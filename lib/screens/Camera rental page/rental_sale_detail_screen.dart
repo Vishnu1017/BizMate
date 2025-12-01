@@ -1,3 +1,4 @@
+import 'package:bizmate/models/payment.dart';
 import 'package:bizmate/widgets/app_snackbar.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -44,6 +45,25 @@ class _RentalSaleDetailScreenState extends State<RentalSaleDetailScreen> {
     'Wallet',
   ];
 
+  IconData _getIconForMode(String mode) {
+    switch (mode) {
+      case 'Cash':
+        return Icons.money;
+      case 'UPI':
+        return Icons.qr_code_scanner;
+      case 'Card':
+        return Icons.credit_card;
+      case 'Bank Transfer':
+        return Icons.account_balance;
+      case 'Cheque':
+        return Icons.receipt_long;
+      case 'Wallet':
+        return Icons.account_balance_wallet;
+      default:
+        return Icons.payments;
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -58,10 +78,10 @@ class _RentalSaleDetailScreenState extends State<RentalSaleDetailScreen> {
       text: widget.sale.numberOfDays.toString(),
     );
     totalController = TextEditingController(
-      text: widget.sale.totalCost.toStringAsFixed(2),
+      text: widget.sale.totalCost.toString(),
     );
     amountController = TextEditingController(
-      text: widget.sale.amountPaid.toStringAsFixed(2),
+      text: widget.sale.amountPaid.toString(),
     );
 
     _selectedMode =
@@ -70,8 +90,11 @@ class _RentalSaleDetailScreenState extends State<RentalSaleDetailScreen> {
     isFullyPaid = widget.sale.amountPaid >= widget.sale.totalCost;
   }
 
-  // ⭐ FIXED: Correct Save Logic
+  // ------------------------------------------------------------------
+  // ⭐⭐⭐ SAVE CHANGES (EXACTLY LIKE FIRST CODE YOU SENT) ⭐⭐⭐
+  // ------------------------------------------------------------------
   void saveChanges() async {
+    // VALIDATION
     if (customerController.text.trim().isEmpty) {
       AppSnackBar.showError(
         context,
@@ -85,7 +108,7 @@ class _RentalSaleDetailScreenState extends State<RentalSaleDetailScreen> {
         !RegExp(r'^[0-9]+$').hasMatch(phoneController.text)) {
       AppSnackBar.showError(
         context,
-        message: "Enter a valid 10-digit phone number!",
+        message: "Enter a valid 10-digit phone!",
         duration: Duration(seconds: 2),
       );
       return;
@@ -98,32 +121,79 @@ class _RentalSaleDetailScreenState extends State<RentalSaleDetailScreen> {
         ) ??
         0;
 
-    widget.sale.customerName = customerController.text;
-    widget.sale.customerPhone = phoneController.text;
-    widget.sale.totalCost = total;
-    widget.sale.amountPaid = isFullyPaid ? total : paid;
-    widget.sale.paymentMode = _selectedMode;
+    if (total <= 0) {
+      AppSnackBar.showError(
+        context,
+        message: "Total must be more than 0",
+        duration: Duration(seconds: 2),
+      );
+      return;
+    }
 
-    // ⭐ CORRECT HIVE UPDATE (WORKS 100%)
+    // NEW PAYMENT ENTRY
+    final newPayment = Payment(
+      amount: isFullyPaid ? total : paid,
+      date: DateTime.now(),
+      mode: _selectedMode,
+    );
+
+    // ------------ ⭐ FIX: UPDATE ALL EDITABLE FIELDS ⭐ --------------
+    final updatedSale = RentalSaleModel(
+      id: widget.sale.id,
+
+      customerName: customerController.text.trim(),
+      customerPhone: phoneController.text.trim(),
+
+      /// Previously you did NOT update these — FIXED now
+      itemName: itemController.text.trim(),
+      imageUrl: widget.sale.imageUrl,
+
+      ratePerDay:
+          double.tryParse(rateController.text) ?? widget.sale.ratePerDay,
+      numberOfDays:
+          int.tryParse(daysController.text) ?? widget.sale.numberOfDays,
+
+      totalCost: total,
+
+      fromDateTime: widget.sale.fromDateTime,
+      toDateTime: widget.sale.toDateTime,
+      pdfFilePath: widget.sale.pdfFilePath,
+
+      paymentMode: _selectedMode,
+      amountPaid: newPayment.amount,
+      rentalDateTime: widget.sale.rentalDateTime,
+
+      paymentHistory: [newPayment, ...widget.sale.paymentHistory],
+    );
+
+    // ------------ ⭐ FIX: CORRECT HIVE UPDATE WITH REVERSE INDEX ⭐ --------------
+
     final safeEmail = widget.userEmail
         .replaceAll('.', '_')
         .replaceAll('@', '_');
+
     final box = Hive.box("userdata_$safeEmail");
 
-    List<RentalSaleModel> list = List<RentalSaleModel>.from(
+    List<RentalSaleModel> originalList = List<RentalSaleModel>.from(
       box.get("rental_sales", defaultValue: []),
     );
 
-    list[widget.index] = widget.sale; // replace old with new
+    // Convert UI index → real index
+    int realIndex = originalList.length - 1 - widget.index;
 
-    await box.put("rental_sales", list);
+    if (realIndex >= 0 && realIndex < originalList.length) {
+      originalList[realIndex] = updatedSale;
+    }
+
+    await box.put("rental_sales", originalList);
 
     AppSnackBar.showSuccess(
       context,
-      message: "Rental sale updated successfully!",
+      message: "Rental sale updated!",
+      duration: Duration(seconds: 2),
     );
 
-    Navigator.pop(context, true); // trigger refresh
+    Navigator.pop(context, true);
   }
 
   InputDecoration customInput(String label, IconData icon) {
@@ -157,7 +227,8 @@ class _RentalSaleDetailScreenState extends State<RentalSaleDetailScreen> {
     return Scaffold(
       backgroundColor: Color(0xFFE3F2FD),
       appBar: AppBar(
-        title: Text(
+        iconTheme: IconThemeData(color: Colors.white),
+        title: const Text(
           "Rental Sale Details",
           style: TextStyle(color: Colors.white),
         ),
@@ -179,7 +250,6 @@ class _RentalSaleDetailScreenState extends State<RentalSaleDetailScreen> {
             borderRadius: BorderRadius.circular(24),
           ),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(formattedDate, style: TextStyle(color: Colors.grey[700])),
               SizedBox(height: 20),
@@ -218,23 +288,24 @@ class _RentalSaleDetailScreenState extends State<RentalSaleDetailScreen> {
               ),
               SizedBox(height: 20),
 
-              // Payment UI
+              // Payment Section ---------------------------------------------------
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
                     "Total Cost",
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                   ),
                   Text(
                     "₹ ${total.toStringAsFixed(2)}",
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                   ),
                 ],
               ),
+
               Divider(),
 
-              // Paid / Received
+              // Received Section
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -244,6 +315,8 @@ class _RentalSaleDetailScreenState extends State<RentalSaleDetailScreen> {
                         isFullyPaid = !isFullyPaid;
                         if (isFullyPaid) {
                           amountController.text = total.toStringAsFixed(2);
+                        } else {
+                          amountController.clear();
                         }
                       });
                     },
@@ -285,29 +358,57 @@ class _RentalSaleDetailScreenState extends State<RentalSaleDetailScreen> {
                   ),
                   Container(
                     width: 100,
+                    height: 40,
+                    alignment: Alignment.centerRight,
                     child:
                         isFullyPaid
                             ? Text(
-                              "₹ ${total.toStringAsFixed(2)}",
-                              textAlign: TextAlign.end,
+                              "₹ ${(double.tryParse(total.toStringAsFixed(2)) ?? 0).toStringAsFixed(2)}",
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
-                                color: Colors.green,
+                                fontSize: 14,
+                                color: Colors.green[700],
                               ),
                             )
-                            : TextField(
+                            : TextFormField(
                               controller: amountController,
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                    decimal: true,
+                                  ),
+                              inputFormatters: [
+                                FilteringTextInputFormatter.allow(
+                                  RegExp(r'^\d*\.?\d{0,2}'),
+                                ),
+                              ],
                               textAlign: TextAlign.end,
-                              keyboardType: TextInputType.numberWithOptions(
-                                decimal: true,
-                              ),
                               decoration: InputDecoration(
+                                isDense: true,
+                                hintText: "0.00",
+                                hintStyle: TextStyle(
+                                  color: Colors.green.shade400,
+                                ),
+                                prefixIcon: Icon(
+                                  Icons.currency_rupee,
+                                  color: Colors.green.shade700,
+                                  size: 20,
+                                ),
                                 border: InputBorder.none,
+                                contentPadding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                ),
                               ),
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                                color: Colors.green[700],
+                              ),
+                              onChanged: (_) => setState(() {}),
                             ),
                   ),
                 ],
               ),
+
               Divider(),
 
               Row(
@@ -316,19 +417,20 @@ class _RentalSaleDetailScreenState extends State<RentalSaleDetailScreen> {
                   Text(
                     balance > 0 ? "Balance Due" : "Paid in Full",
                     style: TextStyle(
-                      color: balance > 0 ? Colors.red : Colors.green,
                       fontWeight: FontWeight.bold,
+                      color: balance > 0 ? Colors.red : Colors.green,
                     ),
                   ),
                   Text(
                     "₹ ${balance.abs().toStringAsFixed(2)}",
                     style: TextStyle(
-                      color: balance > 0 ? Colors.red : Colors.green,
                       fontWeight: FontWeight.bold,
+                      color: balance > 0 ? Colors.red : Colors.green,
                     ),
                   ),
                 ],
               ),
+
               SizedBox(height: 20),
 
               DropdownButtonFormField<String>(
@@ -340,7 +442,11 @@ class _RentalSaleDetailScreenState extends State<RentalSaleDetailScreen> {
                             value: mode,
                             child: Row(
                               children: [
-                                Icon(Icons.payment, size: 20),
+                                Icon(
+                                  _getIconForMode(mode),
+                                  size: 20,
+                                  color: Color(0xFF1A237E),
+                                ),
                                 SizedBox(width: 8),
                                 Text(mode),
                               ],
@@ -354,36 +460,32 @@ class _RentalSaleDetailScreenState extends State<RentalSaleDetailScreen> {
 
               SizedBox(height: 30),
 
+              // Save Button ----------------------------------------------------
               Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF1A237E), Color(0xFF00BCD4)],
-                    begin: Alignment.centerLeft,
-                    end: Alignment.centerRight,
-                  ),
                   borderRadius: BorderRadius.circular(28),
+                  gradient: LinearGradient(
+                    colors: [const Color(0xFF1A237E), Color(0xFF00BCD4)],
+                  ),
                 ),
                 child: ElevatedButton.icon(
                   onPressed: saveChanges,
-                  icon: const Icon(Icons.save, color: Colors.white),
-                  label: const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 14.0),
+                  icon: Icon(Icons.save, color: Colors.white),
+                  label: Padding(
+                    padding: EdgeInsets.symmetric(vertical: 14),
                     child: Text(
                       "Save Changes",
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 18,
                         fontWeight: FontWeight.bold,
+                        fontSize: 18,
                       ),
                     ),
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.transparent,
                     shadowColor: Colors.transparent,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(28),
-                    ),
                   ),
                 ),
               ),

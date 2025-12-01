@@ -1,4 +1,6 @@
 import 'package:bizmate/models/rental_sale_model.dart';
+import 'package:bizmate/widgets/advanced_search_bar.dart'
+    show AdvancedSearchBar;
 import 'package:bizmate/widgets/confirm_delete_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -28,6 +30,7 @@ class _RentalOrdersPageState extends State<RentalOrdersPage> {
     "Partially Paid",
     "Unpaid",
   ];
+  late final VoidCallback _rentalSalesListener;
 
   @override
   void initState() {
@@ -50,9 +53,26 @@ class _RentalOrdersPageState extends State<RentalOrdersPage> {
 
     _loadOrders();
 
-    userBox.listenable(keys: ['rental_sales']).addListener(() {
+    // 🔥 SAFE LISTENER FIX
+    _rentalSalesListener = () {
+      if (!mounted) return; // prevents setState crash
       _loadOrders();
-    });
+    };
+
+    userBox
+        .listenable(keys: ['rental_sales'])
+        .addListener(_rentalSalesListener);
+  }
+
+  @override
+  void dispose() {
+    try {
+      userBox
+          .listenable(keys: ['rental_sales'])
+          .removeListener(_rentalSalesListener);
+    } catch (_) {}
+
+    super.dispose();
   }
 
   void _loadOrders() {
@@ -111,6 +131,23 @@ class _RentalOrdersPageState extends State<RentalOrdersPage> {
     );
   }
 
+  // ---------------------------------------------------------------------------
+  // SEARCH HANDLER (CORRECTED FOR RENTAL ORDERS)
+  // ---------------------------------------------------------------------------
+  void _handleSearchChanged(String query) {
+    setState(() {
+      _searchQuery = query.trim();
+      _applyFilters(); // <-- Apply filters again with updated search
+    });
+  }
+
+  // ---------------------------------------------------------------------------
+  // DATE RANGE HANDLER (Not used but required by widget)
+  // ---------------------------------------------------------------------------
+  void _handleDateRangeChanged(DateTimeRange? range) {
+    // No date filter in orders page — function kept empty intentionally.
+  }
+
   // STATUS COLORS
   Color _statusColor(RentalSaleModel o) {
     if (o.amountPaid >= o.totalCost) return const Color(0xFF10B981);
@@ -130,45 +167,12 @@ class _RentalOrdersPageState extends State<RentalOrdersPage> {
       backgroundColor: Colors.transparent,
       body: Column(
         children: [
-          const SizedBox(height: 16),
-
           // 🔍 MODERN SEARCH BAR
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: TextField(
-                onChanged: (v) {
-                  _searchQuery = v;
-                  _applyFilters();
-                  setState(() {});
-                },
-                decoration: InputDecoration(
-                  hintText: "Search orders...",
-                  hintStyle: TextStyle(color: Colors.grey[600]),
-                  prefixIcon: Icon(Icons.search, color: Colors.grey[600]),
-                  filled: true,
-                  fillColor: Colors.transparent,
-                  contentPadding: const EdgeInsets.symmetric(
-                    vertical: 16,
-                    horizontal: 20,
-                  ),
-                  border: InputBorder.none,
-                  enabledBorder: InputBorder.none,
-                  focusedBorder: InputBorder.none,
-                ),
-              ),
-            ),
+          AdvancedSearchBar(
+            hintText: 'Search orders...',
+            onSearchChanged: _handleSearchChanged,
+            onDateRangeChanged: _handleDateRangeChanged,
+            showDateFilter: false,
           ),
 
           // 🔘 MODERN FILTER CHIPS

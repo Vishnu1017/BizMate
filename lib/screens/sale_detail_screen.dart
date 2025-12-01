@@ -117,13 +117,52 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
       return;
     }
 
-    final box = Hive.box<Sale>('sales');
+    // -------------------------------------------------------
+    // ✅ FIX: Load the CURRENT USER'S SALES BOX
+    // -------------------------------------------------------
+    if (!Hive.isBoxOpen('session')) {
+      await Hive.openBox('session');
+    }
+
+    final sessionBox = Hive.box('session');
+    final email = sessionBox.get("currentUserEmail");
+
+    if (email == null) {
+      AppSnackBar.showError(
+        context,
+        message: "Session expired. Please login again.",
+        duration: Duration(seconds: 2),
+      );
+      return;
+    }
+
+    final safeEmail = email
+        .toString()
+        .replaceAll('.', '_')
+        .replaceAll('@', '_');
+
+    final userBox = await Hive.openBox("userdata_$safeEmail");
+
+    // Fetch the existing sales list
+    List<Sale> sales = [];
+    try {
+      sales = List<Sale>.from(userBox.get("sales", defaultValue: []));
+    } catch (_) {
+      sales = [];
+    }
+
+    // -------------------------------------------------------
+    // Generate new payment entry
+    // -------------------------------------------------------
     final newPayment = Payment(
-      amount: paid == 0 && isFullyPaid ? total : paid,
+      amount: isFullyPaid ? total : paid,
       date: DateTime.now(),
       mode: _selectedMode,
     );
 
+    // -------------------------------------------------------
+    // Create updated sale object
+    // -------------------------------------------------------
     final updatedSale = Sale(
       customerName: customerController.text,
       phoneNumber: phoneController.text,
@@ -139,9 +178,20 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
       item: widget.sale.item,
     );
 
-    await box.putAt(widget.index, updatedSale);
+    // -------------------------------------------------------
+    // ✅ Correct saving: Update sale inside user's sales LIST
+    // -------------------------------------------------------
+    if (widget.index < sales.length) {
+      sales[widget.index] = updatedSale;
+    }
 
-    AppSnackBar.showSuccess(context, message: 'Sale updated successfully!');
+    await userBox.put("sales", sales); // save entire list back
+
+    AppSnackBar.showSuccess(
+      context,
+      message: 'Sale updated successfully!',
+      duration: Duration(seconds: 2),
+    );
 
     Navigator.pop(context);
   }
@@ -378,7 +428,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                     textAlign: TextAlign.end,
                                     decoration: InputDecoration(
                                       isDense: true,
-                                      hintText: "Enter",
+                                      hintText: "0.00",
                                       hintStyle: TextStyle(
                                         color: Colors.green.shade400,
                                       ),

@@ -24,6 +24,7 @@ class WhatsAppService {
         AppSnackBar.showWarning(
           context,
           message: "Please enter a valid 10-digit phone number",
+          duration: Duration(seconds: 2),
         );
 
         return;

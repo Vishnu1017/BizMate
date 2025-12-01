@@ -65,7 +65,11 @@ class _AddRentalItemPageState extends State<AddRentalItemPage> {
   Future<void> _saveItem() async {
     if (_formKey.currentState!.validate()) {
       if (_selectedImage == null) {
-        AppSnackBar.showWarning(context, message: 'Please upload an image!');
+        AppSnackBar.showWarning(
+          context,
+          message: 'Please upload an image!',
+          duration: Duration(seconds: 2),
+        );
         return;
       }
 
@@ -112,7 +116,11 @@ class _AddRentalItemPageState extends State<AddRentalItemPage> {
       // 🔥 Save back to box
       await userBox.put("rental_items", rentalList);
 
-      AppSnackBar.showSuccess(context, message: 'Item added successfully!');
+      AppSnackBar.showSuccess(
+        context,
+        message: 'Item added successfully!',
+        duration: Duration(seconds: 2),
+      );
       _clearForm();
     }
   }
@@ -402,6 +410,22 @@ class _AddRentalItemPageState extends State<AddRentalItemPage> {
       controller: controller,
       maxLines: maxLines,
       keyboardType: keyboardType,
+      onChanged: (value) {
+        // ⭐ AUTO CAPITALIZE FIRST LETTER (Item Name & Brand)
+        if (label == "Item Name" || label == "Brand") {
+          if (value.isNotEmpty) {
+            final formatted =
+                value[0].toUpperCase() +
+                (value.length > 1 ? value.substring(1) : "");
+            if (formatted != value) {
+              controller.value = controller.value.copyWith(
+                text: formatted,
+                selection: TextSelection.collapsed(offset: formatted.length),
+              );
+            }
+          }
+        }
+      },
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: Icon(icon, color: Colors.black54),

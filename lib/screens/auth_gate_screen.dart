@@ -23,11 +23,35 @@ class AuthGateScreen extends StatelessWidget {
     required this.userEmail,
   });
 
+  // ✅ NEW: helper to check if passcode is enabled
+  Future<bool> _isPasscodeEnabled(String email) async {
+    final pass = await _storage.read(key: "passcode_$email");
+    return pass != null && pass.isNotEmpty;
+  }
+
   @override
   Widget build(BuildContext context) {
     Future.microtask(() async {
-      // ✅ FIXED VERSION: DO NOT DELETE OTHER USER DATA
-      // Each user has unique keys: passcode_email + type_email
+      // NEW LOGIC – respects disable switch
+      final isEnabled = await _isPasscodeEnabled(user.email);
+
+      if (!isEnabled) {
+        // 🔥 Passcode disabled → skip AuthGate → go to main home
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder:
+                (_) => NavBarPage(
+                  user: user,
+                  userPhone: user.phone,
+                  userEmail: user.email,
+                ),
+          ),
+        );
+        return;
+      }
+
+      // OLD LOGIC – unchanged
       final key = "passcode_${user.email}";
       final savedPasscode = await _storage.read(key: key);
 
@@ -59,7 +83,7 @@ class AuthGateScreen extends StatelessWidget {
 }
 
 /// -----------------------------------------------------
-///                PASSCODE CREATION SCREEN
+///              PASSCODE CREATION SCREEN
 /// -----------------------------------------------------
 
 class PasscodeCreationScreen extends StatefulWidget {

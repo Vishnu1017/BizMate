@@ -121,7 +121,7 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage> {
     if (phone.length < 10 || !RegExp(r'^[0-9]+$').hasMatch(phone)) {
       AppSnackBar.showWarning(
         context,
-        message: "Please enter a valid 10-digit phone number",
+        message: "Please enter a valid 10-digit phone number",duration: Duration(seconds: 2)
       );
       return;
     }

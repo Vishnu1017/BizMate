@@ -176,13 +176,32 @@ class SaleOptionsMenu extends StatelessWidget {
           "Are you sure you want to delete this sale? This action cannot be undone.",
       icon: Icons.warning_amber_rounded,
       iconColor: Colors.redAccent,
-      onConfirm: () {
-        box.deleteAt(originalIndex);
-        AppSnackBar.showError(
-          context,
-          message: "Sale deleted successfully.",
-          duration: const Duration(seconds: 2),
-        );
+      onConfirm: () async {
+        try {
+          // 1. Load sales list
+          List<Sale> sales = List<Sale>.from(
+            box.get("sales", defaultValue: []),
+          );
+
+          // 2. Remove this sale from list
+          sales.remove(sale);
+
+          // 3. Write list back to Hive
+          await box.put("sales", sales);
+
+          // 4. Update UI
+          AppSnackBar.showSuccess(
+            parentContext,
+            message: "Sale deleted successfully.",
+            duration: Duration(seconds: 2),
+          );
+        } catch (e) {
+          AppSnackBar.showError(
+            parentContext,
+            message: "Failed to delete sale: $e",
+            duration: Duration(seconds: 2),
+          );
+        }
       },
     );
   }
@@ -234,6 +253,7 @@ class SaleOptionsMenu extends StatelessWidget {
       AppSnackBar.showWarning(
         context,
         message: "Please set your UPI ID in your profile first",
+        duration: Duration(seconds: 2),
       );
       return;
     }
@@ -303,6 +323,7 @@ class SaleOptionsMenu extends StatelessWidget {
       AppSnackBar.showWarning(
         context,
         message: "Please set your UPI ID in your profile first",
+        duration: Duration(seconds: 2),
       );
       return;
     }

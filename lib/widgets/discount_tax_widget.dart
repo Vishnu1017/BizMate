@@ -5,8 +5,8 @@ class DiscountTaxWidget extends StatelessWidget {
   final TextEditingController discountAmountController;
   final bool isEditingPercent;
   final Function(bool) onModeChange;
-  final double subtotal;
 
+  final double subtotal;
   final String? selectedTaxRate;
   final String selectedTaxType;
   final List<String> taxRateOptions;
@@ -33,57 +33,70 @@ class DiscountTaxWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _summaryRow("Subtotal", subtotal),
-        const SizedBox(height: 12),
 
+        const SizedBox(height: 20),
+
+        // --------------------------
+        // 🔥 EXACT SAME ROW YOU WANT
+        // --------------------------
         Row(
           children: [
             Expanded(
-              child: _textField(
-                controller: discountPercentController,
+              child: _glassTextField(
                 label: "Discount %",
-                suffix: "%",
+                icon: Icons.percent,
+                controller: discountPercentController,
+                suffixText: "%",
                 onTap: () => onModeChange(true),
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: _textField(
-                controller: discountAmountController,
+              child: _glassTextField(
                 label: "Discount ₹",
-                prefix: "₹ ",
+                icon: Icons.currency_rupee,
+                controller: discountAmountController,
+                prefixText: "₹ ",
                 onTap: () => onModeChange(false),
               ),
             ),
           ],
         ),
 
-        const SizedBox(height: 16),
+        const SizedBox(height: 20),
 
+        // TAX TYPE
+        _glassDropdown(
+          label: "Tax Type",
+          value: selectedTaxType,
+          options: ["With Tax", "Without Tax"],
+          onChanged: (_) {},
+          enabled: false, // keep same as rental page
+        ),
+
+        const SizedBox(height: 14),
+
+        // TAX RATE (enabled only if With Tax is selected)
         IgnorePointer(
-          ignoring: selectedTaxType != 'With Tax',
+          ignoring: selectedTaxType != "With Tax",
           child: Opacity(
-            opacity: selectedTaxType == 'With Tax' ? 1 : 0.4,
-            child: DropdownButtonFormField<String>(
+            opacity: selectedTaxType == "With Tax" ? 1 : 0.3,
+            child: _glassDropdown(
+              label: "Select Tax Rate",
               value: selectedTaxRate,
-              decoration: const InputDecoration(
-                labelText: "Select Tax Rate",
-                border: OutlineInputBorder(),
-              ),
-              items:
-                  taxRateOptions
-                      .map(
-                        (opt) => DropdownMenuItem(value: opt, child: Text(opt)),
-                      )
-                      .toList(),
+              options: taxRateOptions,
               onChanged: onTaxRateChanged,
+              enabled: selectedTaxType == "With Tax",
             ),
           ),
         ),
 
-        if (selectedTaxType == 'With Tax' && parsedTaxRate > 0) ...[
-          const SizedBox(height: 12),
+        // TAX DETAILS CARDS
+        if (selectedTaxType == "With Tax" && parsedTaxRate > 0) ...[
+          const SizedBox(height: 14),
           Row(
             children: [
               Expanded(
@@ -106,54 +119,108 @@ class DiscountTaxWidget extends StatelessWidget {
     );
   }
 
-  Widget _summaryRow(String title, double value) {
+  // ---------------------- UI ELEMENTS ----------------------
+
+  Widget _summaryRow(String label, double value) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(title, style: const TextStyle(fontSize: 16)),
+        Text(
+          label,
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+        ),
         Text(
           "₹ ${value.toStringAsFixed(2)}",
-          style: const TextStyle(fontWeight: FontWeight.w600),
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+          ),
         ),
       ],
     );
   }
 
-  Widget _textField({
-    required TextEditingController controller,
+  // 🔥 SAME GLASS TEXT FIELD DESIGN FROM RentalAddCustomerPage
+  Widget _glassTextField({
     required String label,
-    String? prefix,
-    String? suffix,
+    required IconData icon,
+    required TextEditingController controller,
+    String? prefixText,
+    String? suffixText,
     VoidCallback? onTap,
   }) {
-    return TextFormField(
-      controller: controller,
-      onTap: onTap,
-      decoration: InputDecoration(
-        labelText: label,
-        prefixText: prefix,
-        suffixText: suffix,
-        border: const OutlineInputBorder(),
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        color: Colors.grey.shade200.withOpacity(0.3),
+        border: Border.all(color: Colors.grey.shade400, width: 1),
       ),
-      keyboardType: TextInputType.numberWithOptions(decimal: true),
+      child: TextFormField(
+        controller: controller,
+        onTap: onTap,
+        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+        onChanged: (_) {},
+        decoration: InputDecoration(
+          border: InputBorder.none,
+          labelText: label,
+          prefixText: prefixText,
+          suffixText: suffixText,
+          prefixIcon: Icon(icon, color: Colors.black87),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 14,
+          ),
+        ),
+      ),
     );
   }
 
-  Widget _infoCard(String title, String value) {
+  Widget _glassDropdown({
+    required String label,
+    required String? value,
+    required List<String> options,
+    required Function(String?) onChanged,
+    bool enabled = true,
+  }) {
     return Container(
-      padding: const EdgeInsets.all(8),
+      padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
-        color: Colors.grey.shade200,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(12),
+        color: Colors.grey.shade200.withOpacity(0.3),
+        border: Border.all(color: Colors.grey.shade400),
+      ),
+      child: DropdownButtonFormField<String>(
+        value: value,
+        decoration: InputDecoration(labelText: label, border: InputBorder.none),
+        items:
+            options
+                .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                .toList(),
+        onChanged: enabled ? onChanged : null,
+      ),
+    );
+  }
+
+  Widget _infoCard(String label, String value) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade200.withOpacity(0.5),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade400),
       ),
       child: Column(
         children: [
           Text(
-            title,
-            style: const TextStyle(fontSize: 13, color: Colors.black54),
+            label,
+            style: const TextStyle(fontSize: 12, color: Colors.black54),
           ),
           const SizedBox(height: 4),
-          Text(value, style: const TextStyle(fontWeight: FontWeight.bold)),
+          Text(
+            value,
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+          ),
         ],
       ),
     );

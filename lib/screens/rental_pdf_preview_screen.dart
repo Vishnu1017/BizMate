@@ -125,7 +125,7 @@ Thanks for renting with us!
             AppSnackBar.showSuccess(
               context,
               message:
-                  "Message copied! Paste it in WhatsApp after selecting contact.",
+                  "Message copied! Paste it in WhatsApp after selecting contact.",duration: Duration(seconds: 2)
             );
 
             await Future.delayed(const Duration(milliseconds: 300));

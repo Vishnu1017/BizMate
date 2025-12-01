@@ -15,12 +15,13 @@ import 'login_screen.dart';
 
 class ProfilePage extends StatefulWidget {
   final User user;
-  final Future<void> Function()? onRentalStatusChanged; // ✅ Add this
+  final Future<void> Function()? onRentalStatusChanged;
 
   const ProfilePage({
     super.key,
     required this.user,
-    this.onRentalStatusChanged, required String userEmail,
+    this.onRentalStatusChanged,
+    required String userEmail,
   });
 
   @override
@@ -40,6 +41,7 @@ class _ProfilePageState extends State<ProfilePage> {
   bool _isImageSaved = false;
   bool _isEditing = false;
   bool _isRentalEnabled = false;
+  bool _isPasscodeEnabled = false;
 
   final List<String> roles = [
     'None',
@@ -60,6 +62,10 @@ class _ProfilePageState extends State<ProfilePage> {
   late TextEditingController _phoneController;
   late TextEditingController _upiController;
 
+  final FlutterSecureStorage _secureStorage = FlutterSecureStorage(
+    aOptions: const AndroidOptions(encryptedSharedPreferences: true),
+  );
+
   @override
   void initState() {
     super.initState();
@@ -67,7 +73,6 @@ class _ProfilePageState extends State<ProfilePage> {
       _verifySession();
     });
 
-    // 🔥 Load the latest user data from Hive instead of using the old widget.user
     final box = Hive.box<User>('users');
     final user = box.values.firstWhere(
       (u) => u.email == widget.user.email,
@@ -88,6 +93,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
     _loadImage();
     _loadRentalSetting();
+    _loadPasscodeSetting();
   }
 
   @override
@@ -166,6 +172,25 @@ class _ProfilePageState extends State<ProfilePage> {
     });
   }
 
+  Future<void> _loadPasscodeSetting() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    // Read stored toggle
+    final toggleValue =
+        prefs.getBool('${widget.user.email}_passcodeEnabled') ?? false;
+
+    // Read stored passcode (we do NOT enable automatically)
+    final savedPasscode = await _secureStorage.read(
+      key: "passcode_${widget.user.email}",
+    );
+
+    // Only enable if toggle = true
+    setState(() {
+      _isPasscodeEnabled =
+          toggleValue && savedPasscode != null && savedPasscode.isNotEmpty;
+    });
+  }
+
   Future<void> _enableRental() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('${widget.user.email}_rentalEnabled', true);
@@ -177,13 +202,13 @@ class _ProfilePageState extends State<ProfilePage> {
       _isRentalEnabled = true;
     });
 
-    // Call the callback if provided
     widget.onRentalStatusChanged?.call();
 
     if (mounted) {
       AppSnackBar.showSuccess(
         context,
         message: 'Rental page enabled successfully!',
+        duration: Duration(seconds: 2),
       );
     }
   }
@@ -195,12 +220,100 @@ class _ProfilePageState extends State<ProfilePage> {
       _isRentalEnabled = false;
     });
 
-    // Call the callback if provided
     widget.onRentalStatusChanged?.call();
 
     if (mounted) {
-      AppSnackBar.showWarning(context, message: 'Rental page disabled');
+      AppSnackBar.showWarning(
+        context,
+        message: 'Rental page disabled',
+        duration: Duration(seconds: 2),
+      );
     }
+  }
+
+  Future<void> _setupPasscode() async {
+    final newPasscode = await _showPasscodeDialog(
+      "Setup Passcode",
+      "Enter your new 4-digit passcode",
+    );
+    if (newPasscode != null && newPasscode.length == 4) {
+      final confirmPasscode = await _showPasscodeDialog(
+        "Confirm Passcode",
+        "Re-enter your 4-digit passcode",
+      );
+
+      if (confirmPasscode == newPasscode) {
+        await _secureStorage.write(
+          key: "passcode_${widget.user.email}",
+          value: newPasscode,
+        );
+        setState(() {
+          _isPasscodeEnabled = true;
+        });
+
+        if (mounted) {
+          AppSnackBar.showSuccess(
+            context,
+            message: 'Passcode setup successfully!',
+            duration: Duration(seconds: 2),
+          );
+        }
+      } else {
+        if (mounted) {
+          AppSnackBar.showError(
+            context,
+            message: 'Passcodes do not match!',
+            duration: Duration(seconds: 2),
+          );
+        }
+      }
+    } else if (newPasscode != null) {
+      if (mounted) {
+        AppSnackBar.showError(
+          context,
+          message: 'Passcode must be 4 digits!',
+          duration: Duration(seconds: 2),
+        );
+      }
+    }
+  }
+
+  Future<String?> _showPasscodeDialog(String title, String hint) async {
+    TextEditingController passcodeController = TextEditingController();
+
+    return showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(title),
+          content: TextField(
+            controller: passcodeController,
+            keyboardType: TextInputType.number,
+            maxLength: 4,
+            obscureText: true,
+            decoration: InputDecoration(
+              hintText: hint,
+              border: OutlineInputBorder(),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (passcodeController.text.length == 4) {
+                  Navigator.of(context).pop(passcodeController.text);
+                }
+              },
+              child: Text('Confirm'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Future<void> _pickImage() async {
@@ -245,6 +358,7 @@ class _ProfilePageState extends State<ProfilePage> {
       AppSnackBar.showSuccess(
         context,
         message: 'Profile image updated successfully!',
+        duration: Duration(seconds: 2),
       );
     } catch (e) {
       debugPrint('Image picking error: $e');
@@ -262,7 +376,6 @@ class _ProfilePageState extends State<ProfilePage> {
     setState(() {
       _isEditing = !_isEditing;
       if (!_isEditing) {
-        // Reset controllers to latest saved values
         _nameController.text = name;
         _roleController.text = role;
         _emailController.text = email;
@@ -281,7 +394,6 @@ class _ProfilePageState extends State<ProfilePage> {
       );
 
       if (userKey != null) {
-        // 🔥 UPDATE EXISTING USER INSTEAD OF CREATING NEW ONE
         final existingUser = box.get(userKey)!;
 
         existingUser.name = _nameController.text.trim();
@@ -289,9 +401,8 @@ class _ProfilePageState extends State<ProfilePage> {
         existingUser.phone = _phoneController.text.trim();
         existingUser.role = _roleController.text.trim();
         existingUser.upiId = _upiController.text.trim();
-        // imageUrl & passcode remain SAFE — not overwritten
 
-        await existingUser.save(); // 🔥 This is important
+        await existingUser.save();
 
         setState(() {
           name = existingUser.name;
@@ -305,6 +416,7 @@ class _ProfilePageState extends State<ProfilePage> {
         AppSnackBar.showSuccess(
           context,
           message: 'Profile updated successfully!',
+          duration: Duration(seconds: 2),
         );
       }
     } catch (e) {
@@ -367,9 +479,6 @@ class _ProfilePageState extends State<ProfilePage> {
         print("User not found in Hive");
       }
 
-      // ------------------------------------------
-      // 🔥 DELETE PASSCODE FROM SECURE STORAGE
-      // ------------------------------------------
       final storage = FlutterSecureStorage(
         aOptions: const AndroidOptions(encryptedSharedPreferences: true),
       );
@@ -379,9 +488,6 @@ class _ProfilePageState extends State<ProfilePage> {
 
       print("Passcode + Type deleted");
 
-      // ------------------------------------------
-      // 🔥 DELETE PROFILE IMAGE & PREFS
-      // ------------------------------------------
       final prefs = await SharedPreferences.getInstance();
       final imgPath = prefs.getString('${email}_profileImagePath');
 
@@ -398,9 +504,6 @@ class _ProfilePageState extends State<ProfilePage> {
 
       print("SharedPrefs cleared");
 
-      // ------------------------------------------
-      // 🔥 CLEAR SESSION BOX
-      // ------------------------------------------
       if (Hive.isBoxOpen('session')) {
         await Hive.box('session').clear();
       } else {
@@ -410,14 +513,12 @@ class _ProfilePageState extends State<ProfilePage> {
 
       print("Session cleared");
 
-      // ------------------------------------------
-      // 🔥 NAVIGATE TO LOGIN SCREEN
-      // ------------------------------------------
       if (!mounted) return;
 
       AppSnackBar.showSuccess(
         context,
         message: "Account deleted successfully!",
+        duration: Duration(seconds: 2),
       );
 
       Navigator.pushAndRemoveUntil(
@@ -449,7 +550,10 @@ class _ProfilePageState extends State<ProfilePage> {
         height: screenHeight,
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFF1A237E), Color(0xFF00BCD4)],
+            colors: [
+              Color.fromARGB(200, 0, 0, 0),
+              Color.fromARGB(150, 0, 0, 0),
+            ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -463,7 +567,6 @@ class _ProfilePageState extends State<ProfilePage> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Main Profile Card
                 Container(
                   width: isSmallScreen ? screenWidth * 0.95 : screenWidth * 0.7,
                   padding: const EdgeInsets.all(24),
@@ -474,10 +577,8 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                   child: Column(
                     children: [
-                      // Header Section with Edit Button in Top-Right
                       Column(
                         children: [
-                          // Edit Button - Top Right aligned properly
                           Align(
                             alignment: Alignment.topRight,
                             child: PopupMenuButton<String>(
@@ -531,7 +632,6 @@ class _ProfilePageState extends State<ProfilePage> {
                           ),
                           const SizedBox(height: 8),
 
-                          // Profile Image and Name - Centered
                           GestureDetector(
                             onTap: _pickImage,
                             child: Stack(
@@ -640,7 +740,6 @@ class _ProfilePageState extends State<ProfilePage> {
                         ],
                       ),
 
-                      // Role Section
                       _isEditing
                           ? Padding(
                             padding: const EdgeInsets.symmetric(
@@ -682,13 +781,11 @@ class _ProfilePageState extends State<ProfilePage> {
                               onChanged: (String? newValue) async {
                                 if (newValue == null) return;
 
-                                // Update role locally
                                 setState(() {
                                   role = newValue;
                                   _roleController.text = newValue;
                                 });
 
-                                // Save and update instantly
                                 final prefs =
                                     await SharedPreferences.getInstance();
 
@@ -764,17 +861,24 @@ class _ProfilePageState extends State<ProfilePage> {
                       const Divider(color: Colors.white30, height: 20),
                       const SizedBox(height: 20),
 
-                      // Profile Information
                       _buildInfoSection(isSmallScreen),
+
+                      // Passcode Control Section - For all users
+                      if (!_isEditing) ...[
+                        const SizedBox(height: 10),
+                        const Divider(color: Colors.white30, height: 20),
+                        const SizedBox(height: 10),
+                        _buildPasscodeControlSection(isSmallScreen),
+                      ],
 
                       // Rental Page Control Section - Only for Photographer role
                       if (role == 'Photographer' && !_isEditing) ...[
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 10),
                         const Divider(color: Colors.white30, height: 20),
+                        const SizedBox(height: 10),
                         _buildRentalControlSection(isSmallScreen),
                       ],
 
-                      // Action Buttons when Editing
                       if (_isEditing) ...[
                         const SizedBox(height: 30),
                         Row(
@@ -784,9 +888,8 @@ class _ProfilePageState extends State<ProfilePage> {
                                 onPressed: _toggleEditing,
                                 style: OutlinedButton.styleFrom(
                                   foregroundColor: Colors.white,
-                                  side: BorderSide(
-                                    color: Colors.white.withOpacity(0.5),
-                                  ),
+                                  backgroundColor: Colors.black,
+                                  side: BorderSide(color: Colors.white),
                                   padding: const EdgeInsets.symmetric(
                                     vertical: 16,
                                   ),
@@ -814,6 +917,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                   padding: const EdgeInsets.symmetric(
                                     vertical: 16,
                                   ),
+                                  side: BorderSide(color: Colors.white),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(12),
                                   ),
@@ -835,7 +939,6 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                 ),
 
-                // Bottom Action Buttons when Not Editing
                 if (!_isEditing) ...[
                   const SizedBox(height: 30),
                   SizedBox(
@@ -847,8 +950,8 @@ class _ProfilePageState extends State<ProfilePage> {
                           child: _actionButton(
                             icon: Icons.logout,
                             text: "Logout",
-                            color: Colors.white.withOpacity(0.15),
-                            borderColor: Colors.white.withOpacity(0.5),
+                            color: Colors.black,
+                            borderColor: Colors.white,
                             onTap: _logout,
                             isSmallScreen: isSmallScreen,
                           ),
@@ -859,6 +962,7 @@ class _ProfilePageState extends State<ProfilePage> {
                             icon: Icons.delete_forever,
                             text: "Delete",
                             color: Colors.red.shade600,
+                            borderColor: Colors.white,
                             gradient: LinearGradient(
                               colors: [
                                 Colors.red.shade600,
@@ -905,7 +1009,7 @@ class _ProfilePageState extends State<ProfilePage> {
           Icons.qr_code,
           "UPI ID",
           _upiController,
-          upiId.isEmpty ? "No UPI ID" : upiId, // Show proper message when empty
+          upiId.isEmpty ? "No UPI ID" : upiId,
           isSmallScreen,
         ),
         const SizedBox(height: 16),
@@ -915,207 +1019,446 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Widget _buildRentalControlSection(bool isSmallScreen) {
+    final w = MediaQuery.of(context).size.width;
+    final isTablet = w > 600;
+
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(isTablet ? 20 : 15),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white30),
+        borderRadius: BorderRadius.circular(isTablet ? 20 : 10),
+        color: Colors.grey.shade900,
+        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.5),
+            blurRadius: isTablet ? 40 : 20,
+            offset: Offset(0, isTablet ? 12 : 8),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          /// --- Header Row ---
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Icon(Icons.camera_alt, color: Colors.white70, size: 22),
-              const SizedBox(width: 12),
-              Text(
-                'Rental Page Control',
-                style: TextStyle(
-                  fontSize: isSmallScreen ? 18 : 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
+              Row(
+                children: [
+                  Container(
+                    width: isTablet ? 12 : 8,
+                    height: isTablet ? 12 : 8,
+                    margin: const EdgeInsets.only(right: 8),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: LinearGradient(
+                        colors: [Colors.blueAccent, Colors.cyanAccent],
+                      ),
+                    ),
+                  ),
+                  Text(
+                    "RENTAL CONTROL",
+                    style: TextStyle(
+                      fontSize: isTablet ? 16 : 12,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white70,
+                      letterSpacing: 1,
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            'Manage rental page visibility in navigation',
-            style: TextStyle(
-              color: Colors.white.withOpacity(0.8),
-              fontSize: isSmallScreen ? 14 : 16,
-            ),
-          ),
-          const SizedBox(height: 16),
 
-          // Status Display
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.05),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.white.withOpacity(0.2)),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              /// LIVE / OFFLINE Badge
+              Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal: isTablet ? 14 : 10,
+                  vertical: isTablet ? 6 : 4,
+                ),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(30),
+                  color:
+                      _isRentalEnabled
+                          ? Colors.green.withOpacity(0.15)
+                          : Colors.red.withOpacity(0.15),
+                  border: Border.all(
+                    color:
+                        _isRentalEnabled
+                            ? Colors.greenAccent.withOpacity(0.3)
+                            : Colors.redAccent.withOpacity(0.3),
+                  ),
+                ),
+                child: Row(
                   children: [
-                    Text(
-                      'Current Status',
-                      style: TextStyle(
-                        fontSize: isSmallScreen ? 14 : 16,
-                        color: Colors.white,
+                    Container(
+                      width: isTablet ? 8 : 4,
+                      height: isTablet ? 8 : 4,
+                      margin: const EdgeInsets.only(right: 6),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color:
+                            _isRentalEnabled
+                                ? Colors.greenAccent
+                                : Colors.redAccent,
                       ),
                     ),
                     Text(
-                      _isRentalEnabled ? 'Enabled' : 'Disabled',
+                      _isRentalEnabled ? "LIVE" : "OFFLINE",
                       style: TextStyle(
-                        fontSize: isSmallScreen ? 16 : 18,
-                        color:
-                            _isRentalEnabled
-                                ? const Color.fromARGB(255, 57, 130, 59)
-                                : Colors.orange,
-                        fontWeight: FontWeight.bold,
+                        fontSize: isTablet ? 11 : 8,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                        letterSpacing: 1,
                       ),
                     ),
                   ],
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color:
-                        _isRentalEnabled
-                            ? Colors.green.withOpacity(0.2)
-                            : Colors.orange.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: _isRentalEnabled ? Colors.green : Colors.orange,
-                    ),
-                  ),
-                  child: Text(
-                    _isRentalEnabled ? 'ACTIVE' : 'INACTIVE',
-                    style: TextStyle(
-                      color: _isRentalEnabled ? Colors.white : Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
+              ),
+            ],
+          ),
+
+          SizedBox(height: isTablet ? 18 : 12),
+
+          /// --- Title & Subtitle ---
+          Text(
+            "Rental Page Access",
+            style: TextStyle(
+              fontSize: isTablet ? 28 : (isSmallScreen ? 22 : 24),
+              fontWeight: FontWeight.w800,
+              color: Colors.white,
+              letterSpacing: -0.5,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 6),
+          Text(
+            "Toggle to enable or disable the rental page for all users",
+            style: TextStyle(
+              fontSize: isTablet ? 17 : 14,
+              color: Colors.white.withOpacity(0.5),
+              height: 1.4,
+            ),
+          ),
 
-          // Enable/Disable Buttons
+          SizedBox(height: isTablet ? 30 : 24),
+
+          /// --- Switch Row ---
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Expanded(
-                child: _rentalControlButton(
-                  icon: Icons.check_circle,
-                  text: "Enable",
-                  color: const Color.fromARGB(255, 0, 255, 8),
-                  isEnabled: !_isRentalEnabled,
-                  onTap: _isRentalEnabled ? null : _enableRental,
-                  isSmallScreen: isSmallScreen,
-                ),
+              /// Left Status
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "STATUS",
+                    style: TextStyle(
+                      fontSize: isTablet ? 14 : 10,
+                      color: Colors.white54,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 1.5,
+                    ),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    _isRentalEnabled ? "Enabled" : "Disabled",
+                    style: TextStyle(
+                      fontSize: isTablet ? 40 : (isSmallScreen ? 24 : 32),
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white,
+                      letterSpacing: -1,
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _rentalControlButton(
-                  icon: Icons.remove_circle,
-                  text: "Disable",
-                  color: Colors.orange,
-                  isEnabled: _isRentalEnabled,
-                  onTap: _isRentalEnabled ? _disableRental : null,
-                  isSmallScreen: isSmallScreen,
+
+              /// Right Switch
+              Transform.scale(
+                scale: isTablet ? 1.35 : (isSmallScreen ? 1.0 : 1.15),
+                child: Switch(
+                  value: _isRentalEnabled,
+                  activeThumbColor: Colors.white,
+                  inactiveThumbColor: Colors.white,
+                  activeTrackColor: Colors.green.shade700,
+                  inactiveTrackColor: Colors.red.shade700,
+                  onChanged: (value) {
+                    if (value) {
+                      _enableRental();
+                    } else {
+                      _disableRental();
+                    }
+                  },
                 ),
               ),
             ],
           ),
 
-          // Info Message
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.white),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.info, color: Colors.white, size: 18),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    _isRentalEnabled
-                        ? 'Rental page is visible in navigation menu'
-                        : 'Rental page is hidden from navigation menu',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: isSmallScreen ? 14 : 15,
-                    ),
+          SizedBox(height: isTablet ? 16 : 6),
+
+          Divider(color: Colors.white.withOpacity(0.1)),
+
+          /// --- Bottom Status Text ---
+          Row(
+            children: [
+              Icon(
+                _isRentalEnabled ? Icons.visibility : Icons.visibility_off,
+                size: isTablet ? 22 : 16,
+                color: _isRentalEnabled ? Colors.greenAccent : Colors.redAccent,
+              ),
+              SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  _isRentalEnabled
+                      ? "Rental page is currently visible in your Home Page"
+                      : "Rental page is hidden from your Home Page",
+                  style: TextStyle(
+                    fontSize: isTablet ? 15 : 12,
+                    color: Colors.white.withOpacity(0.7),
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ],
       ),
     );
   }
 
-  Widget _rentalControlButton({
-    required IconData icon,
-    required String text,
-    required Color color,
-    required bool isEnabled,
-    required Function? onTap,
-    required bool isSmallScreen,
-  }) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap != null ? () => onTap() : null,
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
-          decoration: BoxDecoration(
-            color:
-                isEnabled
-                    ? color.withOpacity(0.2)
-                    : Colors.grey.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: isEnabled ? color : Colors.grey.withOpacity(0.3),
-              width: 1.5,
-            ),
+  Widget _buildPasscodeControlSection(bool isSmallScreen) {
+    final w = MediaQuery.of(context).size.width;
+    final isTablet = w > 600;
+
+    return Container(
+      padding: EdgeInsets.all(isTablet ? 20 : 15),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(isTablet ? 20 : 10),
+        color: Colors.grey.shade900,
+        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.5),
+            blurRadius: isTablet ? 40 : 20,
+            offset: Offset(0, isTablet ? 12 : 8),
           ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          /// ------------------ HEADER ------------------
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Icon(
-                icon,
-                color: isEnabled ? color : Colors.grey,
-                size: isSmallScreen ? 24 : 28,
+              Row(
+                children: [
+                  Container(
+                    width: isTablet ? 12 : 8,
+                    height: isTablet ? 12 : 8,
+                    margin: const EdgeInsets.only(right: 8),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: const LinearGradient(
+                        colors: [Colors.purpleAccent, Colors.pinkAccent],
+                      ),
+                    ),
+                  ),
+                  Text(
+                    "SECURITY CONTROL",
+                    style: TextStyle(
+                      fontSize: isTablet ? 16 : 12,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white70,
+                      letterSpacing: 1,
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 8),
-              Text(
-                text,
-                style: TextStyle(
-                  color: isEnabled ? color : Colors.grey,
-                  fontWeight: FontWeight.w600,
-                  fontSize: isSmallScreen ? 14 : 16,
+
+              /// ACTIVE or INACTIVE badge
+              Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal: isTablet ? 14 : 10,
+                  vertical: isTablet ? 6 : 4,
+                ),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(30),
+                  color:
+                      _isPasscodeEnabled
+                          ? Colors.green.withOpacity(0.15)
+                          : Colors.red.withOpacity(0.15),
+                  border: Border.all(
+                    color:
+                        _isPasscodeEnabled
+                            ? Colors.greenAccent.withOpacity(0.3)
+                            : Colors.redAccent.withOpacity(0.3),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: isTablet ? 8 : 4,
+                      height: isTablet ? 8 : 4,
+                      margin: const EdgeInsets.only(right: 6),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color:
+                            _isPasscodeEnabled
+                                ? Colors.greenAccent
+                                : Colors.redAccent,
+                      ),
+                    ),
+                    Text(
+                      _isPasscodeEnabled ? "ACTIVE" : "INACTIVE",
+                      style: TextStyle(
+                        fontSize: isTablet ? 11 : 8,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                        letterSpacing: 1,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
-        ),
+
+          SizedBox(height: isTablet ? 18 : 12),
+
+          /// ------------------ TITLE + SUBTITLE ------------------
+          Text(
+            "App Passcode",
+            style: TextStyle(
+              fontSize: isTablet ? 30 : (isSmallScreen ? 22 : 24),
+              fontWeight: FontWeight.w800,
+              color: Colors.white,
+              letterSpacing: -0.5,
+            ),
+          ),
+
+          SizedBox(height: 6),
+
+          Text(
+            "Secure your app with a passcode",
+            style: TextStyle(
+              fontSize: isTablet ? 17 : (isSmallScreen ? 13.5 : 15),
+              color: Colors.white.withOpacity(0.5),
+              height: 1.4,
+            ),
+          ),
+
+          SizedBox(height: isTablet ? 30 : 24),
+
+          /// ------------------ STATUS + SWITCH ------------------
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              /// Left status
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "SECURITY",
+                    style: TextStyle(
+                      fontSize: isTablet ? 14 : 11,
+                      color: Colors.white54,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 1.5,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    _isPasscodeEnabled ? "Protected" : "Unprotected",
+                    style: TextStyle(
+                      fontSize: isTablet ? 40 : (isSmallScreen ? 24 : 32),
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white,
+                      letterSpacing: -1,
+                    ),
+                  ),
+                ],
+              ),
+
+              /// Right switch (responsive)
+              Transform.scale(
+                scale: isTablet ? 1.35 : (isSmallScreen ? 1.0 : 1.15),
+                child: Switch(
+                  value: _isPasscodeEnabled,
+                  activeThumbColor: Colors.white,
+                  inactiveThumbColor: Colors.white,
+                  activeTrackColor: Colors.green.shade700,
+                  inactiveTrackColor: Colors.red.shade700,
+                  onChanged: (value) async {
+                    final prefs = await SharedPreferences.getInstance();
+
+                    if (value) {
+                      final existing = await _secureStorage.read(
+                        key: "passcode_${widget.user.email}",
+                      );
+
+                      if (existing == null || existing.isEmpty) {
+                        await _setupPasscode();
+                      }
+
+                      await prefs.setBool(
+                        '${widget.user.email}_passcodeEnabled',
+                        true,
+                      );
+
+                      setState(() => _isPasscodeEnabled = true);
+
+                      AppSnackBar.showSuccess(
+                        context,
+                        message: "Passcode enabled",
+                        duration: Duration(seconds: 2),
+                      );
+                    } else {
+                      await prefs.setBool(
+                        '${widget.user.email}_passcodeEnabled',
+                        false,
+                      );
+
+                      setState(() => _isPasscodeEnabled = false);
+
+                      AppSnackBar.showWarning(
+                        context,
+                        message: "Passcode disabled",
+                        duration: Duration(seconds: 2),
+                      );
+                    }
+                  },
+                ),
+              ),
+            ],
+          ),
+
+          SizedBox(height: isTablet ? 16 : 6),
+
+          Divider(color: Colors.white.withOpacity(0.1)),
+
+          /// ------------------ BOTTOM MESSAGE ------------------
+          Row(
+            children: [
+              Icon(
+                _isPasscodeEnabled ? Icons.security : Icons.no_encryption,
+                size: isTablet ? 22 : 16,
+                color:
+                    _isPasscodeEnabled
+                        ? Colors.greenAccent
+                        : Colors.orangeAccent,
+              ),
+              SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  _isPasscodeEnabled
+                      ? "App passcode is currently active and securing your data"
+                      : "Passcode disabled but stored safely for future use",
+                  style: TextStyle(
+                    fontSize: isTablet ? 15 : 12,
+                    color: Colors.white.withOpacity(0.7),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

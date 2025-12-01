@@ -99,7 +99,7 @@ Future<void> _initializeDefaultProfileImage() async {
     final imagePath = prefs.getString('profileImagePath');
 
     if (imagePath == null || !await File(imagePath).exists()) {
-      final byteData = await rootBundle.load('assets/images/LOGO.jpg');
+      final byteData = await rootBundle.load('assets/images/bizmate_logo.JPG');
       final tempDir = await getTemporaryDirectory();
       final file = File('${tempDir.path}/default_logo.jpg');
       await file.writeAsBytes(byteData.buffer.asUint8List());

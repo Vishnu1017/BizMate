@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'rental_orders_page.dart';
 import 'add_rental_item_page.dart';
 import 'rental_customers_page.dart';
-import 'rental_settings_page.dart';
 
 class CameraRentalNavBar extends StatefulWidget {
   final String userName;
@@ -30,7 +29,6 @@ class _CameraRentalNavBarState extends State<CameraRentalNavBar> {
     "Orders",
     "Rental Item",
     "Customers",
-    "Settings",
   ];
 
   late final List<Widget> _pages;
@@ -47,7 +45,6 @@ class _CameraRentalNavBarState extends State<CameraRentalNavBar> {
       RentalOrdersPage(userEmail: widget.userEmail),
       RentalItems(userEmail: widget.userEmail),
       RentalCustomersPage(userEmail: widget.userEmail),
-      RentalSettingsPage(userEmail: widget.userEmail),
     ];
   }
 
@@ -57,7 +54,7 @@ class _CameraRentalNavBarState extends State<CameraRentalNavBar> {
     return Align(
       alignment: Alignment.bottomCenter,
       child: Padding(
-        padding: const EdgeInsets.only(bottom: 16.0, left: 16.0, right: 16.0),
+        padding: const EdgeInsets.only(bottom: 5.0, left: 16.0, right: 16.0),
         child: Container(
           constraints: const BoxConstraints(maxWidth: 500),
           height: 55,
@@ -199,11 +196,6 @@ class _CameraRentalNavBarState extends State<CameraRentalNavBar> {
               BottomNavigationBarItem(
                 icon: Icon(Icons.people_alt_outlined),
                 activeIcon: Icon(Icons.people_alt),
-                label: '',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.settings_outlined),
-                activeIcon: Icon(Icons.settings),
                 label: '',
               ),
             ],

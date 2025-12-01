@@ -31,13 +31,14 @@ class RentalSaleModelAdapter extends TypeAdapter<RentalSaleModel> {
       paymentMode: fields[11] as String,
       amountPaid: fields[12] as double,
       rentalDateTime: fields[13] as DateTime?,
+      paymentHistory: (fields[14] as List?)?.cast<Payment>(),
     );
   }
 
   @override
   void write(BinaryWriter writer, RentalSaleModel obj) {
     writer
-      ..writeByte(14)
+      ..writeByte(15)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -65,7 +66,9 @@ class RentalSaleModelAdapter extends TypeAdapter<RentalSaleModel> {
       ..writeByte(12)
       ..write(obj.amountPaid)
       ..writeByte(13)
-      ..write(obj.rentalDateTime);
+      ..write(obj.rentalDateTime)
+      ..writeByte(14)
+      ..write(obj.paymentHistory);
   }
 
   @override

@@ -12,7 +12,12 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:intl/intl.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key, required String userEmail, required String userName, required String userPhone});
+  const HomePage({
+    super.key,
+    required String userEmail,
+    required String userName,
+    required String userPhone,
+  });
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -160,7 +165,7 @@ class _HomePageState extends State<HomePage>
 
     _controller = AnimationController(
       vsync: this,
-      duration: Duration(milliseconds: 800),
+      duration: Duration(seconds: 2),
     );
 
     _controller.forward();

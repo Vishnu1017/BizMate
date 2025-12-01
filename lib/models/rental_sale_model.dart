@@ -1,4 +1,5 @@
 import 'package:hive/hive.dart';
+import 'payment.dart';
 
 part 'rental_sale_model.g.dart';
 
@@ -46,6 +47,9 @@ class RentalSaleModel extends HiveObject {
   @HiveField(13)
   DateTime rentalDateTime;
 
+  @HiveField(14)
+  List<Payment> paymentHistory; // ⭐ NON-NULLABLE
+
   RentalSaleModel({
     required this.id,
     required this.customerName,
@@ -61,19 +65,15 @@ class RentalSaleModel extends HiveObject {
     this.paymentMode = 'Cash',
     this.amountPaid = 0,
     DateTime? rentalDateTime,
-  }) : rentalDateTime = rentalDateTime ?? DateTime.now();
+    List<Payment>? paymentHistory, // ⭐ ALLOW NULL FOR OLD DATA
+  }) : rentalDateTime = rentalDateTime ?? DateTime.now(),
+       paymentHistory = paymentHistory ?? []; // ⭐ DEFAULT
 
-  /// 🔹 Computed Sale Status: PAID, PARTIAL, DUE
   String get saleStatus {
-    if (amountPaid >= totalCost) {
-      return 'PAID';
-    } else if (amountPaid > 0 && amountPaid < totalCost) {
-      return 'PARTIAL';
-    } else {
-      return 'DUE';
-    }
+    if (amountPaid >= totalCost) return 'PAID';
+    if (amountPaid > 0) return 'PARTIAL';
+    return 'DUE';
   }
 
-  /// 🔹 Remaining Balance
   double get balanceDue => totalCost - amountPaid;
 }

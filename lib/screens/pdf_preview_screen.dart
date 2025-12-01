@@ -126,6 +126,7 @@ Thanks for choosing *Shutter Life Photography*!
               context,
               message:
                   "Message copied! Paste it in WhatsApp after selecting contact.",
+              duration: Duration(seconds: 2),
             );
 
             await Future.delayed(Duration(milliseconds: 300)); // Small wait

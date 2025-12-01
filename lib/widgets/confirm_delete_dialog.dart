@@ -73,7 +73,7 @@ Future<bool> showConfirmDialog({
                         ElevatedButton(
                           onPressed: () {
                             confirmed = true;
-                            Navigator.pop(ctx);
+                            Navigator.pop(context);
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.redAccent,

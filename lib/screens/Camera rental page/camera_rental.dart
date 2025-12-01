@@ -3,20 +3,11 @@
 import 'dart:io';
 import 'package:bizmate/screens/Camera%20rental%20page/rental_sale_detail_screen.dart'
     show RentalSaleDetailScreen;
-import 'package:bizmate/screens/rental_pdf_preview_screen.dart'
-    show RentalPdfPreviewScreen;
 import 'package:bizmate/widgets/advanced_search_bar.dart'
     show AdvancedSearchBar;
-import 'package:bizmate/widgets/app_snackbar.dart' show AppSnackBar;
-import 'package:bizmate/widgets/confirm_delete_dialog.dart'
-    show showConfirmDialog;
+import 'package:bizmate/widgets/rental_sale_menu.dart' show RentalSaleMenu;
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show rootBundle;
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:intl/intl.dart' show DateFormat;
-import 'package:path_provider/path_provider.dart';
-import 'package:pdf/pdf.dart';
-import 'package:pdf/widgets.dart' as pw;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../models/rental_sale_model.dart';
@@ -38,10 +29,29 @@ class CameraRentalPage extends StatefulWidget {
 }
 
 class _CameraRentalPageState extends State<CameraRentalPage> {
-  late Box userBox; // user-specific box (userdata_<safeEmail>)
+  LinearGradient getProgressGradient(double percentage) {
+    if (percentage <= 20) {
+      return const LinearGradient(
+        colors: [Color(0xFFE53935), Color(0xFFD32F2F)],
+      );
+    } else if (percentage <= 50) {
+      return const LinearGradient(
+        colors: [Color(0xFFE53935), Color(0xFFFFA726)],
+      );
+    } else if (percentage <= 75) {
+      return const LinearGradient(
+        colors: [Color(0xFFFFA726), Color(0xFFFFEB3B), Color(0xFF66BB6A)],
+      );
+    } else {
+      return const LinearGradient(
+        colors: [Color(0xFF66BB6A), Color(0xFF2E7D32)],
+      );
+    }
+  }
+
+  late Box userBox;
   bool _isLoading = true;
   List<RentalSaleModel> rentalSales = [];
-  File? _profileImage;
 
   // Search functionality variables
   String _searchQuery = "";
@@ -55,49 +65,25 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
   }
 
   Future<void> _initUserBoxAndListener() async {
-    // Build safe email -> userdata_<safeEmail>
-    final safeEmail = widget.userEmail
-        .toString()
-        .replaceAll('.', '_')
-        .replaceAll('@', '_');
-    final boxName = "userdata_$safeEmail";
-
-    // Open the user box
-    if (!Hive.isBoxOpen(boxName)) {
-      await Hive.openBox(boxName);
-    }
-    userBox = Hive.box(boxName);
-
-    // Initial load of rental_sales from userBox
-    _loadSalesFromUserBox();
-
-    // Listen for changes specifically for 'rental_sales' key
-    userBox.listenable(keys: ['rental_sales']).addListener(() {
-      // When the box (key) updates, refresh the in-memory list
-      _loadSalesFromUserBox();
-    });
-  }
-
-  void _loadSalesFromUserBox() {
     try {
-      final raw = userBox.get('rental_sales', defaultValue: []);
-      // Convert to List<RentalSaleModel>
-      final List<RentalSaleModel> items =
-          (raw as List)
-              .map((e) => e as RentalSaleModel)
-              .toList()
-              .reversed
-              .toList();
-      setState(() {
-        rentalSales = items;
-        _isLoading = false;
-      });
+      final safeEmail = widget.userEmail
+          .toString()
+          .replaceAll('.', '_')
+          .replaceAll('@', '_');
+      final boxName = "userdata_$safeEmail";
+
+      if (!Hive.isBoxOpen(boxName)) {
+        await Hive.openBox(boxName);
+      }
+      userBox = Hive.box(boxName);
     } catch (e) {
-      debugPrint('Error reading rental_sales from userBox: $e');
-      setState(() {
-        rentalSales = [];
-        _isLoading = false;
-      });
+      debugPrint('Error opening user box: $e');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -123,9 +109,7 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
         final file = File(path);
         final exists = await file.exists();
         if (exists) {
-          setState(() {
-            _profileImage = file;
-          });
+          if (mounted) setState(() {});
         } else {
           await prefs.remove(key);
         }
@@ -135,137 +119,32 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
     }
   }
 
-  List<RentalSaleModel> _getFilteredRentalSales() {
-    List<RentalSaleModel> filteredSales = List.from(rentalSales);
-
-    // Filter by search query
-    if (_searchQuery.isNotEmpty) {
-      filteredSales =
-          filteredSales.where((sale) {
-            final customerName = sale.customerName.toLowerCase();
-            final itemName = sale.itemName.toLowerCase();
-            final customerPhone = sale.customerPhone.toLowerCase();
-            final totalCost = sale.totalCost.toString();
-            final amountPaid = sale.amountPaid.toString();
-            final fromDate = _formatDateTime(sale.fromDateTime).toLowerCase();
-            final toDate = _formatDateTime(sale.toDateTime).toLowerCase();
-            final query = _searchQuery.toLowerCase();
-
-            return customerName.contains(query) ||
-                itemName.contains(query) ||
-                customerPhone.contains(query) ||
-                totalCost.contains(query) ||
-                amountPaid.contains(query) ||
-                fromDate.contains(query) ||
-                toDate.contains(query);
-          }).toList();
-    }
-
-    // Filter by date range
-    if (_selectedRange != null) {
-      filteredSales =
-          filteredSales.where((sale) {
-            return sale.fromDateTime.isAfter(
-                  _selectedRange!.start.subtract(const Duration(days: 1)),
-                ) &&
-                sale.toDateTime.isBefore(
-                  _selectedRange!.end.add(const Duration(days: 1)),
-                );
-          }).toList();
-    }
-
-    return filteredSales;
-  }
-
   String _formatDateTime(DateTime dateTime) {
     return "${dateTime.day}/${dateTime.month}/${dateTime.year} "
         "${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}";
   }
 
-  Future<void> _deleteSale(int index) async {
-    try {
-      // We display filtered list — index corresponds to filtered list's position.
-      // The caller passes originalIndex (the index in rentalSales list). We'll expect that.
-      final sale = rentalSales[index];
-
-      // Remove from persistent storage (userBox -> rental_sales list)
-      final raw = userBox.get('rental_sales', defaultValue: []);
-      final List<RentalSaleModel> persisted =
-          (raw as List).map((e) => e as RentalSaleModel).toList();
-
-      // Find and remove the matching sale (by identity or unique property)
-      final int idx = persisted.indexWhere(
-        (s) => identical(s, sale) || _isSameSale(s, sale),
-      );
-
-      if (idx != -1) {
-        persisted.removeAt(idx);
-        await userBox.put('rental_sales', persisted);
-      } else {
-        // fallback: remove first matching by customer+fromDate+toDate+totalCost
-        final fallbackIdx = persisted.indexWhere(
-          (s) =>
-              s.customerName == sale.customerName &&
-              s.fromDateTime == sale.fromDateTime &&
-              s.toDateTime == sale.toDateTime &&
-              s.totalCost == sale.totalCost,
-        );
-        if (fallbackIdx != -1) {
-          persisted.removeAt(fallbackIdx);
-          await userBox.put('rental_sales', persisted);
-        }
-      }
-
-      // Update local list (listener will typically update, but do it now)
-      _loadSalesFromUserBox();
-
-      AppSnackBar.showSuccess(
-        context,
-        message: '${sale.customerName} deleted successfully',
-      );
-
-      _notifyDashboardUpdate();
-    } catch (e) {
-      debugPrint('Error deleting sale: $e');
-      AppSnackBar.showError(
-        context,
-        message: 'Failed to delete: $e',
-        duration: Duration(seconds: 2),
-      );
-    }
-  }
-
-  bool _isSameSale(RentalSaleModel a, RentalSaleModel b) {
-    // Best-effort comparison: compare key fields
-    return a.customerName == b.customerName &&
-        a.itemName == b.itemName &&
-        a.fromDateTime == b.fromDateTime &&
-        a.toDateTime == b.toDateTime &&
-        a.totalCost == b.totalCost;
-  }
-
-  Future<void> _confirmDelete(int index) async {
-    showConfirmDialog(
-      context: context,
-      title: "Delete Sale?",
-      message: "Are you sure you want to remove this item permanently?",
-      onConfirm: () {
-        _deleteSale(index);
-      },
-    );
-  }
-
   Widget _buildImage(RentalSaleModel sale, double size) {
+    // Dynamic size for larger screens
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isTabletOrDesktop = screenWidth > 700;
+    final adjustedSize = isTabletOrDesktop ? size + 8 : size;
+
     return Container(
-      width: size,
-      height: size,
+      width: adjustedSize,
+      height: adjustedSize,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
+        gradient: const LinearGradient(
+          colors: [Color(0xFF667eea), Color(0xFF764ba2)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: Colors.purple.shade300.withOpacity(0.25),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
@@ -276,17 +155,19 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return Container(
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [Colors.blue.shade100, Colors.blue.shade300],
+                    colors: [Color(0xFF667eea), Color(0xFF764ba2)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
                 ),
-                child: const Icon(
-                  Icons.camera_alt,
-                  color: Colors.white,
-                  size: 30,
+                child: const Center(
+                  child: Icon(
+                    Icons.photo_camera,
+                    color: Colors.white,
+                    size: 32,
+                  ),
                 ),
               );
             }
@@ -310,14 +191,28 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
 
   Widget _buildPlaceholderImage() {
     return Container(
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         gradient: LinearGradient(
-          colors: [Colors.blue.shade100, Colors.blue.shade300],
+          colors: [Color(0xFF667eea), Color(0xFF764ba2)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
       ),
-      child: const Icon(Icons.camera_alt, color: Colors.white, size: 40),
+      child: const Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.photo_camera, color: Colors.white, size: 32),
+          SizedBox(height: 8),
+          Text(
+            "Camera",
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -353,11 +248,11 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
   Color getSaleStatusColor(RentalSaleModel sale) {
     switch (getSaleStatus(sale)) {
       case "PAID":
-        return Colors.green;
+        return const Color(0xFF00C853);
       case "PARTIAL":
-        return Colors.orange;
+        return const Color(0xFFFF9800);
       case "DUE":
-        return Colors.red;
+        return const Color(0xFFF44336);
       default:
         return Colors.grey;
     }
@@ -367,189 +262,481 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
     return rentalSales.fold(0, (sum, sale) => sum + sale.totalCost);
   }
 
-  Widget _buildTextDetails(RentalSaleModel sale, bool isWide, int index) {
+  Widget _buildStatusBadge(RentalSaleModel sale) {
+    final status = getSaleStatus(sale);
+    final color = getSaleStatusColor(sale);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withOpacity(0.7), width: 1),
+      ),
+      child: Text(
+        status,
+        style: TextStyle(
+          color: color,
+          fontWeight: FontWeight.w700,
+          fontSize: 12,
+          letterSpacing: 0.5,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatsCard() {
+    return ValueListenableBuilder(
+      valueListenable: userBox.listenable(),
+      builder: (context, Box box, _) {
+        List<RentalSaleModel> allSales = [];
+        try {
+          allSales = List<RentalSaleModel>.from(
+            box.get("rental_sales", defaultValue: []),
+          );
+        } catch (_) {
+          allSales = [];
+        }
+
+        final totalAmount = allSales.fold(
+          0.0,
+          (sum, sale) => sum + sale.totalCost,
+        );
+        final totalPaid = allSales.fold(
+          0.0,
+          (sum, sale) => sum + sale.amountPaid,
+        );
+        final totalDue = totalAmount - totalPaid;
+        final totalRentals = allSales.length;
+
+        final screenWidth = MediaQuery.of(context).size.width;
+        final isTabletOrDesktop = screenWidth > 700;
+        final maxWidth = isTabletOrDesktop ? 900.0 : double.infinity;
+
+        return Align(
+          alignment: Alignment.topCenter,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: maxWidth),
+            child: Container(
+              margin: EdgeInsets.symmetric(
+                horizontal: isTabletOrDesktop ? 24 : 16,
+                vertical: 8,
+              ),
+              padding: EdgeInsets.symmetric(
+                horizontal: isTabletOrDesktop ? 24 : 20,
+                vertical: isTabletOrDesktop ? 20 : 18,
+              ),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF667eea), Color(0xFF764ba2)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(
+                  isTabletOrDesktop ? 24 : 20,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.purple.shade300.withOpacity(0.35),
+                    blurRadius: 22,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
+              ),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final isWideRow = constraints.maxWidth > 350;
+                  final children = [
+                    _buildStatItem(
+                      Icons.camera_alt,
+                      totalRentals.toString(),
+                      "Rentals",
+                    ),
+                    _buildStatItem(
+                      Icons.currency_rupee,
+                      "₹${totalAmount.toInt()}",
+                      "Total",
+                    ),
+                    _buildStatItem(
+                      Icons.trending_up,
+                      "₹${totalDue.toInt()}",
+                      "Due",
+                    ),
+                  ];
+
+                  if (isWideRow) {
+                    return Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: children,
+                    );
+                  } else {
+                    return Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: children.sublist(0, 2),
+                        ),
+                        const SizedBox(height: 12),
+                        Align(alignment: Alignment.center, child: children[2]),
+                      ],
+                    );
+                  }
+                },
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildStatItem(IconData icon, String value, String label) {
+    return Column(
+      children: [
+        Icon(icon, color: Colors.white, size: 24),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          label,
+          style: TextStyle(
+            color: Colors.white.withOpacity(0.85),
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSaleCard(RentalSaleModel sale, int index, bool isWide) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isTabletOrDesktop = screenWidth > 700;
+
+    final horizontalMargin = isTabletOrDesktop ? 24.0 : 16.0;
+    final verticalMargin = isTabletOrDesktop ? 10.0 : 8.0;
+    final radius = isTabletOrDesktop ? 24.0 : 20.0;
+    final padding = EdgeInsets.all(isTabletOrDesktop ? 20 : 16);
+
+    return Container(
+      margin: EdgeInsets.symmetric(
+        horizontal: horizontalMargin,
+        vertical: verticalMargin,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(radius),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.shade300.withOpacity(0.7),
+            blurRadius: 18,
+            offset: const Offset(0, 6),
+          ),
+        ],
+        border: Border.all(color: Colors.grey.shade100, width: 1),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(radius),
+          onTap: () async {
+            await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder:
+                    (_) => RentalSaleDetailScreen(
+                      sale: sale,
+                      index: index,
+                      userEmail: widget.userEmail,
+                    ),
+              ),
+            );
+          },
+          child: Padding(
+            padding: padding,
+            child:
+                isWide
+                    ? _buildWideLayout(sale, index)
+                    : _buildMobileLayout(sale, index),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildWideLayout(RentalSaleModel sale, int index) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildImage(sale, 80),
+        const SizedBox(width: 18),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildHeaderRow(sale, index),
+              const SizedBox(height: 8),
+              Text(
+                sale.itemName,
+                style: const TextStyle(
+                  fontSize: 16,
+                  color: Colors.black87,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 8),
+              _buildDetailsRow(sale),
+              const SizedBox(height: 12),
+              _buildAmountProgress(sale),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMobileLayout(RentalSaleModel sale, int index) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallPhone = screenWidth < 360;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildImage(sale, isSmallPhone ? 52 : 60),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildHeaderRow(sale, index),
+                  const SizedBox(height: 6),
+                  Text(
+                    sale.itemName,
+                    style: TextStyle(
+                      fontSize: isSmallPhone ? 13 : 14,
+                      color: Colors.black87,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        _buildDetailsRow(sale),
+        const SizedBox(height: 12),
+        _buildAmountProgress(sale),
+      ],
+    );
+  }
+
+  Widget _buildHeaderRow(RentalSaleModel sale, int index) {
+    final customerPhone = sale.customerPhone.trim();
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallPhone = screenWidth < 360;
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                sale.customerName,
+                style: TextStyle(
+                  fontSize: isSmallPhone ? 16 : 18,
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF1a1a1a),
+                ),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+              ),
+              if (customerPhone.isNotEmpty) ...[
+                const SizedBox(height: 2),
+                Row(
+                  children: [
+                    Icon(Icons.phone, size: 12, color: Colors.grey.shade600),
+                    const SizedBox(width: 4),
+                    Text(
+                      customerPhone,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey.shade600,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ],
+          ),
+        ),
+        const SizedBox(width: 8),
+        Row(
+          children: [
+            const SizedBox(width: 8),
+            RentalSaleMenu(
+              sale: sale,
+              originalIndex: index,
+              userBox: userBox,
+              isSmallScreen: MediaQuery.of(context).size.width < 600,
+              currentUserName: widget.userName,
+              currentUserPhone: widget.userPhone,
+              currentUserEmail: widget.userEmail,
+              parentContext: context,
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDetailsRow(RentalSaleModel sale) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Adaptive max chip width → behaves like real production apps
+        double maxChipWidth = (constraints.maxWidth / 2) - 20;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: [
+                ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: maxChipWidth),
+                  child: _buildDetailChip(
+                    icon: Icons.calendar_today,
+                    value: '${sale.numberOfDays} days',
+                  ),
+                ),
+                ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: maxChipWidth),
+                  child: _buildDetailChip(
+                    icon: Icons.currency_rupee,
+                    value: '${sale.ratePerDay.toStringAsFixed(0)}/day',
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: [
+                ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: maxChipWidth),
+                  child: _buildDateChip(
+                    'From',
+                    _formatDateTime(sale.fromDateTime),
+                  ),
+                ),
+                ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: maxChipWidth),
+                  child: _buildDateChip('To', _formatDateTime(sale.toDateTime)),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 10),
+            _buildStatusBadge(sale),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildAmountProgress(RentalSaleModel sale) {
+    final double progress =
+        sale.totalCost > 0 ? sale.amountPaid / sale.totalCost : 0.0;
+
+    final double percentage = progress * 100;
     final balanceDue = sale.totalCost - sale.amountPaid;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Header Row
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Expanded(
-              child: Text(
-                sale.customerName,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-                overflow: TextOverflow.ellipsis,
-                maxLines: 1,
+            Text(
+              '₹${sale.amountPaid.toInt()} paid',
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF00C853),
               ),
             ),
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: getSaleStatusColor(sale),
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: getSaleStatusColor(sale).withOpacity(0.3),
-                        blurRadius: 4,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Text(
-                    getSaleStatus(sale),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                PopupMenuButton<String>(
-                  onSelected: (value) {
-                    if (value == 'delete') {
-                      _confirmDelete(index);
-                    } else if (value == 'share_pdf') {
-                      _sharePdf(sale);
-                    }
-                  },
-                  itemBuilder:
-                      (context) => const [
-                        PopupMenuItem(
-                          value: 'share_pdf',
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.picture_as_pdf,
-                                color: Colors.blue,
-                                size: 20,
-                              ),
-                              SizedBox(width: 8),
-                              Text('Share PDF'),
-                            ],
-                          ),
-                        ),
-                        PopupMenuItem(
-                          value: 'delete',
-                          child: Row(
-                            children: [
-                              Icon(Icons.delete, color: Colors.red, size: 20),
-                              SizedBox(width: 8),
-                              Text('Delete'),
-                            ],
-                          ),
-                        ),
-                      ],
-                  icon: const Icon(
-                    Icons.more_vert,
-                    color: Colors.white,
-                    size: 20,
-                  ),
-                ),
-              ],
+            Text(
+              '₹${balanceDue.toInt()} due',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color:
+                    balanceDue > 0
+                        ? const Color(0xFFF44336)
+                        : const Color(0xFF00C853),
+              ),
             ),
           ],
         ),
+        const SizedBox(height: 6),
 
-        const SizedBox(height: 8),
-
-        // Item Details
-        Text(
-          sale.itemName,
-          style: const TextStyle(
-            fontSize: 16,
-            color: Colors.white,
-            fontWeight: FontWeight.w600,
+        Container(
+          height: 8,
+          decoration: BoxDecoration(
+            color: Colors.grey.shade200,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return Container(
+                width: constraints.maxWidth * progress,
+                decoration: BoxDecoration(
+                  gradient: getProgressGradient(percentage),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              );
+            },
           ),
         ),
 
-        const SizedBox(height: 12),
-
-        // Pricing and Duration Row
-        Row(
-          children: [
-            _buildDetailChip(
-              icon: Icons.calendar_today,
-              value: '${sale.numberOfDays} days',
-            ),
-            const SizedBox(width: 8),
-            _buildDetailChip(
-              icon: Icons.attach_money,
-              value: '₹${sale.ratePerDay.toStringAsFixed(0)}/day',
-            ),
-          ],
-        ),
-
-        const SizedBox(height: 12),
-
-        // Amount Details
+        const SizedBox(height: 4),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildAmountRow(
-                  'Total',
-                  '₹${sale.totalCost.toStringAsFixed(0)}',
-                ),
-                const SizedBox(height: 4),
-                _buildAmountRow(
-                  'Paid',
-                  '₹${sale.amountPaid.toStringAsFixed(0)}',
-                  isPaid: true,
-                ),
-              ],
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color:
-                    balanceDue > 0
-                        ? Colors.red.shade400
-                        : Colors.green.shade400,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: (balanceDue > 0 ? Colors.red : Colors.green)
-                        .withOpacity(0.3),
-                    blurRadius: 6,
-                    offset: const Offset(0, 3),
-                  ),
-                ],
-              ),
-              child: Text(
-                '₹${balanceDue.toStringAsFixed(0)}',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
+            Text(
+              'Total: ₹${sale.totalCost.toInt()}',
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey.shade600,
+                fontWeight: FontWeight.w500,
               ),
             ),
-          ],
-        ),
-
-        const SizedBox(height: 12),
-
-        // Date Range
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            _buildDateInfo('From', _formatDateTime(sale.fromDateTime)),
-            _buildDateInfo('To', _formatDateTime(sale.toDateTime)),
+            Text(
+              '${(progress * 100).toInt()}%',
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey.shade600,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
           ],
         ),
       ],
@@ -557,24 +744,33 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
   }
 
   Widget _buildDetailChip({required IconData icon, required String value}) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallPhone = screenWidth < 360;
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: EdgeInsets.symmetric(
+        horizontal: isSmallPhone ? 8 : 10,
+        vertical: 6,
+      ),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.3)),
+        color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade200),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: Colors.white, size: 14),
-          const SizedBox(width: 4),
-          Text(
-            value,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
+          Icon(icon, color: Colors.grey.shade600, size: 14),
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text(
+              value,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: Colors.grey.shade700,
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
         ],
@@ -582,500 +778,339 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
     );
   }
 
-  Widget _buildAmountRow(String label, String value, {bool isPaid = false}) {
-    return Row(
-      children: [
-        Text(
-          '$label: ',
-          style: TextStyle(
-            color: Colors.white.withOpacity(0.8),
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        Text(
-          value,
-          style: TextStyle(
-            color: isPaid ? Colors.green.shade200 : Colors.white,
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ],
-    );
-  }
+  Widget _buildDateChip(String label, String value) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallPhone = screenWidth < 360;
 
-  Widget _buildDateInfo(String label, String value) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            color: Colors.white.withOpacity(0.7),
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: isSmallPhone ? 8 : 10,
+        vertical: 6,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            '$label: ',
+            style: TextStyle(
+              color: Colors.grey.shade600,
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
           ),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          value,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Future<void> _sharePdf(RentalSaleModel sale) async {
-    try {
-      final pdf = pw.Document();
-      final ttf = pw.Font.ttf(
-        await rootBundle.load('assets/fonts/Roboto-Regular.ttf'),
-      );
-
-      final userName =
-          widget.userName.isNotEmpty ? widget.userName : 'Unknown User';
-      final customerName =
-          (sale.customerName.isNotEmpty) ? sale.customerName : 'N/A';
-      final customerPhone =
-          (sale.customerPhone.isNotEmpty) ? sale.customerPhone : 'N/A';
-      final itemName = (sale.itemName.isNotEmpty) ? sale.itemName : 'N/A';
-      final ratePerDay = sale.ratePerDay.toStringAsFixed(2);
-      final numberOfDays = sale.numberOfDays.toString();
-      final totalCost = sale.totalCost.toStringAsFixed(2);
-      final invoiceDate = DateFormat('dd-MM-yyyy').format(DateTime.now());
-
-      // Load profile image for PDF
-      pw.Widget? profileImageWidget;
-      if (_profileImage != null) {
-        try {
-          final profileBytes = _profileImage!.readAsBytesSync();
-          if (profileBytes.isNotEmpty) {
-            profileImageWidget = pw.Container(
-              width: 60,
-              height: 60,
-              child: pw.ClipOval(
-                child: pw.Image(
-                  pw.MemoryImage(profileBytes),
-                  fit: pw.BoxFit.cover,
-                ),
+          Flexible(
+            child: Text(
+              value,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: Colors.grey.shade800,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
               ),
-            );
-          }
-        } catch (e) {
-          debugPrint('Error loading profile image for PDF: $e');
-        }
-      }
-
-      final qrData =
-          'upi://pay?pa=example@upi&pn=${Uri.encodeComponent(customerName)}&am=$totalCost&cu=INR';
-
-      pdf.addPage(
-        pw.Page(
-          build: (pw.Context context) {
-            return pw.Column(
-              crossAxisAlignment: pw.CrossAxisAlignment.start,
-              children: [
-                pw.Row(
-                  crossAxisAlignment: pw.CrossAxisAlignment.start,
-                  children: [
-                    // Profile Image
-                    if (profileImageWidget != null) profileImageWidget,
-                    if (profileImageWidget != null) pw.SizedBox(width: 16),
-                    pw.Expanded(
-                      child: pw.Column(
-                        crossAxisAlignment: pw.CrossAxisAlignment.start,
-                        children: [
-                          pw.Text(
-                            userName,
-                            style: pw.TextStyle(
-                              fontSize: 22,
-                              fontWeight: pw.FontWeight.bold,
-                            ),
-                          ),
-                          pw.Text(
-                            'Phone: +91 ${widget.userPhone.isNotEmpty ? widget.userPhone : "N/A"}',
-                          ),
-                          pw.Text(
-                            'Email: ${widget.userEmail.isNotEmpty ? widget.userEmail : "N/A"}',
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                pw.SizedBox(height: 12),
-                pw.Divider(),
-                pw.Center(
-                  child: pw.Text(
-                    'Rental Invoice',
-                    style: pw.TextStyle(
-                      fontSize: 18,
-                      fontWeight: pw.FontWeight.bold,
-                      color: PdfColors.indigo,
-                    ),
-                  ),
-                ),
-                pw.SizedBox(height: 12),
-                pw.Row(
-                  crossAxisAlignment: pw.CrossAxisAlignment.start,
-                  children: [
-                    pw.Expanded(
-                      flex: 2,
-                      child: pw.Column(
-                        crossAxisAlignment: pw.CrossAxisAlignment.start,
-                        children: [
-                          pw.Text(
-                            'Bill To',
-                            style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
-                          ),
-                          pw.Text(customerName),
-                          pw.Text('Phone: +91 $customerPhone'),
-                          pw.SizedBox(height: 12),
-                          pw.BarcodeWidget(
-                            data: qrData,
-                            barcode: pw.Barcode.qrCode(),
-                            width: 120,
-                            height: 120,
-                          ),
-                          pw.SizedBox(height: 6),
-                          pw.Text(
-                            'Scan to Pay UPI',
-                            style: pw.TextStyle(
-                              fontSize: 16,
-                              fontWeight: pw.FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    pw.SizedBox(width: 20),
-                    pw.Expanded(
-                      flex: 2,
-                      child: pw.Column(
-                        crossAxisAlignment: pw.CrossAxisAlignment.start,
-                        children: [
-                          pw.Text(
-                            'Invoice Details',
-                            style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
-                          ),
-                          pw.Text('Invoice No.: #001'),
-                          pw.Text('Date: $invoiceDate'),
-                          pw.SizedBox(height: 8),
-                          pw.Table(
-                            border: pw.TableBorder.all(
-                              color: PdfColors.grey300,
-                            ),
-                            columnWidths: {
-                              0: pw.FlexColumnWidth(3),
-                              1: pw.FlexColumnWidth(2),
-                            },
-                            children: [
-                              _buildTableRow('Item', itemName, ttf),
-                              _buildTableRow('Rate/Day', '₹ $ratePerDay', ttf),
-                              _buildTableRow('Days', numberOfDays, ttf),
-                              _buildTableRow('Total', '₹ $totalCost', ttf),
-                              _buildTableRow(
-                                'Paid',
-                                '₹ ${sale.amountPaid.toStringAsFixed(2)}',
-                                ttf,
-                              ),
-                              _buildTableRow(
-                                'Balance',
-                                '₹ ${(sale.totalCost - sale.amountPaid).toStringAsFixed(2)}',
-                                ttf,
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                pw.SizedBox(height: 16),
-                pw.Text(
-                  'Terms and Conditions:',
-                  style: pw.TextStyle(
-                    fontSize: 14,
-                    fontWeight: pw.FontWeight.bold,
-                  ),
-                ),
-                pw.SizedBox(height: 8),
-                pw.Text(
-                  '1. All rented items must be returned by the agreed date and time.\n'
-                  '2. The customer is responsible for any loss, theft, or damage to the rented items.\n'
-                  '3. Payment must be completed in full before item delivery.\n'
-                  '4. Late returns will incur additional charges as specified in the rental agreement.\n'
-                  '5. Items must be returned in the same condition as received, including all accessories and packaging.\n'
-                  '6. Any modification, tampering, or misuse of the rented items is strictly prohibited.\n'
-                  '7. Cancellation or rescheduling may be subject to a fee as per the rental policy.\n'
-                  '8. The rental provider reserves the right to refuse service for misuse or violation of terms.\n'
-                  '9. Insurance or damage protection fees, if applicable, must be paid upfront.\n'
-                  '10. By renting, the customer agrees to these terms and acknowledges responsibility for compliance.',
-                  style: pw.TextStyle(fontSize: 10),
-                ),
-                pw.SizedBox(height: 16),
-                pw.Align(
-                  alignment: pw.Alignment.centerRight,
-                  child: pw.Text(
-                    'For: $customerName',
-                    style: pw.TextStyle(
-                      fontWeight: pw.FontWeight.bold,
-                      fontSize: 14,
-                    ),
-                  ),
-                ),
-              ],
-            );
-          },
-        ),
-      );
-
-      final dir = await getTemporaryDirectory();
-      final file = File('${dir.path}/${customerName}_rental.pdf');
-      await file.writeAsBytes(await pdf.save());
-
-      // Persist pdfFilePath into the stored list inside userBox
-      try {
-        // update in-memory object
-        sale.pdfFilePath = file.path;
-
-        // Persist change: find in stored list and replace
-        final raw = userBox.get('rental_sales', defaultValue: []);
-        final List<RentalSaleModel> persisted =
-            (raw as List).map((e) => e as RentalSaleModel).toList();
-
-        final int idx = persisted.indexWhere((s) => _isSameSale(s, sale));
-        if (idx != -1) {
-          persisted[idx] = sale;
-        } else {
-          // best-effort: fallback replace by matching properties
-          final fallbackIdx = persisted.indexWhere(
-            (s) =>
-                s.customerName == sale.customerName &&
-                s.fromDateTime == sale.fromDateTime &&
-                s.toDateTime == sale.toDateTime &&
-                s.totalCost == sale.totalCost,
-          );
-          if (fallbackIdx != -1) persisted[fallbackIdx] = sale;
-        }
-
-        await userBox.put('rental_sales', persisted);
-      } catch (e) {
-        debugPrint('Failed to persist pdfFilePath to userBox: $e');
-      }
-
-      final result = await Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder:
-              (context) => RentalPdfPreviewScreen(
-                filePath: file.path,
-                sale: sale,
-                userName: widget.userName,
-                customerName: widget.userName,
-              ),
-        ),
-      );
-
-      if (result == true) _notifyDashboardUpdate();
-    } catch (e) {
-      debugPrint('PDF generation error: $e');
-      if (mounted) {
-        AppSnackBar.showError(
-          context,
-          message: 'Failed to generate PDF: $e',
-          duration: const Duration(seconds: 2),
-        );
-      }
-    }
-  }
-
-  pw.TableRow _buildTableRow(String title, String value, pw.Font font) {
-    return pw.TableRow(
-      children: [
-        pw.Padding(
-          padding: const pw.EdgeInsets.all(6),
-          child: pw.Text(
-            title,
-            style: pw.TextStyle(font: font, fontWeight: pw.FontWeight.bold),
+            ),
           ),
-        ),
-        pw.Padding(
-          padding: const pw.EdgeInsets.all(6),
-          child: pw.Text(value, style: pw.TextStyle(font: font)),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
-  void _notifyDashboardUpdate() {
-    if (Navigator.canPop(context)) {
-      Navigator.pop(context, totalSalesAmount);
-    }
+  Widget _buildEmptyState() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isTabletOrDesktop = screenWidth > 700;
+    final maxWidth = isTabletOrDesktop ? 400.0 : double.infinity;
+
+    return Center(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxWidth: maxWidth),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: isTabletOrDesktop ? 140 : 120,
+              height: isTabletOrDesktop ? 140 : 120,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.photo_camera_outlined,
+                size: isTabletOrDesktop ? 60 : 50,
+                color: Colors.grey.shade400,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              "No Rental Sales",
+              style: TextStyle(
+                fontSize: isTabletOrDesktop ? 22 : 20,
+                color: Colors.grey.shade600,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 40),
+              child: Text(
+                "Start by adding your first camera rental sale to get started",
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 14, color: Colors.grey.shade500),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNoResultsState() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isTabletOrDesktop = screenWidth > 700;
+    final maxWidth = isTabletOrDesktop ? 400.0 : double.infinity;
+
+    return Center(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxWidth: maxWidth),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.search_off_rounded,
+              size: isTabletOrDesktop ? 90 : 80,
+              color: Colors.grey.shade400,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              "No Results Found",
+              style: TextStyle(
+                fontSize: isTabletOrDesktop ? 20 : 18,
+                color: Colors.grey.shade600,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 40),
+              child: Text(
+                _searchQuery.isNotEmpty && _selectedRange != null
+                    ? "No results for '$_searchQuery' in selected date range"
+                    : _searchQuery.isNotEmpty
+                    ? "No results for '$_searchQuery'"
+                    : "No rentals found in selected date range",
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 14, color: Colors.grey.shade500),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final filteredRentalSales = _getFilteredRentalSales();
-
     return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: Column(
-        children: [
-          AdvancedSearchBar(
-            hintText: 'Search by customer, item, phone, amount...',
-            onSearchChanged: _handleSearchChanged,
-            onDateRangeChanged: _handleDateRangeChanged,
-            showDateFilter: true,
-          ),
-          const SizedBox(height: 16),
-          Expanded(
-            child:
-                _isLoading
-                    ? const Center(child: CircularProgressIndicator())
-                    : rentalSales.isEmpty
-                    ? const Center(
-                      child: Text(
-                        "No Rental Sales Found",
-                        style: TextStyle(fontSize: 16, color: Colors.grey),
-                      ),
-                    )
-                    : filteredRentalSales.isEmpty
-                    ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.search_off,
-                            size: 64,
-                            color: Colors.grey[400],
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            _searchQuery.isNotEmpty && _selectedRange != null
-                                ? "No results found for '$_searchQuery' in selected date range"
-                                : _searchQuery.isNotEmpty
-                                ? "No results found for '$_searchQuery'"
-                                : "No rentals found in selected date range",
-                            style: const TextStyle(
-                              fontSize: 16,
-                              color: Colors.grey,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
-                      ),
-                    )
-                    : ListView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      itemCount: filteredRentalSales.length,
-                      itemBuilder: (context, index) {
-                        final sale = filteredRentalSales[index];
-                        final originalIndex = rentalSales.indexOf(sale);
+      backgroundColor: const Color(0xFFf8f9fa),
+      body: NestedScrollView(
+        headerSliverBuilder: (context, innerBoxIsScrolled) {
+          return [
+            SliverToBoxAdapter(
+              child: AdvancedSearchBar(
+                hintText: 'Search customers, items, phone...',
+                onSearchChanged: _handleSearchChanged,
+                onDateRangeChanged: _handleDateRangeChanged,
+                showDateFilter: true,
+              ),
+            ),
+            SliverToBoxAdapter(child: _buildStatsCard()),
+          ];
+        },
+        body:
+            _isLoading
+                ? _buildLoadingState()
+                : ValueListenableBuilder(
+                  valueListenable: userBox.listenable(),
+                  builder: (context, Box box, _) {
+                    List<RentalSaleModel> allSales = [];
+                    try {
+                      allSales = List<RentalSaleModel>.from(
+                        box.get("rental_sales", defaultValue: []),
+                      );
+                    } catch (_) {
+                      allSales = [];
+                    }
 
-                        return LayoutBuilder(
-                          builder: (context, constraints) {
-                            bool isWide = constraints.maxWidth > 600;
-                            double imageSize = isWide ? 140 : 120;
+                    allSales.sort(
+                      (a, b) => b.rentalDateTime.compareTo(a.rentalDateTime),
+                    );
 
-                            return Container(
-                              margin: const EdgeInsets.only(bottom: 16),
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [
-                                    Colors.blue.shade600,
-                                    Colors.blue.shade800,
-                                  ],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                ),
-                                borderRadius: BorderRadius.circular(20),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.blue.shade800.withOpacity(
-                                      0.3,
+                    List<RentalSaleModel> filteredSales =
+                        List<RentalSaleModel>.from(allSales);
+
+                    if (_searchQuery.isNotEmpty) {
+                      final query = _searchQuery.toLowerCase();
+                      filteredSales =
+                          filteredSales.where((sale) {
+                            final customerName =
+                                sale.customerName.toLowerCase();
+                            final itemName = sale.itemName.toLowerCase();
+                            final customerPhone =
+                                sale.customerPhone.toLowerCase();
+                            final totalCost = sale.totalCost.toString();
+                            final amountPaid = sale.amountPaid.toString();
+                            final fromDate =
+                                _formatDateTime(
+                                  sale.fromDateTime,
+                                ).toLowerCase();
+                            final toDate =
+                                _formatDateTime(sale.toDateTime).toLowerCase();
+
+                            return customerName.contains(query) ||
+                                itemName.contains(query) ||
+                                customerPhone.contains(query) ||
+                                totalCost.contains(query) ||
+                                amountPaid.contains(query) ||
+                                fromDate.contains(query) ||
+                                toDate.contains(query);
+                          }).toList();
+                    }
+
+                    if (_selectedRange != null) {
+                      filteredSales =
+                          filteredSales.where((sale) {
+                            return sale.fromDateTime.isAfter(
+                                  _selectedRange!.start.subtract(
+                                    const Duration(days: 1),
+                                  ),
+                                ) &&
+                                sale.toDateTime.isBefore(
+                                  _selectedRange!.end.add(
+                                    const Duration(days: 1),
+                                  ),
+                                );
+                          }).toList();
+                    }
+
+                    if (allSales.isEmpty) {
+                      return _buildEmptyState();
+                    }
+
+                    if (filteredSales.isEmpty) {
+                      return _buildNoResultsState();
+                    }
+
+                    return LayoutBuilder(
+                      builder: (context, constraints) {
+                        final isVeryWide = constraints.maxWidth > 1000;
+                        final maxWidth =
+                            isVeryWide ? 900.0 : constraints.maxWidth;
+
+                        return Column(
+                          children: [
+                            Padding(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: isVeryWide ? 32 : 24,
+                                vertical: 16,
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.list_alt_rounded,
+                                    color: Colors.grey.shade600,
+                                    size: 18,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    '${filteredSales.length} ${filteredSales.length == 1 ? 'rental' : 'rentals'}',
+                                    style: TextStyle(
+                                      color: Colors.grey.shade600,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
                                     ),
-                                    blurRadius: 15,
-                                    offset: const Offset(0, 8),
+                                  ),
+                                  const Spacer(),
+                                  Text(
+                                    'Latest first',
+                                    style: TextStyle(
+                                      color: Colors.grey.shade500,
+                                      fontSize: 12,
+                                    ),
                                   ),
                                 ],
                               ),
-                              child: Material(
-                                color: Colors.transparent,
-                                child: InkWell(
-                                  borderRadius: BorderRadius.circular(20),
-                                  onTap: () async {
-                                    await Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder:
-                                            (_) => RentalSaleDetailScreen(
-                                              sale:
-                                                  rentalSales[originalIndex], // ✅ REAL OBJECT
-                                              index: originalIndex,
-                                              userEmail: widget.userEmail,
-                                            ),
-                                      ),
-                                    );
+                            ),
+                            Expanded(
+                              child: Align(
+                                alignment: Alignment.topCenter,
+                                child: ConstrainedBox(
+                                  constraints: BoxConstraints(
+                                    maxWidth: maxWidth,
+                                  ),
+                                  child: ListView.builder(
+                                    padding: const EdgeInsets.only(bottom: 20),
+                                    itemCount: filteredSales.length,
+                                    itemBuilder: (context, index) {
+                                      final sale = filteredSales[index];
+                                      final originalIndex = allSales.indexOf(
+                                        sale,
+                                      );
 
-                                    // not even required as listener refreshes automatically
-                                  },
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(20),
-                                    child:
-                                        isWide
-                                            ? Row(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                _buildImage(sale, imageSize),
-                                                const SizedBox(width: 20),
-                                                Expanded(
-                                                  child: _buildTextDetails(
-                                                    sale,
-                                                    isWide,
-                                                    originalIndex,
-                                                  ),
-                                                ),
-                                              ],
-                                            )
-                                            : Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                Row(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
-                                                  children: [
-                                                    _buildImage(
-                                                      sale,
-                                                      imageSize,
-                                                    ),
-                                                    const SizedBox(width: 16),
-                                                    Expanded(
-                                                      child: _buildTextDetails(
-                                                        sale,
-                                                        isWide,
-                                                        originalIndex,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ],
-                                            ),
+                                      return LayoutBuilder(
+                                        builder: (context, cardConstraints) {
+                                          final isWideCard =
+                                              cardConstraints.maxWidth > 600;
+                                          return _buildSaleCard(
+                                            sale,
+                                            originalIndex,
+                                            isWideCard,
+                                          );
+                                        },
+                                      );
+                                    },
                                   ),
                                 ),
                               ),
-                            );
-                          },
+                            ),
+                          ],
                         );
                       },
-                    ),
+                    );
+                  },
+                ),
+      ),
+    );
+  }
+
+  Widget _buildLoadingState() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isTabletOrDesktop = screenWidth > 700;
+
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          SizedBox(
+            width: isTabletOrDesktop ? 90 : 80,
+            height: isTabletOrDesktop ? 90 : 80,
+            child: CircularProgressIndicator(
+              strokeWidth: 3,
+              valueColor: const AlwaysStoppedAnimation<Color>(
+                Color(0xFF667eea),
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+          Text(
+            "Loading Rentals...",
+            style: TextStyle(
+              color: Colors.grey.shade600,
+              fontSize: isTabletOrDesktop ? 18 : 16,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ],
       ),

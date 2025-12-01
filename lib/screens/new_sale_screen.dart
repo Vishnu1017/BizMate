@@ -133,6 +133,19 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
     });
   }
 
+  void removeItem(int index) {
+    setState(() {
+      selectedItems.removeAt(index);
+
+      // update product controller and totals
+      productController.text = selectedItems
+          .map((e) => e['itemName'])
+          .join(', ');
+
+      totalAmountController.text = subtotal.toStringAsFixed(2);
+    });
+  }
+
   Future<bool> isPhoneNumberDuplicate() async {
     if (isCustomerSelectedFromList) return false;
 
@@ -246,8 +259,6 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
     final discountAmount =
         double.tryParse(item['discountAmount']?.toString() ?? '0') ?? 0.0;
     final taxPercent = double.tryParse(item['tax']?.toString() ?? '0') ?? 0.0;
-    // ignore: unused_local_variable
-    final taxType = item['taxType']?.toString() ?? 'Without Tax';
     final subtotal =
         double.tryParse(item['subtotal']?.toString() ?? '0') ?? 0.0;
     final totalAmount =
@@ -275,9 +286,22 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                     style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
                   ),
                 ),
+
                 Text(
                   "₹ ${totalAmount.toStringAsFixed(2)}",
                   style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                SizedBox(width: 10),
+                InkWell(
+                  onTap: () => removeItem(index),
+                  child: Container(
+                    padding: EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: Colors.red.shade50,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(Icons.delete, color: Colors.red, size: 20),
+                  ),
                 ),
               ],
             ),
@@ -519,7 +543,11 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
 
     setState(() => isLoading = false);
 
-    AppSnackBar.showSuccess(context, message: "Sale saved successfully!");
+    AppSnackBar.showSuccess(
+      context,
+      message: "Sale saved successfully!",
+      duration: Duration(seconds: 2),
+    );
 
     await Future.delayed(Duration(milliseconds: 800));
     Navigator.pop(context);

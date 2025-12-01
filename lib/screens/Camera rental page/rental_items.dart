@@ -17,7 +17,7 @@ class RentalItems extends StatefulWidget {
 }
 
 class _RentalItemsState extends State<RentalItems> {
-  late Box userBox; // USER-SPECIFIC BOX (userdata_<safeEmail>)
+  late Box userBox;
 
   List<RentalItem> rentalItems = [];
   List<RentalItem> filteredItems = [];
@@ -50,7 +50,6 @@ class _RentalItemsState extends State<RentalItems> {
         .toString()
         .replaceAll('.', '_')
         .replaceAll('@', '_');
-
     final boxName = "userdata_$safeEmail";
 
     if (!Hive.isBoxOpen(boxName)) {
@@ -59,10 +58,7 @@ class _RentalItemsState extends State<RentalItems> {
 
     userBox = Hive.box(boxName);
 
-    // Load rental_items list
     _loadItems();
-
-    // Listen for changes
     userBox.listenable(keys: ['rental_items']).addListener(() => _loadItems());
   }
 
@@ -75,7 +71,6 @@ class _RentalItemsState extends State<RentalItems> {
       _filterItems();
       setState(() {});
     } catch (e) {
-      print("Error loading rental_items: $e");
       rentalItems = [];
       filteredItems = [];
       setState(() {});
@@ -136,6 +131,8 @@ class _RentalItemsState extends State<RentalItems> {
 
   @override
   Widget build(BuildContext context) {
+    double responsivePadding = MediaQuery.of(context).size.width * 0.025;
+
     return Scaffold(
       backgroundColor: Colors.transparent,
       extendBodyBehindAppBar: true,
@@ -148,9 +145,9 @@ class _RentalItemsState extends State<RentalItems> {
             showDateFilter: false,
           ),
 
-          // CATEGORY CHIPS
+          // CATEGORY CHIPS — RESPONSIVE
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
+            padding: EdgeInsets.symmetric(horizontal: responsivePadding),
             child: SizedBox(
               height: 40,
               child: ListView.separated(
@@ -168,8 +165,8 @@ class _RentalItemsState extends State<RentalItems> {
                     },
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 250),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
+                      padding: EdgeInsets.symmetric(
+                        horizontal: MediaQuery.of(context).size.width * 0.03,
                         vertical: 10,
                       ),
                       decoration: BoxDecoration(
@@ -232,14 +229,14 @@ class _RentalItemsState extends State<RentalItems> {
                     ? const Center(
                       child: Text(
                         'No items added yet!',
-                        style: TextStyle(color: Colors.white70, fontSize: 18),
+                        style: TextStyle(color: Colors.grey, fontSize: 18),
                       ),
                     )
                     : filteredItems.isEmpty
                     ? const Center(
                       child: Text(
                         "No items match your filters",
-                        style: TextStyle(color: Colors.white70, fontSize: 18),
+                        style: TextStyle(color: Colors.grey, fontSize: 18),
                       ),
                     )
                     : _buildGrid(),
@@ -249,33 +246,37 @@ class _RentalItemsState extends State<RentalItems> {
     );
   }
 
+  // ⭐⭐⭐ RESPONSIVE GRID VIEW ⭐⭐⭐
   Widget _buildGrid() {
     return LayoutBuilder(
       builder: (context, constraints) {
         double width = constraints.maxWidth;
 
-        int count =
-            width < 360
-                ? 1
-                : width < 600
-                ? 2
-                : width < 900
-                ? 3
-                : width < 1200
-                ? 4
-                : 5;
+        int columns;
+        double ratio;
 
-        double ratio =
-            width < 360
-                ? 0.85
-                : width < 600
-                ? 0.70
-                : 0.65;
+        // PRODUCTION-LEVEL RESPONSIVE BREAKPOINTS
+        if (width <= 380) {
+          columns = 1;
+          ratio = 0.85;
+        } else if (width <= 600) {
+          columns = 2;
+          ratio = 0.75;
+        } else if (width <= 900) {
+          columns = 3;
+          ratio = 0.70;
+        } else if (width <= 1200) {
+          columns = 4;
+          ratio = 0.68;
+        } else {
+          columns = 5;
+          ratio = 0.65;
+        }
 
         return GridView.builder(
           padding: const EdgeInsets.all(14),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: count,
+            crossAxisCount: columns,
             crossAxisSpacing: 12,
             mainAxisSpacing: 12,
             childAspectRatio: ratio,
@@ -308,10 +309,12 @@ class _RentalItemsState extends State<RentalItems> {
     );
   }
 
-  // ⭐⭐⭐ ORIGINAL CARD UI (NO CHANGES)
+  // ORIGINAL CARD UI — RESPONSIVE ONLY WHERE NEEDED
   Widget _buildCard(RentalItem item, int index) {
     return LayoutBuilder(
       builder: (context, c) {
+        double imageHeight = c.maxHeight * 0.42;
+
         return Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(22),
@@ -336,7 +339,7 @@ class _RentalItemsState extends State<RentalItems> {
                     ),
                     child: Image.file(
                       File(item.imagePath),
-                      height: c.maxHeight * 0.42,
+                      height: imageHeight,
                       width: double.infinity,
                       fit: BoxFit.cover,
                     ),
@@ -346,7 +349,7 @@ class _RentalItemsState extends State<RentalItems> {
                     child: Padding(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 10,
-                        vertical: 8,
+                        vertical: 5,
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -440,7 +443,7 @@ class _RentalItemsState extends State<RentalItems> {
                                 );
                               },
                               child: const Text(
-                                'View Details',
+                                'Place Order',
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,
@@ -448,6 +451,7 @@ class _RentalItemsState extends State<RentalItems> {
                               ),
                             ),
                           ),
+
                           const SizedBox(height: 8),
                         ],
                       ),
@@ -456,7 +460,7 @@ class _RentalItemsState extends State<RentalItems> {
                 ],
               ),
 
-              // ⭐⭐⭐ Positioned badge + delete (RESTORED)
+              // Positioned Badge + Delete Icon
               Positioned(
                 top: 8,
                 right: 8,

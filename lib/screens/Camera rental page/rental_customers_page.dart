@@ -1,4 +1,7 @@
 import 'dart:ui';
+import 'package:bizmate/models/rental_sale_model.dart' show RentalSaleModel;
+import 'package:bizmate/widgets/advanced_search_bar.dart'
+    show AdvancedSearchBar;
 import 'package:bizmate/widgets/app_snackbar.dart' show AppSnackBar;
 import 'package:bizmate/widgets/confirm_delete_dialog.dart'
     show showConfirmDialog;
@@ -8,8 +11,12 @@ import 'package:intl/intl.dart';
 import '../../../models/customer_model.dart';
 
 class RentalCustomersPage extends StatefulWidget {
-  const RentalCustomersPage({Key? key, required String userEmail})
-    : super(key: key);
+  final String userEmail; // ✅ FIXED
+
+  const RentalCustomersPage({
+    Key? key,
+    required this.userEmail, // <-- REQUIRED and stored
+  }) : super(key: key);
 
   @override
   State<RentalCustomersPage> createState() => _RentalCustomersPageState();
@@ -27,46 +34,50 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
     _loadCustomers();
   }
 
+  // ---------------------------------------------------------------------------
+  // ⭐ LOAD CUSTOMERS (USER-SPECIFIC FIRST)
+  // ---------------------------------------------------------------------------
   Future<void> _loadCustomers() async {
     try {
-      if (!Hive.isBoxOpen('session')) {
-        await Hive.openBox('session');
-      }
-
-      final sessionBox = Hive.box('session');
-      final email = sessionBox.get("currentUserEmail");
-
-      if (email != null) {
-        final safeEmail = email
-            .toString()
-            .replaceAll('.', '_')
-            .replaceAll('@', '_');
-        userBox = await Hive.openBox("userdata_$safeEmail");
-      }
-
+      // Open main box
       if (!Hive.isBoxOpen('customers')) {
         await Hive.openBox<CustomerModel>('customers');
       }
       customerBox = Hive.box<CustomerModel>('customers');
 
-      List<CustomerModel> loadedCustomers = [];
+      // Build user-specific box
+      final safeEmail = widget.userEmail
+          .replaceAll('.', '_')
+          .replaceAll('@', '_');
 
-      if (userBox != null) {
+      final boxName = "userdata_$safeEmail";
+
+      if (!Hive.isBoxOpen(boxName)) {
+        userBox = await Hive.openBox(boxName);
+      } else {
+        userBox = Hive.box(boxName);
+      }
+
+      List<CustomerModel> loaded = [];
+
+      // Load USER-SPECIFIC customers first
+      if (userBox != null && userBox!.containsKey("customers")) {
         try {
-          loadedCustomers = List<CustomerModel>.from(
+          loaded = List<CustomerModel>.from(
             userBox!.get("customers", defaultValue: []),
           );
         } catch (_) {
-          loadedCustomers = [];
+          loaded = [];
         }
       }
 
-      if (loadedCustomers.isEmpty) {
-        loadedCustomers = customerBox.values.toList();
+      // If none found, fallback to global main box
+      if (loaded.isEmpty) {
+        loaded = customerBox.values.toList();
       }
 
       setState(() {
-        customers = loadedCustomers.reversed.toList();
+        customers = loaded.reversed.toList();
         _isLoading = false;
       });
     } catch (e) {
@@ -80,12 +91,19 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
     }
   }
 
+  // ---------------------------------------------------------------------------
+  // ⭐ DELETE CUSTOMER (USER-SPECIFIC + MAIN BOX)
+  // ---------------------------------------------------------------------------
   Future<void> _deleteCustomer(int index) async {
     final customer = customers[index];
 
     try {
+      // ---------------------
+      // DELETE FROM USER BOX
+      // ---------------------
       if (userBox != null) {
         List<CustomerModel> userCustomers = [];
+
         try {
           userCustomers = List<CustomerModel>.from(
             userBox!.get("customers", defaultValue: []),
@@ -94,6 +112,7 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
           userCustomers = [];
         }
 
+        // Remove matching
         userCustomers.removeWhere(
           (c) =>
               c.name == customer.name &&
@@ -104,8 +123,11 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
         await userBox!.put("customers", userCustomers);
       }
 
-      final mainBoxCustomers = customerBox.values.toList();
-      final mainIndex = mainBoxCustomers.indexWhere(
+      // ---------------------
+      // DELETE FROM MAIN customers BOX
+      // ---------------------
+      final allMainCustomers = customerBox.values.toList();
+      final mainIndex = allMainCustomers.indexWhere(
         (c) =>
             c.name == customer.name &&
             c.phone == customer.phone &&
@@ -116,24 +138,85 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
         await customerBox.deleteAt(mainIndex);
       }
 
+      // Remove customer from UI list
       setState(() {
         customers.removeAt(index);
       });
 
+      // ALSO delete rental sales of this customer
+      await _deleteCustomerRentalSales(customer.name, customer.phone);
+
       AppSnackBar.showSuccess(
         context,
         message: '${customer.name} deleted successfully',
+        duration: Duration(seconds: 2),
       );
     } catch (e) {
       debugPrint('Error deleting customer: $e');
       AppSnackBar.showError(
         context,
         message: 'Failed to delete customer: $e',
-        duration: Duration(seconds: 2),
+        duration: const Duration(seconds: 2),
       );
     }
   }
 
+  Future<void> _deleteCustomerRentalSales(
+    String customerName,
+    String customerPhone,
+  ) async {
+    try {
+      if (userBox == null) return;
+
+      // Load existing rental sales
+      final raw = userBox!.get('rental_sales', defaultValue: []);
+      List<RentalSaleModel> rentalSales =
+          (raw as List).map((e) => e as RentalSaleModel).toList();
+
+      // Remove sales belonging to this customer
+      rentalSales.removeWhere(
+        (sale) =>
+            sale.customerName == customerName &&
+            sale.customerPhone == customerPhone,
+      );
+
+      await userBox!.put('rental_sales', rentalSales);
+
+      debugPrint("✓ Rental sales deleted for $customerName");
+    } catch (e) {
+      debugPrint("Error deleting rental sales of customer: $e");
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // SEARCH HANDLER
+  // ---------------------------------------------------------------------------
+  void _handleSearchChanged(String query) {
+    setState(() {
+      if (query.isEmpty) {
+        // Reload original list
+        _loadCustomers();
+        return;
+      }
+
+      customers =
+          customers.where((c) {
+            return c.name.toLowerCase().contains(query.toLowerCase()) ||
+                c.phone.toLowerCase().contains(query.toLowerCase());
+          }).toList();
+    });
+  }
+
+  // ---------------------------------------------------------------------------
+  // DATE RANGE HANDLER (NOT USED HERE BUT REQUIRED BY WIDGET)
+  // ---------------------------------------------------------------------------
+  void _handleDateRangeChanged(DateTimeRange? range) {
+    // NO DATE FILTER FOR CUSTOMERS — but function must exist
+  }
+
+  // ---------------------------------------------------------------------------
+  // ⭐ SWEET CONFIRMATION POPUP
+  // ---------------------------------------------------------------------------
   Future<bool> _confirmDelete(CustomerModel customer) async {
     bool confirmed = false;
 
@@ -151,21 +234,25 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
     return confirmed;
   }
 
+  // ---------------------------------------------------------------------------
+  // ⭐ CUSTOMER CARD WIDGET
+  // ---------------------------------------------------------------------------
   Widget _buildCustomerCard(CustomerModel customer, int index) {
-    // 💙 Blue Color Shades (Rotating)
     final blueShades = [
-      [Color(0xFF3B82F6), Color(0xFF2563EB)], // Deep Blue
-      [Color(0xFF60A5FA), Color(0xFF3B82F6)], // Sky → Blue
-      [Color(0xFF1E40AF), Color(0xFF1E3A8A)], // Navy Blue
-      [Color(0xFF38BDF8), Color(0xFF0EA5E9)], // Light Bluish Aqua
-      [Color(0xFF0EA5E9), Color(0xFF0284C7)], // Cyan Blue
-      [Color(0xFF1E3A8A), Color(0xFF3730A3)], // Indigo Blue
+      [Color(0xFF3B82F6), Color(0xFF2563EB)],
+      [Color(0xFF60A5FA), Color(0xFF3B82F6)],
+      [Color(0xFF1E40AF), Color(0xFF1E3A8A)],
+      [Color(0xFF38BDF8), Color(0xFF0EA5E9)],
+      [Color(0xFF0EA5E9), Color(0xFF0284C7)],
+      [Color(0xFF1E3A8A), Color(0xFF3730A3)],
     ];
 
     final colorPair = blueShades[index % blueShades.length];
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+
+      // DELETE SWIPE
       child: Dismissible(
         key: Key(
           '${customer.name}_${customer.phone}_${customer.createdAt.millisecondsSinceEpoch}',
@@ -174,7 +261,6 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
         confirmDismiss: (_) async => await _confirmDelete(customer),
         onDismissed: (_) => _deleteCustomer(index),
 
-        // 💙 BLUE DELETE SWIPE
         background: Container(
           margin: const EdgeInsets.symmetric(vertical: 8),
           alignment: Alignment.centerRight,
@@ -182,17 +268,8 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [Colors.red.shade500, Colors.red.shade700],
-              begin: Alignment.centerLeft,
-              end: Alignment.centerRight,
             ),
             borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.red.shade300.withOpacity(0.4),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
           ),
           child: const Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -214,7 +291,7 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
         child: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: colorPair, // 💙 FULL BLUE CARD
+              colors: colorPair,
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -224,11 +301,6 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
                 color: colorPair[0].withOpacity(0.4),
                 blurRadius: 15,
                 offset: const Offset(0, 8),
-              ),
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 5,
-                offset: const Offset(0, 2),
               ),
             ],
           ),
@@ -247,11 +319,12 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
                 ),
               ),
 
+              // CONTENT
               Padding(
                 padding: const EdgeInsets.all(20),
                 child: Row(
                   children: [
-                    // 💙 BLUE AVATAR CIRCLE
+                    // Avatar
                     Container(
                       width: 70,
                       height: 70,
@@ -265,9 +338,7 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
                       ),
                       child: Center(
                         child: Text(
-                          customer.name.isNotEmpty
-                              ? customer.name[0].toUpperCase()
-                              : '?',
+                          customer.name[0].toUpperCase(),
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 26,
@@ -290,49 +361,41 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
                               fontWeight: FontWeight.w900,
                               color: Colors.white,
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
                           ),
-
                           const SizedBox(height: 8),
-
                           Row(
                             children: [
-                              Icon(
-                                Icons.phone_rounded,
+                              const Icon(
+                                Icons.phone,
                                 color: Colors.white70,
                                 size: 16,
                               ),
-                              const SizedBox(width: 6),
+                              SizedBox(width: 6),
                               Text(
                                 customer.phone,
                                 style: const TextStyle(
-                                  fontSize: 15,
                                   color: Colors.white,
-                                  fontWeight: FontWeight.w600,
+                                  fontSize: 15,
                                 ),
                               ),
                             ],
                           ),
-
                           const SizedBox(height: 6),
-
                           Row(
                             children: [
-                              Icon(
-                                Icons.calendar_month_rounded,
+                              const Icon(
+                                Icons.calendar_month,
                                 color: Colors.white70,
                                 size: 14,
                               ),
-                              const SizedBox(width: 6),
+                              SizedBox(width: 6),
                               Text(
                                 DateFormat(
                                   'MMM dd, yyyy',
                                 ).format(customer.createdAt),
                                 style: const TextStyle(
-                                  fontSize: 13,
                                   color: Colors.white70,
-                                  fontWeight: FontWeight.w500,
+                                  fontSize: 13,
                                 ),
                               ),
                             ],
@@ -341,7 +404,7 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
                       ),
                     ),
 
-                    // Blue more menu
+                    // Menu Icon
                     Container(
                       width: 40,
                       height: 40,
@@ -349,11 +412,7 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
                         shape: BoxShape.circle,
                         color: Colors.white.withOpacity(0.25),
                       ),
-                      child: Icon(
-                        Icons.more_vert_rounded,
-                        color: Colors.white.withOpacity(0.9),
-                        size: 22,
-                      ),
+                      child: Icon(Icons.more_vert, color: Colors.white),
                     ),
                   ],
                 ),
@@ -365,105 +424,28 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
     );
   }
 
+  // ---------------------------------------------------------------------------
+  // UI - EMPTY
+  // ---------------------------------------------------------------------------
   Widget _buildEmptyState() {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 150,
-            height: 150,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: LinearGradient(
-                colors: [
-                  Color(0xFF667eea).withOpacity(0.1),
-                  Color(0xFF764ba2).withOpacity(0.1),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              border: Border.all(color: Colors.grey.withOpacity(0.3), width: 2),
-            ),
-            child: Icon(
-              Icons.people_alt_rounded,
-              color: Colors.grey.withOpacity(0.5),
-              size: 60,
-            ),
-          ),
-          const SizedBox(height: 30),
-          Text(
-            "No Customers Yet",
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w800,
-              color: Colors.grey.shade600,
-              letterSpacing: 0.5,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            "Your customer list is empty\nAdd customers to see them here",
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey.shade500,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
+      child: Text(
+        "No Customers Yet",
+        style: TextStyle(fontSize: 22, color: Colors.grey),
       ),
     );
   }
 
+  // ---------------------------------------------------------------------------
+  // UI - LOADING
+  // ---------------------------------------------------------------------------
   Widget _buildLoadingState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: LinearGradient(
-                colors: [Color(0xFF667eea), Color(0xFF764ba2)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Color(0xFF667eea).withOpacity(0.4),
-                  blurRadius: 15,
-                  offset: const Offset(0, 8),
-                ),
-              ],
-            ),
-            child: const Center(
-              child: SizedBox(
-                width: 30,
-                height: 30,
-                child: CircularProgressIndicator(
-                  strokeWidth: 3,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 20),
-          Text(
-            "Loading Customers",
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              color: Colors.grey.shade700,
-            ),
-          ),
-        ],
-      ),
-    );
+    return const Center(child: CircularProgressIndicator());
   }
 
+  // ---------------------------------------------------------------------------
+  // ⭐ BUILD
+  // ---------------------------------------------------------------------------
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -475,6 +457,13 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
               ? _buildEmptyState()
               : Column(
                 children: [
+                  AdvancedSearchBar(
+                    hintText: 'Search customers...',
+                    onSearchChanged: _handleSearchChanged,
+                    onDateRangeChanged: _handleDateRangeChanged,
+                    showDateFilter:
+                        false, // No date filter needed for customers page
+                  ),
                   Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 24,
@@ -490,26 +479,19 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(12),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.05),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
                           ),
                           child: Text(
-                            '${customers.length} ${customers.length == 1 ? 'Customer' : 'Customers'}',
+                            '${customers.length} Customers',
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w700,
-                              color: Colors.grey.shade700,
                             ),
                           ),
                         ),
                       ],
                     ),
                   ),
+
                   Expanded(
                     child: ListView.builder(
                       padding: const EdgeInsets.only(bottom: 20),

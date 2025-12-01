@@ -158,9 +158,10 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
 
   Future<void> _initBoxes() async {
     try {
-      // Initialize user-specific box
+      // Initialize session box
       if (!Hive.isBoxOpen('session')) {
         await Hive.openBox('session');
+        if (!mounted) return;
       }
 
       final sessionBox = Hive.box('session');
@@ -171,28 +172,46 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
             .toString()
             .replaceAll('.', '_')
             .replaceAll('@', '_');
-        userBox = await Hive.openBox("userdata_$safeEmail");
+
+        if (!Hive.isBoxOpen("userdata_$safeEmail")) {
+          await Hive.openBox("userdata_$safeEmail");
+          if (!mounted) return;
+        }
+
+        userBox = Hive.box("userdata_$safeEmail");
       }
 
-      // Initialize other boxes
+      // Customers box
       if (!Hive.isBoxOpen('customers')) {
         await Hive.openBox<CustomerModel>('customers');
-      }
-      if (!Hive.isBoxOpen('rental_sales')) {
-        await Hive.openBox<RentalSaleModel>('rental_sales');
+        if (!mounted) return;
       }
 
       customerBox = Hive.box<CustomerModel>('customers');
+
+      // Rental sales box
+      if (!Hive.isBoxOpen('rental_sales')) {
+        await Hive.openBox<RentalSaleModel>('rental_sales');
+        if (!mounted) return;
+      }
+
       salesBox = Hive.box<RentalSaleModel>('rental_sales');
     } catch (e) {
       debugPrint('Error initializing Hive boxes: $e');
-      AppSnackBar.showError(
-        context,
-        message: 'Error initializing database: $e',
-        duration: Duration(seconds: 2),
-      );
+
+      if (mounted) {
+        AppSnackBar.showError(
+          context,
+          message: 'Error initializing database: $e',
+          duration: Duration(seconds: 2),
+        );
+      }
     } finally {
-      if (mounted) setState(() => _isLoading = false);
+      if (!mounted) return;
+
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
@@ -263,6 +282,7 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
       AppSnackBar.showWarning(
         context,
         message: 'Please select both From & To dates',
+        duration: Duration(seconds: 2),
       );
       return;
     }
@@ -331,6 +351,7 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
       AppSnackBar.showSuccess(
         context,
         message: 'Sale and customer saved successfully!',
+        duration: Duration(seconds: 2),
       );
 
       Navigator.pop(context, true);
@@ -407,7 +428,18 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
           ),
         ),
         validator: validator,
-        onChanged: (value) => setState(() {}),
+        onChanged: (value) {
+          if (label == "Customer Name" && value.isNotEmpty) {
+            final formatted = value[0].toUpperCase() + value.substring(1);
+            if (formatted != value) {
+              controller.value = controller.value.copyWith(
+                text: formatted,
+                selection: TextSelection.collapsed(offset: formatted.length),
+              );
+            }
+          }
+          setState(() {});
+        },
       ),
     );
   }
@@ -420,7 +452,8 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
     bool enabled = true,
   }) {
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8),
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      padding: EdgeInsets.symmetric(vertical: 5),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
         gradient: LinearGradient(
@@ -1090,6 +1123,9 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
                                       value == null || value.trim().isEmpty
                                           ? "Please enter customer name"
                                           : null,
+                              // ⭐ NEW: Auto-capitalize first letter
+                              keyboardType: TextInputType.name,
+                              onTap: () {}, // keep existing
                             ),
                             _buildGlassTextField(
                               label: "Phone Number",

@@ -102,7 +102,7 @@ class _NavBarPageState extends State<NavBarPage> {
     return Align(
       alignment: Alignment.bottomCenter,
       child: Padding(
-        padding: const EdgeInsets.only(bottom: 16.0, left: 16.0, right: 16.0),
+        padding: const EdgeInsets.only(bottom: 5.0, left: 16.0, right: 16.0),
         child: SizedBox(
           width: double.infinity,
           child: Container(
@@ -178,7 +178,7 @@ class _NavBarPageState extends State<NavBarPage> {
     return Align(
       alignment: Alignment.bottomCenter,
       child: Padding(
-        padding: const EdgeInsets.only(bottom: 16.0, left: 16.0, right: 16.0),
+        padding: const EdgeInsets.only(bottom: 5.0, left: 16.0, right: 16.0),
         child: SizedBox(
           width: double.infinity,
           child: Container(

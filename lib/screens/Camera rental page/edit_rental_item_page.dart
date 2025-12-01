@@ -7,8 +7,6 @@ import '../../models/rental_item.dart';
 class EditRentalItemPage extends StatefulWidget {
   final RentalItem item;
   final int index;
-
-  /// ✅ USER-SPECIFIC SUPPORT
   final String userEmail;
 
   const EditRentalItemPage({
@@ -30,8 +28,6 @@ class _EditRentalItemPageState extends State<EditRentalItemPage> {
   String availability = 'Available';
 
   late Box<RentalItem> rentalBox;
-
-  /// USER BOX
   Box? userBox;
   List<RentalItem> userItems = [];
 
@@ -80,7 +76,11 @@ class _EditRentalItemPageState extends State<EditRentalItemPage> {
 
     await userBox!.put("rental_items", userItems);
 
-    AppSnackBar.showSuccess(context, message: 'Changes saved successfully!');
+    AppSnackBar.showSuccess(
+      context,
+      message: 'Changes saved successfully!',
+      duration: Duration(seconds: 2),
+    );
 
     Future.delayed(const Duration(milliseconds: 500), () {
       Navigator.pop(context, updatedItem);
@@ -92,158 +92,316 @@ class _EditRentalItemPageState extends State<EditRentalItemPage> {
     final size = MediaQuery.of(context).size;
 
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: Color(0xFFF8FAFD),
       appBar: AppBar(
         title: const Text(
-          'Edit Rental Item',
-          style: TextStyle(fontWeight: FontWeight.w600),
+          'Edit Item',
+          style: TextStyle(
+            fontWeight: FontWeight.w700,
+            fontSize: 20,
+            color: Colors.black87,
+          ),
         ),
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
         foregroundColor: Colors.black87,
+        leading: Container(
+          margin: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: IconButton(
+            icon: const Icon(Icons.arrow_back_rounded, size: 22),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(18),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Image section
+            // Image section with modern design
             Container(
+              height: size.height * 0.25,
+              margin: const EdgeInsets.only(bottom: 32),
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
+                    color: Colors.black.withOpacity(0.15),
+                    blurRadius: 20,
+                    offset: const Offset(0, 8),
                   ),
                 ],
               ),
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: Image.file(
-                  File(widget.item.imagePath),
-                  height: size.height * 0.25,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            _buildTextField(nameController, 'Item Name', Icons.camera_alt),
-            _buildTextField(brandController, 'Brand', Icons.business),
-            _buildTextField(
-              priceController,
-              'Price per day',
-              Icons.currency_rupee,
-              isNumber: true,
-            ),
-
-            // Availability dropdown
-            Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
-                color: Colors.white,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black12,
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 4),
-              child: DropdownButtonFormField<String>(
-                value: availability,
-                dropdownColor: Colors.white,
-                icon: const Icon(
-                  Icons.keyboard_arrow_down_rounded,
-                  color: Colors.blueAccent,
-                  size: 28,
-                ),
-                style: const TextStyle(
-                  color: Colors.black87,
-                  fontWeight: FontWeight.w500,
-                  fontSize: 16,
-                ),
-                decoration: const InputDecoration(
-                  border: InputBorder.none,
-                  labelText: 'Availability',
-                  labelStyle: TextStyle(
-                    fontSize: 15,
-                    color: Colors.black54,
-                    fontWeight: FontWeight.w400,
-                  ),
-                  prefixIcon: Icon(
-                    Icons.event_available_rounded,
-                    color: Colors.blueAccent,
-                  ),
-                ),
-                items: const [
-                  DropdownMenuItem(
-                    value: 'Available',
-                    child: Row(
-                      children: [
-                        Icon(Icons.check_circle, color: Colors.green, size: 22),
-                        SizedBox(width: 10),
-                        Text('Available'),
-                      ],
-                    ),
-                  ),
-                  DropdownMenuItem(
-                    value: 'Unavailable',
-                    child: Row(
-                      children: [
-                        Icon(Icons.cancel, color: Colors.redAccent, size: 22),
-                        SizedBox(width: 10),
-                        Text('Unavailable'),
-                      ],
-                    ),
-                  ),
-                ],
-                onChanged: (value) => setState(() => availability = value!),
-              ),
-            ),
-
-            const SizedBox(height: 30),
-
-            // Save Button
-            GestureDetector(
-              onTap: _saveChanges,
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 15),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF2196F3), Color(0xFF42A5F5)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(14),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.blueAccent.withOpacity(0.4),
-                      blurRadius: 10,
-                      offset: const Offset(0, 5),
-                    ),
-                  ],
-                ),
-                child: const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                borderRadius: BorderRadius.circular(20),
+                child: Stack(
                   children: [
-                    Icon(Icons.save, color: Colors.white),
-                    SizedBox(width: 8),
-                    Text(
-                      'Save Changes',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 0.5,
-                        fontSize: 16,
+                    Image.file(
+                      File(widget.item.imagePath),
+                      height: size.height * 0.25,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                    ),
+                    // Gradient overlay
+                    Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.transparent,
+                            Colors.black.withOpacity(0.3),
+                          ],
+                        ),
                       ),
                     ),
                   ],
+                ),
+              ),
+            ),
+
+            // Form section
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.08),
+                    blurRadius: 16,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Item Details',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Update your rental item information',
+                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                  ),
+                  const SizedBox(height: 24),
+
+                  _buildTextField(
+                    nameController,
+                    'Item Name',
+                    Icons.photo_camera_outlined,
+                  ),
+                  const SizedBox(height: 16),
+                  _buildTextField(
+                    brandController,
+                    'Brand',
+                    Icons.business_center_outlined,
+                  ),
+                  const SizedBox(height: 16),
+                  _buildTextField(
+                    priceController,
+                    'Price per day',
+                    Icons.currency_rupee,
+                    isNumber: true,
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Availability dropdown
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Availability Status',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF374151),
+                        ),
+                      ),
+                      const SizedBox(height: 5),
+                      Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(14),
+                          color: Color(0xFFF9FAFB),
+                          border: Border.all(
+                            color: Color(0xFFE5E7EB),
+                            width: 1.5,
+                          ),
+                        ),
+                        child: DropdownButtonFormField<String>(
+                          value: availability,
+                          dropdownColor: Colors.white,
+                          icon: const Icon(
+                            Icons.keyboard_arrow_down_rounded,
+                            color: Color(0xFF2563EB),
+                            size: 24,
+                          ),
+                          style: const TextStyle(
+                            color: Colors.black87,
+                            fontWeight: FontWeight.w500,
+                            fontSize: 16,
+                          ),
+                          decoration: const InputDecoration(
+                            border: InputBorder.none,
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
+                            prefixIcon: Icon(
+                              Icons.event_available_outlined,
+                              color: Color(0xFF2563EB),
+                            ),
+                          ),
+                          items: [
+                            DropdownMenuItem(
+                              value: 'Available',
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 8,
+                                    height: 8,
+                                    decoration: const BoxDecoration(
+                                      color: Colors.green,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  const Text('Available'),
+                                ],
+                              ),
+                            ),
+                            DropdownMenuItem(
+                              value: 'Unavailable',
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 8,
+                                    height: 8,
+                                    decoration: const BoxDecoration(
+                                      color: Colors.red,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  const Text('Unavailable'),
+                                ],
+                              ),
+                            ),
+                          ],
+                          onChanged:
+                              (value) => setState(() => availability = value!),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 32),
+
+            // Save Button
+            Container(
+              height: 56,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF2563EB), Color(0xFF3B82F6)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.blue.withOpacity(0.4),
+                    blurRadius: 15,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: _saveChanges,
+                  borderRadius: BorderRadius.circular(16),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.save_rounded, color: Colors.white, size: 22),
+                      SizedBox(width: 12),
+                      Text(
+                        'Save Changes',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 16,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // Cancel Button
+            Container(
+              height: 56,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                color: Colors.white,
+                border: Border.all(color: Color(0xFFE5E7EB)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () => Navigator.pop(context),
+                  borderRadius: BorderRadius.circular(16),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.close_rounded,
+                        color: Colors.grey[600],
+                        size: 22,
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        'Cancel',
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -259,32 +417,45 @@ class _EditRentalItemPageState extends State<EditRentalItemPage> {
     IconData icon, {
     bool isNumber = false,
   }) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black12,
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: TextField(
-        controller: controller,
-        keyboardType: isNumber ? TextInputType.number : TextInputType.text,
-        decoration: InputDecoration(
-          prefixIcon: Icon(icon, color: Colors.blueAccent),
-          labelText: label,
-          border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 14,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF374151),
           ),
         ),
-      ),
+        const SizedBox(height: 5),
+        Container(
+          decoration: BoxDecoration(
+            color: Color(0xFFF9FAFB),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: Color(0xFFE5E7EB), width: 1.5),
+          ),
+          child: TextField(
+            controller: controller,
+            keyboardType: isNumber ? TextInputType.number : TextInputType.text,
+            style: const TextStyle(
+              color: Colors.black87,
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+            ),
+            decoration: InputDecoration(
+              prefixIcon: Icon(icon, color: Color(0xFF2563EB)),
+              border: InputBorder.none,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 16,
+              ),
+              hintText: 'Enter $label',
+              hintStyle: TextStyle(color: Colors.grey[500]),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

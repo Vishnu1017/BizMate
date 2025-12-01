@@ -146,6 +146,7 @@ class _SalesReportPageState extends State<SalesReportPage> {
         AppSnackBar.showInfo(
           context,
           message: 'PDF saved but could not open: $fileName',
+          duration: Duration(seconds: 2),
         );
       }
     } catch (e) {
@@ -383,7 +384,11 @@ class _SalesReportPageState extends State<SalesReportPage> {
       final sales = getFilteredSales();
 
       if (sales.isEmpty) {
-        AppSnackBar.showInfo(context, message: 'No sales data to export');
+        AppSnackBar.showInfo(
+          context,
+          message: 'No sales data to export',
+          duration: Duration(seconds: 2),
+        );
         return;
       }
 
@@ -462,6 +467,7 @@ class _SalesReportPageState extends State<SalesReportPage> {
         AppSnackBar.showSuccess(
           context,
           message: 'CSV file exported successfully',
+          duration: Duration(seconds: 2),
         );
       }
     } catch (e) {

@@ -8,7 +8,9 @@ import '../models/sale.dart';
 import '../models/rental_sale_model.dart';
 
 class DashboardPage extends StatefulWidget {
-  const DashboardPage({super.key, required String userEmail});
+  final String userEmail;
+
+  const DashboardPage({super.key, required this.userEmail});
 
   @override
   State<DashboardPage> createState() => _DashboardPageState();
@@ -22,50 +24,68 @@ class _DashboardPageState extends State<DashboardPage> {
   double maxYValue = 0;
   String _selectedRange = '3m';
   final ScrollController _scrollController = ScrollController();
-
   double previousMonthsTotal = 0.0;
   double previousMonthsAvg = 0.0;
   int previousMonthsCount = 0;
-
-  Box<Sale>? saleBox;
-  Box<RentalSaleModel>? rentalBox;
+  List<Sale> sales = [];
+  List<RentalSaleModel> rentalSales = [];
 
   @override
   void initState() {
     super.initState();
-    _initializeBoxesAndData();
+
+    // Prevent blocking UI thread
+    Future.delayed(Duration.zero, () async {
+      await _initializeData();
+      if (mounted) setState(() {});
+    });
   }
 
-  Future<void> _initializeBoxesAndData() async {
-    // Load current user email
-    final sessionBox = await Hive.openBox('session');
-    final email = sessionBox.get("currentUserEmail");
-
-    if (email == null) {
-      saleBox = null;
-      rentalBox = null;
-      return;
-    }
-
-    // Open user-specific box
-    final safeEmail = email.replaceAll('.', '_').replaceAll('@', '_');
-    final userBox = await Hive.openBox('userdata_$safeEmail');
-
-    // Load sales from user box instead of global 'sales'
-    List<Sale> sales = List<Sale>.from(userBox.get("sales", defaultValue: []));
-
-    // Store them in memory (not a Hive box anymore)
-    saleBox = await Hive.openBox<Sale>('temp_sales_dashboard');
-    await saleBox!.clear();
-    await saleBox!.addAll(sales);
-
-    // Rental sales (you did NOT move them to user storage, so global stays)
-    rentalBox =
-        Hive.isBoxOpen('rental_sales')
-            ? Hive.box<RentalSaleModel>('rental_sales')
-            : await Hive.openBox<RentalSaleModel>('rental_sales');
-
+  Future<void> _initializeData() async {
+    await _loadSalesData();
+    await _loadRentalSalesData();
     fetchSaleOverview(_selectedRange);
+  }
+
+  Future<void> _loadSalesData() async {
+    try {
+      final safeEmail = widget.userEmail
+          .replaceAll('.', '_')
+          .replaceAll('@', '_');
+      final boxName = "userdata_$safeEmail";
+
+      if (!Hive.isBoxOpen(boxName)) {
+        await Hive.openBox(boxName);
+      }
+      final userBox = Hive.box(boxName);
+
+      final rawSales = userBox.get('sales', defaultValue: []);
+      sales = (rawSales as List).map((e) => e as Sale).toList();
+    } catch (e) {
+      debugPrint('Error loading sales data: $e');
+      sales = [];
+    }
+  }
+
+  Future<void> _loadRentalSalesData() async {
+    try {
+      final safeEmail = widget.userEmail
+          .replaceAll('.', '_')
+          .replaceAll('@', '_');
+      final boxName = "userdata_$safeEmail";
+
+      if (!Hive.isBoxOpen(boxName)) {
+        await Hive.openBox(boxName);
+      }
+      final userBox = Hive.box(boxName);
+
+      final rawRentalSales = userBox.get('rental_sales', defaultValue: []);
+      rentalSales =
+          (rawRentalSales as List).map((e) => e as RentalSaleModel).toList();
+    } catch (e) {
+      debugPrint('Error loading rental sales data: $e');
+      rentalSales = [];
+    }
   }
 
   int getMonthRange(String range) {
@@ -88,8 +108,6 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   void fetchSaleOverview(String range) {
-    if (saleBox == null || rentalBox == null) return;
-
     final now = DateTime.now();
     final rangeInMonths = getMonthRange(range);
 
@@ -105,8 +123,8 @@ class _DashboardPageState extends State<DashboardPage> {
 
     Map<String, double> monthlyTotals = {for (var key in keys) key: 0.0};
 
-    // USER-SPECIFIC SALES
-    for (var sale in saleBox!.values) {
+    // Process regular sales
+    for (var sale in sales) {
       final key =
           '${sale.dateTime.year}-${sale.dateTime.month.toString().padLeft(2, '0')}';
       if (monthlyTotals.containsKey(key)) {
@@ -114,10 +132,10 @@ class _DashboardPageState extends State<DashboardPage> {
       }
     }
 
-    // RENTAL SALES (global)
-    for (var rental in rentalBox!.values) {
+    // Process rental sales
+    for (var rental in rentalSales) {
       final key =
-          '${rental.rentalDateTime.year}-${rental.rentalDateTime.month.toString().padLeft(2, '0')}';
+          '${rental.fromDateTime.year}-${rental.fromDateTime.month.toString().padLeft(2, '0')}';
       if (monthlyTotals.containsKey(key)) {
         monthlyTotals[key] = monthlyTotals[key]! + rental.amountPaid;
       }
@@ -125,10 +143,8 @@ class _DashboardPageState extends State<DashboardPage> {
 
     List<double> monthlyValues =
         keys.map((key) => monthlyTotals[key] ?? 0.0).toList();
-
     final currentMonthTotal =
         monthlyValues.isNotEmpty ? monthlyValues.last : 0.0;
-
     final previousMonths =
         monthlyValues.length > 1
             ? monthlyValues.sublist(0, monthlyValues.length - 1)
@@ -139,7 +155,6 @@ class _DashboardPageState extends State<DashboardPage> {
         previousMonths.isNotEmpty
             ? previousMonthsTotal / previousMonths.length
             : 0.0;
-
     previousMonthsCount = previousMonths.length;
 
     growthPercent =
@@ -149,9 +164,11 @@ class _DashboardPageState extends State<DashboardPage> {
             : (currentMonthTotal > 0 ? 100 : 0);
 
     totalSale = currentMonthTotal;
-
     maxYValue =
-        (monthlyValues.reduce((a, b) => a > b ? a : b) * 1.2).ceilToDouble();
+        monthlyValues.isEmpty
+            ? 100
+            : (monthlyValues.reduce((a, b) => a > b ? a : b) * 1.2)
+                .ceilToDouble();
 
     setState(() {
       monthLabels = months;
@@ -163,7 +180,10 @@ class _DashboardPageState extends State<DashboardPage> {
     });
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollController.hasClients && salesData.length > 5) {
+      if (!mounted) return;
+      if (_scrollController.hasClients &&
+          salesData.isNotEmpty &&
+          salesData.length > 5) {
         _scrollController.animateTo(
           _scrollController.position.maxScrollExtent,
           duration: const Duration(milliseconds: 400),
@@ -173,13 +193,13 @@ class _DashboardPageState extends State<DashboardPage> {
     });
   }
 
-  // 🔥 Convert Rental → Sale (Required for SalesReportPage)
+  // Convert Rental → Sale (Required for SalesReportPage)
   Sale convertRentalToSale(RentalSaleModel r) {
     return Sale(
       customerName: r.customerName,
       amount: r.amountPaid,
       productName: r.itemName,
-      dateTime: r.rentalDateTime,
+      dateTime: r.fromDateTime,
       phoneNumber: r.customerPhone,
       totalAmount: r.totalCost,
       discount: 0,
@@ -189,19 +209,15 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  // 🔥 Navigate to Sales Report with merged data
+  // Navigate to Sales Report with merged data
   void _navigateToSalesReport() async {
-    if (saleBox == null || rentalBox == null) return;
-
     List<Sale> allSales = [];
 
-    // USER-SPECIFIC SALES
-    allSales.addAll(saleBox!.values.toList());
+    // Regular sales
+    allSales.addAll(sales);
 
-    // RENTAL SALES CONVERTED TO NORMAL
-    allSales.addAll(
-      rentalBox!.values.map((r) => convertRentalToSale(r)).toList(),
-    );
+    // Rental sales converted to normal sales
+    allSales.addAll(rentalSales.map((r) => convertRentalToSale(r)).toList());
 
     allSales.sort((a, b) => b.dateTime.compareTo(a.dateTime));
 
@@ -220,25 +236,25 @@ class _DashboardPageState extends State<DashboardPage> {
 
   @override
   Widget build(BuildContext context) {
+    if (salesData.isEmpty) {
+      return Center(child: CircularProgressIndicator());
+    }
+
     final currencyFormat = NumberFormat.simpleCurrency(
       locale: 'en_IN',
       decimalDigits: 2,
     );
+
     final isProfit = growthPercent >= 0;
     final difference = (totalSale - previousMonthsAvg).abs();
     final currentMonthName = DateFormat('MMMM').format(DateTime.now());
-
-    if (saleBox == null || rentalBox == null) {
-      return const Center(child: CircularProgressIndicator());
-    }
 
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // ------------------ Your existing layout kept as-is ------------------
-          // Sale Overview Card (unchanged)
+          // Sale Overview Card
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
             decoration: BoxDecoration(
@@ -329,7 +345,6 @@ class _DashboardPageState extends State<DashboardPage> {
                     ),
                   ],
                 ),
-
                 Center(
                   child: Text(
                     currencyFormat.format(totalSale),
@@ -340,9 +355,7 @@ class _DashboardPageState extends State<DashboardPage> {
                     ),
                   ),
                 ),
-
                 const SizedBox(height: 10),
-
                 // Growth Info
                 Column(
                   children: [
@@ -400,9 +413,7 @@ class _DashboardPageState extends State<DashboardPage> {
                     ),
                   ],
                 ),
-
                 const SizedBox(height: 8),
-
                 // Chart
                 SizedBox(
                   height: 300,
@@ -412,7 +423,6 @@ class _DashboardPageState extends State<DashboardPage> {
                           salesData.length > 5
                               ? salesData.length * 60.0 + 40
                               : constraints.maxWidth;
-
                       return SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
                         controller: _scrollController,
@@ -425,7 +435,7 @@ class _DashboardPageState extends State<DashboardPage> {
                                 minX: 0,
                                 maxX: salesData.length.toDouble() - 1,
                                 minY: 0,
-                                maxY: maxYValue,
+                                maxY: maxYValue == 0 ? 100 : maxYValue,
                                 lineTouchData: LineTouchData(
                                   enabled: true,
                                   touchTooltipData: LineTouchTooltipData(
@@ -517,10 +527,8 @@ class _DashboardPageState extends State<DashboardPage> {
               ],
             ),
           ),
-
           const SizedBox(height: 15),
-
-          // ---------------- BUTTON ----------------
+          // View Sales Insights Button
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 8),
             child: FloatingActionButton.extended(
@@ -541,7 +549,6 @@ class _DashboardPageState extends State<DashboardPage> {
               elevation: 8,
             ),
           ),
-
           const SizedBox(height: 65),
         ],
       ),
