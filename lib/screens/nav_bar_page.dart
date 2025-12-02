@@ -530,8 +530,17 @@ class _NavBarPageState extends State<NavBarPage>
             child: Row(
               children: [
                 Container(
-                  width: _scaleForWidth(screenWidth, 48),
-                  height: _scaleForWidth(screenWidth, 48),
+                  padding: EdgeInsets.all(
+                    MediaQuery.of(context).size.width < 350
+                        ? 2 // very small phones
+                        : MediaQuery.of(context).size.width < 500
+                        ? 4 // normal phones
+                        : MediaQuery.of(context).size.width < 900
+                        ? 6 // tablets
+                        : 8, // desktops
+                  ),
+                  width: _scaleForWidth(screenWidth, 44),
+                  height: _scaleForWidth(screenWidth, 44),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: const Color(0xFF4CAF50).withOpacity(0.1),
