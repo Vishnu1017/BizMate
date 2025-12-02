@@ -416,7 +416,7 @@ class _RentalOrdersPageState extends State<RentalOrdersPage> {
             // Add onTap functionality here
           },
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             child: Row(
               children: [
                 // Status Indicator

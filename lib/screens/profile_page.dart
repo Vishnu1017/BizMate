@@ -7,6 +7,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart'
     show FlutterSecureStorage, AndroidOptions;
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:hive/hive.dart';
+import 'package:hugeicons/hugeicons.dart' show HugeIcon, HugeIcons;
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -546,439 +547,450 @@ class _ProfilePageState extends State<ProfilePage> {
     final isSmallScreen = screenWidth < 600;
 
     return Scaffold(
-      body: Container(
-        height: screenHeight,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              Color.fromARGB(200, 0, 0, 0),
-              Color.fromARGB(150, 0, 0, 0),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
-        child: SafeArea(
-          child: SingleChildScrollView(
-            padding: EdgeInsets.symmetric(
-              horizontal: isSmallScreen ? 16 : 32,
-              vertical: 20,
+      body: MediaQuery.removePadding(
+        removeTop: true, // ⭐ removes system top padding
+        context: context,
+        child: Container(
+          height: screenHeight,
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Color.fromARGB(200, 0, 0, 0),
+                Color.fromARGB(150, 0, 0, 0),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  width: isSmallScreen ? screenWidth * 0.95 : screenWidth * 0.7,
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(24),
-                    border: Border.all(color: Colors.white30, width: 1.5),
-                  ),
-                  child: Column(
-                    children: [
-                      Column(
-                        children: [
-                          Align(
-                            alignment: Alignment.topRight,
-                            child: PopupMenuButton<String>(
-                              icon: const Icon(
-                                FontAwesomeIcons.ellipsisV,
-                                color: Colors.white,
-                                size: 20,
-                              ),
-                              shadowColor: Colors.black.withOpacity(0.3),
-                              onSelected: (value) {
-                                if (value == 'edit') {
-                                  _toggleEditing();
-                                }
-                              },
-                              itemBuilder: (BuildContext context) {
-                                return [
-                                  PopupMenuItem<String>(
-                                    value: 'edit',
-                                    child: Row(
-                                      children: [
-                                        Container(
-                                          padding: const EdgeInsets.all(6),
-                                          decoration: BoxDecoration(
-                                            color: Colors.blueAccent
-                                                .withOpacity(0.2),
-                                            borderRadius: BorderRadius.circular(
-                                              8,
+          ),
+          child: SafeArea(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.symmetric(
+                horizontal: isSmallScreen ? 16 : 32,
+                vertical: 20,
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    width:
+                        isSmallScreen ? screenWidth * 0.95 : screenWidth * 0.7,
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(color: Colors.white30, width: 1.5),
+                    ),
+                    child: Column(
+                      children: [
+                        Column(
+                          children: [
+                            Align(
+                              alignment: Alignment.topRight,
+                              child: PopupMenuButton<String>(
+                                icon: const Icon(
+                                  FontAwesomeIcons.ellipsisV,
+                                  color: Colors.white,
+                                  size: 20,
+                                ),
+                                shadowColor: Colors.black.withOpacity(0.3),
+                                onSelected: (value) {
+                                  if (value == 'edit') {
+                                    _toggleEditing();
+                                  }
+                                },
+                                itemBuilder: (BuildContext context) {
+                                  return [
+                                    PopupMenuItem<String>(
+                                      value: 'edit',
+                                      child: Row(
+                                        children: [
+                                          Container(
+                                            padding: const EdgeInsets.all(6),
+                                            decoration: BoxDecoration(
+                                              color: Colors.blueAccent
+                                                  .withOpacity(0.2),
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                            ),
+                                            child: const Icon(
+                                              Icons.edit,
+                                              color: Colors.blueAccent,
+                                              size: 20,
                                             ),
                                           ),
-                                          child: const Icon(
-                                            Icons.edit,
-                                            color: Colors.blueAccent,
-                                            size: 20,
+                                          const SizedBox(width: 12),
+                                          const Text(
+                                            'Edit Profile',
+                                            style: TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.black,
+                                            ),
                                           ),
-                                        ),
-                                        const SizedBox(width: 12),
-                                        const Text(
-                                          'Edit Profile',
-                                          style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.black,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ];
-                              },
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-
-                          GestureDetector(
-                            onTap: _pickImage,
-                            child: Stack(
-                              alignment: Alignment.bottomRight,
-                              children: [
-                                _isImageLoading
-                                    ? CircleAvatar(
-                                      radius: 50,
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(16.0),
-                                        child: CircularProgressIndicator(
-                                          color: Colors.white,
-                                        ),
+                                        ],
                                       ),
-                                    )
-                                    : CircleAvatar(
-                                      radius: isSmallScreen ? 50 : 60,
-                                      backgroundColor: Colors.white.withOpacity(
-                                        0.3,
-                                      ),
-                                      child:
-                                          _profileImage != null && _isImageSaved
-                                              ? ClipRRect(
-                                                borderRadius:
-                                                    BorderRadius.circular(50),
-                                                child: Image.file(
-                                                  _profileImage!,
-                                                  fit: BoxFit.cover,
-                                                  width:
-                                                      isSmallScreen ? 100 : 120,
-                                                  height:
-                                                      isSmallScreen ? 100 : 120,
-                                                  errorBuilder: (
-                                                    context,
-                                                    error,
-                                                    stackTrace,
-                                                  ) {
-                                                    return Text(
-                                                      name.isNotEmpty
-                                                          ? name[0]
-                                                              .toUpperCase()
-                                                          : 'U',
-                                                      style: TextStyle(
-                                                        fontSize:
-                                                            isSmallScreen
-                                                                ? 36
-                                                                : 42,
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                        color: Colors.white,
-                                                      ),
-                                                    );
-                                                  },
-                                                ),
-                                              )
-                                              : Text(
-                                                name.isNotEmpty
-                                                    ? name[0].toUpperCase()
-                                                    : 'U',
-                                                style: TextStyle(
-                                                  fontSize:
-                                                      isSmallScreen ? 36 : 42,
-                                                  fontWeight: FontWeight.bold,
-                                                  color: Colors.white,
-                                                ),
-                                              ),
                                     ),
-                                if (!_isImageLoading)
-                                  const CircleAvatar(
-                                    radius: 14,
-                                    backgroundColor: Colors.white,
-                                    child: Icon(
-                                      Icons.edit,
-                                      size: 16,
-                                      color: Colors.black87,
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-                          _isEditing
-                              ? TextField(
-                                controller: _nameController,
-                                style: TextStyle(
-                                  fontSize: isSmallScreen ? 22 : 24,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                                textAlign: TextAlign.center,
-                                decoration: const InputDecoration(
-                                  border: InputBorder.none,
-                                  contentPadding: EdgeInsets.zero,
-                                ),
-                              )
-                              : Text(
-                                name,
-                                style: TextStyle(
-                                  fontSize: isSmallScreen ? 22 : 24,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                                textAlign: TextAlign.center,
+                                  ];
+                                },
                               ),
-                          const SizedBox(height: 12),
-                        ],
-                      ),
-
-                      _isEditing
-                          ? Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 16,
                             ),
-                            child: DropdownButtonFormField<String>(
-                              value: role,
-                              decoration: InputDecoration(
-                                labelText: 'Role',
-                                labelStyle: const TextStyle(
+                            const SizedBox(height: 8),
+
+                            GestureDetector(
+                              onTap: _pickImage,
+                              child: Stack(
+                                alignment: Alignment.bottomRight,
+                                children: [
+                                  _isImageLoading
+                                      ? CircleAvatar(
+                                        radius: 50,
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(16.0),
+                                          child: CircularProgressIndicator(
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      )
+                                      : CircleAvatar(
+                                        radius: isSmallScreen ? 50 : 60,
+                                        backgroundColor: Colors.white
+                                            .withOpacity(0.3),
+                                        child:
+                                            _profileImage != null &&
+                                                    _isImageSaved
+                                                ? ClipRRect(
+                                                  borderRadius:
+                                                      BorderRadius.circular(50),
+                                                  child: Image.file(
+                                                    _profileImage!,
+                                                    fit: BoxFit.cover,
+                                                    width:
+                                                        isSmallScreen
+                                                            ? 100
+                                                            : 120,
+                                                    height:
+                                                        isSmallScreen
+                                                            ? 100
+                                                            : 120,
+                                                    errorBuilder: (
+                                                      context,
+                                                      error,
+                                                      stackTrace,
+                                                    ) {
+                                                      return Text(
+                                                        name.isNotEmpty
+                                                            ? name[0]
+                                                                .toUpperCase()
+                                                            : 'U',
+                                                        style: TextStyle(
+                                                          fontSize:
+                                                              isSmallScreen
+                                                                  ? 36
+                                                                  : 42,
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                          color: Colors.white,
+                                                        ),
+                                                      );
+                                                    },
+                                                  ),
+                                                )
+                                                : Text(
+                                                  name.isNotEmpty
+                                                      ? name[0].toUpperCase()
+                                                      : 'U',
+                                                  style: TextStyle(
+                                                    fontSize:
+                                                        isSmallScreen ? 36 : 42,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: Colors.white,
+                                                  ),
+                                                ),
+                                      ),
+                                  if (!_isImageLoading)
+                                    const CircleAvatar(
+                                      radius: 14,
+                                      backgroundColor: Colors.white,
+                                      child: Icon(
+                                        Icons.edit,
+                                        size: 16,
+                                        color: Colors.black87,
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+                            _isEditing
+                                ? TextField(
+                                  controller: _nameController,
+                                  style: TextStyle(
+                                    fontSize: isSmallScreen ? 22 : 24,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                  decoration: const InputDecoration(
+                                    border: InputBorder.none,
+                                    contentPadding: EdgeInsets.zero,
+                                  ),
+                                )
+                                : Text(
+                                  name,
+                                  style: TextStyle(
+                                    fontSize: isSmallScreen ? 22 : 24,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                            const SizedBox(height: 12),
+                          ],
+                        ),
+
+                        _isEditing
+                            ? Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 16,
+                              ),
+                              child: DropdownButtonFormField<String>(
+                                value: role,
+                                decoration: InputDecoration(
+                                  labelText: 'Role',
+                                  labelStyle: const TextStyle(
+                                    color: Colors.white70,
+                                  ),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: const BorderSide(
+                                      color: Colors.white30,
+                                    ),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: const BorderSide(
+                                      color: Colors.white30,
+                                    ),
+                                  ),
+                                  filled: true,
+                                  fillColor: Colors.white.withOpacity(0.1),
+                                ),
+                                dropdownColor: Colors.blueGrey[800],
+                                icon: const Icon(
+                                  Icons.arrow_drop_down,
                                   color: Colors.white70,
                                 ),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: const BorderSide(
-                                    color: Colors.white30,
-                                  ),
-                                ),
-                                enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: const BorderSide(
-                                    color: Colors.white30,
-                                  ),
-                                ),
-                                filled: true,
-                                fillColor: Colors.white.withOpacity(0.1),
-                              ),
-                              dropdownColor: Colors.blueGrey[800],
-                              icon: const Icon(
-                                Icons.arrow_drop_down,
-                                color: Colors.white70,
-                              ),
-                              style: TextStyle(
-                                fontSize: isSmallScreen ? 16 : 18,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white,
-                              ),
-                              onChanged: (String? newValue) async {
-                                if (newValue == null) return;
-
-                                setState(() {
-                                  role = newValue;
-                                  _roleController.text = newValue;
-                                });
-
-                                final prefs =
-                                    await SharedPreferences.getInstance();
-
-                                if (newValue == 'Photographer') {
-                                  await prefs.setBool(
-                                    '${widget.user.email}_rentalEnabled',
-                                    true,
-                                  );
-                                  setState(() => _isRentalEnabled = true);
-                                  widget.onRentalStatusChanged?.call();
-                                } else {
-                                  await prefs.setBool(
-                                    '${widget.user.email}_rentalEnabled',
-                                    false,
-                                  );
-                                  setState(() => _isRentalEnabled = false);
-                                  widget.onRentalStatusChanged?.call();
-                                }
-                              },
-                              items:
-                                  roles.map<DropdownMenuItem<String>>((
-                                    String value,
-                                  ) {
-                                    return DropdownMenuItem<String>(
-                                      value: value,
-                                      child: Text(
-                                        value,
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                    );
-                                  }).toList(),
-                            ),
-                          )
-                          : Container(
-                            margin: const EdgeInsets.symmetric(vertical: 16),
-                            child: Chip(
-                              avatar: CircleAvatar(
-                                backgroundColor: Colors.blue.shade100
-                                    .withOpacity(0.8),
-                                child: Icon(
-                                  Icons.work_outline,
-                                  size: isSmallScreen ? 18 : 20,
-                                  color: Colors.blue.shade700,
-                                ),
-                              ),
-                              label: Text(
-                                role,
                                 style: TextStyle(
                                   fontSize: isSmallScreen ? 16 : 18,
                                   fontWeight: FontWeight.w600,
-                                  color: Colors.blue.shade900,
+                                  color: Colors.white,
                                 ),
+                                onChanged: (String? newValue) async {
+                                  if (newValue == null) return;
+
+                                  setState(() {
+                                    role = newValue;
+                                    _roleController.text = newValue;
+                                  });
+
+                                  final prefs =
+                                      await SharedPreferences.getInstance();
+
+                                  if (newValue == 'Photographer') {
+                                    await prefs.setBool(
+                                      '${widget.user.email}_rentalEnabled',
+                                      true,
+                                    );
+                                    setState(() => _isRentalEnabled = true);
+                                    widget.onRentalStatusChanged?.call();
+                                  } else {
+                                    await prefs.setBool(
+                                      '${widget.user.email}_rentalEnabled',
+                                      false,
+                                    );
+                                    setState(() => _isRentalEnabled = false);
+                                    widget.onRentalStatusChanged?.call();
+                                  }
+                                },
+                                items:
+                                    roles.map<DropdownMenuItem<String>>((
+                                      String value,
+                                    ) {
+                                      return DropdownMenuItem<String>(
+                                        value: value,
+                                        child: Text(
+                                          value,
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      );
+                                    }).toList(),
                               ),
-                              backgroundColor: Colors.blue.shade50.withOpacity(
-                                0.9,
-                              ),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 8,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                side: BorderSide(
-                                  color: Colors.blue.shade200.withOpacity(0.5),
-                                  width: 1,
-                                ),
-                              ),
-                            ),
-                          ),
-
-                      const Divider(color: Colors.white30, height: 20),
-                      const SizedBox(height: 20),
-
-                      _buildInfoSection(isSmallScreen),
-
-                      // Passcode Control Section - For all users
-                      if (!_isEditing) ...[
-                        const SizedBox(height: 10),
-                        const Divider(color: Colors.white30, height: 20),
-                        const SizedBox(height: 10),
-                        _buildPasscodeControlSection(isSmallScreen),
-                      ],
-
-                      // Rental Page Control Section - Only for Photographer role
-                      if (role == 'Photographer' && !_isEditing) ...[
-                        const SizedBox(height: 10),
-                        const Divider(color: Colors.white30, height: 20),
-                        const SizedBox(height: 10),
-                        _buildRentalControlSection(isSmallScreen),
-                      ],
-
-                      if (_isEditing) ...[
-                        const SizedBox(height: 30),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: OutlinedButton(
-                                onPressed: _toggleEditing,
-                                style: OutlinedButton.styleFrom(
-                                  foregroundColor: Colors.white,
-                                  backgroundColor: Colors.black,
-                                  side: BorderSide(color: Colors.white),
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 16,
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
+                            )
+                            : Container(
+                              margin: const EdgeInsets.symmetric(vertical: 16),
+                              child: Chip(
+                                avatar: CircleAvatar(
+                                  backgroundColor: Colors.blue.shade100
+                                      .withOpacity(0.8),
+                                  child: HugeIcon(
+                                    icon: HugeIcons.strokeRoundedWork,
+                                    size: isSmallScreen ? 18 : 20,
+                                    color: Colors.blue.shade700,
                                   ),
                                 ),
-                                child: Text(
-                                  'Cancel',
+                                label: Text(
+                                  role,
                                   style: TextStyle(
                                     fontSize: isSmallScreen ? 16 : 18,
                                     fontWeight: FontWeight.w600,
+                                    color: Colors.blue.shade900,
+                                  ),
+                                ),
+                                backgroundColor: Colors.blue.shade50
+                                    .withOpacity(0.9),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 8,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  side: BorderSide(
+                                    color: Colors.blue.shade200.withOpacity(
+                                      0.5,
+                                    ),
+                                    width: 1,
                                   ),
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: ElevatedButton(
-                                onPressed: _saveProfile,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.blueAccent,
-                                  foregroundColor: Colors.white,
-                                  elevation: 2,
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 16,
-                                  ),
-                                  side: BorderSide(color: Colors.white),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                ),
-                                child: Text(
-                                  'Save Changes',
-                                  style: TextStyle(
-                                    fontSize: isSmallScreen ? 16 : 18,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 10),
-                      ],
-                    ],
-                  ),
-                ),
 
-                if (!_isEditing) ...[
-                  const SizedBox(height: 30),
-                  SizedBox(
-                    width:
-                        isSmallScreen ? screenWidth * 0.95 : screenWidth * 0.7,
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: _actionButton(
-                            icon: Icons.logout,
-                            text: "Logout",
-                            color: Colors.black,
-                            borderColor: Colors.white,
-                            onTap: _logout,
-                            isSmallScreen: isSmallScreen,
+                        const Divider(color: Colors.white30, height: 20),
+                        const SizedBox(height: 20),
+
+                        _buildInfoSection(isSmallScreen),
+
+                        // Passcode Control Section - For all users
+                        if (!_isEditing) ...[
+                          const SizedBox(height: 10),
+                          const Divider(color: Colors.white30, height: 20),
+                          const SizedBox(height: 10),
+                          _buildPasscodeControlSection(isSmallScreen),
+                        ],
+
+                        // Rental Page Control Section - Only for Photographer role
+                        if (role == 'Photographer' && !_isEditing) ...[
+                          const SizedBox(height: 10),
+                          const Divider(color: Colors.white30, height: 20),
+                          const SizedBox(height: 10),
+                          _buildRentalControlSection(isSmallScreen),
+                        ],
+
+                        if (_isEditing) ...[
+                          const SizedBox(height: 30),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: OutlinedButton(
+                                  onPressed: _toggleEditing,
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: Colors.white,
+                                    backgroundColor: Colors.black,
+                                    side: BorderSide(color: Colors.white),
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 16,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    'Cancel',
+                                    style: TextStyle(
+                                      fontSize: isSmallScreen ? 16 : 18,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: ElevatedButton(
+                                  onPressed: _saveProfile,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.blueAccent,
+                                    foregroundColor: Colors.white,
+                                    elevation: 2,
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 16,
+                                    ),
+                                    side: BorderSide(color: Colors.white),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    'Save Changes',
+                                    style: TextStyle(
+                                      fontSize: isSmallScreen ? 16 : 18,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: _actionButton(
-                            icon: Icons.delete_forever,
-                            text: "Delete",
-                            color: Colors.red.shade600,
-                            borderColor: Colors.white,
-                            gradient: LinearGradient(
-                              colors: [
-                                Colors.red.shade600,
-                                Colors.red.shade800,
-                              ],
-                            ),
-                            onTap: () => _showEnhancedDeleteDialog(context),
-                            isSmallScreen: isSmallScreen,
-                          ),
-                        ),
+                          const SizedBox(height: 10),
+                        ],
                       ],
                     ),
                   ),
-                  const SizedBox(height: 20),
+
+                  if (!_isEditing) ...[
+                    const SizedBox(height: 30),
+                    SizedBox(
+                      width:
+                          isSmallScreen
+                              ? screenWidth * 0.95
+                              : screenWidth * 0.7,
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: _actionButton(
+                              icon: Icons.logout,
+                              text: "Logout",
+                              color: Colors.black,
+                              borderColor: Colors.white,
+                              onTap: _logout,
+                              isSmallScreen: isSmallScreen,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: _actionButton(
+                              icon: Icons.delete_forever,
+                              text: "Delete",
+                              color: Colors.red.shade600,
+                              borderColor: Colors.white,
+                              gradient: LinearGradient(
+                                colors: [
+                                  Colors.red.shade600,
+                                  Colors.red.shade800,
+                                ],
+                              ),
+                              onTap: () => _showEnhancedDeleteDialog(context),
+                              isSmallScreen: isSmallScreen,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
         ),
@@ -1046,8 +1058,8 @@ class _ProfilePageState extends State<ProfilePage> {
               Row(
                 children: [
                   Container(
-                    width: isTablet ? 12 : 8,
-                    height: isTablet ? 12 : 8,
+                    width: isTablet ? 10 : 6,
+                    height: isTablet ? 10 : 6,
                     margin: const EdgeInsets.only(right: 8),
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
@@ -1059,7 +1071,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   Text(
                     "RENTAL CONTROL",
                     style: TextStyle(
-                      fontSize: isTablet ? 16 : 12,
+                      fontSize: isTablet ? 12 : 8,
                       fontWeight: FontWeight.w700,
                       color: Colors.white70,
                       letterSpacing: 1,
@@ -1116,13 +1128,13 @@ class _ProfilePageState extends State<ProfilePage> {
             ],
           ),
 
-          SizedBox(height: isTablet ? 18 : 12),
+          SizedBox(height: isTablet ? 16 : 10),
 
           /// --- Title & Subtitle ---
           Text(
             "Rental Page Access",
             style: TextStyle(
-              fontSize: isTablet ? 28 : (isSmallScreen ? 22 : 24),
+              fontSize: isTablet ? 28 : (isSmallScreen ? 20 : 22),
               fontWeight: FontWeight.w800,
               color: Colors.white,
               letterSpacing: -0.5,
@@ -1132,7 +1144,7 @@ class _ProfilePageState extends State<ProfilePage> {
           Text(
             "Toggle to enable or disable the rental page for all users",
             style: TextStyle(
-              fontSize: isTablet ? 17 : 14,
+              fontSize: isTablet ? 13 : 11.5,
               color: Colors.white.withOpacity(0.5),
               height: 1.4,
             ),
@@ -1161,7 +1173,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   Text(
                     _isRentalEnabled ? "Enabled" : "Disabled",
                     style: TextStyle(
-                      fontSize: isTablet ? 40 : (isSmallScreen ? 24 : 32),
+                      fontSize: isTablet ? 40 : (isSmallScreen ? 20 : 22),
                       fontWeight: FontWeight.w900,
                       color: Colors.white,
                       letterSpacing: -1,
@@ -1172,7 +1184,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
               /// Right Switch
               Transform.scale(
-                scale: isTablet ? 1.35 : (isSmallScreen ? 1.0 : 1.15),
+                scale: isTablet ? 1.35 : (isSmallScreen ? 0.8 : 1.05),
                 child: Switch(
                   value: _isRentalEnabled,
                   activeThumbColor: Colors.white,
@@ -1191,7 +1203,7 @@ class _ProfilePageState extends State<ProfilePage> {
             ],
           ),
 
-          SizedBox(height: isTablet ? 16 : 6),
+          SizedBox(height: isTablet ? 14 : 4),
 
           Divider(color: Colors.white.withOpacity(0.1)),
 
@@ -1250,8 +1262,8 @@ class _ProfilePageState extends State<ProfilePage> {
               Row(
                 children: [
                   Container(
-                    width: isTablet ? 12 : 8,
-                    height: isTablet ? 12 : 8,
+                    width: isTablet ? 10 : 6,
+                    height: isTablet ? 10 : 6,
                     margin: const EdgeInsets.only(right: 8),
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
@@ -1263,7 +1275,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   Text(
                     "SECURITY CONTROL",
                     style: TextStyle(
-                      fontSize: isTablet ? 16 : 12,
+                      fontSize: isTablet ? 12 : 8,
                       fontWeight: FontWeight.w700,
                       color: Colors.white70,
                       letterSpacing: 1,
@@ -1275,7 +1287,7 @@ class _ProfilePageState extends State<ProfilePage> {
               /// ACTIVE or INACTIVE badge
               Container(
                 padding: EdgeInsets.symmetric(
-                  horizontal: isTablet ? 14 : 10,
+                  horizontal: isTablet ? 12 : 6,
                   vertical: isTablet ? 6 : 4,
                 ),
                 decoration: BoxDecoration(
@@ -1320,13 +1332,13 @@ class _ProfilePageState extends State<ProfilePage> {
             ],
           ),
 
-          SizedBox(height: isTablet ? 18 : 12),
+          SizedBox(height: isTablet ? 16 : 10),
 
           /// ------------------ TITLE + SUBTITLE ------------------
           Text(
             "App Passcode",
             style: TextStyle(
-              fontSize: isTablet ? 30 : (isSmallScreen ? 22 : 24),
+              fontSize: isTablet ? 30 : (isSmallScreen ? 20 : 22),
               fontWeight: FontWeight.w800,
               color: Colors.white,
               letterSpacing: -0.5,
@@ -1338,7 +1350,7 @@ class _ProfilePageState extends State<ProfilePage> {
           Text(
             "Secure your app with a passcode",
             style: TextStyle(
-              fontSize: isTablet ? 17 : (isSmallScreen ? 13.5 : 15),
+              fontSize: isTablet ? 17 : (isSmallScreen ? 11.5 : 13),
               color: Colors.white.withOpacity(0.5),
               height: 1.4,
             ),
@@ -1367,7 +1379,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   Text(
                     _isPasscodeEnabled ? "Protected" : "Unprotected",
                     style: TextStyle(
-                      fontSize: isTablet ? 40 : (isSmallScreen ? 24 : 32),
+                      fontSize: isTablet ? 40 : (isSmallScreen ? 20 : 22),
                       fontWeight: FontWeight.w900,
                       color: Colors.white,
                       letterSpacing: -1,
@@ -1378,7 +1390,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
               /// Right switch (responsive)
               Transform.scale(
-                scale: isTablet ? 1.35 : (isSmallScreen ? 1.0 : 1.15),
+                scale: isTablet ? 1.35 : (isSmallScreen ? 0.8 : 1.05),
                 child: Switch(
                   value: _isPasscodeEnabled,
                   activeThumbColor: Colors.white,
@@ -1429,7 +1441,7 @@ class _ProfilePageState extends State<ProfilePage> {
             ],
           ),
 
-          SizedBox(height: isTablet ? 16 : 6),
+          SizedBox(height: isTablet ? 14 : 4),
 
           Divider(color: Colors.white.withOpacity(0.1)),
 

@@ -131,7 +131,7 @@ class _RentalItemsState extends State<RentalItems> {
 
   @override
   Widget build(BuildContext context) {
-    double responsivePadding = MediaQuery.of(context).size.width * 0.025;
+    double responsivePadding = MediaQuery.of(context).size.width * 0.02;
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -147,7 +147,10 @@ class _RentalItemsState extends State<RentalItems> {
 
           // CATEGORY CHIPS — RESPONSIVE
           Padding(
-            padding: EdgeInsets.symmetric(horizontal: responsivePadding),
+            padding: EdgeInsets.symmetric(
+              horizontal: responsivePadding,
+              vertical: responsivePadding,
+            ),
             child: SizedBox(
               height: 40,
               child: ListView.separated(
@@ -313,7 +316,7 @@ class _RentalItemsState extends State<RentalItems> {
   Widget _buildCard(RentalItem item, int index) {
     return LayoutBuilder(
       builder: (context, c) {
-        double imageHeight = c.maxHeight * 0.42;
+        double imageHeight = c.maxHeight * 0.40;
 
         return Container(
           decoration: BoxDecoration(
@@ -414,7 +417,6 @@ class _RentalItemsState extends State<RentalItems> {
                           ),
 
                           const SizedBox(height: 6),
-
                           SizedBox(
                             width: double.infinity,
                             child: ElevatedButton(
@@ -451,8 +453,6 @@ class _RentalItemsState extends State<RentalItems> {
                               ),
                             ),
                           ),
-
-                          const SizedBox(height: 8),
                         ],
                       ),
                     ),

@@ -8,6 +8,7 @@ import 'package:bizmate/widgets/advanced_search_bar.dart'
 import 'package:flutter/material.dart';
 import 'package:bizmate/models/product.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:hugeicons/hugeicons.dart' show HugeIcon, HugeIcons;
 
 class ProductsPage extends StatefulWidget {
   const ProductsPage({super.key, required String userEmail});
@@ -232,8 +233,8 @@ class _ProductsPageState extends State<ProductsPage> {
                           ),
                           leading: const CircleAvatar(
                             backgroundColor: Colors.white,
-                            child: Icon(
-                              Icons.shopping_bag,
+                            child: HugeIcon(
+                              icon: HugeIcons.strokeRoundedShoppingBasket01,
                               color: Color(0xFF1A237E),
                             ),
                           ),

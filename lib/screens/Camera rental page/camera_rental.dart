@@ -163,11 +163,7 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
                   ),
                 ),
                 child: const Center(
-                  child: Icon(
-                    Icons.photo_camera,
-                    color: Colors.white,
-                    size: 32,
-                  ),
+                  child: CircularProgressIndicator(color: Colors.white),
                 ),
               );
             }
@@ -309,82 +305,39 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
         final totalDue = totalAmount - totalPaid;
         final totalRentals = allSales.length;
 
-        final screenWidth = MediaQuery.of(context).size.width;
-        final isTabletOrDesktop = screenWidth > 700;
-        final maxWidth = isTabletOrDesktop ? 900.0 : double.infinity;
-
-        return Align(
-          alignment: Alignment.topCenter,
-          child: ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: maxWidth),
-            child: Container(
-              margin: EdgeInsets.symmetric(
-                horizontal: isTabletOrDesktop ? 24 : 16,
-                vertical: 8,
-              ),
-              padding: EdgeInsets.symmetric(
-                horizontal: isTabletOrDesktop ? 24 : 20,
-                vertical: isTabletOrDesktop ? 20 : 18,
-              ),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF667eea), Color(0xFF764ba2)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(
-                  isTabletOrDesktop ? 24 : 20,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.purple.shade300.withOpacity(0.35),
-                    blurRadius: 22,
-                    offset: const Offset(0, 10),
-                  ),
-                ],
-              ),
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  final isWideRow = constraints.maxWidth > 350;
-                  final children = [
-                    _buildStatItem(
-                      Icons.camera_alt,
-                      totalRentals.toString(),
-                      "Rentals",
-                    ),
-                    _buildStatItem(
-                      Icons.currency_rupee,
-                      "₹${totalAmount.toInt()}",
-                      "Total",
-                    ),
-                    _buildStatItem(
-                      Icons.trending_up,
-                      "₹${totalDue.toInt()}",
-                      "Due",
-                    ),
-                  ];
-
-                  if (isWideRow) {
-                    return Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: children,
-                    );
-                  } else {
-                    return Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          children: children.sublist(0, 2),
-                        ),
-                        const SizedBox(height: 12),
-                        Align(alignment: Alignment.center, child: children[2]),
-                      ],
-                    );
-                  }
-                },
-              ),
+        return Container(
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF667eea), Color(0xFF764ba2)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.purple.shade300.withOpacity(0.4),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildStatItem(
+                Icons.camera_alt,
+                totalRentals.toString(),
+                "Rentals",
+              ),
+              _buildStatItem(
+                Icons.currency_rupee,
+                "₹${totalAmount.toInt()}",
+                "Total",
+              ),
+              _buildStatItem(Icons.trending_up, "₹${totalDue.toInt()}", "Due"),
+            ],
           ),
         );
       },
