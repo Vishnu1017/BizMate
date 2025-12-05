@@ -24,13 +24,14 @@ class RentalItemAdapter extends TypeAdapter<RentalItem> {
       availability: fields[4] as String,
       imagePath: fields[5] as String,
       bookedSlots: (fields[6] as List?)?.cast<RentalBooking>(),
+      condition: fields[7] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, RentalItem obj) {
     writer
-      ..writeByte(7)
+      ..writeByte(8)
       ..writeByte(0)
       ..write(obj.name)
       ..writeByte(1)
@@ -44,7 +45,9 @@ class RentalItemAdapter extends TypeAdapter<RentalItem> {
       ..writeByte(5)
       ..write(obj.imagePath)
       ..writeByte(6)
-      ..write(obj.bookedSlots);
+      ..write(obj.bookedSlots)
+      ..writeByte(7)
+      ..write(obj.condition);
   }
 
   @override

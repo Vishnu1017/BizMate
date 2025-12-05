@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'package:bizmate/screens/Camera%20rental%20page/view_rental_details_page.dart';
+import 'package:bizmate/screens/Camera rental page/view_rental_details_page.dart';
 import 'package:bizmate/widgets/confirm_delete_dialog.dart';
 import 'package:bizmate/widgets/advanced_search_bar.dart';
 import 'package:flutter/material.dart';
@@ -106,7 +106,8 @@ class _RentalItemsState extends State<RentalItems> {
                     i.name.toLowerCase().contains(q) ||
                     i.brand.toLowerCase().contains(q) ||
                     i.availability.toLowerCase().contains(q) ||
-                    i.price.toString().contains(q),
+                    i.price.toString().contains(q) ||
+                    (i.condition).toLowerCase().contains(q),
               )
               .toList();
     }
@@ -145,14 +146,14 @@ class _RentalItemsState extends State<RentalItems> {
             showDateFilter: false,
           ),
 
-          // CATEGORY CHIPS — RESPONSIVE
+          // CATEGORY CHIPS
           Padding(
             padding: EdgeInsets.symmetric(
               horizontal: responsivePadding,
-              vertical: responsivePadding,
+              vertical: responsivePadding / 1,
             ),
             child: SizedBox(
-              height: 40,
+              height: 35,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 itemCount: _categories.length,
@@ -169,8 +170,8 @@ class _RentalItemsState extends State<RentalItems> {
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 250),
                       padding: EdgeInsets.symmetric(
-                        horizontal: MediaQuery.of(context).size.width * 0.03,
-                        vertical: 10,
+                        horizontal: MediaQuery.of(context).size.width * 0.025,
+                        vertical: 8,
                       ),
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(30),
@@ -188,15 +189,6 @@ class _RentalItemsState extends State<RentalItems> {
                                     Colors.grey.shade300,
                                   ],
                                 ),
-                        boxShadow:
-                            selected
-                                ? [
-                                  BoxShadow(
-                                    color: Colors.blue.withOpacity(0.3),
-                                    blurRadius: 8,
-                                  ),
-                                ]
-                                : [],
                       ),
                       child: Row(
                         children: [
@@ -225,7 +217,6 @@ class _RentalItemsState extends State<RentalItems> {
             ),
           ),
 
-          // RENTAL ITEMS GRID
           Expanded(
             child:
                 rentalItems.isEmpty
@@ -249,7 +240,6 @@ class _RentalItemsState extends State<RentalItems> {
     );
   }
 
-  // ⭐⭐⭐ RESPONSIVE GRID VIEW ⭐⭐⭐
   Widget _buildGrid() {
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -258,7 +248,6 @@ class _RentalItemsState extends State<RentalItems> {
         int columns;
         double ratio;
 
-        // PRODUCTION-LEVEL RESPONSIVE BREAKPOINTS
         if (width <= 380) {
           columns = 1;
           ratio = 0.85;
@@ -312,8 +301,9 @@ class _RentalItemsState extends State<RentalItems> {
     );
   }
 
-  // ORIGINAL CARD UI — RESPONSIVE ONLY WHERE NEEDED
   Widget _buildCard(RentalItem item, int index) {
+    final conditionSafe = item.condition;
+
     return LayoutBuilder(
       builder: (context, c) {
         double imageHeight = c.maxHeight * 0.40;
@@ -367,18 +357,39 @@ class _RentalItemsState extends State<RentalItems> {
                               fontSize: 15,
                             ),
                           ),
+
                           const SizedBox(height: 3),
 
+                          // BRAND + CONDITION IN ONE PRODUCTION ROW
                           Row(
                             children: [
                               const Icon(Icons.camera, size: 14),
                               const SizedBox(width: 5),
+
                               Expanded(
                                 child: Text(
                                   item.brand,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: const TextStyle(fontSize: 12),
+                                ),
+                              ),
+
+                              const SizedBox(width: 10),
+
+                              Icon(
+                                Icons.circle,
+                                size: 10,
+                                color: _getConditionColor(conditionSafe),
+                              ),
+                              const SizedBox(width: 4),
+
+                              Text(
+                                conditionSafe,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: _getConditionColor(conditionSafe),
                                 ),
                               ),
                             ],
@@ -460,7 +471,6 @@ class _RentalItemsState extends State<RentalItems> {
                 ],
               ),
 
-              // Positioned Badge + Delete Icon
               Positioned(
                 top: 8,
                 right: 8,
@@ -511,5 +521,23 @@ class _RentalItemsState extends State<RentalItems> {
         );
       },
     );
+  }
+
+  // CONDITION COLORS
+  Color _getConditionColor(String condition) {
+    switch (condition) {
+      case 'Brand New':
+        return Colors.green;
+      case 'Excellent':
+        return Colors.teal;
+      case 'Good':
+        return Colors.orange;
+      case 'Fair':
+        return Colors.redAccent;
+      case 'Needs Repair':
+        return Colors.grey;
+      default:
+        return Colors.blueGrey;
+    }
   }
 }

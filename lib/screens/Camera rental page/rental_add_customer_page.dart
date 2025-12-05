@@ -831,11 +831,7 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
               color: Colors.white.withOpacity(0.2),
               shape: BoxShape.circle,
             ),
-            child: const Icon(
-              Icons.arrow_back_ios_new_rounded,
-              color: Colors.white,
-              size: 18,
-            ),
+            child: const Icon(Icons.arrow_back, color: Colors.white, size: 30),
           ),
           onPressed: () => Navigator.pop(context),
         ),

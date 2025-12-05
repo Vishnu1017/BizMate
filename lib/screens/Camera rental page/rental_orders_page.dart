@@ -30,6 +30,7 @@ class _RentalOrdersPageState extends State<RentalOrdersPage> {
     "Partially Paid",
     "Unpaid",
   ];
+
   late final VoidCallback _rentalSalesListener;
 
   @override
@@ -53,9 +54,8 @@ class _RentalOrdersPageState extends State<RentalOrdersPage> {
 
     _loadOrders();
 
-    // 🔥 SAFE LISTENER FIX
     _rentalSalesListener = () {
-      if (!mounted) return; // prevents setState crash
+      if (!mounted) return;
       _loadOrders();
     };
 
@@ -71,14 +71,12 @@ class _RentalOrdersPageState extends State<RentalOrdersPage> {
           .listenable(keys: ['rental_sales'])
           .removeListener(_rentalSalesListener);
     } catch (_) {}
-
     super.dispose();
   }
 
   void _loadOrders() {
     final raw = userBox.get('rental_sales', defaultValue: []);
     allOrders = List<RentalSaleModel>.from(raw);
-
     _applyFilters();
     setState(() {});
   }
@@ -86,7 +84,6 @@ class _RentalOrdersPageState extends State<RentalOrdersPage> {
   void _applyFilters() {
     List<RentalSaleModel> temp = List.from(allOrders);
 
-    // Search filter
     if (_searchQuery.isNotEmpty) {
       final q = _searchQuery.toLowerCase();
 
@@ -98,7 +95,6 @@ class _RentalOrdersPageState extends State<RentalOrdersPage> {
           }).toList();
     }
 
-    // Payment status filters
     if (_statusFilter == "Fully Paid") {
       temp = temp.where((o) => o.amountPaid >= o.totalCost).toList();
     } else if (_statusFilter == "Partially Paid") {
@@ -123,32 +119,21 @@ class _RentalOrdersPageState extends State<RentalOrdersPage> {
       onConfirm: () {
         final raw = userBox.get('rental_sales', defaultValue: []);
         List<RentalSaleModel> updatedList = List<RentalSaleModel>.from(raw);
-
         updatedList.removeAt(index);
-
         userBox.put('rental_sales', updatedList);
       },
     );
   }
 
-  // ---------------------------------------------------------------------------
-  // SEARCH HANDLER (CORRECTED FOR RENTAL ORDERS)
-  // ---------------------------------------------------------------------------
   void _handleSearchChanged(String query) {
     setState(() {
       _searchQuery = query.trim();
-      _applyFilters(); // <-- Apply filters again with updated search
+      _applyFilters();
     });
   }
 
-  // ---------------------------------------------------------------------------
-  // DATE RANGE HANDLER (Not used but required by widget)
-  // ---------------------------------------------------------------------------
-  void _handleDateRangeChanged(DateTimeRange? range) {
-    // No date filter in orders page — function kept empty intentionally.
-  }
+  void _handleDateRangeChanged(DateTimeRange? range) {}
 
-  // STATUS COLORS
   Color _statusColor(RentalSaleModel o) {
     if (o.amountPaid >= o.totalCost) return const Color(0xFF10B981);
     if (o.amountPaid == 0) return const Color(0xFFEF4444);
@@ -163,121 +148,139 @@ class _RentalOrdersPageState extends State<RentalOrdersPage> {
 
   @override
   Widget build(BuildContext context) {
+    final w = MediaQuery.of(context).size.width;
+
+    double scale =
+        w < 360
+            ? 0.78
+            : w < 480
+            ? 0.90
+            : w < 700
+            ? 1.00
+            : w < 1100
+            ? 1.15
+            : 1.25;
+
     return Scaffold(
       backgroundColor: Colors.transparent,
-      body: Column(
-        children: [
-          // 🔍 MODERN SEARCH BAR
-          AdvancedSearchBar(
-            hintText: 'Search orders...',
-            onSearchChanged: _handleSearchChanged,
-            onDateRangeChanged: _handleDateRangeChanged,
-            showDateFilter: false,
-          ),
-
-          // 🔘 MODERN FILTER CHIPS
-          SizedBox(
-            height: 52,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: filters.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 8),
-              itemBuilder: (_, i) {
-                final filter = filters[i];
-                final selected = _statusFilter == filter;
-
-                return FilterChip(
-                  label: Text(
-                    filter,
-                    style: TextStyle(
-                      color: selected ? Colors.white : Colors.grey[700],
-                      fontWeight: FontWeight.w600,
-                      fontSize: 13,
-                    ),
-                  ),
-                  selected: selected,
-                  onSelected: (bool value) {
-                    _statusFilter = filter;
-                    _applyFilters();
-                    setState(() {});
-                  },
-                  backgroundColor: Colors.white,
-                  selectedColor: const Color(0xFF3B82F6),
-                  checkmarkColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                    side: BorderSide(
-                      color:
-                          selected
-                              ? const Color(0xFF3B82F6)
-                              : Colors.grey[300]!,
-                      width: selected ? 0 : 1,
-                    ),
-                  ),
-                  elevation: selected ? 2 : 0,
-                  shadowColor: Colors.black.withOpacity(0.1),
-                );
-              },
+      body: MediaQuery.removePadding(
+        removeTop: true,
+        context: context,
+        child: Column(
+          children: [
+            AdvancedSearchBar(
+              hintText: 'Search orders...',
+              onSearchChanged: _handleSearchChanged,
+              onDateRangeChanged: _handleDateRangeChanged,
+              showDateFilter: false,
             ),
-          ),
 
-          const SizedBox(height: 8),
+            SizedBox(height: 6 * scale),
 
-          // 📊 ORDER SUMMARY
-          if (filteredOrders.isNotEmpty) _buildOrderSummary(),
+            SizedBox(
+              height: 45 * scale,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                padding: EdgeInsets.symmetric(horizontal: 14 * scale),
+                itemCount: filters.length,
+                separatorBuilder: (_, __) => SizedBox(width: 8 * scale),
+                itemBuilder: (_, i) {
+                  final filter = filters[i];
+                  final selected = _statusFilter == filter;
 
-          // 📌 MODERN ORDER LIST
-          Expanded(
-            child:
-                filteredOrders.isEmpty
-                    ? _buildEmptyState()
-                    : ListView.builder(
-                      itemCount: filteredOrders.length,
-                      physics: const BouncingScrollPhysics(),
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 8,
-                        horizontal: 16,
+                  return FilterChip(
+                    label: Text(
+                      filter,
+                      style: TextStyle(
+                        color: selected ? Colors.white : Colors.grey[700],
+                        fontWeight: FontWeight.w600,
+                        fontSize: 12 * scale,
                       ),
-                      itemBuilder: (context, index) {
-                        final order = filteredOrders[index];
-                        final originalIndex = allOrders.indexOf(order);
+                    ),
+                    selected: selected,
+                    onSelected: (bool value) {
+                      _statusFilter = filter;
+                      _applyFilters();
+                      setState(() {});
+                    },
+                    backgroundColor: Colors.white,
+                    selectedColor: const Color(0xFF3B82F6),
+                    checkmarkColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16 * scale),
+                      side: BorderSide(
+                        color:
+                            selected
+                                ? const Color(0xFF3B82F6)
+                                : Colors.grey[300]!,
+                        width: selected ? 0 : 1,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
 
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: Dismissible(
-                            key: Key(order.id),
-                            direction: DismissDirection.endToStart,
-                            background: Container(
-                              alignment: Alignment.centerRight,
-                              padding: const EdgeInsets.only(right: 24),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFEF4444),
-                                borderRadius: BorderRadius.circular(16),
+            SizedBox(height: 8 * scale),
+
+            if (filteredOrders.isNotEmpty) _buildOrderSummary(scale),
+
+            Expanded(
+              child:
+                  filteredOrders.isEmpty
+                      ? _buildEmptyState(scale)
+                      : ListView.builder(
+                        itemCount: filteredOrders.length,
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 10 * scale,
+                          vertical: 8 * scale,
+                        ),
+                        physics: const BouncingScrollPhysics(),
+                        itemBuilder: (context, index) {
+                          final order = filteredOrders[index];
+                          final originalIndex = allOrders.indexOf(order);
+
+                          return Padding(
+                            padding: EdgeInsets.only(bottom: 12 * scale),
+                            child: Dismissible(
+                              key: Key(order.id),
+                              direction: DismissDirection.endToStart,
+                              background: Container(
+                                alignment: Alignment.centerRight,
+                                padding: EdgeInsets.only(right: 24 * scale),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFEF4444),
+                                  borderRadius: BorderRadius.circular(
+                                    16 * scale,
+                                  ),
+                                ),
+                                child: Icon(
+                                  Icons.delete_rounded,
+                                  color: Colors.white,
+                                  size: 22 * scale,
+                                ),
                               ),
-                              child: const Icon(
-                                Icons.delete_rounded,
-                                color: Colors.white,
-                                size: 28,
+                              confirmDismiss: (_) async {
+                                _deleteOrder(originalIndex);
+                                return false;
+                              },
+                              child: _buildOrderCard(
+                                order,
+                                originalIndex,
+                                scale,
                               ),
                             ),
-                            confirmDismiss: (_) async {
-                              _deleteOrder(originalIndex);
-                              return false;
-                            },
-                            child: _buildOrderCard(order, originalIndex),
-                          ),
-                        );
-                      },
-                    ),
-          ),
-        ],
+                          );
+                        },
+                      ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  // 📊 ORDER SUMMARY WIDGET
-  Widget _buildOrderSummary() {
+  Widget _buildOrderSummary(double scale) {
     final totalAmount = filteredOrders.fold(
       0.0,
       (sum, order) => sum + order.totalCost,
@@ -289,63 +292,67 @@ class _RentalOrdersPageState extends State<RentalOrdersPage> {
     final pendingAmount = totalAmount - paidAmount;
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      padding: const EdgeInsets.all(16),
+      margin: EdgeInsets.symmetric(horizontal: 10 * scale, vertical: 6 * scale),
+      padding: EdgeInsets.all(14 * scale),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
+          colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
         ),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(16 * scale),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF667EEA).withOpacity(0.3),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
+            color: const Color(0xFF667EEA).withOpacity(0.25),
+            blurRadius: 10 * scale,
+            offset: Offset(0, 5 * scale),
           ),
         ],
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _buildSummaryItem(
+          _summaryItem(
             "Total",
             "₹${totalAmount.toStringAsFixed(0)}",
             Colors.white,
+            scale,
           ),
-          _buildSummaryItem(
+          _summaryItem(
             "Paid",
             "₹${paidAmount.toStringAsFixed(0)}",
             const Color(0xFF10B981),
+            scale,
           ),
-          _buildSummaryItem(
+          _summaryItem(
             "Pending",
             "₹${pendingAmount.toStringAsFixed(0)}",
             const Color(0xFFF59E0B),
+            scale,
           ),
         ],
       ),
     );
   }
 
-  Widget _buildSummaryItem(String label, String value, Color valueColor) {
+  Widget _summaryItem(
+    String label,
+    String value,
+    Color valueColor,
+    double scale,
+  ) {
     return Column(
       children: [
         Text(
           label,
-          style: const TextStyle(
-            color: Colors.white70,
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-          ),
+          style: TextStyle(color: Colors.white70, fontSize: 11 * scale),
         ),
-        const SizedBox(height: 4),
+        SizedBox(height: 4 * scale),
         Text(
           value,
           style: TextStyle(
             color: valueColor,
-            fontSize: 16,
+            fontSize: 16 * scale,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -353,125 +360,123 @@ class _RentalOrdersPageState extends State<RentalOrdersPage> {
     );
   }
 
-  // 🎨 EMPTY STATE DESIGN
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(double scale) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            width: 120,
-            height: 120,
+            width: 110 * scale,
+            height: 110 * scale,
             decoration: BoxDecoration(
               color: Colors.grey[100],
               shape: BoxShape.circle,
             ),
             child: Icon(
               Icons.inventory_2_outlined,
-              size: 50,
+              size: 45 * scale,
               color: Colors.grey[400],
             ),
           ),
-          const SizedBox(height: 24),
+          SizedBox(height: 18 * scale),
           Text(
             "No Orders Found",
             style: TextStyle(
               color: Colors.grey[600],
-              fontSize: 18,
+              fontSize: 16 * scale,
               fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 6 * scale),
           Text(
             "Try adjusting your search or filter",
-            style: TextStyle(color: Colors.grey[500], fontSize: 14),
+            style: TextStyle(color: Colors.grey[500], fontSize: 13 * scale),
           ),
         ],
       ),
     );
   }
 
-  // 📦 MODERN ORDER CARD UI
-  Widget _buildOrderCard(RentalSaleModel o, int index) {
+  Widget _buildOrderCard(RentalSaleModel o, int index, double scale) {
     final statusColor = _statusColor(o);
     final statusLabel = _statusLabel(o);
 
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(16 * scale),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.08),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
+            blurRadius: 12 * scale,
+            offset: Offset(0, 4 * scale),
           ),
         ],
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(16),
-          onTap: () {
-            // Add onTap functionality here
-          },
+          borderRadius: BorderRadius.circular(16 * scale),
+          onTap: () {},
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            padding: EdgeInsets.symmetric(
+              horizontal: 14 * scale,
+              vertical: 10 * scale,
+            ),
             child: Row(
               children: [
-                // Status Indicator
                 Container(
-                  width: 4,
-                  height: 60,
+                  width: 4 * scale,
+                  height: 60 * scale,
                   decoration: BoxDecoration(
                     color: statusColor,
-                    borderRadius: BorderRadius.circular(2),
+                    borderRadius: BorderRadius.circular(2 * scale),
                   ),
                 ),
-                const SizedBox(width: 16),
 
-                // Order Details
+                SizedBox(width: 14 * scale),
+
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      /// NAME + STATUS
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
                             o.customerName,
-                            style: const TextStyle(
-                              fontSize: 16,
+                            style: TextStyle(
+                              fontSize: 16 * scale,
                               fontWeight: FontWeight.w600,
                               color: Colors.black87,
                             ),
                           ),
                           Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 4,
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 10 * scale,
+                              vertical: 4 * scale,
                             ),
                             decoration: BoxDecoration(
                               color: statusColor.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(12 * scale),
                             ),
                             child: Row(
-                              mainAxisSize: MainAxisSize.min,
                               children: [
                                 Container(
-                                  width: 6,
-                                  height: 6,
+                                  width: 6 * scale,
+                                  height: 6 * scale,
                                   decoration: BoxDecoration(
                                     color: statusColor,
                                     shape: BoxShape.circle,
                                   ),
                                 ),
-                                const SizedBox(width: 6),
+                                SizedBox(width: 6 * scale),
                                 Text(
                                   statusLabel,
                                   style: TextStyle(
                                     color: statusColor,
-                                    fontSize: 11,
+                                    fontSize: 11 * scale,
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
@@ -480,38 +485,50 @@ class _RentalOrdersPageState extends State<RentalOrdersPage> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 8),
+
+                      SizedBox(height: 8 * scale),
+
                       Text(
                         o.itemName,
                         style: TextStyle(
                           color: Colors.grey[600],
-                          fontSize: 14,
+                          fontSize: 14 * scale,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
-                      const SizedBox(height: 4),
+
+                      SizedBox(height: 4 * scale),
+
                       Text(
-                        "${DateFormat('dd MMM yyyy').format(o.fromDateTime)} - ${DateFormat('dd MMM yyyy').format(o.toDateTime)}",
-                        style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                        "${DateFormat('dd MMM yyyy').format(o.fromDateTime)} - "
+                        "${DateFormat('dd MMM yyyy').format(o.toDateTime)}",
+                        style: TextStyle(
+                          color: Colors.grey[500],
+                          fontSize: 12 * scale,
+                        ),
                       ),
-                      const SizedBox(height: 8),
+
+                      SizedBox(height: 8 * scale),
+
                       Row(
                         children: [
                           Text(
                             "₹${o.totalCost.toStringAsFixed(0)}",
-                            style: const TextStyle(
-                              fontSize: 16,
+                            style: TextStyle(
+                              fontSize: 16 * scale,
                               fontWeight: FontWeight.w700,
                               color: Colors.black87,
                             ),
                           ),
-                          const SizedBox(width: 8),
+
+                          SizedBox(width: 8 * scale),
+
                           if (o.amountPaid < o.totalCost)
                             Text(
                               "Paid: ₹${o.amountPaid.toStringAsFixed(0)}",
                               style: TextStyle(
                                 color: Colors.green[600],
-                                fontSize: 12,
+                                fontSize: 12 * scale,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),

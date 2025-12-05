@@ -234,6 +234,7 @@ class _LoginScreenState extends State<LoginScreen>
 
     // Check the toggle flag set from ProfilePage
     final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('isLoggedIn', true);
     final enabledFlag = prefs.getBool('${email}_passcodeEnabled');
 
     // If flag is null, default to true (for old users before flag existed)
@@ -430,7 +431,11 @@ class _LoginScreenState extends State<LoginScreen>
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [Colors.blue.shade700, Colors.purple.shade500],
+                  colors: [
+                    Color(0xFF3EE4D8),
+                    Color(0xFF1FB5D0),
+                    Color(0xFF0F73B8),
+                  ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -454,6 +459,10 @@ class _LoginScreenState extends State<LoginScreen>
                       labelText: "Enter your email",
                       labelStyle: const TextStyle(color: Colors.white70),
                       errorText: _isResetEmailValid ? null : "Invalid email",
+                      errorStyle: TextStyle(
+                        color: Colors.redAccent, // 👈 Change color here
+                        fontWeight: FontWeight.bold,
+                      ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
                         borderSide: const BorderSide(color: Colors.white38),
@@ -558,8 +567,9 @@ class _LoginScreenState extends State<LoginScreen>
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: [
-                              Colors.blue.shade600,
-                              Colors.purple.shade500,
+                              Color(0xFF3EE4D8),
+                              Color(0xFF1FB5D0),
+                              Color(0xFF0F73B8),
                             ],
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
@@ -745,7 +755,7 @@ class _LoginScreenState extends State<LoginScreen>
         height: double.infinity,
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [Colors.blue.shade700, Colors.purple.shade500],
+            colors: [Color(0xFF3EE4D8), Color(0xFF1FB5D0), Color(0xFF0F73B8)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -799,6 +809,10 @@ class _LoginScreenState extends State<LoginScreen>
                                 _isFullNameValid
                                     ? null
                                     : "Name must be at least 2 characters",
+                            errorStyle: TextStyle(
+                              color: Colors.redAccent, // 👈 Change color here
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
 
@@ -863,6 +877,10 @@ class _LoginScreenState extends State<LoginScreen>
                                 _isPhoneValid
                                     ? null
                                     : "Enter a valid 10-digit phone number",
+                            errorStyle: TextStyle(
+                              color: Colors.redAccent, // 👈 Change color here
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
 
@@ -889,6 +907,10 @@ class _LoginScreenState extends State<LoginScreen>
                                   : isCreating
                                   ? "Enter a valid email"
                                   : "Enter valid email / phone",
+                          errorStyle: TextStyle(
+                            color: Colors.redAccent, // 👈 Change color here
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
 
@@ -929,6 +951,10 @@ class _LoginScreenState extends State<LoginScreen>
                               _isPasswordValid
                                   ? null
                                   : "Password must be at least 6 characters",
+                          errorStyle: TextStyle(
+                            color: Colors.redAccent, // 👈 Change color here
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ],

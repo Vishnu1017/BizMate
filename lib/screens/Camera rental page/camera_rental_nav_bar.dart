@@ -240,12 +240,12 @@ class _CameraRentalNavBarState extends State<CameraRentalNavBar> {
                 Container(
                   padding: EdgeInsets.all(
                     MediaQuery.of(context).size.width < 350
-                        ? 2 // very small phones
+                        ? 3 // very small phones
                         : MediaQuery.of(context).size.width < 500
-                        ? 4 // normal phones
+                        ? 5 // normal phones
                         : MediaQuery.of(context).size.width < 900
-                        ? 6 // tablets
-                        : 8, // desktops
+                        ? 7 // tablets
+                        : 9, // desktops
                   ),
                   width: _scaleForWidth(screenWidth, 44),
                   height: _scaleForWidth(screenWidth, 44),
@@ -333,28 +333,19 @@ class _CameraRentalNavBarState extends State<CameraRentalNavBar> {
             0,
             Icons.camera_alt_outlined,
             Icons.camera_alt,
-            'Sales',
           ),
           _buildNavItem(
             screenWidth,
             1,
             Icons.shopping_bag_outlined,
             Icons.shopping_bag,
-            'Orders',
           ),
-          _buildNavItem(
-            screenWidth,
-            2,
-            Icons.add_box_outlined,
-            Icons.add_box,
-            'Items',
-          ),
+          _buildNavItem(screenWidth, 2, Icons.add_box_outlined, Icons.add_box),
           _buildNavItem(
             screenWidth,
             3,
             Icons.people_alt_outlined,
             Icons.people_alt,
-            'Customers',
           ),
         ],
       ),
@@ -366,7 +357,6 @@ class _CameraRentalNavBarState extends State<CameraRentalNavBar> {
     int index,
     IconData outlineIcon,
     IconData filledIcon,
-    String label,
   ) {
     final isSelected = index == _currentIndex;
 
@@ -403,19 +393,11 @@ class _CameraRentalNavBarState extends State<CameraRentalNavBar> {
                   color: isSelected ? _primaryColor : _textSecondary,
                   size:
                       isSelected
-                          ? _scaleForWidth(screenWidth, 20)
-                          : _scaleForWidth(screenWidth, 18),
+                          ? _scaleForWidth(screenWidth, 27)
+                          : _scaleForWidth(screenWidth, 25),
                 ),
               ),
               SizedBox(height: _scaleForWidth(screenWidth, 6)),
-              Text(
-                label,
-                style: TextStyle(
-                  color: isSelected ? _primaryColor : _textSecondary,
-                  fontSize: _scaleForWidth(screenWidth, 10),
-                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                ),
-              ),
             ],
           ),
         ),
@@ -439,10 +421,10 @@ class _CameraRentalNavBarState extends State<CameraRentalNavBar> {
           Expanded(
             child: Padding(
               padding: EdgeInsets.only(
-                top: isSmallScreen ? 16 : 20,
-                left: _pagePadding(screenWidth).horizontal / 2,
-                right: _pagePadding(screenWidth).horizontal / 2,
-                bottom: _pagePadding(screenWidth).horizontal / 10,
+                top: isSmallScreen ? 8 : 10,
+                left: _pagePadding(screenWidth).horizontal / 4,
+                right: _pagePadding(screenWidth).horizontal / 4,
+                bottom: _pagePadding(screenWidth).horizontal / 11,
               ),
               child: Column(
                 children: [

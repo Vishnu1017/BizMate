@@ -1,12 +1,19 @@
-import 'dart:ui';
-import 'package:bizmate/widgets/app_snackbar.dart' show AppSnackBar;
+// lib/screens/delivery_tracker_page.dart
+import 'dart:convert' show jsonEncode, jsonDecode;
+import 'dart:ui' show lerpDouble;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:hugeicons/hugeicons.dart' show HugeIcon, HugeIcons;
 import 'package:url_launcher/url_launcher.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:hive/hive.dart';
+import 'package:bizmate/widgets/app_snackbar.dart' show AppSnackBar;
 import 'package:bizmate/models/sale.dart';
 
+/// DeliveryTrackerPage - fully responsive, polished and production-ready.
+/// Combines responsive helper functions, an iOS-style large title header,
+/// safe animations, and careful layout to avoid RenderFlex overflow.
 class DeliveryTrackerPage extends StatefulWidget {
   final Sale sale;
   final String phoneWithCountryCode;
@@ -23,9 +30,36 @@ class DeliveryTrackerPage extends StatefulWidget {
   State<DeliveryTrackerPage> createState() => _DeliveryTrackerPageState();
 }
 
-class _DeliveryTrackerPageState extends State<DeliveryTrackerPage> {
+// ------------------------- Responsive helper -------------------------
+class _R {
+  final double width;
+  final double height;
+  late final double scale;
+
+  _R(this.width, this.height) {
+    // Breakpoints tuned for phones, phablets, tablets, desktop
+    scale =
+        width < 360
+            ? 0.88
+            : width < 420
+            ? 0.95
+            : width < 600
+            ? 1.0
+            : width < 900
+            ? 1.12
+            : 1.25;
+  }
+
+  double sp(double size) => size * scale; // spacing/radius
+  double fp(double size) => size * scale; // font
+  double ip(double size) => size * scale; // icon
+}
+
+class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
+    with SingleTickerProviderStateMixin {
   final TextEditingController _linkController = TextEditingController();
   final TextEditingController _statusNotesController = TextEditingController();
+
   String? _selectedStatus;
   final List<String> statuses = [
     'All Non Editing Images',
@@ -34,7 +68,20 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage> {
     'Delivered',
   ];
 
-  // Map of status-specific note suggestions
+  final Map<String, Color> _statusColors = {
+    'All Non Editing Images': const Color(0xFF667EEA),
+    'Editing': const Color(0xFFF6AD55),
+    'Printed': const Color(0xFF9F7AEA),
+    'Delivered': const Color(0xFF48BB78),
+  };
+
+  final Map<String, IconData> _statusIcons = {
+    'All Non Editing Images': Icons.cloud_queue_rounded,
+    'Editing': Icons.auto_fix_high_rounded,
+    'Printed': Icons.local_printshop_rounded,
+    'Delivered': Icons.verified_rounded,
+  };
+
   final Map<String, String> _statusNoteSuggestions = {
     'All Non Editing Images':
         'Non-edited photos are ready for download. Final edited versions will be shared separately once completed.',
@@ -47,16 +94,57 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage> {
   List<Map<String, dynamic>> deliveryStatusHistory = [];
   String _previousSuggestion = '';
 
+  late final AnimationController _animationController;
+  late final Animation<double> _scaleAnimation;
+  late final Animation<double> _fadeAnimation;
+
+  int? _invoiceNumber;
+  bool _isSendingWhatsApp = false;
+  bool _isSaving = false;
+
+  // Store the Hive key separately
+  int? _hiveKey;
+
+  // A key used if we later need to measure the header/search bar etc.
+  final GlobalKey _pageKey = GlobalKey();
+
   @override
   void initState() {
     super.initState();
+
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+
+    _scaleAnimation = CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.fastOutSlowIn,
+    );
+
+    _fadeAnimation = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: const Interval(0.3, 1.0, curve: Curves.easeInOut),
+      ),
+    );
+
+    _animationController.forward();
+
     _linkController.text = widget.sale.deliveryLink;
     _selectedStatus =
-        widget.sale.deliveryStatus.isNotEmpty
+        (widget.sale.deliveryStatus.isNotEmpty)
             ? widget.sale.deliveryStatus
-            : 'All Non Editing Images';
+            : statuses.first;
 
-    // Initialize delivery status history if empty
+    // Initialize delivery status history
+    _initializeDeliveryHistory();
+
+    _updateStatusNoteSuggestion();
+    _loadHiveData();
+  }
+
+  void _initializeDeliveryHistory() {
     if (widget.sale.deliveryStatusHistory == null ||
         widget.sale.deliveryStatusHistory!.isEmpty) {
       deliveryStatusHistory = [
@@ -66,9 +154,95 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage> {
           'notes': 'Order has been received and is being processed',
         },
       ];
-      widget.sale.deliveryStatusHistory = deliveryStatusHistory;
     } else {
-      deliveryStatusHistory = widget.sale.deliveryStatusHistory!;
+      try {
+        deliveryStatusHistory =
+            widget.sale.deliveryStatusHistory!
+                .map((e) => jsonDecode(e) as Map<String, dynamic>)
+                .toList();
+      } catch (e) {
+        deliveryStatusHistory = [
+          {
+            'status': 'Order Received',
+            'dateTime': widget.sale.dateTime.toIso8601String(),
+            'notes': 'Order has been received and is being processed',
+          },
+        ];
+      }
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_animationController.isAnimating) {
+      _animationController.forward();
+    }
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    _linkController.dispose();
+    _statusNotesController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadHiveData() async {
+    try {
+      final salesBox = await Hive.openBox<Sale>('sales');
+
+      // Try to find the sale in Hive and get its key
+      final index = salesBox.values.toList().indexWhere((sale) {
+        return sale.customerName == widget.sale.customerName &&
+            sale.phoneNumber == widget.sale.phoneNumber &&
+            sale.dateTime == widget.sale.dateTime &&
+            sale.totalAmount == widget.sale.totalAmount;
+      });
+
+      if (mounted && index != -1) {
+        final keys = salesBox.keys.toList();
+        _hiveKey = keys[index] as int?;
+
+        // Also load invoice number
+        setState(() {
+          _invoiceNumber = index + 1;
+        });
+
+        // If found, update our sale with the Hive version's delivery info
+        final hiveSale = salesBox.get(_hiveKey);
+        if (hiveSale != null) {
+          // Update controllers with Hive data
+          _linkController.text = hiveSale.deliveryLink;
+          _selectedStatus =
+              hiveSale.deliveryStatus.isNotEmpty
+                  ? hiveSale.deliveryStatus
+                  : statuses.first;
+
+          // Update delivery history from Hive
+          if (hiveSale.deliveryStatusHistory != null &&
+              hiveSale.deliveryStatusHistory!.isNotEmpty) {
+            try {
+              deliveryStatusHistory =
+                  hiveSale.deliveryStatusHistory!
+                      .map((e) => jsonDecode(e) as Map<String, dynamic>)
+                      .toList();
+            } catch (e) {
+              // Keep existing history if parsing fails
+            }
+          }
+
+          _updateStatusNoteSuggestion();
+        }
+      } else {
+        // Sale not found in Hive, use default invoice numbering
+        final allSales = salesBox.values.toList();
+        setState(() {
+          _invoiceNumber = allSales.length + 1;
+        });
+      }
+    } catch (_) {
+      // silent in production
     }
   }
 
@@ -77,33 +251,139 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage> {
         _statusNoteSuggestions.containsKey(_selectedStatus) &&
         (_statusNotesController.text.isEmpty ||
             _statusNotesController.text == _previousSuggestion)) {
-      setState(() {
-        _previousSuggestion = _statusNoteSuggestions[_selectedStatus]!;
-        _statusNotesController.text = _previousSuggestion;
-      });
+      _previousSuggestion = _statusNoteSuggestions[_selectedStatus]!;
+      _statusNotesController.text = _previousSuggestion;
     }
   }
 
-  void _saveDeliveryDetails() async {
-    widget.sale.deliveryLink = _linkController.text;
-    widget.sale.deliveryStatus = _selectedStatus!;
-
-    // Add current status to history if it's new or changed
-    if (deliveryStatusHistory.isEmpty ||
-        deliveryStatusHistory.first['status'] != _selectedStatus) {
-      deliveryStatusHistory.insert(0, {
-        'status': _selectedStatus!,
-        'dateTime': DateTime.now().toIso8601String(),
-        'notes':
-            _statusNotesController.text.isNotEmpty
-                ? _statusNotesController.text
-                : null,
-      });
-      widget.sale.deliveryStatusHistory = deliveryStatusHistory;
+  Future<void> _saveDeliveryDetails() async {
+    if (_selectedStatus == null) {
+      AppSnackBar.showWarning(
+        context,
+        message: 'Please select a status',
+        duration: const Duration(seconds: 2),
+      );
+      return;
     }
 
-    await widget.sale.save();
-    Navigator.pop(context);
+    setState(() => _isSaving = true);
+
+    try {
+      // Update local sale object
+      widget.sale.deliveryLink = _linkController.text.trim();
+      widget.sale.deliveryStatus = _selectedStatus!;
+
+      // Update delivery status history
+      bool shouldAddToHistory = true;
+      if (deliveryStatusHistory.isNotEmpty) {
+        final lastStatus = deliveryStatusHistory.first['status'];
+        if (lastStatus == _selectedStatus) {
+          deliveryStatusHistory[0] = {
+            'status': _selectedStatus!,
+            'dateTime': DateTime.now().toIso8601String(),
+            'notes': _statusNotesController.text.trim(),
+          };
+          shouldAddToHistory = false;
+        }
+      }
+
+      if (shouldAddToHistory) {
+        deliveryStatusHistory.insert(0, {
+          'status': _selectedStatus!,
+          'dateTime': DateTime.now().toIso8601String(),
+          'notes': _statusNotesController.text.trim(),
+        });
+      }
+
+      widget.sale.deliveryStatusHistory =
+          deliveryStatusHistory.map((e) => jsonEncode(e)).toList();
+
+      // Get the Hive box
+      final salesBox = await Hive.openBox<Sale>('sales');
+
+      if (_hiveKey != null) {
+        // We have a Hive key, update the existing sale
+        final existingSale = salesBox.get(_hiveKey);
+        if (existingSale != null) {
+          existingSale.deliveryStatus = widget.sale.deliveryStatus;
+          existingSale.deliveryLink = widget.sale.deliveryLink;
+          existingSale.deliveryStatusHistory =
+              widget.sale.deliveryStatusHistory;
+
+          await existingSale.save();
+        } else {
+          // Key exists but sale doesn't? This shouldn't happen, but handle it
+          await _saveAsNewSale(salesBox);
+        }
+      } else {
+        // No Hive key, try to find by properties
+        await _saveByFindingSale(salesBox);
+      }
+
+      if (!mounted) return;
+
+      AppSnackBar.showSuccess(
+        context,
+        message: 'Delivery updated successfully',
+        duration: const Duration(seconds: 2),
+      );
+    } catch (e) {
+      debugPrint('Save error: $e');
+      if (mounted) {
+        AppSnackBar.showError(
+          context,
+          message: 'Failed to save: ${e.toString()}',
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
+  Future<void> _saveByFindingSale(Box<Sale> salesBox) async {
+    try {
+      // Find the existing sale by matching properties
+      final existingSaleIndex = salesBox.values.toList().indexWhere(
+        (s) =>
+            s.customerName == widget.sale.customerName &&
+            s.phoneNumber == widget.sale.phoneNumber &&
+            s.dateTime == widget.sale.dateTime &&
+            s.totalAmount == widget.sale.totalAmount,
+      );
+
+      if (existingSaleIndex != -1) {
+        // Get the actual key
+        final keys = salesBox.keys.toList();
+        final saleKey = keys[existingSaleIndex] as int;
+
+        // Get the Hive-managed sale
+        final hiveSale = salesBox.get(saleKey);
+        if (hiveSale != null) {
+          // Update the Hive-managed sale
+          hiveSale.deliveryStatus = widget.sale.deliveryStatus;
+          hiveSale.deliveryLink = widget.sale.deliveryLink;
+          hiveSale.deliveryStatusHistory = widget.sale.deliveryStatusHistory;
+
+          // Save the Hive-managed sale
+          await hiveSale.save();
+
+          // Store the key for future saves
+          _hiveKey = saleKey;
+        }
+      } else {
+        // This is a new sale, add it to Hive
+        await _saveAsNewSale(salesBox);
+      }
+    } catch (e) {
+      debugPrint("Error finding existing sale in Hive: $e");
+      // Fallback: Save as new sale
+      await _saveAsNewSale(salesBox);
+    }
+  }
+
+  Future<void> _saveAsNewSale(Box<Sale> salesBox) async {
+    final newKey = await salesBox.add(widget.sale);
+    _hiveKey = newKey;
   }
 
   void _sendWhatsApp() {
@@ -121,7 +401,8 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage> {
     if (phone.length < 10 || !RegExp(r'^[0-9]+$').hasMatch(phone)) {
       AppSnackBar.showWarning(
         context,
-        message: "Please enter a valid 10-digit phone number",duration: Duration(seconds: 2)
+        message: "Please enter a valid 10-digit phone number",
+        duration: Duration(seconds: 2),
       );
       return;
     }
@@ -158,160 +439,284 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage> {
   }
 
   void _showStatusHistory() {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isSmallScreen = screenWidth < 600;
-
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (BuildContext context) {
-        return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Container(
-            padding: EdgeInsets.all(isSmallScreen ? 16 : 20),
-            width: isSmallScreen ? screenWidth * 0.9 : 500,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Delivery Status History',
-                  style: TextStyle(
-                    fontSize: isSmallScreen ? 18 : 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                SizedBox(height: 16),
-                deliveryStatusHistory.isEmpty
-                    ? Center(
-                      child: Text(
-                        'No status history available',
-                        style: TextStyle(
-                          fontSize: isSmallScreen ? 14 : 16,
-                          color: Colors.grey,
-                        ),
-                      ),
-                    )
-                    : Expanded(
-                      child: ListView.builder(
-                        shrinkWrap: true,
-                        itemCount: deliveryStatusHistory.length,
-                        itemBuilder: (context, index) {
-                          final status = deliveryStatusHistory[index];
-                          return _buildHistoryItem(
-                            status,
-                            index,
-                            deliveryStatusHistory.length,
-                            isSmallScreen,
-                          );
-                        },
-                      ),
-                    ),
-                SizedBox(height: 20),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: Text('Close'),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => _buildHistorySheet(),
     );
   }
 
-  Widget _buildHistoryItem(
-    Map<String, dynamic> status,
-    int index,
-    int totalItems,
-    bool isSmallScreen,
-  ) {
+  Widget _buildHistorySheet() {
+    final height = MediaQuery.of(context).size.height * 0.78;
     return Container(
-      margin: EdgeInsets.only(bottom: isSmallScreen ? 12 : 16),
+      height: height,
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(28),
+          topRight: Radius.circular(28),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 40,
+            spreadRadius: 8,
+          ),
+        ],
+      ),
+      child: SafeArea(
+        top: false,
+        child: Column(
+          children: [
+            const SizedBox(height: 12),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Row(
+                children: [
+                  Container(
+                    width: 46,
+                    height: 46,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.timeline_rounded,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Text(
+                      'Delivery Timeline',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close_rounded),
+                    tooltip: 'Close timeline',
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Expanded(
+              child:
+                  deliveryStatusHistory.isEmpty
+                      ? Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.timeline_rounded,
+                              size: 64,
+                              color: Colors.grey[300],
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              'No history available',
+                              style: TextStyle(
+                                color: Colors.grey[600],
+                                fontSize: 15,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                      : ListView.separated(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 8,
+                        ),
+                        itemCount: deliveryStatusHistory.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 12),
+                        itemBuilder:
+                            (context, index) => _buildTimelineItem(
+                              deliveryStatusHistory[index],
+                              index,
+                            ),
+                      ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: OutlinedButton.styleFrom(
+                    backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    side: BorderSide(color: Colors.grey[200]!),
+                  ),
+                  child: const Text(
+                    'Close Timeline',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTimelineItem(Map<String, dynamic> status, int index) {
+    final isCurrent = index == 0;
+    DateTime dateTime;
+    try {
+      dateTime = DateTime.parse(status['dateTime']);
+    } catch (_) {
+      dateTime = DateTime.now();
+    }
+    final formattedDate = DateFormat('MMM dd, yyyy').format(dateTime);
+    final formattedTime = DateFormat('hh:mm a').format(dateTime);
+
+    return Container(
+      decoration: BoxDecoration(
+        color: isCurrent ? Colors.white : Colors.grey[50],
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: isCurrent ? Colors.grey.withOpacity(0.12) : Colors.grey[200]!,
+          width: isCurrent ? 1.4 : 1,
+        ),
+        boxShadow:
+            isCurrent
+                ? [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.04),
+                    blurRadius: 14,
+                    spreadRadius: 1,
+                  ),
+                ]
+                : null,
+      ),
+      padding: const EdgeInsets.all(14),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Timeline indicator
           Column(
             children: [
               Container(
-                width: isSmallScreen ? 16 : 20,
-                height: isSmallScreen ? 16 : 20,
+                width: 42,
+                height: 42,
                 decoration: BoxDecoration(
-                  color: index == 0 ? Colors.green : Colors.grey[400],
-                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    colors:
+                        isCurrent
+                            ? [const Color(0xFF667EEA), const Color(0xFF764BA2)]
+                            : [Colors.grey[300]!, Colors.grey[400]!],
+                  ),
+                  borderRadius: BorderRadius.circular(10),
                 ),
-                child:
-                    index == 0
-                        ? Icon(
-                          Icons.check,
-                          color: Colors.white,
-                          size: isSmallScreen ? 12 : 14,
-                        )
-                        : null,
+                child: Center(
+                  child: Icon(
+                    isCurrent ? Icons.check_rounded : Icons.circle_rounded,
+                    color: Colors.white,
+                    size: isCurrent ? 20 : 12,
+                  ),
+                ),
               ),
-              if (index < totalItems - 1)
+              if (index < deliveryStatusHistory.length - 1)
                 Container(
                   width: 2,
-                  height: isSmallScreen ? 40 : 50,
-                  color: Colors.grey[300],
+                  height: 48,
+                  color: Colors.grey[200],
+                  margin: const EdgeInsets.only(top: 8),
                 ),
             ],
           ),
-          SizedBox(width: isSmallScreen ? 12 : 16),
-
-          // Status content
+          const SizedBox(width: 14),
           Expanded(
-            child: Card(
-              elevation: 2,
-              child: Padding(
-                padding: EdgeInsets.all(isSmallScreen ? 12 : 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
                   children: [
-                    Text(
-                      status['status'],
-                      style: TextStyle(
-                        fontSize: isSmallScreen ? 16 : 17,
-                        fontWeight: FontWeight.bold,
-                        color: index == 0 ? Colors.green[700] : Colors.black,
+                    Expanded(
+                      child: Text(
+                        status['status'] ?? 'Status',
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
-                    SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.access_time,
-                          size: 14,
-                          color: Colors.grey[600],
+                    if (isCurrent)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
                         ),
-                        SizedBox(width: 4),
-                        Text(
-                          DateFormat(
-                            'dd MMM yyyy, hh:mm a',
-                          ).format(DateTime.parse(status['dateTime'])),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF48BB78),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Text(
+                          'Current',
                           style: TextStyle(
-                            fontSize: isSmallScreen ? 12 : 13,
-                            color: Colors.grey[600],
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
-                      ],
-                    ),
-                    if (status['notes'] != null &&
-                        status['notes'].isNotEmpty) ...[
-                      SizedBox(height: 8),
-                      Text(
-                        status['notes'],
-                        style: TextStyle(fontSize: isSmallScreen ? 14 : 15),
                       ),
-                    ],
                   ],
                 ),
-              ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.calendar_today_rounded,
+                      size: 14,
+                      color: Colors.grey[500],
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      '$formattedDate • $formattedTime',
+                      style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+                    ),
+                  ],
+                ),
+                if (status['notes'] != null &&
+                    (status['notes'] as String).isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[50],
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: Colors.grey[100]!),
+                    ),
+                    child: Text(
+                      status['notes'],
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
         ],
@@ -320,537 +725,818 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage> {
   }
 
   int getCurrentStepIndex() {
-    return statuses.indexOf(_selectedStatus ?? 'All Non Editing Images');
+    return statuses
+        .indexOf(_selectedStatus ?? statuses.first)
+        .clamp(0, statuses.length - 1);
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
-    final isSmallScreen = screenWidth < 600;
-    final isPortrait = screenHeight > screenWidth;
-
-    return Scaffold(
-      extendBodyBehindAppBar: true,
-      appBar: PreferredSize(
-        preferredSize: Size.fromHeight(kToolbarHeight),
-        child: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Color(0xFF1A237E), Color(0xFF00BCD4)],
-              begin: Alignment.centerLeft,
-              end: Alignment.centerRight,
-            ),
-          ),
-          child: AppBar(
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            automaticallyImplyLeading: true,
-            centerTitle: true,
-            iconTheme: IconThemeData(color: Colors.white),
-            title: Text(
-              'Photo Delivery Tracker',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: isSmallScreen ? 18 : 20,
-              ),
-            ),
-            actions: [
-              IconButton(
-                icon: Icon(Icons.history),
-                onPressed: _showStatusHistory,
-                tooltip: 'View History',
-              ),
-            ],
-          ),
-        ),
-      ),
-      body: Container(
-        width: double.infinity,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFF1A237E), Color(0xFF00BCD4).withOpacity(0.4)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
-        child: Center(
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: EdgeInsets.only(
-                top: MediaQuery.of(context).padding.top + kToolbarHeight + 20,
-                bottom: isSmallScreen ? 12 : 20,
-                left: isSmallScreen ? 12 : 20,
-                right: isSmallScreen ? 12 : 20,
-              ),
-              child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  maxWidth: isSmallScreen ? double.infinity : 600,
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(24),
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
-                    child: Container(
-                      padding: EdgeInsets.all(isSmallScreen ? 16 : 20),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.12),
-                        borderRadius: BorderRadius.circular(24),
-                        border: Border.all(color: Colors.white30, width: 1.5),
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          // Customer Info
-                          _buildCustomerInfo(isSmallScreen),
-                          SizedBox(height: isSmallScreen ? 15 : 20),
-
-                          // Stepper Timeline - Responsive version
-                          _buildResponsiveStepper(isSmallScreen, isPortrait),
-                          SizedBox(height: isSmallScreen ? 10 : 20),
-
-                          // Status Dropdown
-                          DropdownButtonFormField<String>(
-                            initialValue: _selectedStatus,
-                            decoration: InputDecoration(
-                              labelText: 'Delivery Status',
-                              labelStyle: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w600,
-                                fontSize: isSmallScreen ? 14 : 16,
-                              ),
-                              filled: true,
-                              fillColor: Colors.white.withOpacity(0.05),
-                              contentPadding: EdgeInsets.symmetric(
-                                vertical: isSmallScreen ? 14 : 18,
-                                horizontal: isSmallScreen ? 12 : 16,
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(16),
-                                borderSide: BorderSide(
-                                  color: Colors.white.withOpacity(0.2),
-                                  width: 1.2,
-                                ),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(16),
-                                borderSide: BorderSide(
-                                  color: Colors.white,
-                                  width: 1.5,
-                                ),
-                              ),
-                            ),
-                            dropdownColor: Colors.white,
-                            iconEnabledColor: Colors.white,
-                            icon: Icon(
-                              Icons.keyboard_arrow_down_rounded,
-                              size: isSmallScreen ? 24 : 28,
-                            ),
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: isSmallScreen ? 14 : 16,
-                            ),
-                            items:
-                                statuses.map((status) {
-                                  return DropdownMenuItem<String>(
-                                    value: status,
-                                    child: Text(
-                                      status,
-                                      style: TextStyle(
-                                        color: Colors.black,
-                                        fontWeight: FontWeight.w700,
-                                        fontSize: isSmallScreen ? 13 : 14,
-                                      ),
-                                    ),
-                                  );
-                                }).toList(),
-                            selectedItemBuilder: (BuildContext context) {
-                              return statuses.map((status) {
-                                return Text(
-                                  status,
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: isSmallScreen ? 14 : 16,
-                                  ),
-                                );
-                              }).toList();
-                            },
-                            onChanged: (value) {
-                              setState(() {
-                                _selectedStatus = value!;
-                                // Update the status note when status changes
-                                _updateStatusNoteSuggestion();
-                              });
-                            },
-                          ),
-                          SizedBox(height: isSmallScreen ? 15 : 20),
-
-                          // Status Notes with suggestion indicator
-                          Stack(
-                            children: [
-                              TextFormField(
-                                controller: _statusNotesController,
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: isSmallScreen ? 14 : 16,
-                                ),
-                                decoration: InputDecoration(
-                                  labelText: 'Status Notes (Optional)',
-                                  labelStyle: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: isSmallScreen ? 14 : 16,
-                                  ),
-                                  filled: true,
-                                  fillColor: Colors.white.withOpacity(0.05),
-                                  contentPadding: EdgeInsets.symmetric(
-                                    vertical: isSmallScreen ? 14 : 18,
-                                    horizontal: isSmallScreen ? 12 : 16,
-                                  ),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(16),
-                                    borderSide: BorderSide(
-                                      color: Colors.white.withOpacity(0.2),
-                                      width: 1.2,
-                                    ),
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(16),
-                                    borderSide: BorderSide(
-                                      color: Colors.white,
-                                      width: 1.5,
-                                    ),
-                                  ),
-                                ),
-                                maxLines: 2,
-                                onTap: () {
-                                  // Clear the field if it contains the default suggestion
-                                  if (_statusNotesController.text ==
-                                      _previousSuggestion) {
-                                    setState(() {
-                                      _statusNotesController.clear();
-                                      _previousSuggestion = '';
-                                    });
-                                  }
-                                },
-                                onChanged: (value) {
-                                  // Track if user modifies the suggestion
-                                  if (value != _previousSuggestion) {
-                                    _previousSuggestion = '';
-                                  }
-                                },
-                              ),
-                              if (_statusNotesController.text.isEmpty ||
-                                  _statusNotesController.text ==
-                                      _previousSuggestion)
-                                Positioned(
-                                  right: 12,
-                                  top: 12,
-                                  child: GestureDetector(
-                                    onTap: () {
-                                      // Apply the suggestion when the hint is tapped
-                                      if (_selectedStatus != null &&
-                                          _statusNoteSuggestions.containsKey(
-                                            _selectedStatus,
-                                          )) {
-                                        setState(() {
-                                          _previousSuggestion =
-                                              _statusNoteSuggestions[_selectedStatus]!;
-                                          _statusNotesController.text =
-                                              _previousSuggestion;
-                                        });
-                                      }
-                                    },
-                                    child: Tooltip(
-                                      message: 'Apply status note template',
-                                      child: Icon(
-                                        Icons.lightbulb_outline,
-                                        color: Colors.amber,
-                                        size: isSmallScreen ? 18 : 20,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                            ],
-                          ),
-                          SizedBox(height: isSmallScreen ? 15 : 20),
-
-                          // Link Field
-                          TextFormField(
-                            controller: _linkController,
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: isSmallScreen ? 14 : 16,
-                            ),
-                            decoration: InputDecoration(
-                              labelText: 'Google Drive / Download Link',
-                              labelStyle: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w600,
-                                fontSize: isSmallScreen ? 14 : 16,
-                              ),
-                              filled: true,
-                              fillColor: Colors.white.withOpacity(0.05),
-                              contentPadding: EdgeInsets.symmetric(
-                                vertical: isSmallScreen ? 14 : 18,
-                                horizontal: isSmallScreen ? 12 : 16,
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(16),
-                                borderSide: BorderSide(
-                                  color: Colors.white.withOpacity(0.2),
-                                  width: 1.2,
-                                ),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(16),
-                                borderSide: BorderSide(
-                                  color: Colors.white,
-                                  width: 1.5,
-                                ),
-                              ),
-                            ),
-                          ),
-                          SizedBox(height: isSmallScreen ? 20 : 30),
-
-                          // Responsive Buttons
-                          _buildResponsiveButtons(isSmallScreen),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
+  // ---------------------- Large iOS-style header delegate ----------------------
+  // Minimal custom delegate for a polished large title look.
+  // It provides smooth interpolation and pinned small title overlay when collapsed.
+  SliverPersistentHeader _buildLargeHeader(_R r) {
+    return SliverPersistentHeader(
+      pinned: true,
+      delegate: _LargeTitleDelegate(
+        expandedHeight: r.sp(140),
+        title: 'Delivery Tracker',
+        subtitle: 'Track photo delivery progress',
+        onBack: () => Navigator.pop(context),
+        onHistory: _showStatusHistory,
       ),
     );
   }
 
-  Widget _buildCustomerInfo(bool isSmallScreen) {
-    return Card(
-      color: Colors.white.withOpacity(0.1),
-      child: Padding(
-        padding: EdgeInsets.all(isSmallScreen ? 12 : 16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              widget.sale.customerName,
-              style: TextStyle(
-                fontSize: isSmallScreen ? 18 : 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-            SizedBox(height: 4),
-            Text(
-              widget.sale.phoneNumber,
-              style: TextStyle(
-                fontSize: isSmallScreen ? 14 : 16,
-                color: Colors.white70,
-              ),
-            ),
-            SizedBox(height: 4),
-            Text(
-              widget.sale.productName,
-              style: TextStyle(
-                fontSize: isSmallScreen ? 14 : 16,
-                color: Colors.white70,
-              ),
-            ),
-            SizedBox(height: 8),
-            Row(
-              children: [
-                Icon(Icons.calendar_today, size: 16, color: Colors.white70),
-                SizedBox(width: 4),
-                Text(
-                  DateFormat('dd MMM yyyy').format(widget.sale.dateTime),
-                  style: TextStyle(fontSize: 14, color: Colors.white70),
-                ),
-                SizedBox(width: 16),
-                Icon(Icons.receipt, size: 16, color: Colors.white70),
-                SizedBox(width: 4),
-                FutureBuilder<Box<Sale>>(
-                  future: Hive.openBox<Sale>('sales'),
-                  builder: (context, snapshot) {
-                    if (snapshot.hasData) {
-                      final box = snapshot.data!;
-                      final invoiceNumber =
-                          box.values.toList().indexOf(widget.sale) + 1;
-                      return Text(
-                        'Invoice #$invoiceNumber',
-                        style: TextStyle(fontSize: 14, color: Colors.white70),
-                      );
-                    }
-                    return Text(
-                      'Invoice #...',
-                      style: TextStyle(fontSize: 14, color: Colors.white70),
-                    );
-                  },
+  // ---------------------- Build the body ----------------------
+  @override
+  Widget build(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    final height = MediaQuery.of(context).size.height;
+    final r = _R(width, height);
+    // ignore: unused_local_variable
+    final isSmall = width < 600;
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFC),
+      body: SafeArea(
+        child: ScaleTransition(
+          scale: _scaleAnimation,
+          child: FadeTransition(
+            opacity: _fadeAnimation,
+            child: CustomScrollView(
+              key: _pageKey,
+              physics: const BouncingScrollPhysics(),
+              slivers: [
+                _buildLargeHeader(r),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: r.sp(16),
+                      vertical: r.sp(12),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // Customer card
+                        _buildCustomerInfoCard(r),
+                        SizedBox(height: r.sp(18)),
+
+                        // Progress card
+                        _buildProgressCard(r),
+                        SizedBox(height: r.sp(18)),
+
+                        // Status selector
+                        _buildStatusSelectorCard(r),
+                        SizedBox(height: r.sp(18)),
+
+                        // Notes
+                        _buildNotesCard(r),
+                        SizedBox(height: r.sp(18)),
+
+                        // Link
+                        _buildLinkCard(r),
+                        SizedBox(height: r.sp(22)),
+
+                        // Actions
+                        _buildActionButtons(r),
+                        SizedBox(height: r.sp(20)),
+                      ],
+                    ),
+                  ),
                 ),
               ],
             ),
-          ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildResponsiveStepper(bool isSmallScreen, bool isPortrait) {
-    if (isSmallScreen && !isPortrait) {
-      // Horizontal stepper for landscape on small screens
-      return SizedBox(
-        height: 100,
-        child: ListView.builder(
-          scrollDirection: Axis.horizontal,
-          itemCount: statuses.length,
-          itemBuilder: (context, index) {
-            return Container(
-              width: 150,
-              padding: EdgeInsets.all(8),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 24,
-                    height: 24,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color:
-                          index <= getCurrentStepIndex()
-                              ? Colors.white
-                              : Colors.white.withOpacity(0.3),
-                    ),
-                    child:
-                        index < getCurrentStepIndex()
-                            ? Icon(Icons.check, size: 16, color: Colors.black)
-                            : null,
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    statuses[index],
-                    style: TextStyle(
-                      color:
-                          index <= getCurrentStepIndex()
-                              ? Colors.white
-                              : Colors.white60,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 12,
-                    ),
-                    textAlign: TextAlign.center,
-                    maxLines: 2,
-                  ),
-                ],
+  // ---------------------- Individual card builders (responsive using _R) ----------------------
+  Widget _buildCustomerInfoCard(_R r) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(r.sp(16)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: r.sp(18),
+            spreadRadius: 1,
+          ),
+        ],
+      ),
+      padding: EdgeInsets.all(r.sp(14)),
+      child: Row(
+        children: [
+          Container(
+            width: r.sp(56),
+            height: r.sp(56),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
-            );
-          },
-        ),
-      );
-    } else {
-      // Vertical stepper for most cases
-      return MediaQuery.removePadding(
-        context: context,
-        removeTop: true,
-        child: Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.light(
-              primary: Colors.white,
-              onSurface: Colors.white54,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF667EEA).withOpacity(0.22),
+                  blurRadius: r.sp(12),
+                  spreadRadius: 1,
+                ),
+              ],
+            ),
+            child: Center(
+              child: Text(
+                widget.sale.customerName.isNotEmpty
+                    ? widget.sale.customerName.substring(0, 1).toUpperCase()
+                    : 'C',
+                style: TextStyle(
+                  fontSize: r.fp(20),
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
+                ),
+              ),
             ),
           ),
-          child: Stepper(
-            currentStep: getCurrentStepIndex(),
-            controlsBuilder: (context, _) => SizedBox.shrink(),
-            physics: NeverScrollableScrollPhysics(),
-            steps:
-                statuses.map((status) {
-                  final index = statuses.indexOf(status);
-                  return Step(
-                    title: Text(
-                      status,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w700,
-                        color:
-                            index <= getCurrentStepIndex()
-                                ? Colors.white
-                                : Colors.white60,
-                        fontSize: isSmallScreen ? 14 : 16,
-                      ),
+          SizedBox(width: r.sp(12)),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  widget.sale.customerName.isNotEmpty
+                      ? widget.sale.customerName
+                      : 'Customer',
+                  style: TextStyle(
+                    fontSize: r.fp(18),
+                    fontWeight: FontWeight.w800,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                SizedBox(height: r.sp(4)),
+                Text(
+                  widget.sale.phoneNumber,
+                  style: TextStyle(fontSize: r.fp(13), color: Colors.grey[600]),
+                ),
+                SizedBox(height: r.sp(8)),
+                Wrap(
+                  spacing: r.sp(8),
+                  runSpacing: r.sp(6),
+                  children: [
+                    _buildInfoChip(
+                      icon: Icons.photo_album_rounded,
+                      text: widget.sale.productName,
+                      r: r,
                     ),
-                    content: SizedBox.shrink(),
-                    isActive: index <= getCurrentStepIndex(),
-                    state:
-                        index < getCurrentStepIndex()
-                            ? StepState.complete
-                            : index == getCurrentStepIndex()
-                            ? StepState.editing
-                            : StepState.indexed,
-                  );
-                }).toList(),
+                    _buildInfoChip(
+                      icon: Icons.calendar_month_rounded,
+                      text: DateFormat('MMM dd').format(widget.sale.dateTime),
+                      r: r,
+                    ),
+                    if (_invoiceNumber != null)
+                      _buildInfoChip(
+                        icon: Icons.receipt_long_rounded,
+                        text: 'INV #$_invoiceNumber',
+                        r: r,
+                      ),
+                  ],
+                ),
+              ],
+            ),
           ),
-        ),
-      );
-    }
+        ],
+      ),
+    );
   }
 
-  Widget _buildResponsiveButtons(bool isSmallScreen) {
+  Widget _buildInfoChip({
+    required IconData icon,
+    required String text,
+    required _R r,
+  }) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: r.sp(10), vertical: r.sp(6)),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(r.sp(10)),
+        border: Border.all(color: Colors.grey[200]!),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: r.ip(14), color: Colors.grey[600]),
+          SizedBox(width: r.sp(8)),
+          Text(
+            text,
+            style: TextStyle(
+              fontSize: r.fp(12),
+              fontWeight: FontWeight.w500,
+              color: Colors.grey[700],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProgressCard(_R r) {
+    final currentIndex = getCurrentStepIndex();
+    final progress = ((currentIndex + 1) / statuses.length).clamp(0.0, 1.0);
+    final currentColor =
+        _statusColors[_selectedStatus ?? statuses.first] ??
+        const Color(0xFF667EEA);
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(r.sp(14)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: r.sp(16),
+            spreadRadius: 1,
+          ),
+        ],
+      ),
+      padding: EdgeInsets.all(r.sp(14)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Delivery Progress',
+                style: TextStyle(
+                  fontSize: r.fp(16),
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal: r.sp(10),
+                  vertical: r.sp(6),
+                ),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [currentColor, currentColor.withOpacity(0.85)],
+                  ),
+                  borderRadius: BorderRadius.circular(r.sp(12)),
+                ),
+                child: Text(
+                  statuses[currentIndex],
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: r.fp(12),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: r.sp(12)),
+          Container(
+            height: r.sp(12),
+            decoration: BoxDecoration(
+              color: Colors.grey[100],
+              borderRadius: BorderRadius.circular(r.sp(8)),
+            ),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final w = constraints.maxWidth * progress;
+                return Align(
+                  alignment: Alignment.centerLeft,
+                  child: Container(
+                    width: w,
+                    height: double.infinity,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
+                      ),
+                      borderRadius: BorderRadius.circular(r.sp(8)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF667EEA).withOpacity(0.18),
+                          blurRadius: r.sp(10),
+                          spreadRadius: 1,
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          SizedBox(height: r.sp(12)),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                '${(progress * 100).round()}% Complete',
+                style: TextStyle(
+                  fontSize: r.fp(12),
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey[600],
+                ),
+              ),
+              Text(
+                '${currentIndex + 1} of ${statuses.length} Steps',
+                style: TextStyle(
+                  fontSize: r.fp(12),
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey[600],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatusSelectorCard(_R r) {
+    final width = MediaQuery.of(context).size.width;
+    final int columns =
+        width < 420
+            ? 1
+            : width < 900
+            ? 2
+            : 3;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(r.sp(14)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: r.sp(16),
+            spreadRadius: 1,
+          ),
+        ],
+      ),
+      padding: EdgeInsets.all(r.sp(14)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Update Status',
+            style: TextStyle(fontSize: r.fp(16), fontWeight: FontWeight.w700),
+          ),
+          SizedBox(height: r.sp(12)),
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: columns,
+              crossAxisSpacing: r.sp(12),
+              mainAxisSpacing: r.sp(12),
+              childAspectRatio: width < 420 ? 4 : 3,
+            ),
+            itemCount: statuses.length,
+            itemBuilder: (context, index) {
+              final status = statuses[index];
+              final isSelected = _selectedStatus == status;
+              final color = _statusColors[status] ?? const Color(0xFF667EEA);
+
+              return GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _selectedStatus = status;
+                    _updateStatusNoteSuggestion();
+                  });
+                },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 260),
+                  decoration: BoxDecoration(
+                    color: isSelected ? color : Colors.white,
+                    borderRadius: BorderRadius.circular(r.sp(12)),
+                    border: Border.all(
+                      color: isSelected ? color : Colors.grey[200]!,
+                      width: 2,
+                    ),
+                    boxShadow:
+                        isSelected
+                            ? [
+                              BoxShadow(
+                                color: color.withOpacity(0.18),
+                                blurRadius: r.sp(14),
+                                spreadRadius: 1,
+                              ),
+                            ]
+                            : [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.02),
+                                blurRadius: r.sp(8),
+                                spreadRadius: 1,
+                              ),
+                            ],
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        _statusIcons[status],
+                        color: isSelected ? Colors.white : color,
+                        size: r.ip(18),
+                      ),
+                      SizedBox(width: r.sp(8)),
+                      Flexible(
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(vertical: r.sp(10)),
+                          child: Text(
+                            status,
+                            style: TextStyle(
+                              fontSize: r.fp(13),
+                              fontWeight: FontWeight.w600,
+                              color:
+                                  isSelected ? Colors.white : Colors.grey[800],
+                            ),
+                            maxLines: 2,
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNotesCard(_R r) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(r.sp(14)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: r.sp(16),
+            spreadRadius: 1,
+          ),
+        ],
+      ),
+      padding: EdgeInsets.all(r.sp(14)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Status Notes',
+                style: TextStyle(
+                  fontSize: r.fp(16),
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              Tooltip(
+                message: 'Apply template',
+                child: GestureDetector(
+                  onTap: () {
+                    if (_selectedStatus != null &&
+                        _statusNoteSuggestions.containsKey(_selectedStatus)) {
+                      setState(() {
+                        _previousSuggestion =
+                            _statusNoteSuggestions[_selectedStatus]!;
+                        _statusNotesController.text = _previousSuggestion;
+                      });
+                    }
+                  },
+                  child: Container(
+                    width: r.sp(36),
+                    height: r.sp(36),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[50],
+                      borderRadius: BorderRadius.circular(r.sp(10)),
+                      border: Border.all(color: Colors.grey[200]!),
+                    ),
+                    child: Icon(
+                      Icons.auto_awesome_rounded,
+                      size: r.ip(18),
+                      color: const Color(0xFF667EEA),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: r.sp(12)),
+          TextField(
+            controller: _statusNotesController,
+            style: TextStyle(
+              fontSize: r.fp(14),
+              fontWeight: FontWeight.w500,
+              color: Colors.black87,
+            ),
+            decoration: InputDecoration(
+              hintText: 'Add notes about this status...',
+              hintStyle: TextStyle(color: Colors.grey[400]),
+              filled: true,
+              fillColor: Colors.grey[50],
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(r.sp(12)),
+                borderSide: BorderSide.none,
+              ),
+              contentPadding: EdgeInsets.all(r.sp(12)),
+            ),
+            maxLines: 4,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLinkCard(_R r) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(r.sp(14)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: r.sp(16),
+            spreadRadius: 1,
+          ),
+        ],
+      ),
+      padding: EdgeInsets.all(r.sp(14)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Download Link',
+            style: TextStyle(fontSize: r.fp(16), fontWeight: FontWeight.w700),
+          ),
+          SizedBox(height: r.sp(12)),
+          TextField(
+            controller: _linkController,
+            style: TextStyle(
+              fontSize: r.fp(14),
+              fontWeight: FontWeight.w500,
+              color: Colors.black87,
+            ),
+            decoration: InputDecoration(
+              hintText: 'https://drive.google.com/...',
+              hintStyle: TextStyle(color: Colors.grey[400]),
+              prefixIcon: Container(
+                margin: const EdgeInsets.only(right: 8),
+                width: r.sp(44),
+                child: const Center(child: Icon(Icons.link_rounded)),
+              ),
+              prefixIconConstraints: BoxConstraints(minWidth: r.sp(44)),
+              filled: true,
+              fillColor: Colors.grey[50],
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(r.sp(12)),
+                borderSide: BorderSide.none,
+              ),
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: r.sp(12),
+                vertical: r.sp(12),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionButtons(_R r) {
     return Row(
       children: [
         Expanded(
-          child: ElevatedButton.icon(
-            onPressed: _saveDeliveryDetails,
-            icon: Icon(
-              Icons.save,
-              color: Colors.white,
-              size: isSmallScreen ? 18 : 24,
-            ),
-            label: Text(
-              "Save",
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: isSmallScreen ? 14 : 16,
+          child: SizedBox(
+            height: r.sp(54),
+            child: ElevatedButton(
+              onPressed: _isSaving ? null : _saveDeliveryDetails,
+              style: ElevatedButton.styleFrom(
+                padding: EdgeInsets.zero,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(r.sp(14)),
+                ),
               ),
-            ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Color(0xFF1A237E),
-              padding: EdgeInsets.symmetric(vertical: isSmallScreen ? 12 : 14),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
+              child: Ink(
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
+                  ),
+                  borderRadius: BorderRadius.circular(r.sp(14)),
+                ),
+                child: Container(
+                  alignment: Alignment.center,
+                  child:
+                      _isSaving
+                          ? SizedBox(
+                            width: r.sp(18),
+                            height: r.sp(18),
+                            child: const CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
+                            ),
+                          )
+                          : Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(
+                                Icons.save_rounded,
+                                color: Colors.white,
+                              ),
+                              SizedBox(width: r.sp(10)),
+                              Text(
+                                'Save Changes',
+                                style: TextStyle(
+                                  fontSize: r.fp(15),
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ],
+                          ),
+                ),
               ),
             ),
           ),
         ),
-        SizedBox(width: isSmallScreen ? 8 : 12),
-        Expanded(
-          child: ElevatedButton.icon(
-            onPressed: _sendWhatsApp,
-            icon: FaIcon(
-              FontAwesomeIcons.whatsapp,
-              color: Colors.white,
-              size: isSmallScreen ? 18 : 20,
-            ),
-            label: Text(
-              "WhatsApp",
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: isSmallScreen ? 14 : 16,
-              ),
-            ),
+        SizedBox(width: r.sp(12)),
+        SizedBox(
+          width: r.sp(52),
+          height: r.sp(52),
+          child: ElevatedButton(
+            onPressed: _isSendingWhatsApp ? null : _sendWhatsApp,
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green.shade700,
-              padding: EdgeInsets.symmetric(vertical: isSmallScreen ? 12 : 14),
+              backgroundColor: Colors.white,
+              foregroundColor: const Color(0xFF25D366),
+              padding: EdgeInsets.zero,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(r.sp(14)),
               ),
             ),
+            child:
+                _isSendingWhatsApp
+                    ? SizedBox(
+                      width: r.sp(18),
+                      height: r.sp(18),
+                      child: const CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          Color(0xFF25D366),
+                        ),
+                      ),
+                    )
+                    : const FaIcon(FontAwesomeIcons.whatsapp, size: 24),
           ),
         ),
       ],
     );
+  }
+}
+
+// ---------------------- LargeTitleDelegate for iOS-like header ----------------------
+
+class _LargeTitleDelegate extends SliverPersistentHeaderDelegate {
+  final double expandedHeight;
+  final String title;
+  final String subtitle;
+  final VoidCallback onBack;
+  final VoidCallback onHistory;
+
+  _LargeTitleDelegate({
+    required this.expandedHeight,
+    required this.title,
+    required this.subtitle,
+    required this.onBack,
+    required this.onHistory,
+  });
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    final double t = (shrinkOffset / (expandedHeight - kToolbarHeight)).clamp(
+      0.0,
+      1.0,
+    );
+
+    final double titleSize = lerpDouble(26, 18, t)!;
+    final double subtitleSize = lerpDouble(14, 10, t)!;
+    final double paddingTop = lerpDouble(40, 10, t)!;
+
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: Stack(
+        children: [
+          // ---------- CENTERED TITLE BLOCK ----------
+          Positioned.fill(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SizedBox(height: paddingTop),
+                Text(
+                  title,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: titleSize,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                  ),
+                ),
+                if (t < 0.8) // hide subtitle when fully collapsed
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(
+                      subtitle,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: subtitleSize,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.white.withOpacity(0.9),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+
+          // ---------- LEFT: BACK BUTTON ----------
+          Positioned(
+            left: 12,
+            top: 12,
+            child: _circleButton(
+              icon: HugeIcon(
+                icon: HugeIcons.strokeRoundedArrowLeft01,
+                color: Colors.black87,
+                size: 22,
+              ),
+              onTap: onBack,
+            ),
+          ),
+
+          // ---------- RIGHT: HISTORY BUTTON ----------
+          Positioned(
+            right: 12,
+            top: 12,
+            child: _circleButton(
+              icon: HugeIcon(
+                icon: HugeIcons.strokeRoundedTransactionHistory,
+                color: Colors.black87,
+                size: 22,
+              ),
+              onTap: onHistory,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _circleButton({required Widget icon, required VoidCallback onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 44,
+        height: 44,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 10,
+              spreadRadius: 1,
+            ),
+          ],
+        ),
+        child: Center(child: icon),
+      ),
+    );
+  }
+
+  @override
+  double get maxExtent => expandedHeight;
+
+  @override
+  double get minExtent => kToolbarHeight + 12;
+
+  @override
+  bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) {
+    return true;
   }
 }

@@ -153,21 +153,20 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
         child: FutureBuilder<bool>(
           future: _checkImageExists(sale.imageUrl),
           builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Color(0xFF667eea), Color(0xFF764ba2)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                ),
-                child: const Center(
-                  child: CircularProgressIndicator(color: Colors.white),
-                ),
-              );
-            }
-
+            // if (snapshot.connectionState == ConnectionState.waiting) {
+            //   return Container(
+            //     decoration: const BoxDecoration(
+            //       gradient: LinearGradient(
+            //         colors: [Color(0xFF667eea), Color(0xFF764ba2)],
+            //         begin: Alignment.topLeft,
+            //         end: Alignment.bottomRight,
+            //       ),
+            //     ),
+            //     child: const Center(
+            //       child: CircularProgressIndicator(color: Colors.white),
+            //     ),
+            //   );
+            // }
             if (snapshot.hasData && snapshot.data == true) {
               return Image.file(
                 File(sale.imageUrl!),
@@ -306,7 +305,7 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
         final totalRentals = allSales.length;
 
         return Container(
-          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             gradient: const LinearGradient(
@@ -374,7 +373,7 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
     final screenWidth = MediaQuery.of(context).size.width;
     final isTabletOrDesktop = screenWidth > 700;
 
-    final horizontalMargin = isTabletOrDesktop ? 24.0 : 16.0;
+    final horizontalMargin = isTabletOrDesktop ? 24.0 : 10.0;
     final verticalMargin = isTabletOrDesktop ? 10.0 : 8.0;
     final radius = isTabletOrDesktop ? 24.0 : 20.0;
     final padding = EdgeInsets.all(isTabletOrDesktop ? 20 : 16);

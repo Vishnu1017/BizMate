@@ -1,3 +1,5 @@
+// lib/screens/rental/rental_sale_detail_screen.dart
+
 import 'package:bizmate/models/payment.dart';
 import 'package:bizmate/widgets/app_snackbar.dart';
 import 'package:flutter/material.dart';
@@ -90,11 +92,8 @@ class _RentalSaleDetailScreenState extends State<RentalSaleDetailScreen> {
     isFullyPaid = widget.sale.amountPaid >= widget.sale.totalCost;
   }
 
-  // ------------------------------------------------------------------
-  // ⭐⭐⭐ SAVE CHANGES (EXACTLY LIKE FIRST CODE YOU SENT) ⭐⭐⭐
-  // ------------------------------------------------------------------
+  // SAME saveChanges()
   void saveChanges() async {
-    // VALIDATION
     if (customerController.text.trim().isEmpty) {
       AppSnackBar.showError(
         context,
@@ -130,55 +129,41 @@ class _RentalSaleDetailScreenState extends State<RentalSaleDetailScreen> {
       return;
     }
 
-    // NEW PAYMENT ENTRY
     final newPayment = Payment(
       amount: isFullyPaid ? total : paid,
       date: DateTime.now(),
       mode: _selectedMode,
     );
 
-    // ------------ ⭐ FIX: UPDATE ALL EDITABLE FIELDS ⭐ --------------
     final updatedSale = RentalSaleModel(
       id: widget.sale.id,
-
       customerName: customerController.text.trim(),
       customerPhone: phoneController.text.trim(),
-
-      /// Previously you did NOT update these — FIXED now
       itemName: itemController.text.trim(),
       imageUrl: widget.sale.imageUrl,
-
       ratePerDay:
           double.tryParse(rateController.text) ?? widget.sale.ratePerDay,
       numberOfDays:
           int.tryParse(daysController.text) ?? widget.sale.numberOfDays,
-
       totalCost: total,
-
       fromDateTime: widget.sale.fromDateTime,
       toDateTime: widget.sale.toDateTime,
       pdfFilePath: widget.sale.pdfFilePath,
-
       paymentMode: _selectedMode,
       amountPaid: newPayment.amount,
       rentalDateTime: widget.sale.rentalDateTime,
-
       paymentHistory: [newPayment, ...widget.sale.paymentHistory],
     );
-
-    // ------------ ⭐ FIX: CORRECT HIVE UPDATE WITH REVERSE INDEX ⭐ --------------
 
     final safeEmail = widget.userEmail
         .replaceAll('.', '_')
         .replaceAll('@', '_');
-
     final box = Hive.box("userdata_$safeEmail");
 
     List<RentalSaleModel> originalList = List<RentalSaleModel>.from(
       box.get("rental_sales", defaultValue: []),
     );
 
-    // Convert UI index → real index
     int realIndex = originalList.length - 1 - widget.index;
 
     if (realIndex >= 0 && realIndex < originalList.length) {
@@ -196,302 +181,552 @@ class _RentalSaleDetailScreenState extends State<RentalSaleDetailScreen> {
     Navigator.pop(context, true);
   }
 
-  InputDecoration customInput(String label, IconData icon) {
-    return InputDecoration(
-      labelText: label,
-      prefixIcon: Icon(icon, color: Color(0xFF1A237E)),
-      filled: true,
-      fillColor: Colors.white,
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: BorderSide(color: Colors.blue.shade200),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: BorderSide(color: Color(0xFF1A237E), width: 2),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    final formattedDate = DateFormat(
+    final formatted = DateFormat(
       'dd MMM yyyy, hh:mm a',
     ).format(widget.sale.rentalDateTime);
 
-    double total = double.tryParse(totalController.text) ?? 0;
-    double paid = double.tryParse(amountController.text) ?? 0;
-    double balance = total - paid;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isWide = constraints.maxWidth > 800;
+        final padding = isWide ? 120.0 : 16.0;
+        final cardPad = isWide ? 24.0 : 16.0;
 
-    return Scaffold(
-      backgroundColor: Color(0xFFE3F2FD),
-      appBar: AppBar(
-        iconTheme: IconThemeData(color: Colors.white),
-        title: const Text(
-          "Rental Sale Details",
-          style: TextStyle(color: Colors.white),
-        ),
-        centerTitle: true,
-        flexibleSpace: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Color(0xFF1A237E), Color(0xFF00BCD4)],
+        double total =
+            double.tryParse(totalController.text) ?? widget.sale.totalCost;
+        double paid =
+            double.tryParse(amountController.text) ?? widget.sale.amountPaid;
+
+        String statusText;
+        Color statusColor;
+        IconData statusIcon;
+
+        if (paid == total) {
+          statusText = "Fully Paid";
+          statusColor = const Color(0xFF10B981);
+          statusIcon = Icons.check_circle;
+        } else if (paid > 0) {
+          statusText = "Partially Paid";
+          statusColor = const Color(0xFFF59E0B);
+          statusIcon = Icons.pending;
+        } else {
+          statusText = "Unpaid";
+          statusColor = const Color(0xFFEF4444);
+          statusIcon = Icons.schedule;
+        }
+
+        final titleSize = isWide ? 20.0 : 18.0;
+        // ignore: unused_local_variable
+        final subtitleSize = isWide ? 14.0 : 13.0;
+
+        return Scaffold(
+          backgroundColor: const Color(0xFFF8FAFC),
+          appBar: AppBar(
+            elevation: 0,
+            backgroundColor: Colors.white,
+            foregroundColor: const Color(0xFF1A237E),
+            title: Text(
+              "Rental Sale Details",
+              style: TextStyle(
+                fontSize: titleSize,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF1A237E),
+              ),
             ),
+            centerTitle: true,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: () => Navigator.pop(context),
+            ),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.save_rounded),
+                onPressed: saveChanges,
+              ),
+            ],
           ),
-        ),
-      ),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.all(20),
-        child: Container(
-          padding: EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.95),
-            borderRadius: BorderRadius.circular(24),
-          ),
-          child: Column(
-            children: [
-              Text(formattedDate, style: TextStyle(color: Colors.grey[700])),
-              SizedBox(height: 20),
-
-              TextField(
-                controller: customerController,
-                decoration: customInput("Customer Name", Icons.person),
-              ),
-              SizedBox(height: 20),
-
-              TextField(
-                controller: phoneController,
-                keyboardType: TextInputType.phone,
-                decoration: customInput("Phone Number", Icons.phone),
-              ),
-              SizedBox(height: 20),
-
-              TextField(
-                controller: itemController,
-                readOnly: true,
-                decoration: customInput("Item Name", Icons.camera_alt),
-              ),
-              SizedBox(height: 20),
-
-              TextField(
-                controller: rateController,
-                readOnly: true,
-                decoration: customInput("Rate Per Day", Icons.currency_rupee),
-              ),
-              SizedBox(height: 20),
-
-              TextField(
-                controller: daysController,
-                readOnly: true,
-                decoration: customInput("Number of Days", Icons.today),
-              ),
-              SizedBox(height: 20),
-
-              // Payment Section ---------------------------------------------------
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    "Total Cost",
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                  ),
-                  Text(
-                    "₹ ${total.toStringAsFixed(2)}",
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                  ),
-                ],
-              ),
-
-              Divider(),
-
-              // Received Section
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        isFullyPaid = !isFullyPaid;
-                        if (isFullyPaid) {
-                          amountController.text = total.toStringAsFixed(2);
-                        } else {
-                          amountController.clear();
-                        }
-                      });
-                    },
-                    child: Row(
-                      children: [
-                        AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          width: 24,
-                          height: 24,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(4),
-                            border: Border.all(
-                              color: isFullyPaid ? Colors.green : Colors.grey,
-                              width: 1.5,
+          body: SingleChildScrollView(
+            padding: EdgeInsets.symmetric(horizontal: padding, vertical: 20),
+            child: Column(
+              children: [
+                // HEADER CARD -------------------------------------------
+                Container(
+                  padding: EdgeInsets.all(cardPad),
+                  decoration: _cardDecoration(),
+                  child: Row(
+                    children: [
+                      _iconBox(Icons.receipt_long_rounded),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              widget.sale.itemName,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                color: Color(0xFF1A237E),
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
-                            color:
-                                isFullyPaid ? Colors.green : Colors.transparent,
-                          ),
-                          child:
-                              isFullyPaid
-                                  ? const Icon(
-                                    Icons.check,
-                                    size: 18,
-                                    color: Colors.white,
-                                  )
-                                  : null,
+                            const SizedBox(height: 4),
+                            Text(
+                              formatted,
+                              style: TextStyle(
+                                color: Colors.grey.shade600,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: 8),
-                        const Text(
-                          "Received",
+                      ),
+                      _statusBadge(statusText, statusColor, statusIcon),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                // CUSTOMER INFO CARD -----------------------------------
+                Container(
+                  padding: EdgeInsets.all(cardPad),
+                  decoration: _cardDecoration(),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _sectionTitle("Customer Information"),
+                      const SizedBox(height: 16),
+                      _modernField(
+                        controller: customerController,
+                        label: "Customer Name",
+                        icon: Icons.person_outline_rounded,
+                      ),
+                      const SizedBox(height: 12),
+                      _modernField(
+                        controller: phoneController,
+                        label: "Phone Number",
+                        icon: Icons.phone_iphone_rounded,
+                        keyboard: TextInputType.phone,
+                      ),
+                      const SizedBox(height: 12),
+                      _modernField(
+                        controller: itemController,
+                        label: "Item Name",
+                        enabled: false,
+                        icon: Icons.shopping_bag_outlined,
+                      ),
+                      const SizedBox(height: 12),
+                      _modernField(
+                        controller: rateController,
+                        label: "Rate Per Day",
+                        enabled: false,
+                        icon: Icons.currency_rupee,
+                      ),
+                      const SizedBox(height: 12),
+                      _modernField(
+                        controller: daysController,
+                        label: "Number of Days",
+                        enabled: false,
+                        icon: Icons.today,
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                // PAYMENT DETAILS CARD ----------------------------------
+                Container(
+                  padding: EdgeInsets.all(cardPad),
+                  decoration: _cardDecoration(),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _sectionTitle("Payment Details"),
+
+                      const SizedBox(height: 20),
+
+                      _amountDisplay(
+                        "Total Cost",
+                        "₹${total.toStringAsFixed(2)}",
+                        Icons.currency_rupee_rounded,
+                        const Color(0xFF1A237E),
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      // RECEIVED AMOUNT BOX ----------------------------------
+                      _receivedAmountBox(total),
+
+                      const SizedBox(height: 16),
+
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Payment Mode",
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.grey.shade700,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children:
+                                _paymentModes.map((mode) {
+                                  final isSelected = _selectedMode == mode;
+                                  return GestureDetector(
+                                    onTap:
+                                        () => setState(
+                                          () => _selectedMode = mode,
+                                        ),
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                        vertical: 10,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color:
+                                            isSelected
+                                                ? const Color(0xFF1A237E)
+                                                : Colors.grey.shade50,
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(
+                                          color:
+                                              isSelected
+                                                  ? const Color(0xFF1A237E)
+                                                  : Colors.grey.shade200,
+                                        ),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            _getIconForMode(mode),
+                                            size: 18,
+                                            color:
+                                                isSelected
+                                                    ? Colors.white
+                                                    : const Color(0xFF1A237E),
+                                          ),
+                                          const SizedBox(width: 6),
+                                          Text(
+                                            mode,
+                                            style: TextStyle(
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w500,
+                                              color:
+                                                  isSelected
+                                                      ? Colors.white
+                                                      : const Color(0xFF1A237E),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                }).toList(),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 24),
+
+                // SAVE BUTTON ---------------------------------------------
+                SizedBox(
+                  width: double.infinity,
+                  height: 56,
+                  child: ElevatedButton(
+                    onPressed: saveChanges,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF1A237E),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.save_rounded, size: 20, color: Colors.white),
+                        SizedBox(width: 8),
+                        Text(
+                          "Save Changes",
                           style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                            color: Colors.black87,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 16,
+                            color: Colors.white,
                           ),
                         ),
                       ],
                     ),
                   ),
-                  Container(
-                    width: 100,
-                    height: 40,
-                    alignment: Alignment.centerRight,
-                    child:
-                        isFullyPaid
-                            ? Text(
-                              "₹ ${(double.tryParse(total.toStringAsFixed(2)) ?? 0).toStringAsFixed(2)}",
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                                color: Colors.green[700],
-                              ),
-                            )
-                            : TextFormField(
-                              controller: amountController,
-                              keyboardType:
-                                  const TextInputType.numberWithOptions(
-                                    decimal: true,
-                                  ),
-                              inputFormatters: [
-                                FilteringTextInputFormatter.allow(
-                                  RegExp(r'^\d*\.?\d{0,2}'),
-                                ),
-                              ],
-                              textAlign: TextAlign.end,
-                              decoration: InputDecoration(
-                                isDense: true,
-                                hintText: "0.00",
-                                hintStyle: TextStyle(
-                                  color: Colors.green.shade400,
-                                ),
-                                prefixIcon: Icon(
-                                  Icons.currency_rupee,
-                                  color: Colors.green.shade700,
-                                  size: 20,
-                                ),
-                                border: InputBorder.none,
-                                contentPadding: const EdgeInsets.symmetric(
-                                  vertical: 12,
-                                ),
-                              ),
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                                color: Colors.green[700],
-                              ),
-                              onChanged: (_) => setState(() {}),
-                            ),
-                  ),
-                ],
-              ),
-
-              Divider(),
-
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    balance > 0 ? "Balance Due" : "Paid in Full",
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: balance > 0 ? Colors.red : Colors.green,
-                    ),
-                  ),
-                  Text(
-                    "₹ ${balance.abs().toStringAsFixed(2)}",
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: balance > 0 ? Colors.red : Colors.green,
-                    ),
-                  ),
-                ],
-              ),
-
-              SizedBox(height: 20),
-
-              DropdownButtonFormField<String>(
-                value: _selectedMode,
-                items:
-                    _paymentModes
-                        .map(
-                          (mode) => DropdownMenuItem(
-                            value: mode,
-                            child: Row(
-                              children: [
-                                Icon(
-                                  _getIconForMode(mode),
-                                  size: 20,
-                                  color: Color(0xFF1A237E),
-                                ),
-                                SizedBox(width: 8),
-                                Text(mode),
-                              ],
-                            ),
-                          ),
-                        )
-                        .toList(),
-                onChanged: (v) => setState(() => _selectedMode = v!),
-                decoration: customInput("Payment Mode", Icons.payment),
-              ),
-
-              SizedBox(height: 30),
-
-              // Save Button ----------------------------------------------------
-              Container(
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(28),
-                  gradient: LinearGradient(
-                    colors: [const Color(0xFF1A237E), Color(0xFF00BCD4)],
-                  ),
                 ),
-                child: ElevatedButton.icon(
-                  onPressed: saveChanges,
-                  icon: Icon(Icons.save, color: Colors.white),
-                  label: Padding(
-                    padding: EdgeInsets.symmetric(vertical: 14),
-                    child: Text(
-                      "Save Changes",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,
-                      ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  // -------------------------------------------------------------------
+  // REUSABLE UI WIDGETS (identical design to Sale UI)
+  // -------------------------------------------------------------------
+
+  BoxDecoration _cardDecoration() => BoxDecoration(
+    color: Colors.white,
+    borderRadius: BorderRadius.circular(16),
+    boxShadow: [
+      BoxShadow(
+        color: Colors.black.withOpacity(0.05),
+        blurRadius: 16,
+        offset: const Offset(0, 4),
+      ),
+    ],
+  );
+
+  Widget _iconBox(IconData icon) => Container(
+    padding: const EdgeInsets.all(8),
+    decoration: BoxDecoration(
+      color: const Color(0xFFEFF6FF),
+      borderRadius: BorderRadius.circular(12),
+    ),
+    child: Icon(icon, color: const Color(0xFF1A237E), size: 24),
+  );
+
+  Widget _sectionTitle(String title) => Text(
+    title,
+    style: const TextStyle(
+      fontSize: 16,
+      fontWeight: FontWeight.w600,
+      color: Color(0xFF1A237E),
+    ),
+  );
+
+  Widget _statusBadge(String txt, Color c, IconData i) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+    decoration: BoxDecoration(
+      color: c.withOpacity(0.1),
+      borderRadius: BorderRadius.circular(20),
+    ),
+    child: Row(
+      children: [
+        Icon(i, size: 14, color: c),
+        const SizedBox(width: 4),
+        Text(
+          txt,
+          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: c),
+        ),
+      ],
+    ),
+  );
+
+  Widget _modernField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    bool enabled = true,
+    TextInputType? keyboard,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label),
+        const SizedBox(height: 6),
+        Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.grey.shade300),
+            color: enabled ? Colors.white : Colors.grey.shade100,
+          ),
+          child: Row(
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(left: 16),
+                child: Icon(icon, color: const Color(0xFF1A237E)),
+              ),
+              Expanded(
+                child: TextFormField(
+                  controller: controller,
+                  enabled: enabled,
+                  keyboardType: keyboard,
+                  decoration: const InputDecoration(
+                    border: InputBorder.none,
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 16,
                     ),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.transparent,
-                    shadowColor: Colors.transparent,
                   ),
                 ),
               ),
             ],
           ),
         ),
+      ],
+    );
+  }
+
+  Widget _amountDisplay(
+    String title,
+    String amount,
+    IconData icon,
+    Color color,
+  ) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(icon, size: 18, color: color),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            title,
+            style: TextStyle(
+              fontWeight: FontWeight.w500,
+              color: Colors.grey.shade700,
+            ),
+          ),
+        ),
+        Text(
+          amount,
+          style: TextStyle(
+            fontWeight: FontWeight.w700,
+            fontSize: 16,
+            color: color,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _receivedAmountBox(double total) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+      decoration: BoxDecoration(
+        color:
+            isFullyPaid
+                ? const Color(0xFF10B981).withOpacity(0.1)
+                : Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color:
+              isFullyPaid
+                  ? const Color(0xFF10B981).withOpacity(0.3)
+                  : Colors.grey.shade200,
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color:
+                  isFullyPaid ? const Color(0xFF10B981) : Colors.grey.shade300,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(
+              Icons.payments_outlined,
+              color: isFullyPaid ? Colors.white : Colors.grey.shade600,
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Received Amount",
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Colors.grey.shade700,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                isFullyPaid
+                    ? Text(
+                      "₹${total.toStringAsFixed(2)}",
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF10B981),
+                      ),
+                    )
+                    : SizedBox(
+                      height: 40,
+                      child: TextFormField(
+                        controller: amountController,
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
+                        inputFormatters: [
+                          FilteringTextInputFormatter.allow(
+                            RegExp(r'^\d*\.?\d{0,2}'),
+                          ),
+                        ],
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF10B981),
+                        ),
+                        decoration: InputDecoration(
+                          hintText: "0.00",
+                          hintStyle: TextStyle(
+                            color: const Color(0xFF10B981).withOpacity(0.5),
+                          ),
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.zero,
+                          prefixText: "₹",
+                          prefixStyle: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF10B981),
+                          ),
+                        ),
+                        onChanged: (_) => setState(() {}),
+                        validator: (value) {
+                          if (!isFullyPaid &&
+                              (value == null || value.trim().isEmpty)) {
+                            return null; // not required unless user toggles fully paid off
+                          }
+                          final val = double.tryParse(value ?? '');
+                          if (val == null) return 'Enter a valid amount';
+                          if (val < 0) return 'Amount cannot be negative';
+                          return null;
+                        },
+                      ),
+                    ),
+              ],
+            ),
+          ),
+          Switch.adaptive(
+            value: isFullyPaid,
+            onChanged: (value) {
+              setState(() {
+                isFullyPaid = value;
+                if (isFullyPaid) {
+                  amountController.text = total.toStringAsFixed(2);
+                } else {
+                  amountController.clear();
+                }
+              });
+            },
+            activeColor: const Color(0xFF10B981),
+          ),
+        ],
       ),
     );
   }

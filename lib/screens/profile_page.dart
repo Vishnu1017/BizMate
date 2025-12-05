@@ -565,8 +565,8 @@ class _ProfilePageState extends State<ProfilePage> {
           child: SafeArea(
             child: SingleChildScrollView(
               padding: EdgeInsets.symmetric(
-                horizontal: isSmallScreen ? 16 : 32,
-                vertical: 20,
+                horizontal: isSmallScreen ? 10 : 32,
+                vertical: 15,
               ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -915,14 +915,14 @@ class _ProfilePageState extends State<ProfilePage> {
                                   ),
                                 ),
                               ),
-                              const SizedBox(width: 16),
+                              const SizedBox(width: 12),
                               Expanded(
                                 child: ElevatedButton(
                                   onPressed: _saveProfile,
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: Colors.blueAccent,
                                     foregroundColor: Colors.white,
-                                    elevation: 2,
+                                    elevation: 4,
                                     padding: const EdgeInsets.symmetric(
                                       vertical: 16,
                                     ),
@@ -934,7 +934,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                   child: Text(
                                     'Save Changes',
                                     style: TextStyle(
-                                      fontSize: isSmallScreen ? 16 : 18,
+                                      fontSize: isSmallScreen ? 14 : 18,
                                       fontWeight: FontWeight.w600,
                                     ),
                                   ),
@@ -942,7 +942,6 @@ class _ProfilePageState extends State<ProfilePage> {
                               ),
                             ],
                           ),
-                          const SizedBox(height: 10),
                         ],
                       ],
                     ),
@@ -1502,7 +1501,7 @@ class _ProfilePageState extends State<ProfilePage> {
               border: InputBorder.none,
               contentPadding: const EdgeInsets.symmetric(
                 vertical: 16,
-                horizontal: 16,
+                horizontal: 10,
               ),
             ),
           ),

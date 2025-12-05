@@ -13,9 +13,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:io';
-import 'dart:typed_data'; // Add this import for Uint8List
-
-// Import your models and screens
 import '../models/sale.dart';
 import '../models/user_model.dart';
 import '../screens/pdf_preview_screen.dart';
@@ -34,6 +31,21 @@ class SaleOptionsMenu extends StatelessWidget {
   final String currentUserPhone;
   final String currentUserEmail;
   final BuildContext parentContext;
+
+  String generateGooglePayLink(String upiUri) {
+    final encoded = Uri.encodeComponent(upiUri);
+    return "tez://upi/pay?url=$encoded";
+  }
+
+  String generatePhonePeLink(String upiUri) {
+    final encoded = Uri.encodeComponent(upiUri);
+    return "phonepe://upi/pay?url=$encoded";
+  }
+
+  String generatePaytmLink(String upiUri) {
+    final encoded = Uri.encodeComponent(upiUri);
+    return "paytm://upi/pay?url=$encoded";
+  }
 
   const SaleOptionsMenu({
     Key? key,
@@ -213,20 +225,42 @@ class SaleOptionsMenu extends StatelessWidget {
     );
   }
 
-  void _handleDeliveryTracker(BuildContext context) {
-    String rawNumber = '+91 ${sale.phoneNumber}';
-    String phoneWithCountryCode =
-        rawNumber.startsWith('+91') ? rawNumber : '+91$rawNumber';
-    String phoneWithoutCountryCode = rawNumber.replaceFirst('+91', '');
+  void _handleDeliveryTracker(BuildContext context) async {
+    final box = await Hive.openBox<Sale>('sales');
+
+    // If sale is already in box → good
+    if (sale.isInBox) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder:
+              (_) => DeliveryTrackerPage(
+                sale: sale,
+                phoneWithCountryCode: sale.phoneNumber,
+                phoneWithoutCountryCode: sale.phoneNumber,
+              ),
+        ),
+      );
+      return;
+    }
+
+    // Otherwise, find the Hive version of this sale
+    final hiveSale = box.values.firstWhere(
+      (s) =>
+          s.customerName == sale.customerName &&
+          s.phoneNumber == sale.phoneNumber &&
+          s.dateTime == sale.dateTime,
+      orElse: () => sale,
+    );
 
     Navigator.push(
       context,
       MaterialPageRoute(
         builder:
             (_) => DeliveryTrackerPage(
-              sale: sale,
-              phoneWithCountryCode: phoneWithCountryCode,
-              phoneWithoutCountryCode: phoneWithoutCountryCode,
+              sale: hiveSale, // ✔ now always inBox
+              phoneWithCountryCode: hiveSale.phoneNumber,
+              phoneWithoutCountryCode: hiveSale.phoneNumber,
             ),
       ),
     );
@@ -307,6 +341,17 @@ class SaleOptionsMenu extends StatelessWidget {
       0,
       double.infinity,
     );
+    final gpayIcon =
+        (await rootBundle.load("assets/icons/Gpay.png")).buffer.asUint8List();
+    final phonePeIcon =
+        (await rootBundle.load(
+          "assets/icons/Phonepe.png",
+        )).buffer.asUint8List();
+    final paytmIcon =
+        (await rootBundle.load("assets/icons/Paytm.png")).buffer.asUint8List();
+
+    // NOW generate UPI link (correct order)
+
     final rupeeFont = pw.Font.ttf(
       await rootBundle.load('assets/fonts/Roboto-Regular.ttf'),
     );
@@ -319,7 +364,19 @@ class SaleOptionsMenu extends StatelessWidget {
     final usersBox = Hive.box<User>('users');
     final currentUser = await _getCurrentUser(usersBox);
 
-    if (currentUser?.upiId.isEmpty ?? true) {
+    // Now generate QR code
+    final qrData = _generateQrData(enteredAmount, currentUser!);
+
+    final googlePayLink =
+        "gpay://upi/pay?pa=${currentUser.upiId}&pn=${Uri.encodeComponent(currentUser.name)}&am=${enteredAmount?.toStringAsFixed(2)}&cu=INR";
+
+    final phonePeLink =
+        "phonepe://pay?pa=${currentUser.upiId}&pn=${Uri.encodeComponent(currentUser.name)}&am=${enteredAmount?.toStringAsFixed(2)}&cu=INR";
+
+    final paytmLink =
+        "paytm://upi/pay?pa=${currentUser.upiId}&pn=${Uri.encodeComponent(currentUser.name)}&am=${enteredAmount?.toStringAsFixed(2)}&cu=INR";
+
+    if (currentUser.upiId.isEmpty) {
       AppSnackBar.showWarning(
         context,
         message: "Please set your UPI ID in your profile first",
@@ -327,8 +384,6 @@ class SaleOptionsMenu extends StatelessWidget {
       );
       return;
     }
-
-    final qrData = _generateQrData(enteredAmount, currentUser!);
 
     final profileImageBytes = await _getProfileImageBytes();
 
@@ -341,12 +396,30 @@ class SaleOptionsMenu extends StatelessWidget {
               qrData,
               profileImageBytes,
               currentUser,
+              googlePayLink,
+              phonePeLink,
+              paytmLink,
+              pw.MemoryImage(gpayIcon),
+              pw.MemoryImage(phonePeIcon),
+              pw.MemoryImage(paytmIcon),
             ),
       ),
     );
 
     final output = await getTemporaryDirectory();
-    final file = File("${output.path}/invoice_$invoiceNumber.pdf");
+
+    // Generate long filename
+    final formattedDate = DateFormat('dd-MM-yyyy').format(sale.dateTime);
+    final safeCustomerName = sale.customerName.replaceAll(" ", "_");
+
+    final longFileName =
+        "Invoice_${invoiceNumber}_${safeCustomerName}_${formattedDate}_₹${sale.totalAmount.toStringAsFixed(0)}.pdf";
+
+    // Create file
+    final file = File("${output.path}/$longFileName");
+
+    // Save file
+    await file.writeAsBytes(await pdf.save());
     await file.writeAsBytes(await pdf.save());
 
     if (context.mounted) {
@@ -618,12 +691,52 @@ class SaleOptionsMenu extends StatelessWidget {
     return null;
   }
 
+  pw.Widget _upiOption(String title, pw.MemoryImage icon, String url) {
+    const double fontSize = 11.0;
+    const double iconSize = 16.0;
+    const double horizontalPadding = 14.0;
+    const double verticalPadding = 10.0;
+    const double gap = 8.0;
+
+    return pw.UrlLink(
+      destination: url,
+      child: pw.Container(
+        margin: pw.EdgeInsets.only(right: 11), // spacing between items
+        padding: pw.EdgeInsets.symmetric(
+          vertical: verticalPadding,
+          horizontal: horizontalPadding,
+        ),
+        decoration: pw.BoxDecoration(
+          color: PdfColors.grey200, // ⭐ Background color for each button
+          borderRadius: pw.BorderRadius.circular(14),
+        ),
+        child: pw.Row(
+          mainAxisSize: pw.MainAxisSize.min,
+          children: [
+            pw.Image(icon, width: iconSize, height: iconSize),
+            pw.SizedBox(width: gap),
+            pw.Text(
+              title,
+              style: pw.TextStyle(fontSize: fontSize, color: PdfColors.black),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   pw.Widget _buildPdfPage(
     double balanceAmount,
     pw.Font rupeeFont,
     String qrData,
     Uint8List? profileImageBytes,
     User currentUser,
+    String googlePayLink,
+    String phonePeLink,
+    String paytmLink,
+    pw.MemoryImage gpayIcon,
+    pw.MemoryImage phonePeIcon,
+    pw.MemoryImage paytmIcon,
   ) {
     return pw.Container(
       decoration: pw.BoxDecoration(
@@ -745,27 +858,76 @@ class SaleOptionsMenu extends StatelessWidget {
                     pw.Text(sale.customerName),
                     pw.Text('Contact No.: +91 ${sale.phoneNumber}'),
                     pw.SizedBox(height: 12),
+                    // Payment Section (QR + Link)
                     if (balanceAmount > 0) ...[
-                      // QR Code
                       pw.Center(
                         child: pw.BarcodeWidget(
                           data: qrData,
                           barcode: pw.Barcode.qrCode(),
-                          width: 120,
-                          height: 120,
+                          width: 150,
+                          height: 150,
                         ),
                       ),
                       pw.SizedBox(height: 6),
                       pw.Center(
                         child: pw.Text(
-                          "Scan to Pay UPI",
+                          "Scan & Pay via UPI",
                           style: pw.TextStyle(
                             fontSize: 16,
                             fontWeight: pw.FontWeight.bold,
                           ),
                         ),
                       ),
-                      pw.SizedBox(height: 12),
+                      pw.SizedBox(height: 7),
+
+                      // ⬇️ CLICKABLE UPI PAYMENT LINK
+                      pw.Container(
+                        padding: pw.EdgeInsets.all(16),
+                        decoration: pw.BoxDecoration(
+                          borderRadius: pw.BorderRadius.circular(8),
+                        ),
+                        child: pw.Column(
+                          crossAxisAlignment: pw.CrossAxisAlignment.start,
+                          children: [
+                            pw.Text(
+                              "Pay with UPI",
+                              style: pw.TextStyle(
+                                fontSize: 14,
+                                fontWeight: pw.FontWeight.bold,
+                                color: PdfColors.grey900,
+                              ),
+                            ),
+
+                            pw.SizedBox(height: 12),
+
+                            pw.Row(
+                              mainAxisAlignment:
+                                  pw.MainAxisAlignment.spaceBetween,
+                              children: [
+                                _upiOption(
+                                  "Google Pay",
+                                  gpayIcon,
+                                  googlePayLink,
+                                ),
+                                _upiOption("PhonePe", phonePeIcon, phonePeLink),
+                                _upiOption("Paytm", paytmIcon, paytmLink),
+                              ],
+                            ),
+
+                            pw.SizedBox(height: 10),
+
+                            pw.Text(
+                              "Tap any app above to pay",
+                              style: pw.TextStyle(
+                                fontSize: 10,
+                                color: PdfColors.grey600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      pw.SizedBox(height: 16),
                     ],
                   ],
                 ),
@@ -889,7 +1051,7 @@ class SaleOptionsMenu extends StatelessWidget {
               ),
             ],
           ),
-          pw.SizedBox(height: 16),
+          pw.SizedBox(height: 8),
           // Terms and Conditions
           pw.Text(
             'Terms and Conditions:',

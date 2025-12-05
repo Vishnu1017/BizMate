@@ -5,6 +5,7 @@ import 'package:bizmate/screens/Camera%20rental%20page/camera_rental_nav_bar.dar
 import 'package:flutter/material.dart';
 import 'package:bizmate/models/user_model.dart';
 import 'package:bizmate/screens/CalendarPage.dart';
+import 'package:hive/hive.dart';
 import 'package:hugeicons/hugeicons.dart' show HugeIcon, HugeIcons;
 import 'package:shared_preferences/shared_preferences.dart'
     show SharedPreferences;
@@ -43,6 +44,7 @@ class _NavBarPageState extends State<NavBarPage>
     with SingleTickerProviderStateMixin {
   int _currentIndex = 0;
   bool _isRentalEnabled = false;
+  String welcomeMessage = "";
 
   // Modern color palette
   final Color _primaryColor = const Color(0xFF1A237E);
@@ -66,6 +68,7 @@ class _NavBarPageState extends State<NavBarPage>
   void initState() {
     super.initState();
     _loadRentalStatus();
+    fetchWelcomeMessage();
   }
 
   Future<void> _loadRentalStatus() async {
@@ -81,6 +84,55 @@ class _NavBarPageState extends State<NavBarPage>
     await _loadRentalStatus();
     if (!mounted) return;
     setState(() {});
+  }
+
+  Future<void> fetchWelcomeMessage() async {
+    // Open session box
+    if (!Hive.isBoxOpen('session')) {
+      await Hive.openBox('session');
+    }
+    final sessionBox = Hive.box('session');
+
+    // Read email & normalize it (IMPORTANT FIX)
+    final rawEmail = sessionBox.get('currentUserEmail');
+
+    if (rawEmail == null || rawEmail.toString().isEmpty) {
+      setState(() => welcomeMessage = "Welcome!");
+      return;
+    }
+
+    final email = rawEmail.toString().trim().toLowerCase();
+
+    // Load users box
+    final usersBox = Hive.box<User>('users');
+
+    User? user;
+    try {
+      user = usersBox.values.firstWhere(
+        (u) => u.email.trim().toLowerCase() == email,
+      );
+    } catch (e) {
+      user = null;
+    }
+
+    if (user == null) {
+      setState(() => welcomeMessage = "Welcome!");
+      return;
+    }
+
+    // FIRST LOGIN FLAG
+    final firstLoginKey = "firstLogin_$email";
+
+    bool isFirstLogin = sessionBox.get(firstLoginKey, defaultValue: true);
+
+    if (isFirstLogin) {
+      welcomeMessage = "Welcome, \n${user.name}!";
+      sessionBox.put(firstLoginKey, false); // mark as visited
+    } else {
+      welcomeMessage = "Welcome back, \n${user.name}!";
+    }
+
+    if (mounted) setState(() {});
   }
 
   List<Widget> get _pages => [
@@ -197,10 +249,11 @@ class _NavBarPageState extends State<NavBarPage>
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            'Welcome back',
+                            welcomeMessage
+                                .split('\n')
+                                .first, // Welcome OR Welcome back
                             style: TextStyle(
                               fontSize: _scaleForWidth(screenWidth, 12),
                               color: _textSecondary,
@@ -208,7 +261,11 @@ class _NavBarPageState extends State<NavBarPage>
                             ),
                           ),
                           Text(
-                            widget.user.name,
+                            welcomeMessage.contains('\n')
+                                ? welcomeMessage
+                                    .split('\n')[1]
+                                    .replaceAll('!', '')
+                                : widget.user.name,
                             style: TextStyle(
                               fontSize: _scaleForWidth(screenWidth, 16),
                               color: _textPrimary,
@@ -400,7 +457,6 @@ class _NavBarPageState extends State<NavBarPage>
             : "New Customer Sale";
 
     return Container(
-      margin: EdgeInsets.only(bottom: _scaleForWidth(screenWidth, 12)),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
@@ -429,15 +485,24 @@ class _NavBarPageState extends State<NavBarPage>
             child: Row(
               children: [
                 Container(
-                  width: _scaleForWidth(screenWidth, 48),
-                  height: _scaleForWidth(screenWidth, 48),
+                  padding: EdgeInsets.all(
+                    MediaQuery.of(context).size.width < 350
+                        ? 3 // very small phones
+                        : MediaQuery.of(context).size.width < 500
+                        ? 5 // normal phones
+                        : MediaQuery.of(context).size.width < 900
+                        ? 7 // tablets
+                        : 9, // desktops
+                  ),
+                  width: _scaleForWidth(screenWidth, 44),
+                  height: _scaleForWidth(screenWidth, 44),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: _primaryColor.withOpacity(0.1),
                     border: Border.all(color: _primaryColor.withOpacity(0.2)),
                   ),
-                  child: Icon(
-                    Icons.add,
+                  child: HugeIcon(
+                    icon: HugeIcons.strokeRoundedAdd02,
                     color: _primaryColor,
                     size: _scaleForWidth(screenWidth, 24),
                   ),
@@ -483,7 +548,6 @@ class _NavBarPageState extends State<NavBarPage>
     if (_currentIndex != 3) return const SizedBox.shrink();
 
     return Container(
-      margin: EdgeInsets.only(bottom: _scaleForWidth(screenWidth, 12)),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
@@ -532,12 +596,12 @@ class _NavBarPageState extends State<NavBarPage>
                 Container(
                   padding: EdgeInsets.all(
                     MediaQuery.of(context).size.width < 350
-                        ? 2 // very small phones
+                        ? 3 // very small phones
                         : MediaQuery.of(context).size.width < 500
-                        ? 4 // normal phones
+                        ? 5 // normal phones
                         : MediaQuery.of(context).size.width < 900
-                        ? 6 // tablets
-                        : 8, // desktops
+                        ? 7 // tablets
+                        : 9, // desktops
                   ),
                   width: _scaleForWidth(screenWidth, 44),
                   height: _scaleForWidth(screenWidth, 44),
@@ -621,41 +685,21 @@ class _NavBarPageState extends State<NavBarPage>
       ),
       child: Row(
         children: [
-          _buildNavItem(
-            screenWidth,
-            0,
-            Icons.home_outlined,
-            Icons.home,
-            'Home',
-          ),
+          _buildNavItem(screenWidth, 0, Icons.home_outlined, Icons.home),
           _buildNavItem(
             screenWidth,
             1,
             Icons.dashboard_outlined,
             Icons.dashboard,
-            'Dashboard',
           ),
-          _buildNavItem(
-            screenWidth,
-            2,
-            Icons.people_outline,
-            Icons.people,
-            'Customers',
-          ),
+          _buildNavItem(screenWidth, 2, Icons.people_outline, Icons.people),
           _buildNavItem(
             screenWidth,
             3,
             Icons.inventory_2_outlined,
             Icons.inventory_2,
-            'Packages',
           ),
-          _buildNavItem(
-            screenWidth,
-            4,
-            Icons.person_outline,
-            Icons.person,
-            'Profile',
-          ),
+          _buildNavItem(screenWidth, 4, Icons.person_outline, Icons.person),
         ],
       ),
     );
@@ -666,7 +710,6 @@ class _NavBarPageState extends State<NavBarPage>
     int index,
     IconData outlineIcon,
     IconData filledIcon,
-    String label,
   ) {
     final isSelected = index == _currentIndex;
 
@@ -711,19 +754,11 @@ class _NavBarPageState extends State<NavBarPage>
                   color: isSelected ? _primaryColor : _textSecondary,
                   size:
                       isSelected
-                          ? _scaleForWidth(screenWidth, 20)
-                          : _scaleForWidth(screenWidth, 18),
+                          ? _scaleForWidth(screenWidth, 27)
+                          : _scaleForWidth(screenWidth, 25),
                 ),
               ),
               SizedBox(height: _scaleForWidth(screenWidth, 6)),
-              Text(
-                label,
-                style: TextStyle(
-                  color: isSelected ? _primaryColor : _textSecondary,
-                  fontSize: _scaleForWidth(screenWidth, 10),
-                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                ),
-              ),
             ],
           ),
         ),
@@ -747,10 +782,10 @@ class _NavBarPageState extends State<NavBarPage>
           Expanded(
             child: Padding(
               padding: EdgeInsets.only(
-                top: isSmallScreen ? 16 : 20,
-                left: _pagePadding(screenWidth).horizontal / 2,
-                right: _pagePadding(screenWidth).horizontal / 2,
-                bottom: _pagePadding(screenWidth).horizontal / 5,
+                top: isSmallScreen ? 8 : 10,
+                left: _pagePadding(screenWidth).horizontal / 4,
+                right: _pagePadding(screenWidth).horizontal / 4,
+                bottom: _pagePadding(screenWidth).horizontal / 11,
               ),
               child: Column(
                 children: [

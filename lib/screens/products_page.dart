@@ -1,5 +1,5 @@
 // lib/screens/products_page.dart
-// FULL FIXED – USER SPECIFIC PRODUCTS + SEARCH + DELETE + NO BUILD ERRORS
+// FIXED — NO setState-inside-build + FULL RESPONSIVE
 
 import 'package:bizmate/widgets/confirm_delete_dialog.dart'
     show showConfirmDialog;
@@ -20,7 +20,6 @@ class ProductsPage extends StatefulWidget {
 class _ProductsPageState extends State<ProductsPage> {
   String _searchQuery = "";
   List<Product> _allProducts = [];
-  List<Product> _filteredProducts = [];
 
   Box<dynamic>? userBox;
 
@@ -32,15 +31,12 @@ class _ProductsPageState extends State<ProductsPage> {
 
   // ---------------- LOAD USER-SPECIFIC PRODUCTS ----------------
   Future<void> _loadUserProducts() async {
-    // Load logged-in user's email
     if (!Hive.isBoxOpen('session')) await Hive.openBox('session');
-    final sessionBox = Hive.box('session');
-    final email = sessionBox.get('currentUserEmail');
+    final email = Hive.box('session').get("currentUserEmail");
 
     if (email == null) {
       setState(() {
         _allProducts = [];
-        _filteredProducts = [];
       });
       return;
     }
@@ -53,7 +49,6 @@ class _ProductsPageState extends State<ProductsPage> {
             ? Hive.box(boxName)
             : await Hive.openBox(boxName);
 
-    // Ensure products key exists
     if (!userBox!.containsKey('products')) {
       await userBox!.put('products', <Product>[]);
     }
@@ -64,23 +59,15 @@ class _ProductsPageState extends State<ProductsPage> {
 
     setState(() {
       _allProducts = loaded;
-      _filteredProducts = List.from(_allProducts);
     });
   }
 
   // ---------------- SEARCH ----------------
   void _filterProducts() {
     if (_searchQuery.isEmpty) {
-      _filteredProducts = List.from(_allProducts);
-      setState(() {});
-      return;
+    } else {
+      _searchQuery.toLowerCase();
     }
-
-    final q = _searchQuery.toLowerCase();
-
-    _filteredProducts =
-        _allProducts.where((p) => p.name.toLowerCase().contains(q)).toList();
-
     setState(() {});
   }
 
@@ -89,9 +76,7 @@ class _ProductsPageState extends State<ProductsPage> {
     _filterProducts();
   }
 
-  void _handleDateRangeChanged(DateTimeRange? range) {
-    // Not needed for products
-  }
+  void _handleDateRangeChanged(DateTimeRange? range) {}
 
   // ---------------- DELETE PRODUCT ----------------
   Future<bool> _confirmDelete(int realIndex) async {
@@ -103,18 +88,14 @@ class _ProductsPageState extends State<ProductsPage> {
       message: "Are you sure you want to delete this package?",
       icon: Icons.warning_amber_rounded,
       iconColor: Colors.redAccent,
-      onConfirm: () {
-        confirmed = true;
-      },
+      onConfirm: () => confirmed = true,
     );
 
-    if (confirmed && realIndex >= 0) {
+    if (confirmed) {
       _allProducts.removeAt(realIndex);
       await userBox!.put("products", _allProducts);
 
-      // Refresh filtered list
       _filterProducts();
-      setState(() {});
     }
 
     return confirmed;
@@ -122,147 +103,175 @@ class _ProductsPageState extends State<ProductsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final w = MediaQuery.of(context).size.width;
+
+    double scale =
+        w < 360
+            ? 0.78
+            : w < 480
+            ? 0.90
+            : w < 700
+            ? 1.00
+            : w < 1100
+            ? 1.15
+            : 1.25;
+
     return Scaffold(
       backgroundColor: const Color(0xFFF4F6FA),
-      body: Column(
-        children: [
-          AdvancedSearchBar(
-            hintText: 'Search packages...',
-            onSearchChanged: _handleSearchChanged,
-            onDateRangeChanged: _handleDateRangeChanged,
-            showDateFilter: false,
-          ),
+      body: MediaQuery.removePadding(
+        removeTop: true,
+        context: context,
+        child: Column(
+          children: [
+            AdvancedSearchBar(
+              hintText: 'Search packages...',
+              onSearchChanged: _handleSearchChanged,
+              onDateRangeChanged: _handleDateRangeChanged,
+              showDateFilter: false,
+            ),
 
-          // -------- PRODUCTS LIST --------
-          Expanded(
-            child: ValueListenableBuilder(
-              valueListenable: userBox!.listenable(),
-              builder: (context, box, _) {
-                // Reload list when Hive updates (no setState!)
-                final List<Product> newList = List<Product>.from(
-                  userBox!.get("products", defaultValue: <Product>[]),
-                );
-
-                _allProducts = newList;
-
-                // Re-apply filter
-                if (_searchQuery.isEmpty) {
-                  _filteredProducts = List.from(_allProducts);
-                } else {
-                  _filterProducts();
-                }
-
-                if (_filteredProducts.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          _searchQuery.isEmpty
-                              ? Icons.inventory_2
-                              : Icons.search_off,
-                          size: 80,
-                          color: Colors.grey[400],
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          _searchQuery.isEmpty
-                              ? "No Packages Yet"
-                              : "No matching packages found",
-                          style: TextStyle(
-                            fontSize: 20,
-                            color: Colors.grey[600],
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
+            // -------- PRODUCTS LIST --------
+            Expanded(
+              child: ValueListenableBuilder(
+                valueListenable: userBox!.listenable(),
+                builder: (context, box, _) {
+                  // 🔥 REPLACE setState WITH LOCAL COMPUTATION
+                  final List<Product> newList = List<Product>.from(
+                    userBox!.get("products", defaultValue: <Product>[]),
                   );
-                }
 
-                return ListView.builder(
-                  padding: const EdgeInsets.only(
-                    left: 16,
-                    right: 16,
-                    bottom: 16,
-                  ),
-                  itemCount: _filteredProducts.length,
-                  itemBuilder: (context, index) {
-                    final product = _filteredProducts[index];
-                    final realIndex = _allProducts.indexOf(product);
+                  // Local assignments (NO setState)
+                  _allProducts = newList;
 
-                    return Dismissible(
-                      key: Key(product.name + index.toString()),
-                      direction: DismissDirection.endToStart,
-                      confirmDismiss: (_) => _confirmDelete(realIndex),
-                      background: Container(
-                        alignment: Alignment.centerRight,
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        margin: const EdgeInsets.only(bottom: 14),
-                        decoration: BoxDecoration(
-                          color: Colors.red,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: const Icon(
-                          Icons.delete,
-                          color: Colors.white,
-                          size: 30,
-                        ),
-                      ),
-                      child: Container(
-                        margin: const EdgeInsets.only(bottom: 14),
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFF00BCD4), Color(0xFF1A237E)],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
+                  // Local filtered list (NO setState)
+                  List<Product> visibleList =
+                      _searchQuery.isEmpty
+                          ? List.from(_allProducts)
+                          : _allProducts
+                              .where(
+                                (p) => p.name.toLowerCase().contains(
+                                  _searchQuery.toLowerCase(),
+                                ),
+                              )
+                              .toList();
+
+                  if (visibleList.isEmpty) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            _searchQuery.isEmpty
+                                ? Icons.inventory_2
+                                : Icons.search_off,
+                            size: 80 * scale,
+                            color: Colors.grey[400],
                           ),
-                          borderRadius: BorderRadius.circular(10),
-                          boxShadow: const [
-                            BoxShadow(
-                              color: Colors.black12,
-                              blurRadius: 10,
-                              offset: Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: ListTile(
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 12,
-                          ),
-                          leading: const CircleAvatar(
-                            backgroundColor: Colors.white,
-                            child: HugeIcon(
-                              icon: HugeIcons.strokeRoundedShoppingBasket01,
-                              color: Color(0xFF1A237E),
+                          SizedBox(height: 16 * scale),
+                          Text(
+                            _searchQuery.isEmpty
+                                ? "No Packages Yet"
+                                : "No matching packages found",
+                            style: TextStyle(
+                              fontSize: 18 * scale,
+                              color: Colors.grey[600],
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
-                          title: Text(
-                            product.name,
-                            style: const TextStyle(
-                              fontSize: 18,
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          subtitle: Text(
-                            "Rate: ₹${product.rate.toStringAsFixed(2)}",
-                            style: const TextStyle(color: Colors.white70),
-                          ),
-                          trailing: const Icon(
-                            Icons.drag_handle,
-                            color: Colors.white70,
-                          ),
-                        ),
+                        ],
                       ),
                     );
-                  },
-                );
-              },
+                  }
+
+                  return ListView.builder(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 14 * scale,
+                      vertical: 6 * scale,
+                    ),
+                    itemCount: visibleList.length,
+                    itemBuilder: (context, index) {
+                      final product = visibleList[index];
+                      final realIndex = _allProducts.indexOf(product);
+
+                      return Dismissible(
+                        key: Key(product.name + index.toString()),
+                        direction: DismissDirection.endToStart,
+                        confirmDismiss: (_) => _confirmDelete(realIndex),
+                        background: Container(
+                          alignment: Alignment.centerRight,
+                          padding: EdgeInsets.symmetric(horizontal: 20 * scale),
+                          margin: EdgeInsets.only(bottom: 14 * scale),
+                          decoration: BoxDecoration(
+                            color: Colors.red,
+                            borderRadius: BorderRadius.circular(12 * scale),
+                          ),
+                          child: Icon(
+                            Icons.delete,
+                            color: Colors.white,
+                            size: 28 * scale,
+                          ),
+                        ),
+                        child: Container(
+                          margin: EdgeInsets.only(bottom: 14 * scale),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF00BCD4), Color(0xFF1A237E)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(14 * scale),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.10),
+                                blurRadius: 10 * scale,
+                                offset: Offset(0, 4 * scale),
+                              ),
+                            ],
+                          ),
+                          child: ListTile(
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 20 * scale,
+                              vertical: 12 * scale,
+                            ),
+                            leading: CircleAvatar(
+                              radius: 20 * scale,
+                              backgroundColor: Colors.white,
+                              child: HugeIcon(
+                                icon: HugeIcons.strokeRoundedShoppingBasket01,
+                                color: const Color(0xFF1A237E),
+                                size: 20 * scale,
+                              ),
+                            ),
+                            title: Text(
+                              product.name,
+                              style: TextStyle(
+                                fontSize: 16 * scale,
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            subtitle: Text(
+                              "Rate: ₹${product.rate.toStringAsFixed(2)}",
+                              style: TextStyle(
+                                fontSize: 13 * scale,
+                                color: Colors.white70,
+                              ),
+                            ),
+                            trailing: Icon(
+                              Icons.drag_handle,
+                              color: Colors.white70,
+                              size: 20 * scale,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

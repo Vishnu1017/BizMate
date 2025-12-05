@@ -24,14 +24,11 @@ class SaleAdapter extends TypeAdapter<Sale> {
       phoneNumber: fields[4] as String,
       totalAmount: fields[5] as double,
       discount: fields[11] as double,
-      paymentHistory: (fields[6] as List?)?.cast<Payment>(),
+      paymentHistory: (fields[6] as List).cast<Payment>(),
       deliveryStatus: fields[7] as String,
       deliveryLink: fields[8] as String,
       paymentMode: fields[9] as String,
-      deliveryStatusHistory:
-          (fields[10] as List?)
-              ?.map((dynamic e) => (e as Map).cast<String, dynamic>())
-              .toList(),
+      deliveryStatusHistory: (fields[10] as List?)?.cast<String>(),
       item: fields[12] as String,
     );
   }

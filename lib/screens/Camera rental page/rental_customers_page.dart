@@ -11,12 +11,10 @@ import 'package:intl/intl.dart';
 import '../../../models/customer_model.dart';
 
 class RentalCustomersPage extends StatefulWidget {
-  final String userEmail; // ✅ FIXED
+  final String userEmail;
 
-  const RentalCustomersPage({
-    Key? key,
-    required this.userEmail, // <-- REQUIRED and stored
-  }) : super(key: key);
+  const RentalCustomersPage({Key? key, required this.userEmail})
+    : super(key: key);
 
   @override
   State<RentalCustomersPage> createState() => _RentalCustomersPageState();
@@ -25,8 +23,11 @@ class RentalCustomersPage extends StatefulWidget {
 class _RentalCustomersPageState extends State<RentalCustomersPage> {
   late Box<CustomerModel> customerBox;
   Box? userBox;
+  String _searchQuery = "";
   bool _isLoading = true;
+
   List<CustomerModel> customers = [];
+  List<CustomerModel> allCustomers = []; // FULL backup list (important)
 
   @override
   void initState() {
@@ -35,21 +36,18 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
   }
 
   // ---------------------------------------------------------------------------
-  // ⭐ LOAD CUSTOMERS (USER-SPECIFIC FIRST)
+  // ⭐ LOAD CUSTOMERS
   // ---------------------------------------------------------------------------
   Future<void> _loadCustomers() async {
     try {
-      // Open main box
       if (!Hive.isBoxOpen('customers')) {
         await Hive.openBox<CustomerModel>('customers');
       }
       customerBox = Hive.box<CustomerModel>('customers');
 
-      // Build user-specific box
       final safeEmail = widget.userEmail
           .replaceAll('.', '_')
           .replaceAll('@', '_');
-
       final boxName = "userdata_$safeEmail";
 
       if (!Hive.isBoxOpen(boxName)) {
@@ -60,7 +58,6 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
 
       List<CustomerModel> loaded = [];
 
-      // Load USER-SPECIFIC customers first
       if (userBox != null && userBox!.containsKey("customers")) {
         try {
           loaded = List<CustomerModel>.from(
@@ -71,39 +68,39 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
         }
       }
 
-      // If none found, fallback to global main box
       if (loaded.isEmpty) {
         loaded = customerBox.values.toList();
       }
 
+      // SAFETY: ensure widget still mounted before updating state
+      if (!mounted) return;
+
       setState(() {
-        customers = loaded.reversed.toList();
+        allCustomers = loaded.reversed.toList(); // full copy
+        customers = List.from(allCustomers); // display list
         _isLoading = false;
       });
     } catch (e) {
-      debugPrint('Error loading customers: $e');
-      setState(() => _isLoading = false);
-      AppSnackBar.showError(
-        context,
-        message: 'Error loading customers: $e',
-        duration: const Duration(seconds: 2),
-      );
+      if (mounted) {
+        AppSnackBar.showError(context, message: 'Error loading customers: $e');
+        setState(() => _isLoading = false);
+      }
     }
   }
 
   // ---------------------------------------------------------------------------
-  // ⭐ DELETE CUSTOMER (USER-SPECIFIC + MAIN BOX)
+  // ⭐ DELETE CUSTOMER
   // ---------------------------------------------------------------------------
   Future<void> _deleteCustomer(int index) async {
+    // Defensive: ensure index valid
+    if (index < 0 || index >= customers.length) return;
+
     final customer = customers[index];
 
     try {
-      // ---------------------
-      // DELETE FROM USER BOX
-      // ---------------------
+      // USER BOX delete
       if (userBox != null) {
         List<CustomerModel> userCustomers = [];
-
         try {
           userCustomers = List<CustomerModel>.from(
             userBox!.get("customers", defaultValue: []),
@@ -112,7 +109,6 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
           userCustomers = [];
         }
 
-        // Remove matching
         userCustomers.removeWhere(
           (c) =>
               c.name == customer.name &&
@@ -123,41 +119,42 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
         await userBox!.put("customers", userCustomers);
       }
 
-      // ---------------------
-      // DELETE FROM MAIN customers BOX
-      // ---------------------
-      final allMainCustomers = customerBox.values.toList();
-      final mainIndex = allMainCustomers.indexWhere(
+      // MAIN BOX delete
+      final mainList = customerBox.values.toList();
+      final mainIndex = mainList.indexWhere(
         (c) =>
             c.name == customer.name &&
             c.phone == customer.phone &&
             c.createdAt == customer.createdAt,
       );
 
-      if (mainIndex != -1) {
-        await customerBox.deleteAt(mainIndex);
-      }
+      if (mainIndex != -1) await customerBox.deleteAt(mainIndex);
 
-      // Remove customer from UI list
+      // SAFETY: ensure widget still mounted before updating UI
+      if (!mounted) return;
+
+      // DELETE from UI lists
       setState(() {
+        allCustomers.removeWhere(
+          (c) =>
+              c.name == customer.name &&
+              c.phone == customer.phone &&
+              c.createdAt == customer.createdAt,
+        );
         customers.removeAt(index);
       });
 
-      // ALSO delete rental sales of this customer
       await _deleteCustomerRentalSales(customer.name, customer.phone);
 
-      AppSnackBar.showSuccess(
-        context,
-        message: '${customer.name} deleted successfully',
-        duration: const Duration(seconds: 2),
-      );
+      if (!mounted) return;
+      AppSnackBar.showSuccess(context, message: "${customer.name} deleted");
     } catch (e) {
-      debugPrint('Error deleting customer: $e');
-      AppSnackBar.showError(
-        context,
-        message: 'Failed to delete customer: $e',
-        duration: const Duration(seconds: 2),
-      );
+      if (mounted) {
+        AppSnackBar.showError(
+          context,
+          message: 'Failed to delete customer: $e',
+        );
+      }
     }
   }
 
@@ -165,25 +162,21 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
     String customerName,
     String customerPhone,
   ) async {
-    try {
-      if (userBox == null) return;
+    if (userBox == null) return;
 
-      // Load existing rental sales
+    try {
       final raw = userBox!.get('rental_sales', defaultValue: []);
       List<RentalSaleModel> rentalSales =
           (raw as List).map((e) => e as RentalSaleModel).toList();
 
-      // Remove sales belonging to this customer
       rentalSales.removeWhere(
-        (sale) =>
-            sale.customerName == customerName &&
-            sale.customerPhone == customerPhone,
+        (s) =>
+            s.customerName == customerName && s.customerPhone == customerPhone,
       );
 
       await userBox!.put('rental_sales', rentalSales);
-
-      debugPrint("✓ Rental sales deleted for $customerName");
     } catch (e) {
+      // best-effort; log
       debugPrint("Error deleting rental sales of customer: $e");
     }
   }
@@ -192,30 +185,29 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
   // SEARCH HANDLER
   // ---------------------------------------------------------------------------
   void _handleSearchChanged(String query) {
-    setState(() {
-      if (query.isEmpty) {
-        // Reload original list
-        _loadCustomers();
-        return;
-      }
+    _searchQuery = query; // ⭐ Track the active search text
 
+    if (query.isEmpty) {
+      setState(() {
+        customers = List.from(allCustomers);
+      });
+      return;
+    }
+
+    setState(() {
       customers =
-          customers.where((c) {
+          allCustomers.where((c) {
             return c.name.toLowerCase().contains(query.toLowerCase()) ||
                 c.phone.toLowerCase().contains(query.toLowerCase());
           }).toList();
     });
   }
 
-  // ---------------------------------------------------------------------------
-  // DATE RANGE HANDLER (NOT USED HERE BUT REQUIRED BY WIDGET)
-  // ---------------------------------------------------------------------------
-  void _handleDateRangeChanged(DateTimeRange? range) {
-    // NO DATE FILTER FOR CUSTOMERS — but function must exist
-  }
+  // Required by widget
+  void _handleDateRangeChanged(DateTimeRange? range) {}
 
   // ---------------------------------------------------------------------------
-  // ⭐ SWEET CONFIRMATION POPUP
+  // CONFIRM DELETE
   // ---------------------------------------------------------------------------
   Future<bool> _confirmDelete(CustomerModel customer) async {
     bool confirmed = false;
@@ -235,7 +227,7 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
   }
 
   // ---------------------------------------------------------------------------
-  // ⭐ CUSTOMER CARD WIDGET (RESPONSIVE)
+  // UI BUILDERS (NO CHANGE)
   // ---------------------------------------------------------------------------
   Widget _buildCustomerCard(CustomerModel customer, int index) {
     // Responsive calculations inside the widget (no function changes)
@@ -246,7 +238,7 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
 
     final avatarSize =
         isDesktop ? 84.0 : (isTablet ? 72.0 : (isSmallPhone ? 56.0 : 70.0));
-    final horizontalPadding = isDesktop ? 28.0 : (isTablet ? 22.0 : 20.0);
+    final horizontalPadding = isDesktop ? 28.0 : (isTablet ? 10.0 : 8.0);
     final titleFont =
         isDesktop ? 22.0 : (isTablet ? 20.0 : (isSmallPhone ? 16.0 : 20.0));
     final subtitleFont = isDesktop ? 16.0 : (isTablet ? 15.0 : 14.0);
@@ -264,18 +256,18 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
 
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: 8),
-
-      // DELETE SWIPE
       child: Dismissible(
         key: Key(
           '${customer.name}_${customer.phone}_${customer.createdAt.millisecondsSinceEpoch}',
         ),
         direction: DismissDirection.endToStart,
         confirmDismiss: (_) async => await _confirmDelete(customer),
-        onDismissed: (_) => _deleteCustomer(index),
-
+        onDismissed: (_) {
+          // onDismissed fires after the dismiss animation completes.
+          // We call _deleteCustomer which mutates data and state (it has its own mounted checks).
+          _deleteCustomer(index);
+        },
         background: Container(
-          // margin: const EdgeInsets.symmetric(vertical: 8),
           alignment: Alignment.centerRight,
           padding: const EdgeInsets.symmetric(horizontal: 25),
           decoration: BoxDecoration(
@@ -304,7 +296,6 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
             ],
           ),
         ),
-
         child: ConstrainedBox(
           constraints: BoxConstraints(
             maxWidth: isDesktop ? 1100 : double.infinity,
@@ -353,13 +344,10 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
                       ),
                     ),
                   ),
-
-                // CONTENT
                 Padding(
                   padding: EdgeInsets.all(isDesktop ? 17.0 : 15.0),
                   child: Row(
                     children: [
-                      // Avatar
                       Container(
                         width: avatarSize,
                         height: avatarSize,
@@ -384,9 +372,7 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
                           ),
                         ),
                       ),
-
                       SizedBox(width: isDesktop ? 24 : 16),
-
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -448,10 +434,7 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
                           ],
                         ),
                       ),
-
                       SizedBox(width: isDesktop ? 18 : 12),
-
-                      // Menu Icon
                       Container(
                         width: isDesktop ? 48 : 40,
                         height: isDesktop ? 48 : 40,
@@ -472,6 +455,31 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildNoMatchState(String query) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.search_off_rounded, size: 60, color: Colors.grey.shade500),
+          const SizedBox(height: 16),
+          Text(
+            "No matching results",
+            style: TextStyle(
+              fontSize: 18,
+              color: Colors.grey.shade700,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            "Nothing found for \"$query\"",
+            style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+          ),
+        ],
       ),
     );
   }
@@ -542,7 +550,6 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
   // ---------------------------------------------------------------------------
   @override
   Widget build(BuildContext context) {
-    // Root responsiveness variables
     final screenWidth = MediaQuery.of(context).size.width;
     final isVeryWide = screenWidth > 1100;
     final maxContentWidth =
@@ -551,104 +558,103 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: MediaQuery.removePadding(
-        removeTop: true, // ⭐ FIX EXTRA TOP SPACE
+        removeTop: true,
         context: context,
         child: SafeArea(
-          top: false, // ⭐ avoid SafeArea adding top padding again
+          top: false,
           child: Center(
             child: ConstrainedBox(
               constraints: BoxConstraints(maxWidth: maxContentWidth),
-              child:
-                  _isLoading
-                      ? _buildLoadingState()
-                      : customers.isEmpty
-                      ? _buildEmptyState()
-                      : Column(
-                        children: [
-                          AdvancedSearchBar(
-                            hintText: 'Search customers...',
-                            onSearchChanged: _handleSearchChanged,
-                            onDateRangeChanged: _handleDateRangeChanged,
-                            showDateFilter: false,
-                          ),
 
-                          // SUMMARY / COUNT
-                          Padding(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: isVeryWide ? 32 : 24,
-                            ),
-                            child: LayoutBuilder(
-                              builder: (context, constraints) {
-                                double w = constraints.maxWidth;
+              // ⭐ FIX: Search bar ALWAYS visible
+              child: Column(
+                children: [
+                  AdvancedSearchBar(
+                    hintText: 'Search customers...',
+                    onSearchChanged: _handleSearchChanged,
+                    onDateRangeChanged: _handleDateRangeChanged,
+                    showDateFilter: false,
+                  ),
 
-                                // Responsive scale factor based on screen width
-                                double scale =
-                                    w < 360
-                                        ? 0.75
-                                        : w < 480
-                                        ? 0.85
-                                        : w < 700
-                                        ? 0.95
-                                        : 1.1;
+                  // ⭐ SUMMARY / COUNT
+                  Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: isVeryWide ? 32 : 24,
+                    ),
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        double w = constraints.maxWidth;
+                        double scale =
+                            w < 360
+                                ? 0.75
+                                : w < 480
+                                ? 0.85
+                                : w < 700
+                                ? 0.95
+                                : 1.1;
 
-                                return Row(
-                                  children: [
-                                    // ⭐ RESPONSIVE OUTLINE CUSTOMER BOX
-                                    Container(
-                                      padding: EdgeInsets.symmetric(
-                                        horizontal: 10 * scale,
-                                        vertical: 6 * scale,
-                                      ),
-                                      constraints: BoxConstraints(
-                                        minWidth: 20 * scale,
-                                        maxWidth: 60 * scale,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: Colors.white,
-                                        borderRadius: BorderRadius.circular(
-                                          30 * scale,
-                                        ),
-                                        border: Border.all(
-                                          color: Colors.grey,
-                                          width: 1.2 * scale,
-                                        ),
-                                      ),
-                                      child: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          Icon(
-                                            Icons.people_alt_rounded,
-                                            size: 16 * scale,
-                                            color: Colors.black87,
-                                          ),
-                                          SizedBox(width: 4 * scale),
-                                          Text(
-                                            '${customers.length}',
-                                            style: TextStyle(
-                                              fontSize: 14 * scale,
-                                              fontWeight: FontWeight.w700,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-
-                                    SizedBox(width: 12 * scale),
-
-                                    Expanded(child: SizedBox()),
-                                  ],
-                                );
-                              },
-                            ),
-                          ),
-                          // LIST
-                          Expanded(
-                            child: Padding(
+                        return Row(
+                          children: [
+                            Container(
                               padding: EdgeInsets.symmetric(
-                                horizontal: isVeryWide ? 20 : 0,
+                                horizontal: 10 * scale,
+                                vertical: 6 * scale,
                               ),
-                              child: ListView.builder(
+                              constraints: BoxConstraints(
+                                minWidth: 20 * scale,
+                                maxWidth: 60 * scale,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(30 * scale),
+                                border: Border.all(
+                                  color: Colors.grey,
+                                  width: 1.2 * scale,
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.people_alt_rounded,
+                                    size: 16 * scale,
+                                    color: Colors.black87,
+                                  ),
+                                  SizedBox(width: 4 * scale),
+                                  Text(
+                                    '${customers.length}',
+                                    style: TextStyle(
+                                      fontSize: 14 * scale,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                            SizedBox(width: 12 * scale),
+
+                            Expanded(child: SizedBox()),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+
+                  // ⭐ LIST AREA — only this part changes based on data
+                  Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: isVeryWide ? 20 : 0,
+                      ),
+                      child:
+                          _isLoading
+                              ? _buildLoadingState()
+                              : customers.isEmpty
+                              ? (_searchQuery.isNotEmpty
+                                  ? _buildNoMatchState(_searchQuery)
+                                  : _buildEmptyState())
+                              : ListView.builder(
                                 padding: const EdgeInsets.only(bottom: 20),
                                 itemCount: customers.length,
                                 itemBuilder: (context, index) {
@@ -658,10 +664,10 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
                                   );
                                 },
                               ),
-                            ),
-                          ),
-                        ],
-                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

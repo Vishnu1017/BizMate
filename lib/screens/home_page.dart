@@ -115,7 +115,7 @@ class _HomePageState extends State<HomePage>
 
     if (email == null || email.toString().isEmpty) {
       setState(() {
-        welcomeMessage = "🏠 Welcome!";
+        welcomeMessage = "Welcome!";
       });
       return;
     }
@@ -136,7 +136,7 @@ class _HomePageState extends State<HomePage>
 
     if (user == null) {
       setState(() {
-        welcomeMessage = "🏠 Welcome!";
+        welcomeMessage = "Welcome!";
       });
       return;
     }
@@ -258,7 +258,6 @@ class _HomePageState extends State<HomePage>
                   onDateRangeChanged: _handleDateRangeChanged,
                   showDateFilter: true,
                 ),
-
                 if (sales.isEmpty &&
                     _searchQuery.isEmpty &&
                     selectedRange == null)
@@ -332,7 +331,7 @@ class _HomePageState extends State<HomePage>
 
                       // Get the original index from the box to maintain invoice numbering
                       final originalIndex = sales.indexOf(sale);
-                      final invoiceNumber = originalIndex + 1;
+                      final invoiceNumber = sales.length - originalIndex;
                       final formattedDate = DateFormat(
                         'dd MMM yyyy',
                       ).format(sale.dateTime);
@@ -349,7 +348,7 @@ class _HomePageState extends State<HomePage>
                               isVerySmallScreen
                                   ? 13
                                   : isSmallScreen
-                                  ? 15
+                                  ? 8
                                   : 27,
                           vertical: isVerySmallScreen ? 6 : 8,
                         ),

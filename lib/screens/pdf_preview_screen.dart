@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_pdfview/flutter_pdfview.dart';
 import 'package:share_plus/share_plus.dart';
-import '../models/sale.dart'; // Ensure this file includes the new getters
+import '../models/sale.dart';
 
 class PdfPreviewScreen extends StatelessWidget {
   final String filePath;
@@ -17,20 +17,30 @@ class PdfPreviewScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final outerMargin = screenWidth * 0.03;
-    final innerMargin = screenWidth * 0.04;
+    final size = MediaQuery.of(context).size;
+    final width = size.width;
+    final height = size.height;
+
+    final isTablet = width > 600;
+
+    // Super-responsive paddings
+    final outerMargin = width * 0.025;
+    final pdfPaddingHorizontal =
+        isTablet ? width * 0.06 : width * 0.01; // tablet-friendly
+    final pdfPaddingVertical =
+        isTablet ? height * 0.04 : height * 0.10; // better balance
 
     return Scaffold(
       extendBodyBehindAppBar: true,
+
+      // ------------------------- APP BAR -------------------------
       appBar: PreferredSize(
-        preferredSize: Size.fromHeight(60),
+        preferredSize: const Size.fromHeight(60),
         child: AppBar(
           elevation: 0,
           backgroundColor: Colors.transparent,
-          iconTheme: IconThemeData(color: Colors.white),
           flexibleSpace: Container(
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               gradient: LinearGradient(
                 colors: [Color(0xFF1A237E), Color(0xFF00BCD4)],
                 begin: Alignment.centerLeft,
@@ -38,39 +48,47 @@ class PdfPreviewScreen extends StatelessWidget {
               ),
             ),
           ),
+          iconTheme: const IconThemeData(color: Colors.white),
           title: Text(
             "Invoice Preview",
-            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: isTablet ? 26 : width * 0.045,
+              fontWeight: FontWeight.w600,
+            ),
           ),
           centerTitle: true,
         ),
       ),
+
+      // ------------------------- BODY -------------------------
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
             return Container(
               margin: EdgeInsets.all(outerMargin),
-              padding: EdgeInsets.all(10),
               child: Center(
                 child: Container(
-                  margin: EdgeInsets.symmetric(
-                    horizontal: innerMargin,
-                    vertical: screenWidth * 0.3,
+                  width: constraints.maxWidth,
+                  height: constraints.maxHeight,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: pdfPaddingHorizontal,
+                    vertical: pdfPaddingVertical,
                   ),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    border: Border.all(color: Colors.black, width: 3),
-                    borderRadius: BorderRadius.circular(8),
-                    boxShadow: [
+                    border: Border.all(color: Colors.black, width: 2),
+                    borderRadius: BorderRadius.circular(isTablet ? 18 : 12),
+                    boxShadow: const [
                       BoxShadow(
-                        color: Colors.black12,
-                        blurRadius: 10,
-                        offset: Offset(0, 4),
+                        color: Colors.black26,
+                        blurRadius: 16,
+                        offset: Offset(0, 6),
                       ),
                     ],
                   ),
                   child: ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(isTablet ? 18 : 10),
                     child: PDFView(
                       filePath: filePath,
                       enableSwipe: true,
@@ -78,6 +96,7 @@ class PdfPreviewScreen extends StatelessWidget {
                       autoSpacing: true,
                       pageFling: true,
                       fitEachPage: true,
+                      fitPolicy: FitPolicy.BOTH, // best for all screens
                     ),
                   ),
                 ),
@@ -86,63 +105,89 @@ class PdfPreviewScreen extends StatelessWidget {
           },
         ),
       ),
+
+      // ------------------------- SHARE BUTTON -------------------------
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+
       floatingActionButton: Container(
+        margin: EdgeInsets.only(bottom: height * 0.015),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
+          gradient: const LinearGradient(
             colors: [Color(0xFF1A237E), Color(0xFF00BCD4)],
             begin: Alignment.centerLeft,
             end: Alignment.centerRight,
           ),
-          borderRadius: BorderRadius.circular(30),
+          borderRadius: BorderRadius.circular(24), // smaller radius
         ),
         child: FloatingActionButton.extended(
-          backgroundColor: Colors.transparent,
           elevation: 0,
-          icon: Icon(Icons.share, color: Colors.white),
-          label: Text("Share", style: TextStyle(color: Colors.white)),
+          backgroundColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
+
+          // SMALL ICON
+          icon: Icon(
+            Icons.share,
+            color: Colors.white,
+            size: width * 0.040, // smaller icon
+          ),
+
+          // SMALL TEXT + SMALL PADDING
+          label: Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: width * 0.01, // smaller padding
+              vertical: width * 0.01,
+            ),
+            child: Text(
+              "Share",
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: width * 0.030, // SMALL FONT
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+
+          // Same share logic untouched
           onPressed: () async {
             final message = '''
-Hi ${sale.customerName},
+              Hi ${sale.customerName},
 
-🧾 *Invoice Summary*
-• Total Amount: ₹${sale.totalAmount}
-• Received: ₹${sale.receivedAmount}
-• Balance Due: ₹${sale.balanceAmount}
-• Date: ${sale.formattedDate}
+              🧾 *Invoice Summary*
+              • Total Amount: ₹${sale.totalAmount}
+              • Received: ₹${sale.receivedAmount}
+              • Balance Due: ₹${sale.balanceAmount}
+              • Date: ${sale.formattedDate}
 
-📲 Scan the QR code to pay via UPI.
+              📲 Scan the QR code to pay via UPI.
 
-Thanks for choosing *Shutter Life Photography*!
-– *Team Shutter Life Photography*
-''';
+              Thanks for choosing *${sale.customerName}*!
+              – *Team ${sale.customerName}*
+              ''';
 
-            final file = XFile(filePath);
-
-            // 1. First copy to clipboard for WhatsApp
             await Clipboard.setData(ClipboardData(text: message));
 
-            // Show snackbar about clipboard copy
             AppSnackBar.showSuccess(
               context,
               message:
                   "Message copied! Paste it in WhatsApp after selecting contact.",
-              duration: Duration(seconds: 2),
+              duration: const Duration(seconds: 2),
             );
 
-            await Future.delayed(Duration(milliseconds: 300)); // Small wait
+            await Future.delayed(const Duration(milliseconds: 300));
 
-            // 2. Then share both PDF and message via other apps
             try {
               await Share.shareXFiles(
-                [file],
-                text: message, // This will work in Telegram, Gmail etc.
-                subject: '📸 Your Invoice from Shutter Life Photography',
+                [XFile(filePath)],
+                text: message,
+                subject: '📸 Your Invoice from ${sale.customerName}',
               );
             } catch (e) {
               AppSnackBar.showError(
                 context,
-                message: "Failed to share: ${e.toString()}",
-                duration: Duration(seconds: 2),
+                message: "Failed to share: $e",
+                duration: const Duration(seconds: 2),
               );
             }
           },

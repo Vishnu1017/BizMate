@@ -26,10 +26,20 @@ class _EditRentalItemPageState extends State<EditRentalItemPage> {
   late TextEditingController priceController;
 
   String availability = 'Available';
+  String condition = 'Excellent'; // Add condition field
 
   late Box<RentalItem> rentalBox;
   Box? userBox;
   List<RentalItem> userItems = [];
+
+  // Condition options
+  final List<String> _conditions = [
+    'Brand New',
+    'Excellent',
+    'Good',
+    'Fair',
+    'Needs Repair',
+  ];
 
   @override
   void initState() {
@@ -41,6 +51,7 @@ class _EditRentalItemPageState extends State<EditRentalItemPage> {
     brandController = TextEditingController(text: widget.item.brand);
     priceController = TextEditingController(text: widget.item.price.toString());
     availability = widget.item.availability;
+    condition = widget.item.condition; // Initialize condition
 
     _initUserBox();
   }
@@ -64,6 +75,7 @@ class _EditRentalItemPageState extends State<EditRentalItemPage> {
       imagePath: widget.item.imagePath,
       availability: availability,
       category: widget.item.category,
+      condition: condition, // Save condition
     );
 
     // Save to global box
@@ -120,7 +132,7 @@ class _EditRentalItemPageState extends State<EditRentalItemPage> {
             ],
           ),
           child: IconButton(
-            icon: const Icon(Icons.arrow_back_rounded, size: 22),
+            icon: const Icon(Icons.arrow_back, size: 22),
             onPressed: () => Navigator.pop(context),
           ),
         ),
@@ -224,94 +236,12 @@ class _EditRentalItemPageState extends State<EditRentalItemPage> {
                   ),
                   const SizedBox(height: 16),
 
+                  // Condition dropdown - ADDED
+                  _buildConditionDropdown(),
+                  const SizedBox(height: 16),
+
                   // Availability dropdown
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Availability Status',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF374151),
-                        ),
-                      ),
-                      const SizedBox(height: 5),
-                      Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(14),
-                          color: Color(0xFFF9FAFB),
-                          border: Border.all(
-                            color: Color(0xFFE5E7EB),
-                            width: 1.5,
-                          ),
-                        ),
-                        child: DropdownButtonFormField<String>(
-                          value: availability,
-                          dropdownColor: Colors.white,
-                          icon: const Icon(
-                            Icons.keyboard_arrow_down_rounded,
-                            color: Color(0xFF2563EB),
-                            size: 24,
-                          ),
-                          style: const TextStyle(
-                            color: Colors.black87,
-                            fontWeight: FontWeight.w500,
-                            fontSize: 16,
-                          ),
-                          decoration: const InputDecoration(
-                            border: InputBorder.none,
-                            contentPadding: EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 12,
-                            ),
-                            prefixIcon: Icon(
-                              Icons.event_available_outlined,
-                              color: Color(0xFF2563EB),
-                            ),
-                          ),
-                          items: [
-                            DropdownMenuItem(
-                              value: 'Available',
-                              child: Row(
-                                children: [
-                                  Container(
-                                    width: 8,
-                                    height: 8,
-                                    decoration: const BoxDecoration(
-                                      color: Colors.green,
-                                      shape: BoxShape.circle,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  const Text('Available'),
-                                ],
-                              ),
-                            ),
-                            DropdownMenuItem(
-                              value: 'Unavailable',
-                              child: Row(
-                                children: [
-                                  Container(
-                                    width: 8,
-                                    height: 8,
-                                    decoration: const BoxDecoration(
-                                      color: Colors.red,
-                                      shape: BoxShape.circle,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  const Text('Unavailable'),
-                                ],
-                              ),
-                            ),
-                          ],
-                          onChanged:
-                              (value) => setState(() => availability = value!),
-                        ),
-                      ),
-                    ],
-                  ),
+                  _buildAvailabilityDropdown(),
                 ],
               ),
             ),
@@ -453,6 +383,206 @@ class _EditRentalItemPageState extends State<EditRentalItemPage> {
               hintText: 'Enter $label',
               hintStyle: TextStyle(color: Colors.grey[500]),
             ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // NEW: Condition Dropdown Widget
+  Widget _buildConditionDropdown() {
+    // Helper function to get color for condition
+    Color getConditionColor(String condition) {
+      switch (condition) {
+        case 'Brand New':
+          return Colors.green;
+        case 'Excellent':
+          return Colors.lightGreen;
+        case 'Good':
+          return Colors.orange;
+        case 'Fair':
+          return Colors.orangeAccent;
+        case 'Needs Repair':
+          return Colors.red;
+        default:
+          return Colors.grey;
+      }
+    }
+
+    // Helper function to get icon for condition
+    IconData getConditionIcon(String condition) {
+      switch (condition) {
+        case 'Brand New':
+          return Icons.new_releases_outlined;
+        case 'Excellent':
+          return Icons.star_outlined;
+        case 'Good':
+          return Icons.star_half_outlined;
+        case 'Fair':
+          return Icons.build_outlined;
+        case 'Needs Repair':
+          return Icons.construction_outlined;
+        default:
+          return Icons.info_outline;
+      }
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Equipment Condition',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF374151),
+          ),
+        ),
+        const SizedBox(height: 5),
+        Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            color: Color(0xFFF9FAFB),
+            border: Border.all(color: Color(0xFFE5E7EB), width: 1.5),
+          ),
+          child: DropdownButtonFormField<String>(
+            value: condition,
+            dropdownColor: Colors.white,
+            icon: const Icon(
+              Icons.keyboard_arrow_down_rounded,
+              color: Color(0xFF2563EB),
+              size: 24,
+            ),
+            style: const TextStyle(
+              color: Colors.black87,
+              fontWeight: FontWeight.w500,
+              fontSize: 16,
+            ),
+            decoration: const InputDecoration(
+              border: InputBorder.none,
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 12,
+              ),
+              prefixIcon: Icon(
+                Icons.construction_outlined,
+                color: Color(0xFF2563EB),
+              ),
+            ),
+            items:
+                _conditions.map((condition) {
+                  return DropdownMenuItem(
+                    value: condition,
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 10,
+                          height: 10,
+                          decoration: BoxDecoration(
+                            color: getConditionColor(condition),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Icon(
+                          getConditionIcon(condition),
+                          color: getConditionColor(condition),
+                          size: 18,
+                        ),
+                        const SizedBox(width: 12),
+                        Text(condition),
+                      ],
+                    ),
+                  );
+                }).toList(),
+            onChanged: (value) => setState(() => condition = value!),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Updated Availability Dropdown Widget
+  Widget _buildAvailabilityDropdown() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Availability Status',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF374151),
+          ),
+        ),
+        const SizedBox(height: 5),
+        Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            color: Color(0xFFF9FAFB),
+            border: Border.all(color: Color(0xFFE5E7EB), width: 1.5),
+          ),
+          child: DropdownButtonFormField<String>(
+            value: availability,
+            dropdownColor: Colors.white,
+            icon: const Icon(
+              Icons.keyboard_arrow_down_rounded,
+              color: Color(0xFF2563EB),
+              size: 24,
+            ),
+            style: const TextStyle(
+              color: Colors.black87,
+              fontWeight: FontWeight.w500,
+              fontSize: 16,
+            ),
+            decoration: const InputDecoration(
+              border: InputBorder.none,
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 12,
+              ),
+              prefixIcon: Icon(
+                Icons.event_available_outlined,
+                color: Color(0xFF2563EB),
+              ),
+            ),
+            items: [
+              DropdownMenuItem(
+                value: 'Available',
+                child: Row(
+                  children: [
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: const BoxDecoration(
+                        color: Colors.green,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    const Text('Available'),
+                  ],
+                ),
+              ),
+              DropdownMenuItem(
+                value: 'Not Available',
+                child: Row(
+                  children: [
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: const BoxDecoration(
+                        color: Colors.red,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    const Text('Not Available'),
+                  ],
+                ),
+              ),
+            ],
+            onChanged: (value) => setState(() => availability = value!),
           ),
         ),
       ],

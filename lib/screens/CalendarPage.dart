@@ -23,21 +23,18 @@ class _CalendarPageState extends State<CalendarPage> {
     _loadEvents();
   }
 
-  void _loadEvents() {
-    final box = Hive.box<Sale>('sales');
+  void _loadEvents() async {
+    final sales = await _loadUserSales(); // <-- Load user-specific sales
     Map<DateTime, List<Sale>> events = {};
 
-    for (var sale in box.values) {
-      final date = DateTime(
+    for (var sale in sales) {
+      final date = DateTime.utc(
         sale.dateTime.year,
         sale.dateTime.month,
         sale.dateTime.day,
       );
-      if (events[date] == null) {
-        events[date] = [sale];
-      } else {
-        events[date]!.add(sale);
-      }
+
+      events.putIfAbsent(date, () => []).add(sale);
     }
 
     setState(() {
@@ -46,8 +43,30 @@ class _CalendarPageState extends State<CalendarPage> {
   }
 
   List<Sale> _getEventsForDay(DateTime day) {
-    final dateKey = DateTime(day.year, day.month, day.day);
+    final dateKey = DateTime.utc(day.year, day.month, day.day);
     return _events[dateKey] ?? [];
+  }
+
+  Future<List<Sale>> _loadUserSales() async {
+    if (!Hive.isBoxOpen('session')) {
+      await Hive.openBox('session');
+    }
+    final sessionBox = Hive.box('session');
+    final email = sessionBox.get('currentUserEmail');
+
+    if (email == null) return [];
+
+    final safeEmail = email
+        .toString()
+        .replaceAll('.', '_')
+        .replaceAll('@', '_');
+    final userBox = await Hive.openBox("userdata_$safeEmail");
+
+    try {
+      return List<Sale>.from(userBox.get("sales", defaultValue: []));
+    } catch (_) {
+      return [];
+    }
   }
 
   @override
@@ -67,7 +86,7 @@ class _CalendarPageState extends State<CalendarPage> {
             ),
           ),
           title: Text(
-            "📅 Booking Calendar",
+            "Booking Calendar",
             style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
           ),
           iconTheme: IconThemeData(color: Colors.white),
@@ -92,7 +111,11 @@ class _CalendarPageState extends State<CalendarPage> {
               selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
               onDaySelected: (selectedDay, focusedDay) {
                 setState(() {
-                  _selectedDay = selectedDay;
+                  _selectedDay = DateTime.utc(
+                    selectedDay.year,
+                    selectedDay.month,
+                    selectedDay.day,
+                  );
                   _focusedDay = focusedDay;
                 });
               },

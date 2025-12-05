@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:bizmate/models/payment.dart';
 import 'package:hive/hive.dart';
 
@@ -18,7 +19,7 @@ class Sale extends HiveObject {
   DateTime dateTime;
 
   @HiveField(4)
-  String phoneNumber; // THIS IS YOUR CONTACT NUMBER
+  String phoneNumber;
 
   @HiveField(5)
   double totalAmount;
@@ -36,7 +37,7 @@ class Sale extends HiveObject {
   String paymentMode;
 
   @HiveField(10)
-  List<Map<String, dynamic>>? deliveryStatusHistory;
+  List<String>? deliveryStatusHistory;
 
   @HiveField(11)
   double discount;
@@ -49,50 +50,53 @@ class Sale extends HiveObject {
     required this.amount,
     required this.productName,
     required this.dateTime,
-    required this.phoneNumber, // FIXED HERE — This IS contactNumber
+    required this.phoneNumber,
     required this.totalAmount,
     required this.discount,
-    List<Payment>? paymentHistory,
+    this.paymentHistory = const [],
     this.deliveryStatus = 'All Non Editing Images',
     this.deliveryLink = '',
     this.paymentMode = 'Cash',
     this.deliveryStatusHistory,
     required this.item,
-  }) : paymentHistory = paymentHistory ?? [];
+  });
 
-  // ----------- COMPUTED GETTERS -----------
-  double get receivedAmount {
-    return paymentHistory.fold(0.0, (sum, p) => sum + p.amount);
+  List<Map<String, dynamic>> get parsedDeliveryHistory {
+    if (deliveryStatusHistory == null) return [];
+    return deliveryStatusHistory!
+        .map((e) => Map<String, dynamic>.from(jsonDecode(e)))
+        .toList();
   }
 
-  double get balanceAmount {
-    return totalAmount - receivedAmount;
-  }
+  Future<void> addDeliveryStatus(String status, String notes) async {
+    deliveryStatusHistory ??= <String>[];
+    deliveryStatusHistory!.insert(
+      0,
+      jsonEncode({
+        'status': status,
+        'dateTime': DateTime.now().toIso8601String(),
+        'notes': notes,
+      }),
+    );
 
-  String get formattedDate {
-    return "${dateTime.day.toString().padLeft(2, '0')}-"
-        "${dateTime.month.toString().padLeft(2, '0')}-"
-        "${dateTime.year}";
-  }
-
-  // ----------- DELIVERY STATUS UPDATE -----------
-  void addDeliveryStatus(String status, String notes) {
-    deliveryStatusHistory ??= [];
-    deliveryStatusHistory!.add({
-      'status': status,
-      'dateTime': DateTime.now().toIso8601String(),
-      'notes': notes,
-    });
     deliveryStatus = status;
+    await save();
   }
 
-  // ----------- DELETE VALIDATION -----------
+  double get receivedAmount =>
+      paymentHistory.fold(0.0, (sum, p) => sum + p.amount);
+
+  double get balanceAmount => totalAmount - receivedAmount;
+
+  String get formattedDate =>
+      "${dateTime.day.toString().padLeft(2, '0')}-"
+      "${dateTime.month.toString().padLeft(2, '0')}-"
+      "${dateTime.year}";
+
   @override
   Future<void> delete() {
     if (discount > 0) {
-      throw Exception(
-        "Deleting this sale is not allowed because it has a discount.",
-      );
+      throw Exception("Deleting this sale is not allowed.");
     }
     return super.delete();
   }

@@ -198,7 +198,7 @@ class _CustomSplashScreenState extends State<CustomSplashScreen>
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFF1A237E), Color(0xFF00BCD4)],
+            colors: [Color(0xFF3EE4D8), Color(0xFF1FB5D0), Color(0xFF0F73B8)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),

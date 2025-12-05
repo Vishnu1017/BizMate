@@ -25,6 +25,9 @@ class RentalItem {
   @HiveField(6)
   final List<RentalBooking> bookedSlots; // mutable list
 
+  @HiveField(7)
+  final String condition; // ⭐ NEW FIELD ADDED
+
   RentalItem({
     required this.name,
     required this.brand,
@@ -32,8 +35,10 @@ class RentalItem {
     required this.price,
     required this.availability,
     required this.imagePath,
-    List<RentalBooking>? bookedSlots, // optional
-  }) : bookedSlots = bookedSlots ?? [];
+    List<RentalBooking>? bookedSlots,
+    String? condition, // allow null
+  }) : bookedSlots = bookedSlots ?? [],
+       condition = condition ?? "Excellent"; // DEFAULT VALUE
 }
 
 @HiveType(typeId: 5)

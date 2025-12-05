@@ -780,11 +780,7 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
                 ],
               ),
               child: IconButton(
-                icon: Icon(
-                  Icons.arrow_back_ios_new_rounded,
-                  color: Colors.grey.shade700,
-                  size: 18,
-                ),
+                icon: Icon(Icons.arrow_back, color: Colors.black, size: 30),
                 onPressed: () => Navigator.pop(context),
               ),
             ),
