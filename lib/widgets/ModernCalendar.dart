@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 class ModernCalendar extends StatefulWidget {
   final DateTime? selectedDate;
@@ -23,6 +24,8 @@ class ModernCalendar extends StatefulWidget {
 class _ModernCalendarState extends State<ModernCalendar> {
   late DateTime _currentMonth;
   late DateTime _selectedDate;
+
+  bool _hasUserSelectedDate = false;
 
   final List<String> _weekdays = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
 
@@ -50,9 +53,8 @@ class _ModernCalendarState extends State<ModernCalendar> {
     final last = DateTime(_currentMonth.year, _currentMonth.month + 1, 0);
     final days = <DateTime>[];
 
-    int startingWeekday = first.weekday;
-    for (int i = 1; i < startingWeekday; i++) {
-      days.add(first.subtract(Duration(days: startingWeekday - i)));
+    for (int i = 1; i < first.weekday; i++) {
+      days.add(first.subtract(Duration(days: first.weekday - i)));
     }
 
     for (int i = 0; i < last.day; i++) {
@@ -98,8 +100,8 @@ class _ModernCalendarState extends State<ModernCalendar> {
         child: Container(
           width: width * 0.9,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(22),
             color: Colors.white.withOpacity(0.85),
+            borderRadius: BorderRadius.circular(22),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.07),
@@ -112,169 +114,228 @@ class _ModernCalendarState extends State<ModernCalendar> {
             mainAxisSize: MainAxisSize.min,
             children: [
               // HEADER
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  vertical: 16,
-                  horizontal: 20,
-                ),
-                decoration: BoxDecoration(
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(22),
-                  ),
-                  gradient: LinearGradient(
-                    colors: [Colors.blue.shade200, Colors.purple.shade200],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    _navButton(Icons.chevron_left_rounded, _previousMonth),
-                    Column(
-                      children: [
-                        Text(
-                          DateFormat('MMMM yyyy').format(_currentMonth),
-                          style: TextStyle(
-                            fontSize: width * 0.045,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black87,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          "Select a date",
-                          style: TextStyle(
-                            fontSize: width * 0.03,
-                            color: Colors.black.withOpacity(0.6),
-                          ),
-                        ),
-                      ],
-                    ),
-                    _navButton(Icons.chevron_right_rounded, _nextMonth),
-                  ],
-                ),
-              ),
+              _buildHeader(width),
 
               // WEEKDAYS
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 10,
-                ),
-                child: Row(
-                  children:
-                      _weekdays.map((day) {
-                        return Expanded(
-                          child: Center(
-                            child: Text(
-                              day,
-                              style: TextStyle(
-                                color: Colors.grey.shade700,
-                                fontWeight: FontWeight.w600,
-                                fontSize: width * 0.03,
-                              ),
-                            ),
-                          ),
-                        );
-                      }).toList(),
-                ),
-              ),
+              _buildWeekdays(width),
 
               // GRID
+              _buildGrid(days),
+
+              // FOOTER + SAVE BUTTON
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: GridView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 7,
-                    childAspectRatio: 1.2,
-                  ),
-                  itemCount: days.length,
-                  itemBuilder: (context, index) {
-                    final date = days[index];
-
-                    final selected = _isSelected(date);
-                    final today = _isToday(date);
-                    final currentMonth = _isCurrentMonth(date);
-                    final inRange = _isInRange(date);
-
-                    return AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      margin: const EdgeInsets.all(3),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(12),
-                        color:
-                            selected
-                                ? Colors.blue.shade700
-                                : inRange
-                                ? Colors.blue.shade100.withOpacity(0.55)
-                                : today
-                                ? Colors.orange.shade100
-                                : Colors.transparent,
-                        border:
-                            today && !selected
-                                ? Border.all(
-                                  color: Colors.orange.shade400,
-                                  width: 1.2,
-                                )
-                                : null,
-                      ),
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(12),
-                        onTap:
-                            currentMonth
-                                ? () {
-                                  setState(() => _selectedDate = date);
-                                  widget.onDateSelected(date);
-                                }
-                                : null,
-                        child: Center(
-                          child: Text(
-                            date.day.toString(),
-                            style: TextStyle(
-                              fontSize: width * 0.035,
-                              fontWeight:
-                                  selected ? FontWeight.bold : FontWeight.w500,
-                              color:
-                                  selected
-                                      ? Colors.white
-                                      : currentMonth
-                                      ? Colors.black87
-                                      : Colors.grey.shade400,
-                            ),
-                          ),
-                        ),
-                      ),
-                    );
-                  },
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
                 ),
-              ),
+                child: Column(
+                  children: [
+                    Text(
+                      "Selected: ${DateFormat('MMM dd, yyyy').format(_selectedDate)}",
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: Colors.grey.shade700,
+                      ),
+                    ),
 
-              // FOOTER
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                decoration: BoxDecoration(
-                  borderRadius: const BorderRadius.vertical(
-                    bottom: Radius.circular(22),
-                  ),
-                  color: Colors.grey.shade200,
-                ),
-                child: Text(
-                  "Selected: ${DateFormat('MMM dd, yyyy').format(_selectedDate)}",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: width * 0.035,
-                    color: Colors.grey.shade700,
-                  ),
+                    const SizedBox(height: 14),
+
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 250),
+                      child:
+                          _hasUserSelectedDate
+                              ? SizedBox(
+                                key: const ValueKey("save_btn"),
+                                width: double.infinity,
+                                height: 48,
+                                child: ElevatedButton(
+                                  onPressed: () {
+                                    widget.onDateSelected(_selectedDate);
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 20,
+                                      vertical: 12,
+                                    ),
+                                    backgroundColor: Colors.blue.shade600,
+                                    foregroundColor: Colors.white,
+                                    elevation: 0,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: const [
+                                      HugeIcon(
+                                        icon:
+                                            HugeIcons.strokeRoundedTickDouble03,
+                                        size: 18,
+                                        color: Colors.white,
+                                      ),
+                                      SizedBox(width: 6),
+                                      Text(
+                                        "Save Date",
+                                        style: TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              )
+                              : const SizedBox.shrink(),
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  // -------------------- UI HELPERS --------------------
+
+  Widget _buildHeader(double width) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.blue.shade200, Colors.purple.shade200],
+        ),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(22)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          _navButton(Icons.chevron_left_rounded, _previousMonth),
+          Column(
+            children: [
+              Text(
+                DateFormat('MMMM yyyy').format(_currentMonth),
+                style: TextStyle(
+                  fontSize: width * 0.045,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                "Select a date",
+                style: TextStyle(
+                  fontSize: width * 0.03,
+                  color: Colors.black.withOpacity(0.6),
+                ),
+              ),
+            ],
+          ),
+          _navButton(Icons.chevron_right_rounded, _nextMonth),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWeekdays(double width) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      child: Row(
+        children:
+            _weekdays
+                .map(
+                  (day) => Expanded(
+                    child: Center(
+                      child: Text(
+                        day,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: width * 0.03,
+                        ),
+                      ),
+                    ),
+                  ),
+                )
+                .toList(),
+      ),
+    );
+  }
+
+  Widget _buildGrid(List<DateTime> days) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: GridView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: days.length,
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 7,
+          childAspectRatio: 1.2,
+        ),
+        itemBuilder: (_, index) {
+          final date = days[index];
+          return InkWell(
+            borderRadius: BorderRadius.circular(12),
+            onTap:
+                _isCurrentMonth(date)
+                    ? () {
+                      setState(() {
+                        _selectedDate = date;
+                        _hasUserSelectedDate = true;
+                      });
+                    }
+                    : null,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 220),
+              margin: const EdgeInsets.all(3),
+              decoration:
+                  _isSelected(date)
+                      ? BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Colors.blue.shade600,
+                            Colors.purple.shade600,
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(14),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.blue.withOpacity(0.35),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      )
+                      : _isInRange(date)
+                      ? BoxDecoration(
+                        color: Colors.blue.shade100.withOpacity(0.55),
+                        borderRadius: BorderRadius.circular(12),
+                      )
+                      : _isToday(date)
+                      ? BoxDecoration(
+                        border: Border.all(
+                          color: Colors.orange.shade400,
+                          width: 1.4,
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                      )
+                      : BoxDecoration(borderRadius: BorderRadius.circular(12)),
+              child: Center(
+                child: Text(
+                  date.day.toString(),
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight:
+                        _isSelected(date) ? FontWeight.bold : FontWeight.w500,
+                    color: _isSelected(date) ? Colors.white : Colors.black87,
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -296,7 +357,7 @@ class _ModernCalendarState extends State<ModernCalendar> {
             ),
           ],
         ),
-        child: Icon(icon, color: Colors.black87, size: 20),
+        child: Icon(icon, size: 20),
       ),
     );
   }

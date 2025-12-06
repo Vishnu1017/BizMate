@@ -40,6 +40,21 @@ class RentalSaleMenu extends StatelessWidget {
   /// Parent screen context for showing snackbars etc.
   final BuildContext parentContext;
 
+  String _generateGooglePayLink(String upiUri) {
+    final encoded = Uri.encodeComponent(upiUri);
+    return "tez://upi/pay?url=$encoded";
+  }
+
+  String _generatePhonePeLink(String upiUri) {
+    final encoded = Uri.encodeComponent(upiUri);
+    return "phonepe://upi/pay?url=$encoded";
+  }
+
+  String _generatePaytmLink(String upiUri) {
+    final encoded = Uri.encodeComponent(upiUri);
+    return "paytm://upi/pay?url=$encoded";
+  }
+
   const RentalSaleMenu({
     super.key,
     required this.sale,
@@ -439,10 +454,30 @@ class RentalSaleMenu extends StatelessWidget {
     }
   }
 
-  // ---------------------------------------------------------------------------
-  // SHARE PDF FOR RENTAL SALE
-  // (Based on your _sharePdf from CameraRentalPage – same design)
-  // ---------------------------------------------------------------------------
+  pw.Widget _upiOptionButton(String title, pw.MemoryImage icon, String url) {
+    return pw.UrlLink(
+      destination: url,
+      child: pw.Container(
+        margin: const pw.EdgeInsets.only(right: 10),
+        padding: const pw.EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: pw.BoxDecoration(
+          color: PdfColors.grey200,
+          borderRadius: pw.BorderRadius.circular(14),
+        ),
+        child: pw.Row(
+          mainAxisSize: pw.MainAxisSize.min,
+          children: [
+            pw.Image(icon, width: 16, height: 16),
+            pw.SizedBox(width: 8),
+            pw.Text(
+              title,
+              style: pw.TextStyle(fontSize: 11, color: PdfColors.black),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   Future<void> _handleSharePdf(BuildContext context) async {
     try {
@@ -462,8 +497,6 @@ class RentalSaleMenu extends StatelessWidget {
       final numberOfDays = sale.numberOfDays.toString();
       final totalCost = sale.totalCost.toStringAsFixed(2);
       final invoiceDate = DateFormat('dd-MM-yyyy').format(DateTime.now());
-
-      // ❗ Simple version: no profile image (you can add SharedPreferences logic later)
       final profileImage = await _getProfileImage();
 
       pw.Widget? profileImageWidget;
@@ -525,6 +558,16 @@ class RentalSaleMenu extends StatelessWidget {
 
       // 4️⃣ Generate correct UPI QR
       final qrData = _generateQrData(enteredAmount, currentUser);
+      final gpayIcon =
+          (await rootBundle.load("assets/icons/Gpay.png")).buffer.asUint8List();
+      final phonePeIcon =
+          (await rootBundle.load(
+            "assets/icons/Phonepe.png",
+          )).buffer.asUint8List();
+      final paytmIcon =
+          (await rootBundle.load(
+            "assets/icons/Paytm.png",
+          )).buffer.asUint8List();
 
       pdf.addPage(
         pw.Page(
@@ -602,21 +645,71 @@ class RentalSaleMenu extends StatelessWidget {
                               width: 120,
                               height: 120,
                             ),
-                            pw.SizedBox(height: 6),
+
+                            pw.SizedBox(height: 8),
+
                             pw.Text(
-                              'Scan to Pay UPI',
+                              'Scan or Tap to Pay',
                               style: pw.TextStyle(
                                 fontSize: 16,
                                 fontWeight: pw.FontWeight.bold,
                               ),
                             ),
-                          ] else ...[
-                            pw.Text(
-                              'No pending amount',
-                              style: pw.TextStyle(
-                                fontSize: 14,
-                                fontWeight: pw.FontWeight.bold,
-                                color: PdfColors.grey600,
+
+                            pw.SizedBox(height: 7),
+
+                            // ⬇️ CLICKABLE UPI PAYMENT LINK
+                            pw.Container(
+                              padding: pw.EdgeInsets.all(16),
+                              decoration: pw.BoxDecoration(
+                                borderRadius: pw.BorderRadius.circular(8),
+                              ),
+                              child: pw.Column(
+                                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                                children: [
+                                  pw.Text(
+                                    "Pay with UPI",
+                                    style: pw.TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: pw.FontWeight.bold,
+                                      color: PdfColors.grey900,
+                                    ),
+                                  ),
+
+                                  pw.SizedBox(height: 12),
+
+                                  pw.Row(
+                                    mainAxisAlignment:
+                                        pw.MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      _upiOptionButton(
+                                        "Google Pay",
+                                        pw.MemoryImage(gpayIcon),
+                                        _generateGooglePayLink(qrData),
+                                      ),
+                                      _upiOptionButton(
+                                        "PhonePe",
+                                        pw.MemoryImage(phonePeIcon),
+                                        _generatePhonePeLink(qrData),
+                                      ),
+                                      _upiOptionButton(
+                                        "Paytm",
+                                        pw.MemoryImage(paytmIcon),
+                                        _generatePaytmLink(qrData),
+                                      ),
+                                    ],
+                                  ),
+
+                                  pw.SizedBox(height: 10),
+
+                                  pw.Text(
+                                    "Tap any app above to pay",
+                                    style: pw.TextStyle(
+                                      fontSize: 10,
+                                      color: PdfColors.grey600,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ],

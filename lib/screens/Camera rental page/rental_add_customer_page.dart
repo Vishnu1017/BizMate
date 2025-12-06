@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:ui';
 import 'package:bizmate/widgets/app_snackbar.dart' show AppSnackBar;
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
@@ -29,6 +30,8 @@ class RentalAddCustomerPage extends StatefulWidget {
 }
 
 class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
+  List<Map<String, String>> customerList = [];
+  bool isCustomerSelectedFromList = false;
   final _formKey = GlobalKey<FormState>();
   final nameController = TextEditingController();
   final phoneController = TextEditingController();
@@ -47,7 +50,8 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
   bool isEditingPercent = true;
   String selectedTaxType = 'Without Tax';
   String? selectedTaxRate;
-
+  bool get _isRentalPeriodLocked =>
+      widget.fromDateTime != null && widget.toDateTime != null;
   final List<String> taxChoiceOptions = ['With Tax', 'Without Tax'];
   final List<String> taxRateOptions = [
     'None',
@@ -82,6 +86,244 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
           selectedTaxRate!.replaceAll(RegExp(r'[^\d.]'), ''),
         ) ??
         0;
+  }
+
+  void showCustomerPicker() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        final media = MediaQuery.of(context);
+        final width = media.size.width;
+        final height = media.size.height;
+
+        // ✅ SAME scaling logic — just clamped (NO visual change)
+        double rs(double v) => (v * (width / 390)).clamp(v * 0.9, v * 1.15);
+
+        int columns = 2;
+        if (width >= 1200) {
+          columns = 5;
+        } else if (width >= 900) {
+          columns = 4;
+        } else if (width >= 600) {
+          columns = 3;
+        }
+
+        final filteredCustomers = ValueNotifier<List<Map<String, String>>>(
+          customerList,
+        );
+
+        return BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+          child: Container(
+            height: height * 0.85, // ✅ unchanged
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  const Color(0xFF1A237E).withOpacity(0.98),
+                  const Color(0xFF00BCD4).withOpacity(0.95),
+                ],
+              ),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(32),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.3),
+                  blurRadius: 40,
+                  offset: const Offset(0, -10),
+                ),
+              ],
+            ),
+            child: Column(
+              children: [
+                // HEADER (UNCHANGED)
+                Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: rs(24),
+                    vertical: rs(20),
+                  ),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: const [Color(0xFF1A237E), Color(0xFF00BCD4)],
+                    ),
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(32),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        "Select Customer",
+                        style: TextStyle(
+                          fontSize: rs(22),
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      IconButton(
+                        icon: Icon(
+                          Icons.close,
+                          color: Colors.white,
+                          size: rs(22),
+                        ),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // BODY (UNCHANGED)
+                Expanded(
+                  child:
+                      customerList.isEmpty
+                          ? Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.group_off,
+                                  size: rs(40),
+                                  color: Colors.white,
+                                ),
+                                SizedBox(height: rs(16)),
+                                Text(
+                                  "No Customers Found",
+                                  style: TextStyle(
+                                    fontSize: rs(18),
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                          : Padding(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: rs(16),
+                              vertical: rs(16),
+                            ),
+                            child: ValueListenableBuilder<
+                              List<Map<String, String>>
+                            >(
+                              valueListenable: filteredCustomers,
+                              builder: (context, list, _) {
+                                return GridView.builder(
+                                  physics: const BouncingScrollPhysics(),
+                                  itemCount: list.length,
+                                  gridDelegate:
+                                      SliverGridDelegateWithFixedCrossAxisCount(
+                                        crossAxisCount: columns,
+                                        crossAxisSpacing: rs(16),
+                                        mainAxisSpacing: rs(16),
+                                        childAspectRatio:
+                                            width >= 600 ? 2.2 : 1.6,
+                                      ),
+                                  itemBuilder: (_, index) {
+                                    final customer = list[index];
+                                    final name = customer['name']!;
+                                    final phone = customer['phone']!;
+                                    final initials =
+                                        name
+                                            .split(' ')
+                                            .where((e) => e.isNotEmpty)
+                                            .map((e) => e[0])
+                                            .take(2)
+                                            .join()
+                                            .toUpperCase();
+
+                                    final color =
+                                        _blueAquaColors[initials.codeUnits
+                                                .reduce((a, b) => a + b) %
+                                            _blueAquaColors.length];
+
+                                    return GestureDetector(
+                                      onTap: () {
+                                        setState(() {
+                                          nameController.text = name;
+                                          phoneController.text = phone;
+                                          isCustomerSelectedFromList = true;
+                                        });
+                                        Navigator.pop(context);
+                                      },
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          gradient: LinearGradient(
+                                            colors: [
+                                              color.withOpacity(0.9),
+                                              color.withOpacity(0.7),
+                                            ],
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            rs(20),
+                                          ),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: color.withOpacity(0.3),
+                                              blurRadius: 15,
+                                              offset: const Offset(0, 5),
+                                            ),
+                                          ],
+                                          border: Border.all(
+                                            color: Colors.white.withOpacity(
+                                              0.3,
+                                            ),
+                                            width: 1.5,
+                                          ),
+                                        ),
+                                        // ✅ inner layout unchanged
+                                        padding: EdgeInsets.all(rs(16)),
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              initials,
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: rs(14),
+                                              ),
+                                            ),
+                                            const Spacer(),
+                                            Text(
+                                              name,
+                                              maxLines: 2,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.w600,
+                                                fontSize: rs(14),
+                                              ),
+                                            ),
+                                            SizedBox(height: rs(4)),
+                                            Text(
+                                              phone,
+                                              style: TextStyle(
+                                                color: Colors.white70,
+                                                fontSize: rs(12),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                );
+                              },
+                            ),
+                          ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   Map<String, double> calculateSummary() {
@@ -213,6 +455,31 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
         _isLoading = false;
       });
     }
+
+    void loadCustomers() {
+      try {
+        final customers = customerBox.values.toList();
+
+        final Set<String> seen = {};
+        final List<Map<String, String>> uniqueCustomers = [];
+
+        for (final c in customers) {
+          final key = "${c.name}_${c.phone}";
+          if (!seen.contains(key)) {
+            seen.add(key);
+            uniqueCustomers.add({'name': c.name, 'phone': c.phone});
+          }
+        }
+
+        setState(() {
+          customerList = uniqueCustomers;
+        });
+      } catch (_) {
+        setState(() => customerList = []);
+      }
+    }
+
+    loadCustomers();
   }
 
   Future<void> _selectDateTime(BuildContext context, bool isFrom) async {
@@ -552,7 +819,10 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
           color: Colors.transparent,
           borderRadius: BorderRadius.circular(16),
           child: InkWell(
-            onTap: () => _selectDateTime(context, isFrom),
+            onTap:
+                _isRentalPeriodLocked
+                    ? null
+                    : () => _selectDateTime(context, isFrom),
             borderRadius: BorderRadius.circular(16),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -824,16 +1094,23 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(Icons.arrow_back, color: Colors.white, size: 30),
+        leading: Container(
+          margin: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
-          onPressed: () => Navigator.pop(context),
+          child: IconButton(
+            icon: const Icon(Icons.arrow_back, size: 22),
+            onPressed: () => Navigator.pop(context),
+          ),
         ),
       ),
       body: Stack(
@@ -1121,7 +1398,7 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
                                           : null,
                               // ⭐ NEW: Auto-capitalize first letter
                               keyboardType: TextInputType.name,
-                              onTap: () {}, // keep existing
+                              onTap: showCustomerPicker, // keep existing
                             ),
                             _buildGlassTextField(
                               label: "Phone Number",
@@ -1324,6 +1601,63 @@ class _BackgroundPatternPainter extends CustomPainter {
           canvas.drawCircle(
             Offset(x + circleSize / 2, y + circleSize / 2),
             circleSize / 4,
+            paint,
+          );
+        }
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+// Add this array of blue/aqua theme colors for avatar backgrounds
+final List<Color> _blueAquaColors = [
+  const Color(0xFF1A237E), // Deep Blue (Primary from your page)
+  const Color(0xFF283593), // Dark Blue
+  const Color(0xFF303F9F), // Blue
+  const Color(0xFF3949AB), // Light Blue
+  const Color(0xFF3F51B5), // Primary Blue
+  const Color(0xFF5C6BC0), // Light Blue
+  const Color(0xFF00BCD4), // Aqua Blue (Secondary from your page)
+  const Color(0xFF00ACC1), // Dark Aqua
+  const Color(0xFF0097A7), // Deep Aqua
+  const Color(0xFF00838F), // Very Dark Aqua
+  const Color(0xFF006064), // Teal
+  const Color(0xFF4DD0E1), // Light Cyan
+  const Color(0xFF26C6DA), // Cyan
+  const Color(0xFF00B8D4), // Bright Aqua
+  const Color(0xFF0091EA), // Light Blue
+  const Color(0xFF2962FF), // Electric Blue
+];
+
+// Custom painter for card background pattern
+class CustomerCardPatternPainter extends CustomPainter {
+  final Color color;
+
+  CustomerCardPatternPainter({required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint =
+        Paint()
+          ..color = color.withOpacity(0.3)
+          ..style = PaintingStyle.fill;
+
+    const circleSize = 60.0;
+    final rows = (size.height / circleSize).ceil();
+    final columns = (size.width / circleSize).ceil();
+
+    for (int i = 0; i < rows; i++) {
+      for (int j = 0; j < columns; j++) {
+        final x = j * circleSize;
+        final y = i * circleSize;
+
+        if ((i + j) % 3 == 0) {
+          canvas.drawCircle(
+            Offset(x + circleSize / 2, y + circleSize / 2),
+            circleSize / 8,
             paint,
           );
         }

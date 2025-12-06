@@ -14,10 +14,14 @@ import 'package:intl/intl.dart';
 class HomePage extends StatefulWidget {
   const HomePage({
     super.key,
-    required String userEmail,
-    required String userName,
-    required String userPhone,
+    required this.userEmail,
+    required this.userName,
+    required this.userPhone,
   });
+
+  final String userEmail;
+  final String userName;
+  final String userPhone;
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -226,16 +230,32 @@ class _HomePageState extends State<HomePage>
               }).toList();
         }
 
-        // Filter sales based on date range
+        // ✅ CORRECT DATE RANGE FILTER (INCLUSIVE + TIME SAFE)
         if (selectedRange != null) {
+          final DateTime rangeStart = DateTime(
+            selectedRange!.start.year,
+            selectedRange!.start.month,
+            selectedRange!.start.day,
+            0,
+            0,
+            0,
+          );
+
+          final DateTime rangeEnd = DateTime(
+            selectedRange!.end.year,
+            selectedRange!.end.month,
+            selectedRange!.end.day,
+            23,
+            59,
+            59,
+            999,
+          );
+
           sales =
               sales.where((sale) {
-                return sale.dateTime.isAfter(
-                      selectedRange!.start.subtract(Duration(days: 1)),
-                    ) &&
-                    sale.dateTime.isBefore(
-                      selectedRange!.end.add(Duration(days: 1)),
-                    );
+                final saleDate = sale.dateTime;
+                return !saleDate.isBefore(rangeStart) &&
+                    !saleDate.isAfter(rangeEnd);
               }).toList();
         }
 

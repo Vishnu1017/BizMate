@@ -69,21 +69,41 @@ class _EditRentalItemPageState extends State<EditRentalItemPage> {
 
   void _saveChanges() async {
     final updatedItem = RentalItem(
-      name: nameController.text,
-      brand: brandController.text,
+      name: nameController.text.trim(),
+      brand: brandController.text.trim(),
       price: double.tryParse(priceController.text) ?? 0,
       imagePath: widget.item.imagePath,
       availability: availability,
       category: widget.item.category,
-      condition: condition, // Save condition
+      condition: condition,
     );
 
-    // Save to global box
-    rentalBox.putAt(widget.index, updatedItem);
+    // ✅ SAFELY UPDATE GLOBAL BOX
+    if (widget.index >= 0 && widget.index < rentalBox.length) {
+      // normal update
+      await rentalBox.putAt(widget.index, updatedItem);
+    } else {
+      // fallback: find and replace
+      final existingIndex = rentalBox.values.toList().indexWhere(
+        (i) =>
+            i.name == widget.item.name &&
+            i.brand == widget.item.brand &&
+            i.imagePath == widget.item.imagePath,
+      );
 
-    // Save to user-specific box
-    if (userItems.length > widget.index) {
+      if (existingIndex != -1) {
+        await rentalBox.putAt(existingIndex, updatedItem);
+      } else {
+        // last safety: add
+        await rentalBox.add(updatedItem);
+      }
+    }
+
+    // ✅ USER-SPECIFIC BOX (ALREADY SAFE)
+    if (userItems.isNotEmpty && widget.index < userItems.length) {
       userItems[widget.index] = updatedItem;
+    } else {
+      userItems.add(updatedItem);
     }
 
     await userBox!.put("rental_items", userItems);
@@ -91,10 +111,10 @@ class _EditRentalItemPageState extends State<EditRentalItemPage> {
     AppSnackBar.showSuccess(
       context,
       message: 'Changes saved successfully!',
-      duration: Duration(seconds: 2),
+      duration: const Duration(seconds: 2),
     );
 
-    Future.delayed(const Duration(milliseconds: 500), () {
+    Future.delayed(const Duration(milliseconds: 400), () {
       Navigator.pop(context, updatedItem);
     });
   }
@@ -397,7 +417,7 @@ class _EditRentalItemPageState extends State<EditRentalItemPage> {
         case 'Brand New':
           return Colors.green;
         case 'Excellent':
-          return Colors.lightGreen;
+          return Colors.teal;
         case 'Good':
           return Colors.orange;
         case 'Fair':

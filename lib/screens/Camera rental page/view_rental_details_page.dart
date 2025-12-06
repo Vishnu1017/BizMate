@@ -773,14 +773,14 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
                 color: Colors.white,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.08),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
                   ),
                 ],
               ),
               child: IconButton(
-                icon: Icon(Icons.arrow_back, color: Colors.black, size: 30),
+                icon: const Icon(Icons.arrow_back, size: 22),
                 onPressed: () => Navigator.pop(context),
               ),
             ),

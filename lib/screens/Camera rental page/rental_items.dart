@@ -29,11 +29,13 @@ class _RentalItemsState extends State<RentalItems> {
     'All',
     'Camera',
     'Lens',
-    'Light',
+    'Lighting',
     'Tripod',
     'Drone',
     'Gimbal',
-    'Microphone',
+    'Audio',
+    'Video',
+    'Accessories',
   ];
 
   @override
@@ -193,7 +195,7 @@ class _RentalItemsState extends State<RentalItems> {
                       child: Row(
                         children: [
                           Icon(
-                            Icons.circle,
+                            _getCategoryIcon(category),
                             size: 14,
                             color:
                                 selected ? Colors.white : Colors.grey.shade700,
@@ -533,11 +535,36 @@ class _RentalItemsState extends State<RentalItems> {
       case 'Good':
         return Colors.orange;
       case 'Fair':
-        return Colors.redAccent;
+        return Colors.orangeAccent;
       case 'Needs Repair':
-        return Colors.grey;
+        return Colors.red;
       default:
-        return Colors.blueGrey;
+        return Colors.grey;
+    }
+  }
+
+  IconData _getCategoryIcon(String category) {
+    switch (category.toLowerCase()) {
+      case 'camera':
+        return Icons.camera_alt_outlined;
+      case 'lens':
+        return Icons.lens_outlined;
+      case 'lighting':
+        return Icons.lightbulb_outline;
+      case 'tripod':
+        return Icons.camera_alt_outlined;
+      case 'drone':
+        return Icons.airplanemode_active;
+      case 'gimbal':
+        return Icons.video_stable_outlined;
+      case 'audio':
+        return Icons.mic_outlined;
+      case 'video':
+        return Icons.videocam_outlined;
+      case 'accessories':
+        return Icons.settings_input_component_outlined;
+      default:
+        return Icons.category_outlined;
     }
   }
 }
