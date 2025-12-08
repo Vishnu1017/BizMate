@@ -40,19 +40,28 @@ class RentalSaleMenu extends StatelessWidget {
   /// Parent screen context for showing snackbars etc.
   final BuildContext parentContext;
 
-  String _generateGooglePayLink(String upiUri) {
-    final encoded = Uri.encodeComponent(upiUri);
-    return "tez://upi/pay?url=$encoded";
+  String _generateGooglePayLink(String upiId, String name, double? amount) {
+    final encodedName = Uri.encodeComponent(name);
+
+    return amount != null && amount > 0
+        ? 'gpay://upi/pay?pa=$upiId&pn=$encodedName&am=${amount.toStringAsFixed(2)}&cu=INR'
+        : 'gpay://upi/pay?pa=$upiId&pn=$encodedName&cu=INR';
   }
 
-  String _generatePhonePeLink(String upiUri) {
-    final encoded = Uri.encodeComponent(upiUri);
-    return "phonepe://upi/pay?url=$encoded";
+  String _generatePhonePeLink(String upiId, String name, double? amount) {
+    final encodedName = Uri.encodeComponent(name);
+
+    return amount != null && amount > 0
+        ? 'phonepe://pay?pa=$upiId&pn=$encodedName&am=${amount.toStringAsFixed(2)}&cu=INR'
+        : 'phonepe://pay?pa=$upiId&pn=$encodedName&cu=INR';
   }
 
-  String _generatePaytmLink(String upiUri) {
-    final encoded = Uri.encodeComponent(upiUri);
-    return "paytm://upi/pay?url=$encoded";
+  String _generatePaytmLink(String upiId, String name, double? amount) {
+    final encodedName = Uri.encodeComponent(name);
+
+    return amount != null && amount > 0
+        ? 'paytm://upi/pay?pa=$upiId&pn=$encodedName&am=${amount.toStringAsFixed(2)}&cu=INR'
+        : 'paytm://upi/pay?pa=$upiId&pn=$encodedName&cu=INR';
   }
 
   const RentalSaleMenu({
@@ -454,9 +463,9 @@ class RentalSaleMenu extends StatelessWidget {
     }
   }
 
-  pw.Widget _upiOptionButton(String title, pw.MemoryImage icon, String url) {
+  pw.Widget _upiOptionButton(String title, pw.MemoryImage icon, String link) {
     return pw.UrlLink(
-      destination: url,
+      destination: link, // ✅ now real upi://pay
       child: pw.Container(
         margin: const pw.EdgeInsets.only(right: 10),
         padding: const pw.EdgeInsets.symmetric(horizontal: 14, vertical: 10),
@@ -498,6 +507,18 @@ class RentalSaleMenu extends StatelessWidget {
       final totalCost = sale.totalCost.toStringAsFixed(2);
       final invoiceDate = DateFormat('dd-MM-yyyy').format(DateTime.now());
       final profileImage = await _getProfileImage();
+      final gpayIcon =
+          (await rootBundle.load('assets/icons/Gpay.png')).buffer.asUint8List();
+
+      final phonePeIcon =
+          (await rootBundle.load(
+            'assets/icons/Phonepe.png',
+          )).buffer.asUint8List();
+
+      final paytmIcon =
+          (await rootBundle.load(
+            'assets/icons/Paytm.png',
+          )).buffer.asUint8List();
 
       pw.Widget? profileImageWidget;
 
@@ -553,21 +574,27 @@ class RentalSaleMenu extends StatelessWidget {
               .clamp(0, double.infinity)
               .toDouble();
 
-      // 3️⃣ Ask user for custom amount
       final enteredAmount = await _showAmountDialog(context, balanceAmount);
 
-      // 4️⃣ Generate correct UPI QR
       final qrData = _generateQrData(enteredAmount, currentUser);
-      final gpayIcon =
-          (await rootBundle.load("assets/icons/Gpay.png")).buffer.asUint8List();
-      final phonePeIcon =
-          (await rootBundle.load(
-            "assets/icons/Phonepe.png",
-          )).buffer.asUint8List();
-      final paytmIcon =
-          (await rootBundle.load(
-            "assets/icons/Paytm.png",
-          )).buffer.asUint8List();
+
+      final googlePayLink = _generateGooglePayLink(
+        currentUser.upiId,
+        currentUser.name,
+        enteredAmount,
+      );
+
+      final phonePeLink = _generatePhonePeLink(
+        currentUser.upiId,
+        currentUser.name,
+        enteredAmount,
+      );
+
+      final paytmLink = _generatePaytmLink(
+        currentUser.upiId,
+        currentUser.name,
+        enteredAmount,
+      );
 
       pdf.addPage(
         pw.Page(
@@ -685,17 +712,17 @@ class RentalSaleMenu extends StatelessWidget {
                                       _upiOptionButton(
                                         "Google Pay",
                                         pw.MemoryImage(gpayIcon),
-                                        _generateGooglePayLink(qrData),
+                                        googlePayLink,
                                       ),
                                       _upiOptionButton(
                                         "PhonePe",
                                         pw.MemoryImage(phonePeIcon),
-                                        _generatePhonePeLink(qrData),
+                                        phonePeLink,
                                       ),
                                       _upiOptionButton(
                                         "Paytm",
                                         pw.MemoryImage(paytmIcon),
-                                        _generatePaytmLink(qrData),
+                                        paytmLink,
                                       ),
                                     ],
                                   ),

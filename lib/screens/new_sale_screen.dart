@@ -407,6 +407,17 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
   }
 
   void showCustomerPicker() {
+    if (customerList.isEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        AppSnackBar.showWarning(
+          context,
+          message: 'No customers found. Please add a sale first.',
+          duration: const Duration(seconds: 2),
+        );
+      });
+      return;
+    }
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,

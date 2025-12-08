@@ -1,3 +1,5 @@
+// ignore_for_file: unused_local_variable
+
 import 'dart:io';
 import 'package:bizmate/widgets/app_snackbar.dart' show AppSnackBar;
 import 'package:bizmate/widgets/confirm_delete_dialog.dart'
@@ -365,328 +367,51 @@ class _ProfilePageState extends State<ProfilePage>
       barrierDismissible: true,
       barrierColor: Colors.black.withOpacity(0.6),
       builder: (context) {
+        // Calculate responsive dimensions
+        final screenWidth = MediaQuery.of(context).size.width;
+        final screenHeight = MediaQuery.of(context).size.height;
+        final isSmallScreen = screenWidth < 360;
+        final isVerySmallScreen = screenWidth < 320;
+        final isLargeScreen = screenWidth > 600;
+
+        // Responsive padding
+        final horizontalPadding = isSmallScreen ? 16.0 : 20.0;
+        final verticalPadding = isSmallScreen ? 16.0 : 20.0;
+        final dialogPadding = EdgeInsets.symmetric(
+          horizontal: horizontalPadding,
+          vertical: verticalPadding,
+        );
+
+        // Responsive font sizes
+        final titleFontSize = isSmallScreen ? 22.0 : 26.0;
+        final optionTitleFontSize = isSmallScreen ? 15.0 : 17.0;
+        final descriptionFontSize = isSmallScreen ? 12.0 : 13.0;
+        final levelFontSize = isSmallScreen ? 10.0 : 11.0;
+
+        // Responsive icon sizes
+        final headerIconSize = isSmallScreen ? 24.0 : 28.0;
+        final optionIconSize = isSmallScreen ? 20.0 : 24.0;
+
+        // Responsive spacing
+        final optionSpacing = isSmallScreen ? 8.0 : 12.0;
+        final iconContainerSize = isSmallScreen ? 44.0 : 52.0;
+
         return Dialog(
           backgroundColor: Colors.transparent,
           elevation: 0,
-          insetPadding: EdgeInsets.all(20),
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(28),
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.15),
-                  blurRadius: 50,
-                  spreadRadius: 5,
-                ),
-              ],
+          insetPadding: EdgeInsets.all(isSmallScreen ? 12.0 : 20.0),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: isLargeScreen ? 500 : screenWidth * 0.9,
+              maxHeight: screenHeight * 0.85,
             ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Header
-                Container(
-                  width: double.infinity,
-                  padding: EdgeInsets.symmetric(vertical: 24, horizontal: 24),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(28),
-                      topRight: Radius.circular(28),
-                    ),
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [Color(0xFF4F46E5), Color(0xFF7C3AED)],
-                    ),
-                  ),
-                  child: Column(
-                    children: [
-                      Container(
-                        width: 56,
-                        height: 56,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white.withOpacity(0.2),
-                          border: Border.all(
-                            color: Colors.white.withOpacity(0.3),
-                            width: 2,
-                          ),
-                        ),
-                        child: Icon(
-                          Icons.shield_rounded,
-                          color: Colors.white,
-                          size: 28,
-                        ),
-                      ),
-                      SizedBox(height: 16),
-                      Text(
-                        "Security Level",
-                        style: TextStyle(
-                          fontSize: 26,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                      SizedBox(height: 8),
-                      Text(
-                        "Choose your preferred authentication method",
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.white.withOpacity(0.9),
-                          height: 1.4,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Options
-                Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _buildSecurityOption(
-                        icon: Icons.looks_4_rounded,
-                        title: "4-Digit PIN",
-                        description: "Basic security • Quick access",
-                        level: "Low",
-                        color: Color(0xFF3B82F6),
-                        value: "pin4",
-                        isRecommended: false,
-                      ),
-
-                      SizedBox(height: 12),
-
-                      _buildSecurityOption(
-                        icon: Icons.looks_6_rounded,
-                        title: "6-Digit PIN",
-                        description: "Enhanced security • Recommended",
-                        level: "Medium",
-                        color: Color(0xFF10B981),
-                        value: "pin6",
-                        isRecommended: true,
-                      ),
-
-                      SizedBox(height: 12),
-
-                      _buildSecurityOption(
-                        icon: Icons.password_rounded,
-                        title: "Alphanumeric",
-                        description: "Maximum security • Letters & numbers",
-                        level: "High",
-                        color: Color(0xFF8B5CF6),
-                        value: "alphanumeric",
-                        isRecommended: false,
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Cancel Button
-                Container(
-                  padding: EdgeInsets.fromLTRB(20, 0, 20, 20),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      style: TextButton.styleFrom(
-                        padding: EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                          side: BorderSide(color: Color(0xFFE2E8F0)),
-                        ),
-                      ),
-                      child: Text(
-                        "Cancel",
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Color(0xFF64748B),
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildSecurityOption({
-    required IconData icon,
-    required String title,
-    required String description,
-    required String level,
-    required Color color,
-    required String value,
-    required bool isRecommended,
-  }) {
-    return Material(
-      color: Colors.transparent,
-      borderRadius: BorderRadius.circular(18),
-      child: InkWell(
-        onTap: () => Navigator.pop(context, value),
-        borderRadius: BorderRadius.circular(18),
-        splashColor: color.withOpacity(0.1),
-        highlightColor: color.withOpacity(0.05),
-        child: Container(
-          padding: EdgeInsets.all(18),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(18),
-            color: Colors.white,
-            border: Border.all(
-              color: isRecommended ? color.withOpacity(0.3) : Color(0xFFF1F5F9),
-              width: isRecommended ? 2 : 1.5,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.03),
-                blurRadius: 10,
-                offset: Offset(0, 3),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              // Icon Container
-              Container(
-                width: 52,
-                height: 52,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [color.withOpacity(0.15), color.withOpacity(0.05)],
-                  ),
-                ),
-                child: Center(child: Icon(icon, color: color, size: 24)),
-              ),
-
-              SizedBox(width: 16),
-
-              // Text Content
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Text(
-                          title,
-                          style: TextStyle(
-                            fontSize: 17,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF1E293B),
-                          ),
-                        ),
-                        SizedBox(width: 8),
-                        if (isRecommended)
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: color.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(6),
-                              border: Border.all(color: color.withOpacity(0.3)),
-                            ),
-                            child: Text(
-                              "Recommended",
-                              style: TextStyle(
-                                fontSize: 10,
-                                color: color,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 0.5,
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                    SizedBox(height: 6),
-                    Text(
-                      description,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Color(0xFF64748B),
-                        height: 1.4,
-                      ),
-                    ),
-                    SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Color(0xFFF1F5F9),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
-                            level,
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: Color(0xFF475569),
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-
-              // Arrow
-              Icon(
-                Icons.chevron_right_rounded,
-                color: Color(0xFF94A3B8),
-                size: 24,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Future<String?> _showPasscodeDialog(
-    String title,
-    String hint,
-    int maxLength,
-    TextInputType keyboardType,
-    String passcodeType,
-  ) async {
-    TextEditingController passcodeController = TextEditingController();
-    bool isObscured = true;
-    bool isConfirmMode = false;
-    String firstPasscode = "";
-    String currentTitle = title;
-    String currentHint = hint;
-
-    return showDialog<String>(
-      context: context,
-      barrierDismissible: false,
-      barrierColor: Colors.black.withOpacity(0.7),
-      builder: (BuildContext context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return Dialog(
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-              insetPadding: EdgeInsets.all(20),
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
               child: Container(
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(28),
+                  borderRadius: BorderRadius.circular(
+                    isSmallScreen ? 24.0 : 28.0,
+                  ),
                   color: Colors.white,
                   boxShadow: [
                     BoxShadow(
@@ -703,401 +428,878 @@ class _ProfilePageState extends State<ProfilePage>
                     Container(
                       width: double.infinity,
                       padding: EdgeInsets.symmetric(
-                        vertical: 24,
-                        horizontal: 24,
+                        vertical: isSmallScreen ? 20.0 : 24.0,
+                        horizontal: isSmallScreen ? 20.0 : 24.0,
                       ),
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.only(
-                          topLeft: Radius.circular(28),
-                          topRight: Radius.circular(28),
+                          topLeft: Radius.circular(isSmallScreen ? 24.0 : 28.0),
+                          topRight: Radius.circular(
+                            isSmallScreen ? 24.0 : 28.0,
+                          ),
                         ),
-                        gradient: _getPasscodeTypeGradient(passcodeType),
+                        gradient: const LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [Color(0xFF4F46E5), Color(0xFF7C3AED)],
+                        ),
                       ),
                       child: Column(
                         children: [
-                          // Progress indicator
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              for (int i = 0; i < (isConfirmMode ? 2 : 1); i++)
-                                Container(
-                                  width: 8,
-                                  height: 8,
-                                  margin: EdgeInsets.symmetric(horizontal: 4),
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color:
-                                        i == 0
-                                            ? Colors.white
-                                            : Colors.white.withOpacity(0.3),
-                                  ),
-                                ),
-                            ],
+                          Container(
+                            width: isSmallScreen ? 48.0 : 56.0,
+                            height: isSmallScreen ? 48.0 : 56.0,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.white.withOpacity(0.2),
+                              border: Border.all(
+                                color: Colors.white.withOpacity(0.3),
+                                width: 2,
+                              ),
+                            ),
+                            child: Icon(
+                              Icons.shield_rounded,
+                              color: Colors.white,
+                              size: headerIconSize,
+                            ),
                           ),
-                          SizedBox(height: 16),
-
-                          Icon(
-                            isConfirmMode
-                                ? Icons.verified_rounded
-                                : Icons.lock_rounded,
-                            color: Colors.white,
-                            size: 36,
-                          ),
-                          SizedBox(height: 16),
-
+                          SizedBox(height: isSmallScreen ? 12.0 : 16.0),
                           Text(
-                            currentTitle,
+                            "Security Level",
                             style: TextStyle(
-                              fontSize: 24,
+                              fontSize: titleFontSize,
                               fontWeight: FontWeight.bold,
                               color: Colors.white,
                               letterSpacing: 0.5,
                             ),
                           ),
-                          SizedBox(height: 8),
-
-                          Text(
-                            currentHint,
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.white.withOpacity(0.9),
-                              height: 1.4,
+                          SizedBox(height: isSmallScreen ? 6.0 : 8.0),
+                          Padding(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: isSmallScreen ? 8.0 : 0,
                             ),
-                            textAlign: TextAlign.center,
-                          ),
-
-                          if (isConfirmMode) ...[
-                            SizedBox(height: 8),
-                            Text(
-                              "Re-enter your passcode to confirm",
+                            child: Text(
+                              "Choose your preferred authentication method",
                               style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.white.withOpacity(0.8),
+                                fontSize: isSmallScreen ? 13.0 : 14.0,
+                                color: Colors.white.withOpacity(0.9),
+                                height: 1.4,
                               ),
+                              textAlign: TextAlign.center,
                             ),
-                          ],
+                          ),
                         ],
                       ),
                     ),
 
-                    // Body
+                    // Options
                     Padding(
-                      padding: const EdgeInsets.all(24),
+                      padding: dialogPadding,
                       child: Column(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          // Visual indicator
-                          _buildPasscodeVisualIndicator(
-                            passcodeController.text,
-                            maxLength,
-                            passcodeType,
-                            isConfirmMode,
+                          _buildSecurityOption(
+                            icon: Icons.looks_4_rounded,
+                            title: "4-Digit PIN",
+                            description: "Basic security • Quick access",
+                            level: "Low",
+                            color: const Color(0xFF3B82F6),
+                            value: "pin4",
+                            isRecommended: false,
+                            fontSize: optionTitleFontSize,
+                            descriptionSize: descriptionFontSize,
+                            levelSize: levelFontSize,
+                            iconSize: optionIconSize,
+                            iconContainerSize: iconContainerSize,
                           ),
 
-                          SizedBox(height: 32),
+                          SizedBox(height: optionSpacing),
 
-                          // Input field with toggle
-                          Container(
-                            padding: EdgeInsets.symmetric(horizontal: 16),
-                            decoration: BoxDecoration(
-                              color: Color(0xFFF8FAFC),
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(
-                                color: Color(0xFFE2E8F0),
-                                width: 1.5,
-                              ),
-                            ),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: TextField(
-                                    controller: passcodeController,
-                                    keyboardType: keyboardType,
-                                    maxLength: maxLength,
-                                    obscureText: isObscured,
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontSize: _getFontSizeForPasscodeType(
-                                        passcodeType,
-                                      ),
-                                      fontWeight: FontWeight.bold,
-                                      color: Color(0xFF1E293B),
-                                      letterSpacing:
-                                          _getLetterSpacingForPasscodeType(
-                                            passcodeType,
-                                          ),
-                                      fontFamily:
-                                          passcodeType == "alphanumeric"
-                                              ? 'monospace'
-                                              : null,
-                                    ),
-                                    decoration: InputDecoration(
-                                      hintText: _getHintTextForPasscodeType(
-                                        passcodeType,
-                                      ),
-                                      hintStyle: TextStyle(
-                                        color: Color(0xFF94A3B8),
-                                        letterSpacing:
-                                            _getLetterSpacingForPasscodeType(
-                                              passcodeType,
-                                            ),
-                                        fontFamily:
-                                            passcodeType == "alphanumeric"
-                                                ? 'monospace'
-                                                : null,
-                                      ),
-                                      counterText: '',
-                                      border: InputBorder.none,
-                                      contentPadding: EdgeInsets.symmetric(
-                                        vertical: 18,
-                                      ),
-                                    ),
-                                    onChanged: (value) {
-                                      setState(() {});
-                                      // Auto-submit when max length reached for PIN
-                                      if ((passcodeType == "pin4" ||
-                                              passcodeType == "pin6") &&
-                                          value.length == maxLength &&
-                                          !isConfirmMode) {
-                                        Future.delayed(
-                                          Duration(milliseconds: 300),
-                                          () {
-                                            setState(() {
-                                              firstPasscode = value;
-                                              isConfirmMode = true;
-                                              passcodeController.clear();
-                                              currentTitle = "Confirm Passcode";
-                                              currentHint =
-                                                  "Re-enter your $maxLength-digit PIN";
-                                            });
-                                          },
-                                        );
-                                      }
-                                    },
-                                  ),
-                                ),
-
-                                // Toggle visibility button (for alphanumeric)
-                                if (passcodeType == "alphanumeric")
-                                  IconButton(
-                                    onPressed: () {
-                                      setState(() {
-                                        isObscured = !isObscured;
-                                      });
-                                    },
-                                    icon: Icon(
-                                      isObscured
-                                          ? Icons.visibility_off_rounded
-                                          : Icons.visibility_rounded,
-                                      color: Color(0xFF64748B),
-                                      size: 22,
-                                    ),
-                                    splashRadius: 20,
-                                    padding: EdgeInsets.all(8),
-                                  ),
-                              ],
-                            ),
+                          _buildSecurityOption(
+                            icon: Icons.looks_6_rounded,
+                            title: "6-Digit PIN",
+                            description: "Enhanced security • Recommended",
+                            level: "Medium",
+                            color: const Color(0xFF10B981),
+                            value: "pin6",
+                            isRecommended: true,
+                            fontSize: optionTitleFontSize,
+                            descriptionSize: descriptionFontSize,
+                            levelSize: levelFontSize,
+                            iconSize: optionIconSize,
+                            iconContainerSize: iconContainerSize,
                           ),
 
-                          SizedBox(height: 12),
+                          SizedBox(height: optionSpacing),
 
-                          // Requirements indicator
-                          _buildPasscodeRequirements(
-                            passcodeType,
-                            passcodeController.text,
+                          _buildSecurityOption(
+                            icon: Icons.password_rounded,
+                            title: "Alphanumeric",
+                            description: "Maximum security • Letters & numbers",
+                            level: "High",
+                            color: const Color(0xFF8B5CF6),
+                            value: "alphanumeric",
+                            isRecommended: false,
+                            fontSize: optionTitleFontSize,
+                            descriptionSize: descriptionFontSize,
+                            levelSize: levelFontSize,
+                            iconSize: optionIconSize,
+                            iconContainerSize: iconContainerSize,
                           ),
-
-                          // Length indicator
-                          if (passcodeType == "alphanumeric")
-                            Container(
-                              margin: EdgeInsets.only(top: 8),
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 6,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Color(0xFFF1F5F9),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    "Length: ",
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Color(0xFF64748B),
-                                    ),
-                                  ),
-                                  Text(
-                                    "${passcodeController.text.length}/$maxLength",
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold,
-                                      color:
-                                          passcodeController.text.length ==
-                                                  maxLength
-                                              ? Color(0xFF10B981)
-                                              : Color(0xFF64748B),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
                         ],
                       ),
                     ),
 
-                    // Action Buttons
+                    // Cancel Button
                     Container(
-                      padding: EdgeInsets.fromLTRB(20, 0, 20, 20),
-                      child: Row(
-                        children: [
-                          // Cancel/Back Button
-                          Expanded(
-                            child: Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(14),
-                                border: Border.all(color: Color(0xFFE2E8F0)),
+                      padding: EdgeInsets.fromLTRB(
+                        horizontalPadding,
+                        0,
+                        horizontalPadding,
+                        verticalPadding,
+                      ),
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          style: TextButton.styleFrom(
+                            padding: EdgeInsets.symmetric(
+                              vertical: isSmallScreen ? 14.0 : 16.0,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(
+                                isSmallScreen ? 12.0 : 14.0,
                               ),
-                              child: TextButton(
-                                onPressed:
-                                    isConfirmMode
-                                        ? () {
-                                          setState(() {
-                                            isConfirmMode = false;
-                                            passcodeController.clear();
-                                            currentTitle = title;
-                                            currentHint = hint;
-                                          });
-                                        }
-                                        : () => Navigator.pop(context),
-                                style: TextButton.styleFrom(
-                                  padding: EdgeInsets.symmetric(vertical: 16),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(14),
-                                  ),
-                                ),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    if (isConfirmMode)
-                                      Icon(Icons.arrow_back_rounded, size: 18),
-                                    SizedBox(width: isConfirmMode ? 6 : 0),
-                                    Text(
-                                      isConfirmMode ? "Back" : "Cancel",
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        color: Color(0xFF64748B),
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
+                              side: const BorderSide(color: Color(0xFFE2E8F0)),
                             ),
                           ),
-
-                          SizedBox(width: 16),
-
-                          // Confirm/Next Button
-                          Expanded(
-                            child: Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(14),
-                                gradient: _getPasscodeTypeGradient(
-                                  passcodeType,
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: _getPrimaryColorForPasscodeType(
-                                      passcodeType,
-                                    ).withOpacity(0.3),
-                                    blurRadius: 10,
-                                    spreadRadius: 2,
-                                  ),
-                                ],
-                              ),
-                              child: ElevatedButton(
-                                onPressed:
-                                    passcodeController.text.length == maxLength
-                                        ? () {
-                                          if (isConfirmMode) {
-                                            if (passcodeController.text ==
-                                                firstPasscode) {
-                                              Navigator.pop(
-                                                context,
-                                                firstPasscode,
-                                              );
-                                            } else {
-                                              ScaffoldMessenger.of(
-                                                context,
-                                              ).showSnackBar(
-                                                SnackBar(
-                                                  content: Text(
-                                                    "Passcodes don't match. Try again.",
-                                                  ),
-                                                  backgroundColor: Colors.red,
-                                                ),
-                                              );
-                                              setState(() {
-                                                passcodeController.clear();
-                                              });
-                                            }
-                                          } else {
-                                            if (passcodeType ==
-                                                "alphanumeric") {
-                                              setState(() {
-                                                firstPasscode =
-                                                    passcodeController.text;
-                                                isConfirmMode = true;
-                                                passcodeController.clear();
-                                                currentTitle =
-                                                    "Confirm Passcode";
-                                                currentHint =
-                                                    "Re-enter your alphanumeric passcode";
-                                              });
-                                            } else {
-                                              // For PINs, already handled by auto-submit
-                                            }
-                                          }
-                                        }
-                                        : null,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.transparent,
-                                  foregroundColor: Colors.white,
-                                  shadowColor: Colors.transparent,
-                                  padding: EdgeInsets.symmetric(vertical: 16),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(14),
-                                  ),
-                                ),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      isConfirmMode ? "Confirm" : "Continue",
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-
-                                    SizedBox(width: 8),
-                                    Icon(
-                                      isConfirmMode
-                                          ? Icons.check_rounded
-                                          : Icons.arrow_forward_rounded,
-                                      size: 18,
-                                    ),
-                                  ],
-                                ),
-                              ),
+                          child: Text(
+                            "Cancel",
+                            style: TextStyle(
+                              fontSize: isSmallScreen ? 15.0 : 16.0,
+                              color: const Color(0xFF64748B),
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
-                        ],
+                        ),
                       ),
                     ),
                   ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildSecurityOption({
+    required IconData icon,
+    required String title,
+    required String description,
+    required String level,
+    required Color color,
+    required String value,
+    required bool isRecommended,
+    required double fontSize,
+    required double descriptionSize,
+    required double levelSize,
+    required double iconSize,
+    required double iconContainerSize,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(18),
+      child: InkWell(
+        onTap: () => Navigator.pop(context, value),
+        borderRadius: BorderRadius.circular(18),
+        splashColor: color.withOpacity(0.1),
+        highlightColor: color.withOpacity(0.05),
+        child: Container(
+          padding: EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(18),
+            color: Colors.white,
+            border: Border.all(
+              color:
+                  isRecommended
+                      ? color.withOpacity(0.3)
+                      : const Color(0xFFF1F5F9),
+              width: isRecommended ? 2 : 1.5,
+            ),
+            boxShadow: const [
+              BoxShadow(
+                color: Color.fromRGBO(0, 0, 0, 0.03),
+                blurRadius: 10,
+                offset: Offset(0, 3),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              // Icon Container
+              Container(
+                width: iconContainerSize,
+                height: iconContainerSize,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [color.withOpacity(0.15), color.withOpacity(0.05)],
+                  ),
+                ),
+                child: Center(child: Icon(icon, color: color, size: iconSize)),
+              ),
+
+              SizedBox(width: 12),
+
+              // Text Content
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            title,
+                            style: TextStyle(
+                              fontSize: fontSize,
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xFF1E293B),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        if (isRecommended) ...[
+                          SizedBox(width: 6),
+                          Flexible(
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 3,
+                              ),
+                              decoration: BoxDecoration(
+                                color: color.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(
+                                  color: color.withOpacity(0.3),
+                                ),
+                              ),
+                              child: Text(
+                                "Recommended",
+                                style: TextStyle(
+                                  fontSize: levelSize - 1,
+                                  color: color,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 0.5,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      description,
+                      style: TextStyle(
+                        fontSize: descriptionSize,
+                        color: const Color(0xFF64748B),
+                        height: 1.4,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    SizedBox(height: 6),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 3,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF1F5F9),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            level,
+                            style: TextStyle(
+                              fontSize: levelSize,
+                              color: const Color(0xFF475569),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              // Arrow
+              Icon(
+                Icons.chevron_right_rounded,
+                color: const Color(0xFF94A3B8),
+                size: 24,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<String?> _showPasscodeDialog(
+    String title,
+    String hint,
+    int maxLength,
+    TextInputType keyboardType,
+    String passcodeType,
+  ) async {
+    final TextEditingController passcodeController = TextEditingController();
+    bool isObscured = true;
+
+    return showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      barrierColor: Colors.black.withOpacity(0.7),
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            // Responsive helpers
+            final screenWidth = MediaQuery.of(context).size.width;
+            final screenHeight = MediaQuery.of(context).size.height;
+            final isSmallScreen = screenWidth < 360;
+            final isLargeScreen = screenWidth > 600;
+
+            final dialogBorderRadius = isSmallScreen ? 24.0 : 28.0;
+            final contentPadding = isSmallScreen ? 16.0 : 24.0;
+            final buttonPadding = isSmallScreen ? 16.0 : 20.0;
+            final inputFontSize = _getFontSizeForPasscodeType(
+              passcodeType,
+              isSmallScreen: isSmallScreen,
+            );
+            final buttonFontSize = isSmallScreen ? 15.0 : 16.0;
+
+            return Dialog(
+              backgroundColor: Colors.transparent,
+              insetPadding: EdgeInsets.all(isSmallScreen ? 12 : 20),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: isLargeScreen ? 500 : screenWidth * 0.9,
+                  maxHeight: screenHeight * 0.85,
+                ),
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(dialogBorderRadius),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.15),
+                          blurRadius: 50,
+                          spreadRadius: 5,
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // HEADER
+                        Container(
+                          width: double.infinity,
+                          padding: EdgeInsets.all(isSmallScreen ? 20.0 : 24.0),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.vertical(
+                              top: Radius.circular(dialogBorderRadius),
+                            ),
+                            gradient: _getPasscodeTypeGradient(passcodeType),
+                          ),
+                          child: Column(
+                            children: [
+                              Icon(
+                                Icons.lock_rounded,
+                                color: Colors.white,
+                                size: isSmallScreen ? 30 : 36,
+                              ),
+                              const SizedBox(height: 12),
+                              Text(
+                                title,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: isSmallScreen ? 20 : 24,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                hint,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: isSmallScreen ? 13 : 14,
+                                  color: Colors.white.withOpacity(0.9),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        // BODY
+                        Padding(
+                          padding: EdgeInsets.all(contentPadding),
+                          child: Column(
+                            children: [
+                              _buildPasscodeVisualIndicator(
+                                passcodeController.text,
+                                maxLength,
+                                passcodeType,
+                                false,
+                                isSmallScreen: isSmallScreen,
+                              ),
+
+                              SizedBox(height: isSmallScreen ? 24 : 32),
+
+                              Container(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: isSmallScreen ? 12 : 16,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFF8FAFC),
+                                  borderRadius: BorderRadius.circular(
+                                    isSmallScreen ? 14 : 16,
+                                  ),
+                                  border: Border.all(
+                                    color: const Color(0xFFE2E8F0),
+                                    width: 1.5,
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: TextField(
+                                        controller: passcodeController,
+                                        keyboardType: keyboardType,
+                                        maxLength: maxLength,
+                                        obscureText: isObscured,
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          fontSize: inputFontSize,
+                                          fontWeight: FontWeight.bold,
+                                          color: const Color(0xFF1E293B),
+                                          letterSpacing:
+                                              _getLetterSpacingForPasscodeType(
+                                                passcodeType,
+                                                isSmallScreen: isSmallScreen,
+                                              ),
+                                          fontFamily:
+                                              passcodeType == "alphanumeric"
+                                                  ? 'monospace'
+                                                  : null,
+                                        ),
+                                        decoration: InputDecoration(
+                                          hintText: _getHintTextForPasscodeType(
+                                            passcodeType,
+                                            isSmallScreen: isSmallScreen,
+                                          ),
+                                          hintStyle: TextStyle(
+                                            color: const Color(0xFF94A3B8),
+                                            letterSpacing:
+                                                _getLetterSpacingForPasscodeType(
+                                                  passcodeType,
+                                                  isSmallScreen: isSmallScreen,
+                                                ),
+                                            fontFamily:
+                                                passcodeType == "alphanumeric"
+                                                    ? 'monospace'
+                                                    : null,
+                                          ),
+                                          counterText: '',
+                                          border: InputBorder.none,
+                                        ),
+                                        onChanged: (_) => setState(() {}),
+                                      ),
+                                    ),
+
+                                    if (passcodeType == "alphanumeric")
+                                      IconButton(
+                                        icon: Icon(
+                                          isObscured
+                                              ? Icons.visibility_off_rounded
+                                              : Icons.visibility_rounded,
+                                          color: const Color(0xFF64748B),
+                                        ),
+                                        onPressed:
+                                            () => setState(
+                                              () => isObscured = !isObscured,
+                                            ),
+                                      ),
+                                  ],
+                                ),
+                              ),
+
+                              const SizedBox(height: 12),
+
+                              _buildPasscodeRequirements(
+                                passcodeType,
+                                passcodeController.text,
+                                isSmallScreen: isSmallScreen,
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        // ACTION BUTTONS
+                        // MODERN ACTION BUTTONS SECTION
+                        Padding(
+                          padding: EdgeInsets.fromLTRB(
+                            buttonPadding,
+                            0,
+                            buttonPadding,
+                            buttonPadding,
+                          ),
+                          child: Column(
+                            children: [
+                              // Progress indicator
+                              Container(
+                                height: 2,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[200],
+                                  borderRadius: BorderRadius.circular(1),
+                                ),
+                                child: FractionallySizedBox(
+                                  alignment: Alignment.centerLeft,
+                                  widthFactor:
+                                      passcodeController.text.length /
+                                      maxLength,
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        colors: [
+                                          Theme.of(context).colorScheme.primary,
+                                          Theme.of(context).colorScheme.primary
+                                              .withOpacity(0.7),
+                                        ],
+                                      ),
+                                      borderRadius: BorderRadius.circular(1),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 20),
+
+                              Row(
+                                children: [
+                                  // CANCEL BUTTON - Modern Design
+                                  Expanded(
+                                    child: Material(
+                                      color: Colors.transparent,
+                                      borderRadius: BorderRadius.circular(12),
+                                      child: InkWell(
+                                        onTap: () => Navigator.pop(context),
+                                        borderRadius: BorderRadius.circular(12),
+                                        child: Container(
+                                          height: 54,
+                                          decoration: BoxDecoration(
+                                            color: Colors.transparent,
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
+                                            border: Border.all(
+                                              color: Colors.grey[300]!,
+                                              width: 1.5,
+                                            ),
+                                          ),
+                                          child: Stack(
+                                            children: [
+                                              // Background effect
+                                              Positioned.fill(
+                                                child: ClipRRect(
+                                                  borderRadius:
+                                                      BorderRadius.circular(12),
+                                                  child: Container(
+                                                    decoration: BoxDecoration(
+                                                      gradient: LinearGradient(
+                                                        begin:
+                                                            Alignment.topLeft,
+                                                        end:
+                                                            Alignment
+                                                                .bottomRight,
+                                                        colors: [
+                                                          Colors.white
+                                                              .withOpacity(0.1),
+                                                          Colors.transparent,
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+
+                                              // Content
+                                              Center(
+                                                child: Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.center,
+                                                  children: [
+                                                    Container(
+                                                      width: 24,
+                                                      height: 24,
+                                                      decoration: BoxDecoration(
+                                                        shape: BoxShape.circle,
+                                                        border: Border.all(
+                                                          color:
+                                                              Colors.grey[600]!,
+                                                          width: 1.5,
+                                                        ),
+                                                      ),
+                                                      child: Center(
+                                                        child: Container(
+                                                          width: 8,
+                                                          height: 8,
+                                                          decoration: BoxDecoration(
+                                                            shape:
+                                                                BoxShape.circle,
+                                                            color:
+                                                                Colors
+                                                                    .grey[600]!,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    const SizedBox(width: 10),
+                                                    Text(
+                                                      "Cancel",
+                                                      style: TextStyle(
+                                                        fontSize: 16,
+                                                        fontWeight:
+                                                            FontWeight.w600,
+                                                        color:
+                                                            Colors.grey[800]!,
+                                                        letterSpacing: -0.2,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+
+                                  const SizedBox(width: 16),
+
+                                  // CONTINUE BUTTON - Modern Design
+                                  Expanded(
+                                    child: AnimatedContainer(
+                                      duration: const Duration(
+                                        milliseconds: 300,
+                                      ),
+                                      curve: Curves.easeOutCubic,
+                                      height: 54,
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(12),
+                                        gradient:
+                                            passcodeController.text.length ==
+                                                    maxLength
+                                                ? LinearGradient(
+                                                  begin: Alignment.topLeft,
+                                                  end: Alignment.bottomRight,
+                                                  colors: [
+                                                    Theme.of(
+                                                      context,
+                                                    ).colorScheme.primary,
+                                                    Theme.of(context)
+                                                        .colorScheme
+                                                        .primary
+                                                        .withGreen(50),
+                                                  ],
+                                                )
+                                                : LinearGradient(
+                                                  begin: Alignment.topLeft,
+                                                  end: Alignment.bottomRight,
+                                                  colors: [
+                                                    Colors.grey[200]!,
+                                                    Colors.grey[300]!,
+                                                  ],
+                                                ),
+                                        boxShadow:
+                                            passcodeController.text.length ==
+                                                    maxLength
+                                                ? [
+                                                  BoxShadow(
+                                                    color: Theme.of(context)
+                                                        .colorScheme
+                                                        .primary
+                                                        .withOpacity(0.4),
+                                                    blurRadius: 15,
+                                                    spreadRadius: 0,
+                                                    offset: const Offset(0, 4),
+                                                  ),
+                                                ]
+                                                : [
+                                                  BoxShadow(
+                                                    color: Colors.grey
+                                                        .withOpacity(0.1),
+                                                    blurRadius: 8,
+                                                    offset: const Offset(0, 2),
+                                                  ),
+                                                ],
+                                      ),
+                                      child: Material(
+                                        color: Colors.transparent,
+                                        borderRadius: BorderRadius.circular(12),
+                                        child: InkWell(
+                                          onTap:
+                                              passcodeController.text.length ==
+                                                      maxLength
+                                                  ? () => Navigator.pop(
+                                                    context,
+                                                    passcodeController.text,
+                                                  )
+                                                  : null,
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                          child: Stack(
+                                            children: [
+                                              // Inner highlight effect
+                                              Positioned.fill(
+                                                child: ClipRRect(
+                                                  borderRadius:
+                                                      BorderRadius.circular(12),
+                                                  child: Container(
+                                                    decoration: BoxDecoration(
+                                                      gradient:
+                                                          passcodeController
+                                                                      .text
+                                                                      .length ==
+                                                                  maxLength
+                                                              ? LinearGradient(
+                                                                begin:
+                                                                    Alignment
+                                                                        .topCenter,
+                                                                end:
+                                                                    Alignment
+                                                                        .bottomCenter,
+                                                                colors: [
+                                                                  Colors.white
+                                                                      .withOpacity(
+                                                                        0.2,
+                                                                      ),
+                                                                  Colors
+                                                                      .transparent,
+                                                                ],
+                                                              )
+                                                              : null,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+
+                                              // Content
+                                              Center(
+                                                child: Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.center,
+                                                  children: [
+                                                    Text(
+                                                      "Continue",
+                                                      style: TextStyle(
+                                                        fontSize: 16,
+                                                        fontWeight:
+                                                            FontWeight.w700,
+                                                        color:
+                                                            passcodeController
+                                                                        .text
+                                                                        .length ==
+                                                                    maxLength
+                                                                ? Colors.white
+                                                                : Colors
+                                                                    .grey[400]!,
+                                                        letterSpacing: -0.2,
+                                                        shadows:
+                                                            passcodeController
+                                                                        .text
+                                                                        .length ==
+                                                                    maxLength
+                                                                ? [
+                                                                  Shadow(
+                                                                    color: Colors
+                                                                        .black
+                                                                        .withOpacity(
+                                                                          0.1,
+                                                                        ),
+                                                                    blurRadius:
+                                                                        2,
+                                                                    offset:
+                                                                        const Offset(
+                                                                          0,
+                                                                          1,
+                                                                        ),
+                                                                  ),
+                                                                ]
+                                                                : null,
+                                                      ),
+                                                    ),
+                                                    const SizedBox(width: 8),
+                                                    AnimatedContainer(
+                                                      duration: const Duration(
+                                                        milliseconds: 400,
+                                                      ),
+                                                      curve: Curves.elasticOut,
+                                                      transform:
+                                                          Matrix4.translationValues(
+                                                            passcodeController
+                                                                        .text
+                                                                        .length ==
+                                                                    maxLength
+                                                                ? 0
+                                                                : -10,
+                                                            0,
+                                                            0,
+                                                          ),
+                                                      child: Icon(
+                                                        Icons
+                                                            .arrow_forward_rounded,
+                                                        size: 20,
+                                                        color:
+                                                            passcodeController
+                                                                        .text
+                                                                        .length ==
+                                                                    maxLength
+                                                                ? Colors.white
+                                                                : Colors
+                                                                    .grey[400]!,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             );
@@ -1111,8 +1313,13 @@ class _ProfilePageState extends State<ProfilePage>
     String text,
     int maxLength,
     String passcodeType,
-    bool isConfirmMode,
-  ) {
+    bool isConfirmMode, {
+    bool isSmallScreen = false,
+  }) {
+    final dotSize = isSmallScreen ? 14.0 : 18.0;
+    final fontSize = isSmallScreen ? 16.0 : 18.0;
+    final statusFontSize = isSmallScreen ? 11.0 : 12.0;
+
     return Column(
       children: [
         // Dots or letters indicator
@@ -1122,15 +1329,17 @@ class _ProfilePageState extends State<ProfilePage>
             children: List.generate(maxLength, (index) {
               final filled = index < text.length;
               return Container(
-                margin: EdgeInsets.symmetric(horizontal: 8),
-                width: 18,
-                height: 18,
+                margin: EdgeInsets.symmetric(
+                  horizontal: isSmallScreen ? 6.0 : 8.0,
+                ),
+                width: dotSize,
+                height: dotSize,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color:
                       filled
                           ? _getPrimaryColorForPasscodeType(passcodeType)
-                          : Color(0xFFE2E8F0),
+                          : const Color(0xFFE2E8F0),
                   boxShadow:
                       filled
                           ? [
@@ -1150,32 +1359,38 @@ class _ProfilePageState extends State<ProfilePage>
 
         if (passcodeType == "alphanumeric")
           Container(
-            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: EdgeInsets.symmetric(
+              horizontal: isSmallScreen ? 12.0 : 16.0,
+              vertical: isSmallScreen ? 10.0 : 12.0,
+            ),
             decoration: BoxDecoration(
-              color: Color(0xFFF8FAFC),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Color(0xFFE2E8F0)),
+              color: const Color(0xFFF8FAFC),
+              borderRadius: BorderRadius.circular(isSmallScreen ? 10.0 : 12.0),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
             ),
             child: Text(
               text.isEmpty ? "Enter your passcode" : "•" * text.length,
               style: TextStyle(
-                fontSize: 18,
+                fontSize: fontSize,
                 fontWeight: FontWeight.w500,
-                color: text.isEmpty ? Color(0xFF94A3B8) : Color(0xFF1E293B),
+                color:
+                    text.isEmpty
+                        ? const Color(0xFF94A3B8)
+                        : const Color(0xFF1E293B),
                 fontFamily: 'monospace',
-                letterSpacing: 4,
+                letterSpacing: isSmallScreen ? 3.0 : 4.0,
               ),
             ),
           ),
 
-        SizedBox(height: 8),
+        SizedBox(height: isSmallScreen ? 6.0 : 8.0),
 
         // Status text
         if (text.isNotEmpty)
           Text(
             "${text.length} character${text.length != 1 ? 's' : ''} entered",
             style: TextStyle(
-              fontSize: 12,
+              fontSize: statusFontSize,
               color: _getPrimaryColorForPasscodeType(passcodeType),
               fontWeight: FontWeight.w500,
             ),
@@ -1184,7 +1399,11 @@ class _ProfilePageState extends State<ProfilePage>
     );
   }
 
-  Widget _buildPasscodeRequirements(String passcodeType, String currentText) {
+  Widget _buildPasscodeRequirements(
+    String passcodeType,
+    String currentText, {
+    bool isSmallScreen = false,
+  }) {
     List<Map<String, dynamic>> requirements = [];
 
     if (passcodeType == "alphanumeric") {
@@ -1208,16 +1427,19 @@ class _ProfilePageState extends State<ProfilePage>
         },
       ];
     } else {
-      return SizedBox(); // No requirements for 4-digit PIN
+      return const SizedBox(); // No requirements for 4-digit PIN
     }
 
+    final requirementsFontSize = isSmallScreen ? 11.0 : 12.0;
+    final iconSize = isSmallScreen ? 12.0 : 14.0;
+
     return Container(
-      margin: EdgeInsets.only(top: 12),
-      padding: EdgeInsets.all(12),
+      margin: EdgeInsets.only(top: isSmallScreen ? 8.0 : 12.0),
+      padding: EdgeInsets.all(isSmallScreen ? 10.0 : 12.0),
       decoration: BoxDecoration(
-        color: Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Color(0xFFE2E8F0)),
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(isSmallScreen ? 10.0 : 12.0),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1225,35 +1447,39 @@ class _ProfilePageState extends State<ProfilePage>
           Text(
             "Requirements:",
             style: TextStyle(
-              fontSize: 12,
+              fontSize: requirementsFontSize,
               fontWeight: FontWeight.bold,
-              color: Color(0xFF475569),
+              color: const Color(0xFF475569),
             ),
           ),
-          SizedBox(height: 8),
+          SizedBox(height: isSmallScreen ? 6.0 : 8.0),
           ...requirements
               .map(
                 (req) => Padding(
-                  padding: const EdgeInsets.only(bottom: 6),
+                  padding: EdgeInsets.only(bottom: isSmallScreen ? 4.0 : 6.0),
                   child: Row(
                     children: [
                       Icon(
                         req["met"]
                             ? Icons.check_circle_rounded
                             : Icons.circle_outlined,
-                        size: 14,
+                        size: iconSize,
                         color:
-                            req["met"] ? Color(0xFF10B981) : Color(0xFF94A3B8),
+                            req["met"]
+                                ? const Color(0xFF10B981)
+                                : const Color(0xFF94A3B8),
                       ),
-                      SizedBox(width: 8),
-                      Text(
-                        req["text"],
-                        style: TextStyle(
-                          fontSize: 12,
-                          color:
-                              req["met"]
-                                  ? Color(0xFF10B981)
-                                  : Color(0xFF64748B),
+                      SizedBox(width: isSmallScreen ? 6.0 : 8.0),
+                      Expanded(
+                        child: Text(
+                          req["text"],
+                          style: TextStyle(
+                            fontSize: requirementsFontSize,
+                            color:
+                                req["met"]
+                                    ? const Color(0xFF10B981)
+                                    : const Color(0xFF64748B),
+                          ),
                         ),
                       ),
                     ],
@@ -1266,90 +1492,102 @@ class _ProfilePageState extends State<ProfilePage>
     );
   }
 
-  // Helper functions
+  // Add these new responsive helper functions
+
+  double _getFontSizeForPasscodeType(
+    String passcodeType, {
+    bool isSmallScreen = false,
+  }) {
+    if (passcodeType == "alphanumeric") {
+      return isSmallScreen ? 16.0 : 18.0;
+    } else if (passcodeType == "pin6") {
+      return isSmallScreen ? 22.0 : 24.0;
+    } else {
+      return isSmallScreen ? 24.0 : 26.0; // pin4
+    }
+  }
+
+  String _getHintTextForPasscodeType(
+    String passcodeType, {
+    bool isSmallScreen = false,
+  }) {
+    if (passcodeType == "alphanumeric") {
+      return isSmallScreen ? "Enter passcode" : "Enter your passcode";
+    } else if (passcodeType == "pin6") {
+      return isSmallScreen ? "6 digits" : "6-digit PIN";
+    } else {
+      return isSmallScreen ? "4 digits" : "4-digit PIN";
+    }
+  }
+
+  double _getLetterSpacingForPasscodeType(
+    String passcodeType, {
+    bool isSmallScreen = false,
+  }) {
+    if (passcodeType == "alphanumeric") {
+      return isSmallScreen ? 1.0 : 1.5;
+    } else if (passcodeType == "pin6") {
+      return isSmallScreen ? 4.0 : 6.0;
+    } else {
+      return isSmallScreen ? 6.0 : 8.0; // pin4
+    }
+  }
+
+  // Existing helper functions (keep these exactly as they were)
+
   LinearGradient _getPasscodeTypeGradient(String passcodeType) {
-    switch (passcodeType) {
-      case "pin6":
-        return LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF10B981), Color(0xFF059669)],
-        );
-      case "alphanumeric":
-        return LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF8B5CF6), Color(0xFF7C3AED)],
-        );
-      default: // pin4
-        return LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF3B82F6), Color(0xFF1D4ED8)],
-        );
+    if (passcodeType == "pin4") {
+      return const LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [Color(0xFF3B82F6), Color(0xFF60A5FA)],
+      );
+    } else if (passcodeType == "pin6") {
+      return const LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [Color(0xFF10B981), Color(0xFF34D399)],
+      );
+    } else {
+      return const LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [Color(0xFF8B5CF6), Color(0xFFA78BFA)],
+      );
     }
   }
 
   Color _getPrimaryColorForPasscodeType(String passcodeType) {
-    switch (passcodeType) {
-      case "pin6":
-        return Color(0xFF10B981);
-      case "alphanumeric":
-        return Color(0xFF8B5CF6);
-      default:
-        return Color(0xFF3B82F6);
-    }
-  }
-
-  double _getFontSizeForPasscodeType(String passcodeType) {
-    switch (passcodeType) {
-      case "pin4":
-        return 28.0;
-      case "pin6":
-        return 26.0;
-      case "alphanumeric":
-        return 20.0;
-      default:
-        return 22.0;
-    }
-  }
-
-  double _getLetterSpacingForPasscodeType(String passcodeType) {
-    switch (passcodeType) {
-      case "pin4":
-        return 12.0;
-      case "pin6":
-        return 10.0;
-      case "alphanumeric":
-        return 2.0;
-      default:
-        return 8.0;
-    }
-  }
-
-  String _getHintTextForPasscodeType(String passcodeType) {
-    switch (passcodeType) {
-      case "pin4":
-        return "0000";
-      case "pin6":
-        return "000000";
-      case "alphanumeric":
-        return "Enter passcode";
-      default:
-        return "Enter passcode";
+    if (passcodeType == "pin4") {
+      return const Color(0xFF3B82F6);
+    } else if (passcodeType == "pin6") {
+      return const Color(0xFF10B981);
+    } else {
+      return const Color(0xFF8B5CF6);
     }
   }
 
   bool _hasRepeatingPattern(String text) {
     if (text.length < 2) return false;
 
-    // Check for repeating digits (e.g., 111111, 121212)
-    for (int i = 0; i < text.length - 1; i++) {
-      if (text[i] != text[i + 1]) {
-        return false;
+    // Check for repeating digits
+    for (int i = 1; i < text.length; i++) {
+      if (text[i] != text[0]) return false;
+    }
+
+    // Check for sequential patterns (123456, 654321)
+    bool isSequentialIncreasing = true;
+    bool isSequentialDecreasing = true;
+    for (int i = 1; i < text.length; i++) {
+      if (int.parse(text[i]) != int.parse(text[i - 1]) + 1) {
+        isSequentialIncreasing = false;
+      }
+      if (int.parse(text[i]) != int.parse(text[i - 1]) - 1) {
+        isSequentialDecreasing = false;
       }
     }
-    return true;
+
+    return isSequentialIncreasing || isSequentialDecreasing;
   }
 
   Future<void> _pickImage() async {

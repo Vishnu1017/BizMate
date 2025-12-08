@@ -6,6 +6,7 @@ import 'package:bizmate/widgets/app_snackbar.dart' show AppSnackBar;
 import 'package:bizmate/widgets/modern_calendar_range.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:hugeicons/hugeicons.dart' show HugeIcon, HugeIcons;
 import 'package:intl/intl.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:path_provider/path_provider.dart';
@@ -13,7 +14,6 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:hive/hive.dart';
-import 'package:collection/collection.dart';
 
 enum DateRangePreset {
   today,
@@ -540,12 +540,12 @@ class _SalesReportPageState extends State<SalesReportPage> {
                   'Balance',
                 ],
                 data:
-                    sales.mapIndexed((index, s) {
+                    sales.map((s) {
                       final balance = s.totalAmount - s.amount;
 
                       return [
                         dateFormat.format(s.dateTime),
-                        (index + 1).toString(), // ✅ Order No.
+                        "-",
                         s.customerName,
                         s.phoneNumber,
                         "Sale",
@@ -657,10 +657,8 @@ class _SalesReportPageState extends State<SalesReportPage> {
       final dateFormat = DateFormat('dd/MM/yyyy');
       final buffer = StringBuffer();
 
-      // Excel UTF-8 BOM
       buffer.write('\uFEFF');
 
-      // Header row
       buffer.writeln(
         [
           'Date',
@@ -675,18 +673,12 @@ class _SalesReportPageState extends State<SalesReportPage> {
         ].map((e) => '"$e"').join(','),
       );
 
-      // ⭐ FIXED: Generate order numbers properly using index
-      for (int i = 0; i < sales.length; i++) {
-        final s = sales[i];
-
-        final orderNo = i + 1; // ← ACTUAL WORKING ORDER NUMBER
-
+      for (var s in sales) {
         final balance = s.totalAmount - s.amount;
-
         buffer.writeln(
           [
             dateFormat.format(s.dateTime),
-            orderNo, //  ← NOW YOU GET REAL ORDER NUMBER IN EXCEL
+            '-',
             s.customerName,
             s.phoneNumber,
             'Sale',
@@ -705,6 +697,8 @@ class _SalesReportPageState extends State<SalesReportPage> {
       final file = File(path);
       await file.writeAsString(buffer.toString());
 
+      if (!await file.exists()) throw Exception('Failed to create CSV file');
+
       final result = await OpenFilex.open(path);
 
       if (!mounted) return;
@@ -713,13 +707,22 @@ class _SalesReportPageState extends State<SalesReportPage> {
         AppSnackBar.showError(
           context,
           message: 'Failed to open file: ${result.message}',
+          duration: const Duration(seconds: 2),
         );
       } else {
-        AppSnackBar.showSuccess(context, message: 'CSV exported successfully');
+        AppSnackBar.showSuccess(
+          context,
+          message: 'CSV file exported successfully',
+          duration: const Duration(seconds: 2),
+        );
       }
     } catch (e) {
       if (!mounted) return;
-      AppSnackBar.showError(context, message: 'Error: $e');
+      AppSnackBar.showError(
+        context,
+        message: 'Error: ${e.toString()}',
+        duration: const Duration(seconds: 2),
+      );
       debugPrint('CSV Export Error: $e');
     } finally {
       if (mounted) setState(() => _isLoadingCsv = false);
@@ -793,29 +796,13 @@ class _SalesReportPageState extends State<SalesReportPage> {
 
   List<Sale> getFilteredSales() {
     if (selectedRange == null) return widget.sales;
-
-    final start = DateTime(
-      selectedRange!.start.year,
-      selectedRange!.start.month,
-      selectedRange!.start.day,
-      0,
-      0,
-      0,
-    );
-
-    final end = DateTime(
-      selectedRange!.end.year,
-      selectedRange!.end.month,
-      selectedRange!.end.day,
-      23,
-      59,
-      59,
-    );
-
     return widget.sales.where((sale) {
-      return sale.dateTime.isAtSameMomentAs(start) ||
-          sale.dateTime.isAtSameMomentAs(end) ||
-          (sale.dateTime.isAfter(start) && sale.dateTime.isBefore(end));
+      return sale.dateTime.isAfter(
+            selectedRange!.start.subtract(const Duration(days: 1)),
+          ) &&
+          sale.dateTime.isBefore(
+            selectedRange!.end.add(const Duration(days: 1)),
+          );
     }).toList();
   }
 
@@ -910,8 +897,8 @@ class _SalesReportPageState extends State<SalesReportPage> {
                 top: MediaQuery.of(context).padding.top + 8,
                 left: 12,
                 child: _modernCircleButton(
-                  customIcon: Icon(
-                    Icons.arrow_back,
+                  customIcon: HugeIcon(
+                    icon: HugeIcons.strokeRoundedArrowLeft04,
                     color: Colors.white,
                     size: 30,
                   ),
@@ -1148,22 +1135,6 @@ class _SalesReportPageState extends State<SalesReportPage> {
     final paid = transactions.fold(0.0, (sum, s) => sum + s.amount);
     final balance = total - paid;
     final paidPercentage = total == 0 ? 0 : ((paid / total) * 100).round();
-    double percentage = total == 0 ? 0 : (paid / total * 100);
-    double progressValue = total == 0 ? 0 : (paid / total).clamp(0.0, 1.0);
-
-    LinearGradient getProgressGradient(double percentage) {
-      if (percentage <= 20) {
-        return LinearGradient(colors: [Color(0xFFE53935), Color(0xFFD32F2F)]);
-      } else if (percentage <= 50) {
-        return LinearGradient(colors: [Color(0xFFE53935), Color(0xFFFFA726)]);
-      } else if (percentage <= 75) {
-        return LinearGradient(
-          colors: [Color(0xFFFFA726), Color(0xFFFFEB3B), Color(0xFF66BB6A)],
-        );
-      } else {
-        return LinearGradient(colors: [Color(0xFF66BB6A), Color(0xFF2E7D32)]);
-      }
-    }
 
     // Extract name and phone from the customer key
     final customerName = _getDisplayName(customerKey);
@@ -1229,34 +1200,11 @@ class _SalesReportPageState extends State<SalesReportPage> {
               ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Container(
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[200],
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Stack(
-                    children: [
-                      // Gradient Progress
-                      Container(
-                        width:
-                            MediaQuery.of(context).size.width * progressValue,
-                        decoration: BoxDecoration(
-                          gradient: getProgressGradient(percentage),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                      ),
-
-                      // Progress Indicator (Transparent so ripple/animation still works)
-                      LinearProgressIndicator(
-                        value: progressValue,
-                        backgroundColor: Colors.transparent,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          Colors.transparent,
-                        ),
-                      ),
-                    ],
-                  ),
+                child: LinearProgressIndicator(
+                  value: total == 0 ? 0 : (paid / total).clamp(0.0, 1.0),
+                  backgroundColor: Colors.grey[200],
+                  color: balance > 0 ? Colors.orange : Colors.green,
+                  minHeight: 6,
                 ),
               ),
               const SizedBox(height: 8),

@@ -8,7 +8,6 @@ import 'package:bizmate/models/rental_item.dart';
 import 'package:bizmate/models/rental_sale_model.dart';
 import 'package:bizmate/models/sale.dart';
 import 'package:bizmate/models/user_model.dart';
-import 'package:bizmate/screens/home_page.dart';
 import 'package:bizmate/screens/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -212,53 +211,20 @@ class _CustomSplashScreenState extends State<CustomSplashScreen>
     // We keep the Timer but check persisted login flag before navigating.
     _navTimer = Timer(const Duration(seconds: 3), () async {
       try {
-        final prefs = await SharedPreferences.getInstance();
-        final isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
 
-        final sessionBox = await Hive.openBox('session');
-        final email = sessionBox.get('currentUserEmail');
-
-        Widget nextScreen = const LoginScreen();
-
-        if (isLoggedIn && email != null) {
-          final usersBox = Hive.box<User>('users');
-
-          // Try to find the user
-          User? foundUser = usersBox.values.firstWhere(
-            (u) =>
-                u.email.trim().toLowerCase() ==
-                email.toString().trim().toLowerCase(),
-            orElse:
-                () => User(
-                  name: '',
-                  email: '',
-                  phone: '',
-                  password: '',
-                  role: '',
-                ),
-          );
-
-          // Force non-null user
-          final User loggedUser = foundUser;
-
-          nextScreen = HomePage(
-            userEmail: loggedUser.email,
-            userName: loggedUser.name,
-            userPhone: loggedUser.phone,
-          );
-        }
+        // Choose next screen based on saved state.
+        final Widget nextScreen = LoginScreen();
 
         if (!mounted) return;
-
         Navigator.of(
           context,
         ).pushReplacement(MaterialPageRoute(builder: (_) => nextScreen));
       } catch (e) {
-        debugPrint('Navigation error: $e');
+        debugPrint('Navigation decision failed: $e');
         if (!mounted) return;
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const LoginScreen()),
-        );
+        Navigator.of(
+          context,
+        ).pushReplacement(MaterialPageRoute(builder: (_) => LoginScreen()));
       }
     });
   }

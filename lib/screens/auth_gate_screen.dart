@@ -430,23 +430,42 @@ class _EnterPasscodeScreenState extends State<EnterPasscodeScreen> {
   List<String> _pinDigits = List.filled(6, '');
   bool _obscureAlphanumeric = true;
 
+  late List<FocusNode> _pinFocusNodes;
+
   @override
   void initState() {
     super.initState();
+    _pinFocusNodes = List.generate(6, (_) => FocusNode());
     _loadPasscodeType();
+  }
+
+  @override
+  void dispose() {
+    for (final f in _pinFocusNodes) {
+      f.dispose();
+    }
+    _passcodeController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadPasscodeType() async {
     final typeStr = await widget.secureStorage.read(
       key: 'passcode_type_${widget.user.email}',
     );
+
     if (typeStr == PasscodeType.alphanumeric.name) {
       setState(() => _savedType = PasscodeType.alphanumeric);
     } else {
       final pass = await widget.secureStorage.read(
         key: 'passcode_${widget.user.email}',
       );
-      if (pass != null) _numericLength = pass.length;
+      if (pass != null) {
+        setState(() {
+          _savedType = PasscodeType.numeric;
+          _numericLength = pass.length;
+          _pinDigits = List.filled(6, '');
+        });
+      }
     }
   }
 
@@ -454,21 +473,9 @@ class _EnterPasscodeScreenState extends State<EnterPasscodeScreen> {
     final key = 'passcode_${widget.user.email}';
     final savedPasscode = await widget.secureStorage.read(key: key);
 
-    if (savedPasscode == null || savedPasscode.isEmpty) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder:
-              (_) => PasscodeCreationScreen(
-                user: widget.user,
-                secureStorage: widget.secureStorage,
-              ),
-        ),
-      );
-      return;
-    }
+    if (savedPasscode == null || savedPasscode.isEmpty) return;
 
-    String enteredPass =
+    final enteredPass =
         _savedType == PasscodeType.numeric
             ? _pinDigits.take(_numericLength).join()
             : _passcodeController.text.trim();
@@ -501,23 +508,25 @@ class _EnterPasscodeScreenState extends State<EnterPasscodeScreen> {
   }
 
   Widget _buildPinFields(BoxConstraints constraints) {
-    double totalSpacing = (_numericLength - 1) * 12;
-    double availableWidth = constraints.maxWidth - totalSpacing - 40;
-    double fieldSize = availableWidth / _numericLength;
-    fieldSize = fieldSize > 80 ? 80 : (fieldSize < 50 ? 50 : fieldSize);
+    final spacing = _numericLength == 6 ? 6.0 : 12.0;
+    final availableWidth =
+        constraints.maxWidth - ((_numericLength - 1) * spacing) - 32;
+
+    final double fieldSize =
+        ((availableWidth / _numericLength).clamp(48.0, 72.0)).toDouble();
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 20),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: List.generate(_numericLength, (index) {
-          bool filled = _pinDigits[index].isNotEmpty;
+          final filled = _pinDigits[index].isNotEmpty;
 
           return AnimatedContainer(
-            duration: const Duration(milliseconds: 300),
+            duration: const Duration(milliseconds: 250),
             width: fieldSize,
             height: fieldSize,
-            margin: EdgeInsets.symmetric(horizontal: fieldSize / 13),
+            margin: EdgeInsets.symmetric(horizontal: spacing / 2),
             decoration: BoxDecoration(
               gradient:
                   filled
@@ -536,12 +545,12 @@ class _EnterPasscodeScreenState extends State<EnterPasscodeScreen> {
                     filled
                         ? Colors.white.withOpacity(0.8)
                         : Colors.white.withOpacity(0.3),
-                width: 1.5,
               ),
             ),
             child: TextField(
+              focusNode: _pinFocusNodes[index],
               obscureText: true,
-              obscuringCharacter: '*',
+              obscuringCharacter: '•',
               maxLength: 1,
               textAlign: TextAlign.center,
               keyboardType: TextInputType.number,
@@ -557,11 +566,13 @@ class _EnterPasscodeScreenState extends State<EnterPasscodeScreen> {
               ),
               onChanged: (value) {
                 setState(() => _pinDigits[index] = value);
+
                 if (value.isNotEmpty && index < _numericLength - 1) {
-                  FocusScope.of(context).nextFocus();
+                  _pinFocusNodes[index + 1].requestFocus();
                 }
+
                 if (value.isEmpty && index > 0) {
-                  FocusScope.of(context).previousFocus();
+                  _pinFocusNodes[index - 1].requestFocus();
                 }
               },
             ),
@@ -654,10 +665,9 @@ class _EnterPasscodeScreenState extends State<EnterPasscodeScreen> {
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          const SizedBox(height: 20),
                           if (_errorMessage.isNotEmpty)
                             Padding(
-                              padding: const EdgeInsets.all(8.0),
+                              padding: const EdgeInsets.all(8),
                               child: Text(
                                 _errorMessage,
                                 style: TextStyle(color: Colors.red.shade300),
@@ -669,28 +679,8 @@ class _EnterPasscodeScreenState extends State<EnterPasscodeScreen> {
                                 controller: _passcodeController,
                                 obscureText: _obscureAlphanumeric,
                                 style: const TextStyle(color: Colors.white),
-                                decoration: InputDecoration(
-                                  labelText: "Enter Passcode",
-                                  labelStyle: const TextStyle(
-                                    color: Colors.white70,
-                                  ),
-                                  suffixIcon: IconButton(
-                                    icon: Icon(
-                                      _obscureAlphanumeric
-                                          ? Icons.visibility
-                                          : Icons.visibility_off,
-                                      color: Colors.white70,
-                                    ),
-                                    onPressed:
-                                        () => setState(
-                                          () =>
-                                              _obscureAlphanumeric =
-                                                  !_obscureAlphanumeric,
-                                        ),
-                                  ),
-                                ),
                               ),
-                          const SizedBox(height: 40),
+                          const SizedBox(height: 30),
                           ElevatedButton(
                             onPressed: _verifyPasscode,
                             style: ElevatedButton.styleFrom(

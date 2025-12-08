@@ -37,6 +37,7 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
   final phoneController = TextEditingController();
   final discountPercentController = TextEditingController();
   final discountAmountController = TextEditingController();
+  bool get _hasCustomers => customerList.isNotEmpty;
 
   DateTime? fromDateTime;
   DateTime? toDateTime;
@@ -72,6 +73,19 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
     'IGST@28.0%',
   ];
 
+  void _handleCustomerFieldTap() {
+    if (!_hasCustomers) {
+      AppSnackBar.showWarning(
+        context,
+        message: 'No customers found. Please add a customer first.',
+        duration: const Duration(seconds: 2),
+      );
+      return; // ✅ stop here
+    }
+
+    showCustomerPicker(); // ✅ open picker only when customers exist
+  }
+
   @override
   void initState() {
     super.initState();
@@ -89,6 +103,14 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
   }
 
   void showCustomerPicker() {
+    if (!_hasCustomers) {
+      AppSnackBar.showWarning(
+        context,
+        message: 'No customers found. Please add a customer first.',
+        duration: const Duration(seconds: 2),
+      );
+      return;
+    }
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -685,7 +707,13 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
             color: Colors.white.withOpacity(0.8),
             fontWeight: FontWeight.w600,
           ),
-          prefixIcon: Icon(icon, color: Colors.white.withOpacity(0.8)),
+          prefixIcon: Icon(
+            icon,
+            color:
+                _hasCustomers
+                    ? Colors.white.withOpacity(0.8)
+                    : Colors.white.withOpacity(0.4),
+          ),
           suffixText: suffixText,
           prefixText: prefixText,
           border: InputBorder.none,
@@ -1396,9 +1424,8 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
                                       value == null || value.trim().isEmpty
                                           ? "Please enter customer name"
                                           : null,
-                              // ⭐ NEW: Auto-capitalize first letter
                               keyboardType: TextInputType.name,
-                              onTap: showCustomerPicker, // keep existing
+                              onTap: _handleCustomerFieldTap,
                             ),
                             _buildGlassTextField(
                               label: "Phone Number",

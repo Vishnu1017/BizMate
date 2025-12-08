@@ -337,7 +337,7 @@ class _CalendarPageState extends State<CalendarPage> {
 
                               if (event is Sale) {
                                 return Padding(
-                                  padding: EdgeInsets.only(bottom: 14 * scale),
+                                  padding: EdgeInsets.only(bottom: 10 * scale),
                                   child: _eventCard(
                                     icon: Icons.shopping_cart_rounded,
                                     title: event.customerName,
@@ -362,7 +362,7 @@ class _CalendarPageState extends State<CalendarPage> {
                                 ).format(event.toDateTime);
 
                                 return Padding(
-                                  padding: EdgeInsets.only(bottom: 14 * scale),
+                                  padding: EdgeInsets.only(bottom: 10 * scale),
                                   child: _eventCard(
                                     icon: Icons.photo_camera_rounded,
                                     title: event.customerName,
@@ -449,11 +449,11 @@ class _CalendarPageState extends State<CalendarPage> {
           children: [
             // Icon
             CircleAvatar(
-              radius: 22,
+              radius: 18 * scale, // 👈 avatar size (diameter = 44)
               backgroundColor: color.withOpacity(0.12),
-              child: Icon(icon, color: color),
+              child: Icon(icon, color: color, size: 18 * scale),
             ),
-            const SizedBox(width: 14),
+            const SizedBox(width: 12),
 
             // Texts
             Expanded(
@@ -464,8 +464,8 @@ class _CalendarPageState extends State<CalendarPage> {
                     title,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 16,
+                    style: TextStyle(
+                      fontSize: 12 * scale,
                       fontWeight: FontWeight.w700,
                       color: Color(0xFF0F172A),
                     ),
@@ -474,7 +474,7 @@ class _CalendarPageState extends State<CalendarPage> {
                   Text(
                     subtitle,
                     style: TextStyle(
-                      fontSize: 13,
+                      fontSize: 10 * scale,
                       color: Colors.grey.shade700,
                       fontWeight: FontWeight.w500,
                     ),
@@ -498,9 +498,9 @@ class _CalendarPageState extends State<CalendarPage> {
               ),
               child: Text(
                 tag,
-                style: const TextStyle(
+                style: TextStyle(
                   color: Colors.white,
-                  fontSize: 11,
+                  fontSize: 9 * scale,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 0.6,
                 ),
@@ -546,8 +546,8 @@ class _CalendarPageState extends State<CalendarPage> {
     );
   }
 
-  static final TextStyle _timeStyle = TextStyle(
-    fontSize: 12,
+  TextStyle get _timeStyle => TextStyle(
+    fontSize: 9 * scale,
     color: Colors.grey.shade800,
     fontWeight: FontWeight.w500,
   );
