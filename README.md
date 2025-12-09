@@ -98,167 +98,79 @@ flutter build web    # Web
 <h2>📄 License</h2>
 <p>MIT License – see LICENSE file for details.</p>
 
-<style>
-  body {
-    background: #0e0f14;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-      Roboto, sans-serif;
-  }
+<h2>📸 Screenshots</h2>
 
-  .screenshots {
-    max-width: 1200px;
-    margin: auto;
-    padding: 32px 16px;
-    color: #fff;
-  }
-
-  .screenshots h2 {
-    font-size: 28px;
-    margin-bottom: 24px;
-  }
-
-  .section {
-    margin-bottom: 44px;
-  }
-
-  .section-title {
-    font-size: 20px;
-    margin-bottom: 14px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .section-title::after {
-    content: "";
-    flex: 1;
-    height: 1px;
-    background: linear-gradient(
-      to right,
-      rgba(255, 255, 255, 0.5),
-      transparent
-    );
-  }
-
-  .slider {
-    display: flex;
-    gap: 18px;
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    scroll-behavior: smooth;
-    padding-bottom: 12px;
-  }
-
-  .slider::-webkit-scrollbar {
-    display: none;
-  }
-
-  .slide {
-    flex: 0 0 240px;
-    scroll-snap-align: center;
-    background: rgba(255, 255, 255, 0.08);
-    border-radius: 18px;
-    padding: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    backdrop-filter: blur(12px);
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-  }
-
-  .slide:hover {
-    transform: translateY(-8px) scale(1.03);
-    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.85);
-  }
-
-  .slide img {
-    width: 100%;
-    border-radius: 14px;
-    display: block;
-  }
-
-  .slider {
-    cursor: grab;
-  }
-
-  .slider:active {
-    cursor: grabbing;
-  }
-</style>
-
-<div class="screenshots">
-  <h2>📸 Screenshots</h2>
-
+<ul>
   <!-- Splash & Home -->
-  <div class="section">
-    <div class="section-title">🚀 Splash & Home</div>
-    <div class="slider">
-      <div class="slide"><img src="assets/screenshots/SplashScreen.png" /></div>
-      <div class="slide"><img src="assets/screenshots/Home_page.png" /></div>
-      <div class="slide"><img src="assets/screenshots/dashborad.png" /></div>
-    </div>
-  </div>
+  <li><img src="assets/screenshots/SplashScreen.png" width="250" /></li>
+  <li><img src="assets/screenshots/Home_page.png" width="250" /></li>
+  <li><img src="assets/screenshots/dashborad.png" width="250" /></li>
 
   <!-- Items -->
-  <div class="section">
-    <div class="section-title">📦 Items</div>
-    <div class="slider">
-      <div class="slide"><img src="assets/screenshots/add_new_item.png" /></div>
-      <div class="slide"><img src="assets/screenshots/add_new_item1.png" /></div>
-      <div class="slide"><img src="assets/screenshots/add_new_items.png.png" /></div>
-    </div>
-  </div>
+  <li><img src="assets/screenshots/add_new_item.png" width="250" /></li>
+  <li><img src="assets/screenshots/add_new_item1.png" width="250" /></li>
+  <li><img src="assets/screenshots/add_new_items.png.png" width="250" /></li>
 
   <!-- Sales -->
-  <div class="section">
-    <div class="section-title">💰 Sales</div>
-    <div class="slider">
-      <div class="slide"><img src="assets/screenshots/add_new_sale.png" /></div>
-      <div class="slide"><img src="assets/screenshots/add_new_sale1.png" /></div>
-      <div class="slide"><img src="assets/screenshots/add_new_sale2.png" /></div>
-      <div class="slide"><img src="assets/screenshots/edit_sale1.png" /></div>
-      <div class="slide"><img src="assets/screenshots/edit_sale2.png" /></div>
-    </div>
-  </div>
+  <li><img src="assets/screenshots/add_new_sale.png" width="250" /></li>
+  <li><img src="assets/screenshots/add_new_sale1.png" width="250" /></li>
+  <li><img src="assets/screenshots/add_new_sale2.png" width="250" /></li>
+  <li><img src="assets/screenshots/edit_sale1.png" width="250" /></li>
+  <li><img src="assets/screenshots/edit_sale2.png" width="250" /></li>
 
   <!-- Rentals -->
-  <div class="section">
-    <div class="section-title">📷 Rentals</div>
-    <div class="slider">
-      <div class="slide"><img src="assets/screenshots/add_rental_gear.png" /></div>
-      <div class="slide"><img src="assets/screenshots/add_rental_gear1.png" /></div>
-      <div class="slide"><img src="assets/screenshots/add_rental_gear2.png" /></div>
-      <div class="slide"><img src="assets/screenshots/rentak_items.png" /></div>
-      <div class="slide"><img src="assets/screenshots/rental_customer.png" /></div>
-      <div class="slide"><img src="assets/screenshots/rental_order.png" /></div>
-      <div class="slide"><img src="assets/screenshots/rental_sale.png" /></div>
-    </div>
-  </div>
+  <li><img src="assets/screenshots/add_rental_gear.png" width="250" /></li>
+  <li><img src="assets/screenshots/add_rental_gear1.png" width="250" /></li>
+  <li><img src="assets/screenshots/add_rental_gear2.png" width="250" /></li>
+  <li><img src="assets/screenshots/rentak_items.png" width="250" /></li>
+  <li><img src="assets/screenshots/rental_customer.png" width="250" /></li>
+  <li><img src="assets/screenshots/rental_edit.png" width="250" /></li>
+  <li><img src="assets/screenshots/rental_edit1.png" width="250" /></li>
+  <li><img src="assets/screenshots/rental_order.png" width="250" /></li>
+  <li><img src="assets/screenshots/rental_order1.png" width="250" /></li>
+  <li><img src="assets/screenshots/rental_order2.png" width="250" /></li>
+  <li><img src="assets/screenshots/rental_sale.png" width="250" /></li>
+  <li><img src="assets/screenshots/rental_sale1.png" width="250" /></li>
 
-  <!-- Customers -->
-  <div class="section">
-    <div class="section-title">👤 Customers</div>
-    <div class="slider">
-      <div class="slide"><img src="assets/screenshots/customer_page.png" /></div>
-      <div class="slide"><img src="assets/screenshots/customer_whatsapp.png" /></div>
-    </div>
-  </div>
+  <!-- Customer -->
+  <li><img src="assets/screenshots/customer_page.png" width="250" /></li>
+  <li><img src="assets/screenshots/customer_whatsapp.png" width="250" /></li>
 
-  <!-- Booking -->
-  <div class="section">
-    <div class="section-title">📅 Booking & Dates</div>
-    <div class="slider">
-      <div class="slide"><img src="assets/screenshots/booking_calendar.png" /></div>
-      <div class="slide"><img src="assets/screenshots/date selection.png" /></div>
-      <div class="slide"><img src="assets/screenshots/date_selecting_range.png" /></div>
-    </div>
-  </div>
+  <!-- Booking & Dates -->
+  <li><img src="assets/screenshots/booking_calendar.png" width="250" /></li>
+  <li><img src="assets/screenshots/date selection.png" width="250" /></li>
+  <li><img src="assets/screenshots/date_selecting_range.png" width="250" /></li>
 
   <!-- Delivery -->
-  <div class="section">
-    <div class="section-title">🚚 Delivery</div>
-    <div class="slider">
-      <div class="slide"><img src="assets/screenshots/Delviery_tracker1.png" /></div>
-      <div class="slide"><img src="assets/screenshots/Delviery_tracker2.png" /></div>
-    </div>
-  </div>
-</div>
+  <li><img src="assets/screenshots/Delviery_tracker1.png" width="250" /></li>
+  <li><img src="assets/screenshots/Delviery_tracker2.png" width="250" /></li>
+
+  <!-- Package & Payments -->
+  <li><img src="assets/screenshots/package_page.png" width="250" /></li>
+  <li><img src="assets/screenshots/payment_history.png" width="250" /></li>
+
+  <!-- Profile -->
+  <li><img src="assets/screenshots/profile_page1.png" width="250" /></li>
+  <li><img src="assets/screenshots/profile_page2.png" width="250" /></li>
+  <li><img src="assets/screenshots/profile_page_editing1.png" width="250" /></li>
+  <li><img src="assets/screenshots/profile_page_editing2.png" width="250" /></li>
+  <li><img src="assets/screenshots/profile_page_editing3.png" width="250" /></li>
+
+  <!-- Passcode -->
+  <li><img src="assets/screenshots/passcode_in_profile_page.png" width="250" /></li>
+  <li><img src="assets/screenshots/passcode_in_profile_page1.png" width="250" /></li>
+  <li><img src="assets/screenshots/passcode_in_profile_page2.png" width="250" /></li>
+  <li><img src="assets/screenshots/passcode_in_profile_page3.png" width="250" /></li>
+
+  <!-- View & Select -->
+  <li><img src="assets/screenshots/select_products.png" width="250" /></li>
+  <li><img src="assets/screenshots/view_details.png" width="250" /></li>
+  <li><img src="assets/screenshots/view_details1.png" width="250" /></li>
+
+  <!-- Misc -->
+  <li><img src="assets/screenshots/delete_pop.png" width="250" /></li>
+  <li><img src="assets/screenshots/complete_page.png" width="250" /></li>
+  <li><img src="assets/screenshots/complete_page1.png" width="250" /></li>
+  <li><img src="assets/screenshots/camera_rental_page.png" width="250" /></li>
+
+</ul>
