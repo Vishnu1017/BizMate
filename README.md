@@ -190,7 +190,6 @@ flutter build web    # Web
 
   <!-- Splash & Home -->
   <div class="section">
-    <div class="section-title">🚀 Splash & Home</div>
     <div class="slider">
       <div class="slide"><img src="assets/screenshots/SplashScreen.png"width="250" /></div>
       <div class="slide"><img src="assets/screenshots/Home_page.png" width="250"/></div>
@@ -200,7 +199,6 @@ flutter build web    # Web
 
   <!-- Items -->
   <div class="section">
-    <div class="section-title">📦 Items</div>
     <div class="slider">
       <div class="slide"><img src="assets/screenshots/add_new_item.png" width="250"/></div>
       <div class="slide"><img src="assets/screenshots/add_new_item1.png" width="250"/></div>
@@ -210,7 +208,6 @@ flutter build web    # Web
 
   <!-- Sales -->
   <div class="section">
-    <div class="section-title">💰 Sales</div>
     <div class="slider">
       <div class="slide"><img src="assets/screenshots/add_new_sale.png" width="250"/></div>
       <div class="slide"><img src="assets/screenshots/add_new_sale1.png" width="250"/></div>
@@ -222,7 +219,6 @@ flutter build web    # Web
 
   <!-- Rentals -->
   <div class="section">
-    <div class="section-title">📷 Rentals</div>
     <div class="slider">
       <div class="slide"><img src="assets/screenshots/add_rental_gear.png" width="250"/></div>
       <div class="slide"><img src="assets/screenshots/add_rental_gear1.png" width="250"/></div>
@@ -236,7 +232,6 @@ flutter build web    # Web
 
   <!-- Customers -->
   <div class="section">
-    <div class="section-title">👤 Customers</div>
     <div class="slider">
       <div class="slide"><img src="assets/screenshots/customer_page.png"width="250" /></div>
       <div class="slide"><img src="assets/screenshots/customer_whatsapp.png" width="250"/></div>
@@ -245,7 +240,6 @@ flutter build web    # Web
 
   <!-- Booking -->
   <div class="section">
-    <div class="section-title">📅 Booking & Dates</div>
     <div class="slider">
       <div class="slide"><img src="assets/screenshots/booking_calendar.png" width="250"/></div>
       <div class="slide"><img src="assets/screenshots/date selection.png" width="250"/></div>
@@ -255,7 +249,6 @@ flutter build web    # Web
 
   <!-- Delivery -->
   <div class="section">
-    <div class="section-title">🚚 Delivery</div>
     <div class="slider">
       <div class="slide"><img src="assets/screenshots/Delviery_tracker1.png"width="250"/></div>
       <div class="slide"><img src="assets/screenshots/Delviery_tracker2.png" width="250"/></div>
