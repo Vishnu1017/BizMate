@@ -23,7 +23,6 @@ class AuthGateScreen extends StatelessWidget {
     required this.userEmail,
   });
 
-  // ✅ NEW: helper to check if passcode is enabled
   Future<bool> _isPasscodeEnabled(String email) async {
     final pass = await _storage.read(key: "passcode_$email");
     return pass != null && pass.isNotEmpty;
@@ -32,11 +31,9 @@ class AuthGateScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Future.microtask(() async {
-      // NEW LOGIC – respects disable switch
       final isEnabled = await _isPasscodeEnabled(user.email);
 
       if (!isEnabled) {
-        // 🔥 Passcode disabled → skip AuthGate → go to main home
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
@@ -51,7 +48,6 @@ class AuthGateScreen extends StatelessWidget {
         return;
       }
 
-      // OLD LOGIC – unchanged
       final key = "passcode_${user.email}";
       final savedPasscode = await _storage.read(key: key);
 
@@ -76,8 +72,163 @@ class AuthGateScreen extends StatelessWidget {
     });
 
     return Scaffold(
-      backgroundColor: Colors.blue.shade900,
-      body: const Center(child: CircularProgressIndicator(color: Colors.white)),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFFF5F7FA), Color(0xFFE4E7EB), Color(0xFFD1D5DB)],
+          ),
+        ),
+        child: Stack(
+          children: [
+            // Background elements
+            Positioned(
+              top: -50,
+              right: -50,
+              child: Container(
+                width: 200,
+                height: 200,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    colors: [
+                      Color(0xFF667EEA).withOpacity(0.1),
+                      Color(0xFF764BA2).withOpacity(0.1),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: -100,
+              left: -50,
+              child: Container(
+                width: 300,
+                height: 300,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    colors: [
+                      Color(0xFFF093FB).withOpacity(0.1),
+                      Color(0xFFF5576C).withOpacity(0.1),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+            Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Glass morphism card
+                  Container(
+                    width: 140,
+                    height: 140,
+                    margin: const EdgeInsets.only(bottom: 40),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.white.withOpacity(0.8),
+                          Colors.white.withOpacity(0.4),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 30,
+                          offset: Offset(10, 10),
+                        ),
+                        BoxShadow(
+                          color: Colors.white.withOpacity(0.7),
+                          blurRadius: 30,
+                          offset: Offset(-10, -10),
+                        ),
+                      ],
+                    ),
+                    child: Center(
+                      child: Container(
+                        width: 100,
+                        height: 100,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: LinearGradient(
+                            colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Color(0xFF667EEA).withOpacity(0.4),
+                              blurRadius: 20,
+                              spreadRadius: 2,
+                            ),
+                          ],
+                        ),
+                        child: Icon(
+                          Icons.shield_outlined,
+                          size: 48,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  Text(
+                    "Secure Access",
+                    style: TextStyle(
+                      color: Color(0xFF334155),
+                      fontSize: 32,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                  SizedBox(height: 10),
+                  Text(
+                    "Verifying your identity",
+                    style: TextStyle(
+                      color: Color(0xFF64748B),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  SizedBox(height: 40),
+
+                  // Modern loading indicator
+                  Container(
+                    width: 80,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(2),
+                      color: Color(0xFFE2E8F0),
+                    ),
+                    child: Stack(
+                      children: [
+                        AnimatedContainer(
+                          duration: Duration(milliseconds: 1500),
+                          curve: Curves.easeInOut,
+                          width: 80,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(2),
+                            gradient: LinearGradient(
+                              colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -100,12 +251,33 @@ class PasscodeCreationScreen extends StatefulWidget {
   State<PasscodeCreationScreen> createState() => _PasscodeCreationScreenState();
 }
 
-class _PasscodeCreationScreenState extends State<PasscodeCreationScreen> {
+class _PasscodeCreationScreenState extends State<PasscodeCreationScreen>
+    with SingleTickerProviderStateMixin {
   PasscodeType _selectedType = PasscodeType.numeric;
   int _numericLength = 4;
   final TextEditingController _alphanumericController = TextEditingController();
   List<String> _pinDigits = List.filled(6, '');
   bool _obscureAlphanumeric = true;
+  late AnimationController _animationController;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    )..repeat(reverse: true);
+    _scaleAnimation = Tween<double>(begin: 0.98, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
 
   Future<void> _savePasscode() async {
     String passcode;
@@ -164,112 +336,207 @@ class _PasscodeCreationScreenState extends State<PasscodeCreationScreen> {
   }
 
   Widget _buildAnimatedPinFields(BoxConstraints constraints) {
-    double totalSpacing = (_numericLength - 1) * 12;
-    double availableWidth = constraints.maxWidth - totalSpacing - 40;
-    double fieldSize = availableWidth / _numericLength;
-    fieldSize = fieldSize > 80 ? 80 : (fieldSize < 50 ? 50 : fieldSize);
+    final spacing = _numericLength == 6 ? 10.0 : 16.0;
+
+    final maxWidth = constraints.maxWidth;
+    final availableWidth = maxWidth - ((_numericLength - 1) * spacing) - 24;
+
+    final double fieldSize = (availableWidth / _numericLength).clamp(
+      52.0,
+      70.0,
+    );
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 20),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: List.generate(_numericLength, (index) {
-          bool isFilled = _pinDigits[index].isNotEmpty;
+      padding: const EdgeInsets.symmetric(vertical: 30),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        physics: const NeverScrollableScrollPhysics(),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: List.generate(_numericLength, (index) {
+            final isFilled = _pinDigits[index].isNotEmpty;
 
-          return AnimatedContainer(
-            duration: const Duration(milliseconds: 400),
-            width: fieldSize,
-            height: fieldSize,
-            margin: EdgeInsets.symmetric(horizontal: fieldSize / 22),
-            decoration: BoxDecoration(
-              gradient:
-                  isFilled
-                      ? LinearGradient(
-                        colors: [Colors.blue.shade400, Colors.blue.shade700],
-                      )
-                      : LinearGradient(
-                        colors: [
-                          Colors.white.withOpacity(0.1),
-                          Colors.white.withOpacity(0.05),
-                        ],
-                      ),
-              borderRadius: BorderRadius.circular(fieldSize / 5),
-              border: Border.all(
-                color:
+            return AnimatedContainer(
+              duration: const Duration(milliseconds: 250),
+              width: fieldSize,
+              height: fieldSize,
+              margin: EdgeInsets.symmetric(horizontal: spacing / 2),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color:
+                        isFilled
+                            ? const Color(0xFF667EEA).withOpacity(0.35)
+                            : Colors.grey.shade300,
+                    blurRadius: isFilled ? 18 : 14,
+                    offset: isFilled ? const Offset(0, 10) : const Offset(8, 8),
+                  ),
+                  const BoxShadow(
+                    color: Colors.white,
+                    blurRadius: 14,
+                    offset: Offset(-8, -8),
+                  ),
+                ],
+                gradient:
                     isFilled
-                        ? Colors.white.withOpacity(0.8)
-                        : Colors.white.withOpacity(0.3),
+                        ? const LinearGradient(
+                          colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
+                        )
+                        : null,
               ),
-            ),
-            child: Center(
-              child: TextField(
-                obscureText: true,
-                obscuringCharacter: '•',
-                maxLength: 1,
-                textAlign: TextAlign.center,
-                keyboardType: TextInputType.number,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: fieldSize / 2.2,
-                  fontWeight: FontWeight.w700,
+              child: Center(
+                child: TextField(
+                  maxLength: 1,
+                  obscureText: true,
+                  obscuringCharacter: '•',
+                  textAlign: TextAlign.center,
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  style: TextStyle(
+                    color: isFilled ? Colors.white : const Color(0xFF334155),
+                    fontSize: fieldSize / 2.6,
+                    fontWeight: FontWeight.w700,
+                  ),
+                  decoration: const InputDecoration(
+                    counterText: "",
+                    border: InputBorder.none,
+                  ),
+                  onChanged: (value) {
+                    setState(() => _pinDigits[index] = value);
+
+                    if (value.isNotEmpty && index < _numericLength - 1) {
+                      FocusScope.of(context).nextFocus();
+                    } else if (value.isEmpty && index > 0) {
+                      FocusScope.of(context).previousFocus();
+                    }
+                  },
                 ),
-                decoration: const InputDecoration(
-                  counterText: "",
-                  border: InputBorder.none,
-                ),
-                onChanged: (value) {
-                  setState(() => _pinDigits[index] = value);
-                  if (value.isNotEmpty && index < _numericLength - 1) {
-                    FocusScope.of(context).nextFocus();
-                  }
-                  if (value.isEmpty && index > 0) {
-                    FocusScope.of(context).previousFocus();
-                  }
-                },
               ),
-            ),
-          );
-        }),
+            );
+          }),
+        ),
       ),
     );
   }
 
   Widget _buildTypeSelector() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              _buildTypeOption("Numeric", Icons.numbers, PasscodeType.numeric),
-              _buildTypeOption(
-                "Alphanumeric",
-                Icons.text_fields,
-                PasscodeType.alphanumeric,
-              ),
-            ],
-          ),
-          if (_selectedType == PasscodeType.numeric) ...[
-            const SizedBox(height: 16),
-            DropdownButton<int>(
-              value: _numericLength,
-              dropdownColor: Colors.blue.shade800,
-              style: const TextStyle(color: Colors.white),
-              items: const [
-                DropdownMenuItem(value: 4, child: Text("4 Digits")),
-                DropdownMenuItem(value: 6, child: Text("6 Digits")),
+    return AnimatedBuilder(
+      animation: _scaleAnimation,
+      builder: (context, child) {
+        return Transform.scale(
+          scale: _scaleAnimation.value,
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.shade300,
+                  blurRadius: 30,
+                  offset: Offset(15, 15),
+                ),
+                BoxShadow(
+                  color: Colors.white,
+                  blurRadius: 30,
+                  offset: Offset(-15, -15),
+                ),
               ],
-              onChanged: (val) => setState(() => _numericLength = val!),
             ),
-          ],
-        ],
-      ),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _buildTypeOption(
+                      "Numeric",
+                      Icons.pin_outlined,
+                      PasscodeType.numeric,
+                    ),
+                    _buildTypeOption(
+                      "Custom",
+                      Icons.text_fields_outlined,
+                      PasscodeType.alphanumeric,
+                    ),
+                  ],
+                ),
+                if (_selectedType == PasscodeType.numeric) ...[
+                  const SizedBox(height: 20),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 12,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Color(0xFFF8FAFC),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Color(0xFFE2E8F0), width: 1.5),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.format_list_numbered_rounded,
+                          color: Color(0xFF667EEA),
+                          size: 20,
+                        ),
+                        SizedBox(width: 12),
+                        Text(
+                          "Length:",
+                          style: TextStyle(
+                            color: Color(0xFF64748B),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        SizedBox(width: 12),
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Color(0xFF667EEA).withOpacity(0.1),
+                                Color(0xFF764BA2).withOpacity(0.1),
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: DropdownButton<int>(
+                            value: _numericLength,
+                            underline: Container(),
+                            dropdownColor: Colors.white,
+                            style: TextStyle(
+                              color: Color(0xFF334155),
+                              fontWeight: FontWeight.w600,
+                            ),
+                            items: const [
+                              DropdownMenuItem(
+                                value: 4,
+                                child: Text("4 Digits"),
+                              ),
+                              DropdownMenuItem(
+                                value: 6,
+                                child: Text("6 Digits"),
+                              ),
+                            ],
+                            onChanged:
+                                (val) => setState(() => _numericLength = val!),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -278,35 +545,56 @@ class _PasscodeCreationScreenState extends State<PasscodeCreationScreen> {
 
     return GestureDetector(
       onTap: () => setState(() => _selectedType = type),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
         decoration: BoxDecoration(
           gradient:
               isSelected
                   ? LinearGradient(
-                    colors: [Colors.blue.shade400, Colors.blue.shade600],
+                    colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   )
-                  : LinearGradient(
-                    colors: [
-                      Colors.white.withOpacity(0.05),
-                      Colors.white.withOpacity(0.02),
-                    ],
-                  ),
-          borderRadius: BorderRadius.circular(15),
-          border: Border.all(
-            color: isSelected ? Colors.white : Colors.transparent,
-            width: 1.5,
-          ),
+                  : LinearGradient(colors: [Colors.white, Color(0xFFF8FAFC)]),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow:
+              isSelected
+                  ? [
+                    BoxShadow(
+                      color: Color(0xFF667EEA).withOpacity(0.4),
+                      blurRadius: 20,
+                      offset: Offset(0, 10),
+                    ),
+                  ]
+                  : [
+                    BoxShadow(
+                      color: Colors.grey.shade300,
+                      blurRadius: 15,
+                      offset: Offset(8, 8),
+                    ),
+                    BoxShadow(
+                      color: Colors.white,
+                      blurRadius: 15,
+                      offset: Offset(-8, -8),
+                    ),
+                  ],
         ),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: Colors.white, size: 24),
-            const SizedBox(height: 8),
+            Icon(
+              icon,
+              color: isSelected ? Colors.white : Color(0xFF667EEA),
+              size: 28,
+            ),
+            const SizedBox(height: 12),
             Text(
               title,
               style: TextStyle(
-                color: Colors.white,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                color: isSelected ? Colors.white : Color(0xFF334155),
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
               ),
             ),
           ],
@@ -318,83 +606,194 @@ class _PasscodeCreationScreenState extends State<PasscodeCreationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.blue.shade900,
-      body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 420),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: LayoutBuilder(
-                builder:
-                    (context, constraints) => SingleChildScrollView(
-                      child: Column(
-                        children: [
-                          const SizedBox(height: 40),
-                          const Icon(
-                            Icons.fingerprint,
-                            size: 60,
-                            color: Colors.white,
-                          ),
-                          const SizedBox(height: 20),
-                          const Text(
-                            "Create Your Passcode",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 28,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-                          _buildTypeSelector(),
-                          const SizedBox(height: 20),
-                          _selectedType == PasscodeType.numeric
-                              ? _buildAnimatedPinFields(constraints)
-                              : TextField(
-                                controller: _alphanumericController,
-                                obscureText: _obscureAlphanumeric,
-                                style: const TextStyle(color: Colors.white),
-                                decoration: InputDecoration(
-                                  labelText: "Enter Passcode",
-                                  labelStyle: const TextStyle(
-                                    color: Colors.white70,
-                                  ),
-                                  suffixIcon: IconButton(
-                                    icon: Icon(
-                                      _obscureAlphanumeric
-                                          ? Icons.visibility
-                                          : Icons.visibility_off,
-                                      color: Colors.white70,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFFF5F7FA), Color(0xFFE4E7EB), Color(0xFFD1D5DB)],
+          ),
+        ),
+        child: SafeArea(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 450),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: LayoutBuilder(
+                  builder:
+                      (context, constraints) => SingleChildScrollView(
+                        child: Column(
+                          children: [
+                            const SizedBox(height: 40),
+                            // Header
+                            Column(
+                              children: [
+                                Container(
+                                  width: 80,
+                                  height: 80,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        Color(0xFF667EEA),
+                                        Color(0xFF764BA2),
+                                      ],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
                                     ),
-                                    onPressed:
-                                        () => setState(
-                                          () =>
-                                              _obscureAlphanumeric =
-                                                  !_obscureAlphanumeric,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Color(
+                                          0xFF667EEA,
+                                        ).withOpacity(0.4),
+                                        blurRadius: 30,
+                                        offset: Offset(0, 20),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Icon(
+                                    Icons.key_outlined,
+                                    size: 40,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                const SizedBox(height: 24),
+                                Text(
+                                  "Setup Passcode",
+                                  style: TextStyle(
+                                    color: Color(0xFF334155),
+                                    fontSize: 28,
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: -0.5,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  "Create a secure passcode for ${widget.user.email.split('@')[0]}",
+                                  style: TextStyle(
+                                    color: Color(0xFF64748B),
+                                    fontSize: 14,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 40),
+                            _buildTypeSelector(),
+                            const SizedBox(height: 40),
+                            _selectedType == PasscodeType.numeric
+                                ? _buildAnimatedPinFields(constraints)
+                                : Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 20,
+                                    vertical: 5,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(20),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.grey.shade300,
+                                        blurRadius: 20,
+                                        offset: Offset(10, 10),
+                                      ),
+                                      BoxShadow(
+                                        color: Colors.white,
+                                        blurRadius: 20,
+                                        offset: Offset(-10, -10),
+                                      ),
+                                    ],
+                                  ),
+                                  child: TextField(
+                                    controller: _alphanumericController,
+                                    obscureText: _obscureAlphanumeric,
+                                    style: TextStyle(
+                                      color: Color(0xFF334155),
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                    decoration: InputDecoration(
+                                      hintText: "Enter custom passcode",
+                                      hintStyle: TextStyle(
+                                        color: Color(0xFF94A3B8),
+                                      ),
+                                      border: InputBorder.none,
+                                      suffixIcon: IconButton(
+                                        icon: Icon(
+                                          _obscureAlphanumeric
+                                              ? Icons.visibility_outlined
+                                              : Icons.visibility_off_outlined,
+                                          color: Color(0xFF667EEA),
                                         ),
+                                        onPressed:
+                                            () => setState(
+                                              () =>
+                                                  _obscureAlphanumeric =
+                                                      !_obscureAlphanumeric,
+                                            ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                            const SizedBox(height: 50),
+                            // Save button
+                            MouseRegion(
+                              onHover: (_) {},
+                              child: GestureDetector(
+                                onTap: _savePasscode,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 18,
+                                    horizontal: 40,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        Color(0xFF667EEA),
+                                        Color(0xFF764BA2),
+                                      ],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    ),
+                                    borderRadius: BorderRadius.circular(20),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Color(
+                                          0xFF667EEA,
+                                        ).withOpacity(0.4),
+                                        blurRadius: 30,
+                                        offset: Offset(0, 20),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.check_circle_outline,
+                                        color: Colors.white,
+                                        size: 22,
+                                      ),
+                                      SizedBox(width: 12),
+                                      Text(
+                                        "Save Passcode",
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w700,
+                                          letterSpacing: 0.5,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ),
-                          const SizedBox(height: 30),
-                          ElevatedButton(
-                            onPressed: _savePasscode,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.white,
-                              foregroundColor: Colors.blue.shade900,
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 16,
-                                horizontal: 40,
-                              ),
                             ),
-                            child: const Text(
-                              "Save Passcode",
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                          const SizedBox(height: 40),
-                        ],
+                            const SizedBox(height: 60),
+                          ],
+                        ),
                       ),
-                    ),
+                ),
               ),
             ),
           ),
@@ -422,13 +821,16 @@ class EnterPasscodeScreen extends StatefulWidget {
   State<EnterPasscodeScreen> createState() => _EnterPasscodeScreenState();
 }
 
-class _EnterPasscodeScreenState extends State<EnterPasscodeScreen> {
+class _EnterPasscodeScreenState extends State<EnterPasscodeScreen>
+    with SingleTickerProviderStateMixin {
   final TextEditingController _passcodeController = TextEditingController();
   String _errorMessage = '';
   PasscodeType _savedType = PasscodeType.numeric;
   int _numericLength = 4;
   List<String> _pinDigits = List.filled(6, '');
   bool _obscureAlphanumeric = true;
+  late AnimationController _shakeController;
+  late Animation<double> _shakeAnimation;
 
   late List<FocusNode> _pinFocusNodes;
 
@@ -437,10 +839,19 @@ class _EnterPasscodeScreenState extends State<EnterPasscodeScreen> {
     super.initState();
     _pinFocusNodes = List.generate(6, (_) => FocusNode());
     _loadPasscodeType();
+
+    _shakeController = AnimationController(
+      duration: const Duration(milliseconds: 600),
+      vsync: this,
+    );
+    _shakeAnimation = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(parent: _shakeController, curve: Curves.elasticOut),
+    );
   }
 
   @override
   void dispose() {
+    _shakeController.dispose();
     for (final f in _pinFocusNodes) {
       f.dispose();
     }
@@ -485,6 +896,7 @@ class _EnterPasscodeScreenState extends State<EnterPasscodeScreen> {
         _errorMessage =
             "Passcode must be ${savedPasscode.length} characters long";
       });
+      _shakeController.forward(from: 0);
       return;
     }
 
@@ -504,81 +916,121 @@ class _EnterPasscodeScreenState extends State<EnterPasscodeScreen> {
       setState(() {
         _errorMessage = 'Incorrect passcode';
       });
+      _shakeController.forward(from: 0);
     }
   }
 
   Widget _buildPinFields(BoxConstraints constraints) {
-    final spacing = _numericLength == 6 ? 6.0 : 12.0;
-    final availableWidth =
-        constraints.maxWidth - ((_numericLength - 1) * spacing) - 32;
+    final spacing = _numericLength == 6 ? 10.0 : 16.0;
 
-    final double fieldSize =
-        ((availableWidth / _numericLength).clamp(48.0, 72.0)).toDouble();
+    final maxWidth = constraints.maxWidth;
+    final availableWidth = maxWidth - ((_numericLength - 1) * spacing) - 24;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 20),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: List.generate(_numericLength, (index) {
-          final filled = _pinDigits[index].isNotEmpty;
+    final double fieldSize = (availableWidth / _numericLength).clamp(
+      52.0,
+      70.0,
+    );
 
-          return AnimatedContainer(
-            duration: const Duration(milliseconds: 250),
-            width: fieldSize,
-            height: fieldSize,
-            margin: EdgeInsets.symmetric(horizontal: spacing / 2),
-            decoration: BoxDecoration(
-              gradient:
-                  filled
-                      ? LinearGradient(
-                        colors: [Colors.blue.shade400, Colors.blue.shade700],
-                      )
-                      : LinearGradient(
-                        colors: [
-                          Colors.white.withOpacity(0.1),
-                          Colors.white.withOpacity(0.05),
+    return AnimatedBuilder(
+      animation: _shakeAnimation,
+      builder: (context, child) {
+        final offset =
+            _errorMessage.isNotEmpty
+                ? Offset(
+                  16 *
+                      _shakeAnimation.value *
+                      (_shakeAnimation.value - 0.5).sign,
+                  0,
+                )
+                : Offset.zero;
+
+        return Transform.translate(
+          offset: offset,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 40),
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              physics: const NeverScrollableScrollPhysics(),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(_numericLength, (index) {
+                  final filled = _pinDigits[index].isNotEmpty;
+
+                  return AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    width: fieldSize,
+                    height: fieldSize,
+                    margin: EdgeInsets.symmetric(horizontal: spacing / 2),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color:
+                              filled
+                                  ? const Color(0xFF667EEA).withOpacity(0.35)
+                                  : Colors.grey.shade300,
+                          blurRadius: filled ? 20 : 14,
+                          offset:
+                              filled ? const Offset(0, 10) : const Offset(8, 8),
+                        ),
+                        const BoxShadow(
+                          color: Colors.white,
+                          blurRadius: 14,
+                          offset: Offset(-8, -8),
+                        ),
+                      ],
+                      gradient:
+                          filled
+                              ? const LinearGradient(
+                                colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
+                              )
+                              : null,
+                    ),
+                    child: Center(
+                      child: TextField(
+                        focusNode: _pinFocusNodes[index],
+                        maxLength: 1,
+                        obscureText: true,
+                        obscuringCharacter: '•',
+                        textAlign: TextAlign.center,
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
                         ],
+                        style: TextStyle(
+                          color:
+                              filled ? Colors.white : const Color(0xFF334155),
+                          fontSize: fieldSize / 2.6,
+                          fontWeight: FontWeight.w700,
+                        ),
+                        decoration: const InputDecoration(
+                          counterText: "",
+                          border: InputBorder.none,
+                        ),
+                        onChanged: (value) {
+                          setState(() => _pinDigits[index] = value);
+
+                          if (value.isNotEmpty && index < _numericLength - 1) {
+                            _pinFocusNodes[index + 1].requestFocus();
+                          } else if (value.isEmpty && index > 0) {
+                            _pinFocusNodes[index - 1].requestFocus();
+                          }
+
+                          if (_errorMessage.isNotEmpty) {
+                            setState(() => _errorMessage = '');
+                          }
+                        },
                       ),
-              borderRadius: BorderRadius.circular(fieldSize / 5),
-              border: Border.all(
-                color:
-                    filled
-                        ? Colors.white.withOpacity(0.8)
-                        : Colors.white.withOpacity(0.3),
+                    ),
+                  );
+                }),
               ),
             ),
-            child: TextField(
-              focusNode: _pinFocusNodes[index],
-              obscureText: true,
-              obscuringCharacter: '•',
-              maxLength: 1,
-              textAlign: TextAlign.center,
-              keyboardType: TextInputType.number,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: fieldSize / 2.2,
-                fontWeight: FontWeight.w700,
-              ),
-              decoration: const InputDecoration(
-                counterText: "",
-                border: InputBorder.none,
-              ),
-              onChanged: (value) {
-                setState(() => _pinDigits[index] = value);
-
-                if (value.isNotEmpty && index < _numericLength - 1) {
-                  _pinFocusNodes[index + 1].requestFocus();
-                }
-
-                if (value.isEmpty && index > 0) {
-                  _pinFocusNodes[index - 1].requestFocus();
-                }
-              },
-            ),
-          );
-        }),
-      ),
+          ),
+        );
+      },
     );
   }
 
@@ -586,51 +1038,145 @@ class _EnterPasscodeScreenState extends State<EnterPasscodeScreen> {
     showDialog(
       context: context,
       builder:
-          (context) => AlertDialog(
-            backgroundColor: Colors.blue.shade800,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-            title: const Text(
-              "Reset Passcode?",
-              style: TextStyle(
+          (context) => Dialog(
+            backgroundColor: Colors.transparent,
+            child: Container(
+              padding: const EdgeInsets.all(32),
+              decoration: BoxDecoration(
                 color: Colors.white,
-                fontWeight: FontWeight.w600,
+                borderRadius: BorderRadius.circular(32),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 50,
+                    offset: Offset(0, 30),
+                  ),
+                ],
               ),
-            ),
-            content: Text(
-              "This will create a new passcode. Your old passcode will be lost.",
-              style: TextStyle(color: Colors.white.withOpacity(0.8)),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text(
-                  "Cancel",
-                  style: TextStyle(color: Colors.white70),
-                ),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                      builder:
-                          (_) => PasscodeCreationScreen(
-                            user: widget.user,
-                            secureStorage: widget.secureStorage,
-                          ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: LinearGradient(
+                        colors: [Color(0xFFF5576C), Color(0xFFF093FB)],
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Color(0xFFF5576C).withOpacity(0.3),
+                          blurRadius: 20,
+                          offset: Offset(0, 10),
+                        ),
+                      ],
                     ),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: Colors.blue.shade900,
-                ),
-                child: const Text("Continue"),
+                    child: Icon(
+                      Icons.warning_amber_rounded,
+                      color: Colors.white,
+                      size: 40,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Text(
+                    "Reset Passcode?",
+                    style: TextStyle(
+                      color: Color(0xFF334155),
+                      fontSize: 24,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    "You'll need to create a new passcode.",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Color(0xFF64748B),
+                      fontSize: 15,
+                      height: 1.5,
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: Color(0xFFE2E8F0),
+                            width: 2,
+                          ),
+                        ),
+                        child: TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 32,
+                              vertical: 14,
+                            ),
+                          ),
+                          child: Text(
+                            "Cancel",
+                            style: TextStyle(
+                              color: Color(0xFF64748B),
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [Color(0xFFF5576C), Color(0xFFF093FB)],
+                          ),
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Color(0xFFF5576C).withOpacity(0.4),
+                              blurRadius: 20,
+                              offset: Offset(0, 10),
+                            ),
+                          ],
+                        ),
+                        child: TextButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder:
+                                    (_) => PasscodeCreationScreen(
+                                      user: widget.user,
+                                      secureStorage: widget.secureStorage,
+                                    ),
+                              ),
+                            );
+                          },
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 32,
+                              vertical: 14,
+                            ),
+                          ),
+                          child: Text(
+                            "Continue",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
     );
   }
@@ -638,75 +1184,270 @@ class _EnterPasscodeScreenState extends State<EnterPasscodeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.blue.shade900,
-      body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 420),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: LayoutBuilder(
-                builder:
-                    (context, constraints) => SingleChildScrollView(
-                      child: Column(
-                        children: [
-                          const SizedBox(height: 40),
-                          const Icon(
-                            Icons.lock_outline,
-                            size: 60,
-                            color: Colors.white,
-                          ),
-                          const SizedBox(height: 20),
-                          const Text(
-                            "Welcome Back",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 28,
-                              fontWeight: FontWeight.bold,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFFF5F7FA), Color(0xFFE4E7EB), Color(0xFFD1D5DB)],
+          ),
+        ),
+        child: SafeArea(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 450),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: LayoutBuilder(
+                  builder:
+                      (context, constraints) => SingleChildScrollView(
+                        child: Column(
+                          children: [
+                            const SizedBox(height: 40),
+                            // Header
+                            Column(
+                              children: [
+                                Container(
+                                  width: 80,
+                                  height: 80,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        Color(0xFF667EEA),
+                                        Color(0xFF764BA2),
+                                      ],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Color(
+                                          0xFF667EEA,
+                                        ).withOpacity(0.4),
+                                        blurRadius: 30,
+                                        offset: Offset(0, 20),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Icon(
+                                    Icons.lock_person_outlined,
+                                    size: 40,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                const SizedBox(height: 24),
+                                Text(
+                                  "Welcome Back",
+                                  style: TextStyle(
+                                    color: Color(0xFF334155),
+                                    fontSize: 28,
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: -0.5,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  widget.user.email.split('@')[0],
+                                  style: TextStyle(
+                                    color: Color(0xFF64748B),
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ),
-                          if (_errorMessage.isNotEmpty)
-                            Padding(
-                              padding: const EdgeInsets.all(8),
-                              child: Text(
-                                _errorMessage,
-                                style: TextStyle(color: Colors.red.shade300),
+
+                            // Error message
+                            if (_errorMessage.isNotEmpty)
+                              Container(
+                                margin: const EdgeInsets.only(
+                                  top: 20,
+                                  bottom: 10,
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                  vertical: 14,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Color(0xFFFEE2E2),
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(
+                                    color: Color(0xFFFECACA),
+                                    width: 1.5,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.error_outline_rounded,
+                                      color: Color(0xFFDC2626),
+                                      size: 20,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Text(
+                                      _errorMessage,
+                                      style: TextStyle(
+                                        color: Color(0xFF991B1B),
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+
+                            const SizedBox(height: 20),
+
+                            // Passcode input
+                            _savedType == PasscodeType.numeric
+                                ? _buildPinFields(constraints)
+                                : Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 20,
+                                    vertical: 5,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(20),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.grey.shade300,
+                                        blurRadius: 20,
+                                        offset: Offset(10, 10),
+                                      ),
+                                      BoxShadow(
+                                        color: Colors.white,
+                                        blurRadius: 20,
+                                        offset: Offset(-10, -10),
+                                      ),
+                                    ],
+                                  ),
+                                  child: TextField(
+                                    controller: _passcodeController,
+                                    obscureText: _obscureAlphanumeric,
+                                    style: TextStyle(
+                                      color: Color(0xFF334155),
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                    decoration: InputDecoration(
+                                      hintText: "Enter passcode",
+                                      hintStyle: TextStyle(
+                                        color: Color(0xFF94A3B8),
+                                      ),
+                                      border: InputBorder.none,
+                                      suffixIcon: IconButton(
+                                        icon: Icon(
+                                          _obscureAlphanumeric
+                                              ? Icons.visibility_outlined
+                                              : Icons.visibility_off_outlined,
+                                          color: Color(0xFF667EEA),
+                                        ),
+                                        onPressed:
+                                            () => setState(
+                                              () =>
+                                                  _obscureAlphanumeric =
+                                                      !_obscureAlphanumeric,
+                                            ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+
+                            const SizedBox(height: 40),
+
+                            // Unlock button
+                            MouseRegion(
+                              onHover: (_) {},
+                              child: GestureDetector(
+                                onTap: _verifyPasscode,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 18,
+                                    horizontal: 40,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        Color(0xFF667EEA),
+                                        Color(0xFF764BA2),
+                                      ],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    ),
+                                    borderRadius: BorderRadius.circular(20),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Color(
+                                          0xFF667EEA,
+                                        ).withOpacity(0.4),
+                                        blurRadius: 30,
+                                        offset: Offset(0, 20),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.lock_open_outlined,
+                                        color: Colors.white,
+                                        size: 22,
+                                      ),
+                                      SizedBox(width: 12),
+                                      Text(
+                                        "Unlock Account",
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w700,
+                                          letterSpacing: 0.5,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               ),
                             ),
-                          _savedType == PasscodeType.numeric
-                              ? _buildPinFields(constraints)
-                              : TextField(
-                                controller: _passcodeController,
-                                obscureText: _obscureAlphanumeric,
-                                style: const TextStyle(color: Colors.white),
+
+                            const SizedBox(height: 24),
+
+                            // Forgot passcode
+                            TextButton(
+                              onPressed: _forgotPasscode,
+                              style: TextButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                  vertical: 12,
+                                ),
                               ),
-                          const SizedBox(height: 30),
-                          ElevatedButton(
-                            onPressed: _verifyPasscode,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.white,
-                              foregroundColor: Colors.blue.shade900,
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 16,
-                                horizontal: 40,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.help_outline_rounded,
+                                    color: Color(0xFF64748B),
+                                    size: 18,
+                                  ),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    "Forgot Passcode?",
+                                    style: TextStyle(
+                                      color: Color(0xFF64748B),
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                            child: const Text(
-                              "Unlock",
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-                          TextButton(
-                            onPressed: _forgotPasscode,
-                            child: const Text(
-                              "Forgot Passcode?",
-                              style: TextStyle(color: Colors.white70),
-                            ),
-                          ),
-                        ],
+
+                            const SizedBox(height: 60),
+                          ],
+                        ),
                       ),
-                    ),
+                ),
               ),
             ),
           ),
