@@ -445,6 +445,7 @@ class SaleOptionsMenu extends StatelessWidget {
   Widget _buildAmountDialog(BuildContext context, double balanceAmount) {
     final screenWidth = MediaQuery.of(context).size.width;
     final maxWidth = screenWidth < 400 ? screenWidth * 0.9 : 400.0;
+
     final controller = TextEditingController(
       text: balanceAmount.toStringAsFixed(2),
     );
@@ -489,6 +490,7 @@ class SaleOptionsMenu extends StatelessWidget {
                     ],
                   ),
                 ),
+
                 // Body
                 Padding(
                   padding: const EdgeInsets.symmetric(
@@ -519,17 +521,24 @@ class SaleOptionsMenu extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 24),
+
+                      /// ✅ ACTIONS
                       Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
+                          /// ✅ CANCEL → JUST CLOSE DIALOG
                           TextButton(
                             child: Text(
                               'Cancel',
                               style: TextStyle(color: Colors.grey[700]),
                             ),
-                            onPressed: () => Navigator.pop(context, null),
+                            onPressed: () {
+                              Navigator.of(context).pop(); // ✅ CLOSE ONLY
+                            },
                           ),
                           const SizedBox(width: 10),
+
+                          /// ✅ GENERATE QR
                           ElevatedButton(
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.deepPurple,
@@ -543,18 +552,23 @@ class SaleOptionsMenu extends StatelessWidget {
                             ),
                             onPressed: () {
                               final input = controller.text.trim();
+
+                              // ❌ EMPTY → close dialog, DO NOTHING
                               if (input.isEmpty) {
-                                Navigator.pop(context, 0.0);
+                                Navigator.of(context).pop();
                                 return;
                               }
 
                               final parsed = double.tryParse(input);
+
+                              // ❌ INVALID or ZERO → close dialog, DO NOTHING
                               if (parsed == null || parsed <= 0) {
-                                Navigator.pop(context, 0.0);
+                                Navigator.of(context).pop();
                                 return;
                               }
 
-                              Navigator.pop(context, parsed);
+                              // ✅ VALID AMOUNT
+                              Navigator.of(context).pop(parsed);
                             },
                             child: const Text(
                               'Generate QR',

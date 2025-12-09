@@ -211,9 +211,7 @@ class PaymentHistoryPage extends StatelessWidget {
                       curve: Curves.easeOut,
                       width: constraints.maxWidth * (paidPercentage / 100),
                       decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [Colors.white, Colors.white.withOpacity(0.8)],
-                        ),
+                        gradient: getProgressGradient(paidPercentage),
                         borderRadius: BorderRadius.circular(4),
                       ),
                     );

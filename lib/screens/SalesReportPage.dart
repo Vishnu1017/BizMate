@@ -47,6 +47,33 @@ class _SalesReportPageState extends State<SalesReportPage> {
 
   // Scroll controller to close overlay on scroll
   final ScrollController _scrollController = ScrollController();
+  LinearGradient getProgressGradient(double percentage) {
+    if (percentage <= 20) {
+      return const LinearGradient(
+        begin: Alignment.centerLeft,
+        end: Alignment.centerRight,
+        colors: [Color(0xFFE53935), Color(0xFFD32F2F)],
+      );
+    } else if (percentage <= 50) {
+      return const LinearGradient(
+        begin: Alignment.centerLeft,
+        end: Alignment.centerRight,
+        colors: [Color(0xFFE53935), Color(0xFFFFA726)],
+      );
+    } else if (percentage <= 75) {
+      return const LinearGradient(
+        begin: Alignment.centerLeft,
+        end: Alignment.centerRight,
+        colors: [Color(0xFFFFA726), Color(0xFFFFEB3B), Color(0xFF66BB6A)],
+      );
+    } else {
+      return const LinearGradient(
+        begin: Alignment.centerLeft,
+        end: Alignment.centerRight,
+        colors: [Color(0xFF66BB6A), Color(0xFF2E7D32)],
+      );
+    }
+  }
 
   @override
   void initState() {
@@ -1200,13 +1227,9 @@ class _SalesReportPageState extends State<SalesReportPage> {
               ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: LinearProgressIndicator(
-                  value: total == 0 ? 0 : (paid / total).clamp(0.0, 1.0),
-                  backgroundColor: Colors.grey[200],
-                  color: balance > 0 ? Colors.orange : Colors.green,
-                  minHeight: 6,
-                ),
+                child: _gradientProgressBar(paid: paid, total: total),
               ),
+
               const SizedBox(height: 8),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -1443,6 +1466,37 @@ class _SalesReportPageState extends State<SalesReportPage> {
                   )
                   : (customChild ?? Icon(icon, color: Colors.white, size: 18)),
         ),
+      ),
+    );
+  }
+
+  Widget _gradientProgressBar({required double paid, required double total}) {
+    final double progress = total == 0 ? 0 : (paid / total).clamp(0.0, 1.0);
+
+    final double percentage = progress * 100;
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(6),
+      child: Stack(
+        children: [
+          // Background
+          Container(height: 6, width: double.infinity, color: Colors.grey[200]),
+
+          // Gradient progress
+          LayoutBuilder(
+            builder: (context, constraints) {
+              return AnimatedContainer(
+                duration: const Duration(milliseconds: 500),
+                curve: Curves.easeOut,
+                height: 6,
+                width: constraints.maxWidth * progress,
+                decoration: BoxDecoration(
+                  gradient: getProgressGradient(percentage),
+                ),
+              );
+            },
+          ),
+        ],
       ),
     );
   }
