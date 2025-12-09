@@ -387,19 +387,11 @@ class _CustomSplashScreenState extends State<CustomSplashScreen>
                       builder: (context, child) {
                         final floatValue = _floatAnimation.value;
                         final floatOffset = 10 * sin(floatValue * 2 * pi);
-                        final borderWidth =
-                            1.5 + 0.5 * sin(_controller.value * pi * 2);
 
                         return Container(
                           width: 180,
                           height: 180,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: Colors.white.withOpacity(0.6),
-                              width: borderWidth,
-                            ),
-                          ),
+                          decoration: BoxDecoration(),
                           child: Stack(
                             children: [
                               // Gradient background
