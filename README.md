@@ -98,161 +98,79 @@ flutter build web    # Web
 <h2>📄 License</h2>
 <p>MIT License – see LICENSE file for details.</p>
 
-<style>
-  .screenshots-section {
-    margin-top: 24px;
-  }
+<h2>📸 Screenshots</h2>
 
-  .screenshots-section h2 {
-    font-size: 24px;
-    margin-bottom: 16px;
-  }
-
-  .screenshots-group {
-    margin-bottom: 32px;
-  }
-
-  .screenshots-group h3 {
-    margin-bottom: 12px;
-    font-size: 18px;
-    color: #444;
-  }
-
-  .screenshots-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 16px;
-  }
-
-  .screenshot-card {
-    background: #fff;
-    border-radius: 12px;
-    padding: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-  }
-
-  .screenshot-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
-  }
-
-  .screenshot-card img {
-    width: 100%;
-    border-radius: 8px;
-    display: block;
-  }
-</style>
-
-<div class="screenshots-section">
-  <h2>📸 App Screenshots</h2>
-
+<ul>
   <!-- Splash & Home -->
-  <div class="screenshots-group">
-    <h3>🚀 Splash & Home</h3>
-    <div class="screenshots-grid">
-      <div class="screenshot-card"><img src="assets/screenshots/SplashScreen.png" /></div>
-      <div class="screenshot-card"><img src="assets/screenshots/Home_page.png" /></div>
-      <div class="screenshot-card"><img src="assets/screenshots/dashboard.png" /></div>
-    </div>
-  </div>
+  <li><img src="assets/screenshots/SplashScreen.png" width="250" /></li>
+  <li><img src="assets/screenshots/Home_page.png" width="250" /></li>
+  <li><img src="assets/screenshots/dashboard.png" width="250" /></li>
 
   <!-- Items -->
-  <div class="screenshots-group">
-    <h3>📦 Items</h3>
-    <div class="screenshots-grid">
-      <div class="screenshot-card"><img src="assets/screenshots/add_new_item.png" /></div>
-      <div class="screenshot-card"><img src="assets/screenshots/add_new_item1.png" /></div>
-      <div class="screenshot-card"><img src="assets/screenshots/add_new_items.png" /></div>
-    </div>
-  </div>
+  <li><img src="assets/screenshots/add_new_item.png" width="250" /></li>
+  <li><img src="assets/screenshots/add_new_item1.png" width="250" /></li>
+  <li><img src="assets/screenshots/add_new_items.png" width="250" /></li>
 
   <!-- Sales -->
-  <div class="screenshots-group">
-    <h3>💰 Sales</h3>
-    <div class="screenshots-grid">
-      <div class="screenshot-card"><img src="assets/screenshots/add_new_sale.png" /></div>
-      <div class="screenshot-card"><img src="assets/screenshots/add_new_sale1.png" /></div>
-      <div class="screenshot-card"><img src="assets/screenshots/add_new_sale2.png" /></div>
-      <div class="screenshot-card"><img src="assets/screenshots/edit_sale1.png" /></div>
-      <div class="screenshot-card"><img src="assets/screenshots/edit_sale2.png" /></div>
-    </div>
-  </div>
+  <li><img src="assets/screenshots/add_new_sale.png" width="250" /></li>
+  <li><img src="assets/screenshots/add_new_sale1.png" width="250" /></li>
+  <li><img src="assets/screenshots/add_new_sale2.png" width="250" /></li>
+  <li><img src="assets/screenshots/edit_sale1.png" width="250" /></li>
+  <li><img src="assets/screenshots/edit_sale2.png" width="250" /></li>
 
   <!-- Rentals -->
-  <div class="screenshots-group">
-    <h3>📷 Rentals</h3>
-    <div class="screenshots-grid">
-      <div class="screenshot-card"><img src="assets/screenshots/add_rental_gear.png" /></div>
-      <div class="screenshot-card"><img src="assets/screenshots/add_rental_gear1.png" /></div>
-      <div class="screenshot-card"><img src="assets/screenshots/add_rental_gear2.png" /></div>
-      <div class="screenshot-card"><img src="assets/screenshots/rental_items.png" /></div>
-      <div class="screenshot-card"><img src="assets/screenshots/rental_customer.png" /></div>
-      <div class="screenshot-card"><img src="assets/screenshots/rental_edit.png" /></div>
-      <div class="screenshot-card"><img src="assets/screenshots/rental_edit1.png" /></div>
-      <div class="screenshot-card"><img src="assets/screenshots/rental_order.png" /></div>
-      <div class="screenshot-card"><img src="assets/screenshots/rental_order1.png" /></div>
-      <div class="screenshot-card"><img src="assets/screenshots/rental_order2.png" /></div>
-      <div class="screenshot-card"><img src="assets/screenshots/rental_sale.png" /></div>
-      <div class="screenshot-card"><img src="assets/screenshots/rental_sale1.png" /></div>
-    </div>
-  </div>
+  <li><img src="assets/screenshots/add_rental_gear.png" width="250" /></li>
+  <li><img src="assets/screenshots/add_rental_gear1.png" width="250" /></li>
+  <li><img src="assets/screenshots/add_rental_gear2.png" width="250" /></li>
+  <li><img src="assets/screenshots/rental_items.png" width="250" /></li>
+  <li><img src="assets/screenshots/rental_customer.png" width="250" /></li>
+  <li><img src="assets/screenshots/rental_edit.png" width="250" /></li>
+  <li><img src="assets/screenshots/rental_edit1.png" width="250" /></li>
+  <li><img src="assets/screenshots/rental_order.png" width="250" /></li>
+  <li><img src="assets/screenshots/rental_order1.png" width="250" /></li>
+  <li><img src="assets/screenshots/rental_order2.png" width="250" /></li>
+  <li><img src="assets/screenshots/rental_sale.png" width="250" /></li>
+  <li><img src="assets/screenshots/rental_sale1.png" width="250" /></li>
 
   <!-- Customer -->
-  <div class="screenshots-group">
-    <h3>👤 Customers</h3>
-    <div class="screenshots-grid">
-      <div class="screenshot-card"><img src="assets/screenshots/customer_page.png" /></div>
-      <div class="screenshot-card"><img src="assets/screenshots/customer_whatsapp.png" /></div>
-    </div>
-  </div>
+  <li><img src="assets/screenshots/customer_page.png" width="250" /></li>
+  <li><img src="assets/screenshots/customer_whatsapp.png" width="250" /></li>
 
-  <!-- Booking -->
-  <div class="screenshots-group">
-    <h3>📅 Booking & Dates</h3>
-    <div class="screenshots-grid">
-      <div class="screenshot-card"><img src="assets/screenshots/booking_calendar.png" /></div>
-      <div class="screenshot-card"><img src="assets/screenshots/date_selection.png" /></div>
-      <div class="screenshot-card"><img src="assets/screenshots/date_selecting_range.png" /></div>
-    </div>
-  </div>
+  <!-- Booking & Dates -->
+  <li><img src="assets/screenshots/booking_calendar.png" width="250" /></li>
+  <li><img src="assets/screenshots/date_selection.png" width="250" /></li>
+  <li><img src="assets/screenshots/date_selecting_range.png" width="250" /></li>
 
   <!-- Delivery -->
-  <div class="screenshots-group">
-    <h3>🚚 Delivery</h3>
-    <div class="screenshots-grid">
-      <div class="screenshot-card"><img src="assets/screenshots/Delivery_tracker1.png" /></div>
-      <div class="screenshot-card"><img src="assets/screenshots/Delivery_tracker2.png" /></div>
-    </div>
-  </div>
+  <li><img src="assets/screenshots/Delivery_tracker1.png" width="250" /></li>
+  <li><img src="assets/screenshots/Delivery_tracker2.png" width="250" /></li>
+
+  <!-- Package & Payments -->
+  <li><img src="assets/screenshots/package_page.png" width="250" /></li>
+  <li><img src="assets/screenshots/payment_history.png" width="250" /></li>
 
   <!-- Profile -->
-  <div class="screenshots-group">
-    <h3>🙍 Profile & Security</h3>
-    <div class="screenshots-grid">
-      <div class="screenshot-card"><img src="assets/screenshots/profile_page1.png" /></div>
-      <div class="screenshot-card"><img src="assets/screenshots/profile_page2.png" /></div>
-      <div class="screenshot-card"><img src="assets/screenshots/profile_page_editing1.png" /></div>
-      <div class="screenshot-card"><img src="assets/screenshots/profile_page_editing2.png" /></div>
-      <div class="screenshot-card"><img src="assets/screenshots/profile_page_editing3.png" /></div>
-      <div class="screenshot-card"><img src="assets/screenshots/passcode_in_profile_page.png" /></div>
-      <div class="screenshot-card"><img src="assets/screenshots/passcode_in_profile_page1.png" /></div>
-      <div class="screenshot-card"><img src="assets/screenshots/passcode_in_profile_page2.png" /></div>
-      <div class="screenshot-card"><img src="assets/screenshots/passcode_in_profile_page3.png" /></div>
-    </div>
-  </div>
+  <li><img src="assets/screenshots/profile_page1.png" width="250" /></li>
+  <li><img src="assets/screenshots/profile_page2.png" width="250" /></li>
+  <li><img src="assets/screenshots/profile_page_editing1.png" width="250" /></li>
+  <li><img src="assets/screenshots/profile_page_editing2.png" width="250" /></li>
+  <li><img src="assets/screenshots/profile_page_editing3.png" width="250" /></li>
+
+  <!-- Passcode -->
+  <li><img src="assets/screenshots/passcode_in_profile_page.png" width="250" /></li>
+  <li><img src="assets/screenshots/passcode_in_profile_page1.png" width="250" /></li>
+  <li><img src="assets/screenshots/passcode_in_profile_page2.png" width="250" /></li>
+  <li><img src="assets/screenshots/passcode_in_profile_page3.png" width="250" /></li>
+
+  <!-- View & Select -->
+  <li><img src="assets/screenshots/select_products.png" width="250" /></li>
+  <li><img src="assets/screenshots/view_details.png" width="250" /></li>
+  <li><img src="assets/screenshots/view_details1.png" width="250" /></li>
 
   <!-- Misc -->
-  <div class="screenshots-group">
-    <h3>✨ Misc</h3>
-    <div class="screenshots-grid">
-      <div class="screenshot-card"><img src="assets/screenshots/select_products.png" /></div>
-      <div class="screenshot-card"><img src="assets/screenshots/view_details.png" /></div>
-      <div class="screenshot-card"><img src="assets/screenshots/view_details1.png" /></div>
-      <div class="screenshot-card"><img src="assets/screenshots/delete_pop.png" /></div>
-      <div class="screenshot-card"><img src="assets/screenshots/complete_page.png" /></div>
-      <div class="screenshot-card"><img src="assets/screenshots/complete_page1.png" /></div>
-      <div class="screenshot-card"><img src="assets/screenshots/camera_rental_page.png" /></div>
-    </div>
-  </div>
-</div>
+  <li><img src="assets/screenshots/delete_pop.png" width="250" /></li>
+  <li><img src="assets/screenshots/complete_page.png" width="250" /></li>
+  <li><img src="assets/screenshots/complete_page1.png" width="250" /></li>
+  <li><img src="assets/screenshots/camera_rental_page.png" width="250" /></li>
+
+</ul>
