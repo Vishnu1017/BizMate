@@ -99,183 +99,166 @@ flutter build web    # Web
 <p>MIT License – see LICENSE file for details.</p>
 
 <style>
-  :root {
-    --bg: #0e0f13;
-    --card: rgba(255, 255, 255, 0.08);
-    --border: rgba(255, 255, 255, 0.15);
-    --text: #ffffff;
-    --sub: #b3b3b3;
-    --accent: linear-gradient(135deg, #7f5cff, #0abde3);
-  }
-
   body {
-    background: var(--bg);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #0e0f14;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+      Roboto, sans-serif;
   }
 
-  .showcase {
+  .screenshots {
     max-width: 1200px;
     margin: auto;
     padding: 32px 16px;
-    color: var(--text);
+    color: #fff;
   }
 
-  .showcase h2 {
+  .screenshots h2 {
     font-size: 28px;
-    margin-bottom: 8px;
-  }
-
-  .showcase p {
-    color: var(--sub);
-    margin-bottom: 32px;
+    margin-bottom: 24px;
   }
 
   .section {
-    margin-bottom: 48px;
+    margin-bottom: 44px;
   }
 
   .section-title {
+    font-size: 20px;
+    margin-bottom: 14px;
     display: flex;
     align-items: center;
-    gap: 12px;
-    font-size: 20px;
-    margin-bottom: 20px;
+    gap: 10px;
   }
 
-  .section-line {
+  .section-title::after {
+    content: "";
     flex: 1;
     height: 1px;
-    background: linear-gradient(to right, rgba(255,255,255,0.4), transparent);
+    background: linear-gradient(
+      to right,
+      rgba(255, 255, 255, 0.5),
+      transparent
+    );
   }
 
-  .shot-row {
+  .slider {
     display: flex;
-    gap: 20px;
+    gap: 18px;
     overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
     padding-bottom: 12px;
-    scrollbar-width: none;
   }
 
-  .shot-row::-webkit-scrollbar {
+  .slider::-webkit-scrollbar {
     display: none;
   }
 
-  .shot {
+  .slide {
     flex: 0 0 240px;
-    background: var(--card);
-    backdrop-filter: blur(14px);
-    border-radius: 20px;
-    padding: 10px;
-    border: 1px solid var(--border);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
-    transition: transform 0.35s ease, box-shadow 0.35s ease;
+    scroll-snap-align: center;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 18px;
+    padding: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(12px);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
   }
 
-  .shot:hover {
-    transform: translateY(-10px) scale(1.03);
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9);
+  .slide:hover {
+    transform: translateY(-8px) scale(1.03);
+    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.85);
   }
 
-  .shot img {
+  .slide img {
     width: 100%;
     border-radius: 14px;
     display: block;
   }
 
-  .glow {
-    position: relative;
+  .slider {
+    cursor: grab;
   }
 
-  .glow::after {
-    content: "";
-    position: absolute;
-    inset: -1px;
-    border-radius: 20px;
-    background: var(--accent);
-    opacity: 0.35;
-    filter: blur(18px);
-    z-index: -1;
+  .slider:active {
+    cursor: grabbing;
   }
 </style>
 
-<div class="showcase">
-  <h2>📸 App Experience</h2>
-  <p>A complete walkthrough of the system – sales, rentals, customers, and tools.</p>
+<div class="screenshots">
+  <h2>📸 Screenshots</h2>
 
   <!-- Splash & Home -->
   <div class="section">
-    <div class="section-title">
-      🚀 Splash & Home <span class="section-line"></span>
-    </div>
-    <div class="shot-row">
-      <div class="shot glow"><img src="assets/screenshots/SplashScreen.png"></div>
-      <div class="shot glow"><img src="assets/screenshots/Home_page.png"></div>
-      <div class="shot glow"><img src="assets/screenshots/dashboard.png"></div>
+    <div class="section-title">🚀 Splash & Home</div>
+    <div class="slider">
+      <div class="slide"><img src="assets/screenshots/SplashScreen.png" /></div>
+      <div class="slide"><img src="assets/screenshots/Home_page.png" /></div>
+      <div class="slide"><img src="assets/screenshots/dashborad.png" /></div>
     </div>
   </div>
 
   <!-- Items -->
   <div class="section">
-    <div class="section-title">
-      📦 Inventory <span class="section-line"></span>
-    </div>
-    <div class="shot-row">
-      <div class="shot glow"><img src="assets/screenshots/add_new_item.png"></div>
-      <div class="shot glow"><img src="assets/screenshots/add_new_item1.png"></div>
-      <div class="shot glow"><img src="assets/screenshots/add_new_items.png"></div>
+    <div class="section-title">📦 Items</div>
+    <div class="slider">
+      <div class="slide"><img src="assets/screenshots/add_new_item.png" /></div>
+      <div class="slide"><img src="assets/screenshots/add_new_item1.png" /></div>
+      <div class="slide"><img src="assets/screenshots/add_new_items.png.png" /></div>
     </div>
   </div>
 
   <!-- Sales -->
   <div class="section">
-    <div class="section-title">
-      💰 Sales <span class="section-line"></span>
-    </div>
-    <div class="shot-row">
-      <div class="shot glow"><img src="assets/screenshots/add_new_sale.png"></div>
-      <div class="shot glow"><img src="assets/screenshots/add_new_sale1.png"></div>
-      <div class="shot glow"><img src="assets/screenshots/add_new_sale2.png"></div>
-      <div class="shot"><img src="assets/screenshots/edit_sale1.png"></div>
-      <div class="shot"><img src="assets/screenshots/edit_sale2.png"></div>
+    <div class="section-title">💰 Sales</div>
+    <div class="slider">
+      <div class="slide"><img src="assets/screenshots/add_new_sale.png" /></div>
+      <div class="slide"><img src="assets/screenshots/add_new_sale1.png" /></div>
+      <div class="slide"><img src="assets/screenshots/add_new_sale2.png" /></div>
+      <div class="slide"><img src="assets/screenshots/edit_sale1.png" /></div>
+      <div class="slide"><img src="assets/screenshots/edit_sale2.png" /></div>
     </div>
   </div>
 
   <!-- Rentals -->
   <div class="section">
-    <div class="section-title">
-      📷 Rentals <span class="section-line"></span>
-    </div>
-    <div class="shot-row">
-      <div class="shot glow"><img src="assets/screenshots/add_rental_gear.png"></div>
-      <div class="shot glow"><img src="assets/screenshots/add_rental_gear1.png"></div>
-      <div class="shot glow"><img src="assets/screenshots/add_rental_gear2.png"></div>
-      <div class="shot"><img src="assets/screenshots/rental_items.png"></div>
-      <div class="shot"><img src="assets/screenshots/rental_customer.png"></div>
-      <div class="shot"><img src="assets/screenshots/rental_order.png"></div>
-      <div class="shot"><img src="assets/screenshots/rental_sale.png"></div>
+    <div class="section-title">📷 Rentals</div>
+    <div class="slider">
+      <div class="slide"><img src="assets/screenshots/add_rental_gear.png" /></div>
+      <div class="slide"><img src="assets/screenshots/add_rental_gear1.png" /></div>
+      <div class="slide"><img src="assets/screenshots/add_rental_gear2.png" /></div>
+      <div class="slide"><img src="assets/screenshots/rentak_items.png" /></div>
+      <div class="slide"><img src="assets/screenshots/rental_customer.png" /></div>
+      <div class="slide"><img src="assets/screenshots/rental_order.png" /></div>
+      <div class="slide"><img src="assets/screenshots/rental_sale.png" /></div>
     </div>
   </div>
 
   <!-- Customers -->
   <div class="section">
-    <div class="section-title">
-      👤 Customers <span class="section-line"></span>
-    </div>
-    <div class="shot-row">
-      <div class="shot glow"><img src="assets/screenshots/customer_page.png"></div>
-      <div class="shot glow"><img src="assets/screenshots/customer_whatsapp.png"></div>
+    <div class="section-title">👤 Customers</div>
+    <div class="slider">
+      <div class="slide"><img src="assets/screenshots/customer_page.png" /></div>
+      <div class="slide"><img src="assets/screenshots/customer_whatsapp.png" /></div>
     </div>
   </div>
 
-  <!-- Profile -->
+  <!-- Booking -->
   <div class="section">
-    <div class="section-title">
-      🔐 Profile & Security <span class="section-line"></span>
+    <div class="section-title">📅 Booking & Dates</div>
+    <div class="slider">
+      <div class="slide"><img src="assets/screenshots/booking_calendar.png" /></div>
+      <div class="slide"><img src="assets/screenshots/date selection.png" /></div>
+      <div class="slide"><img src="assets/screenshots/date_selecting_range.png" /></div>
     </div>
-    <div class="shot-row">
-      <div class="shot glow"><img src="assets/screenshots/profile_page1.png"></div>
-      <div class="shot"><img src="assets/screenshots/profile_page_editing1.png"></div>
-      <div class="shot"><img src="assets/screenshots/passcode_in_profile_page.png"></div>
+  </div>
+
+  <!-- Delivery -->
+  <div class="section">
+    <div class="section-title">🚚 Delivery</div>
+    <div class="slider">
+      <div class="slide"><img src="assets/screenshots/Delviery_tracker1.png" /></div>
+      <div class="slide"><img src="assets/screenshots/Delviery_tracker2.png" /></div>
     </div>
   </div>
 </div>
