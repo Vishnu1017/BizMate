@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:bizmate/widgets/app_snackbar.dart' show AppSnackBar;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -82,7 +84,6 @@ class AuthGateScreen extends StatelessWidget {
         ),
         child: Stack(
           children: [
-            // Background elements
             Positioned(
               top: -50,
               right: -50,
@@ -117,12 +118,10 @@ class AuthGateScreen extends StatelessWidget {
                 ),
               ),
             ),
-
             Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Glass morphism card
                   Container(
                     width: 140,
                     height: 140,
@@ -177,7 +176,6 @@ class AuthGateScreen extends StatelessWidget {
                       ),
                     ),
                   ),
-
                   Text(
                     "Secure Access",
                     style: TextStyle(
@@ -197,8 +195,6 @@ class AuthGateScreen extends StatelessWidget {
                     ),
                   ),
                   SizedBox(height: 40),
-
-                  // Modern loading indicator
                   Container(
                     width: 80,
                     height: 4,
@@ -233,10 +229,6 @@ class AuthGateScreen extends StatelessWidget {
   }
 }
 
-/// -----------------------------------------------------
-///              PASSCODE CREATION SCREEN
-/// -----------------------------------------------------
-
 class PasscodeCreationScreen extends StatefulWidget {
   final User user;
   final FlutterSecureStorage secureStorage;
@@ -260,10 +252,12 @@ class _PasscodeCreationScreenState extends State<PasscodeCreationScreen>
   bool _obscureAlphanumeric = true;
   late AnimationController _animationController;
   late Animation<double> _scaleAnimation;
+  late List<FocusNode> _pinFocusNodes;
 
   @override
   void initState() {
     super.initState();
+    _pinFocusNodes = List.generate(6, (_) => FocusNode());
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 800),
       vsync: this,
@@ -276,6 +270,9 @@ class _PasscodeCreationScreenState extends State<PasscodeCreationScreen>
   @override
   void dispose() {
     _animationController.dispose();
+    for (final f in _pinFocusNodes) {
+      f.dispose();
+    }
     super.dispose();
   }
 
@@ -336,83 +333,101 @@ class _PasscodeCreationScreenState extends State<PasscodeCreationScreen>
   }
 
   Widget _buildAnimatedPinFields(BoxConstraints constraints) {
-    final spacing = _numericLength == 6 ? 10.0 : 16.0;
+    // Responsive calculation for field sizes
+    final double maxWidth = constraints.maxWidth;
+    final double minSpacing = 10.0;
+    final double maxFieldSize = 70.0;
+    final double minFieldSize = 50.0;
 
-    final maxWidth = constraints.maxWidth;
-    final availableWidth = maxWidth - ((_numericLength - 1) * spacing) - 24;
-
-    final double fieldSize = (availableWidth / _numericLength).clamp(
-      52.0,
-      70.0,
+    // Calculate optimal field size
+    final double totalSpacing = (_numericLength - 1) * minSpacing;
+    final double availableWidth = maxWidth - totalSpacing - 48;
+    double fieldSize = (availableWidth / _numericLength).clamp(
+      minFieldSize,
+      maxFieldSize,
     );
+
+    // Adjust spacing for better visual balance
+    final double actualSpacing = ((maxWidth - (fieldSize * _numericLength)) /
+            (_numericLength + 1))
+        .clamp(minSpacing, 20.0);
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 30),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        physics: const NeverScrollableScrollPhysics(),
+      child: Center(
         child: Row(
-          mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: List.generate(_numericLength, (index) {
             final isFilled = _pinDigits[index].isNotEmpty;
 
-            return AnimatedContainer(
-              duration: const Duration(milliseconds: 250),
-              width: fieldSize,
-              height: fieldSize,
-              margin: EdgeInsets.symmetric(horizontal: spacing / 2),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color:
-                        isFilled
-                            ? const Color(0xFF667EEA).withOpacity(0.35)
-                            : Colors.grey.shade300,
-                    blurRadius: isFilled ? 18 : 14,
-                    offset: isFilled ? const Offset(0, 10) : const Offset(8, 8),
-                  ),
-                  const BoxShadow(
-                    color: Colors.white,
-                    blurRadius: 14,
-                    offset: Offset(-8, -8),
-                  ),
-                ],
-                gradient:
-                    isFilled
-                        ? const LinearGradient(
-                          colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
-                        )
-                        : null,
+            return Container(
+              margin: EdgeInsets.only(
+                left: index == 0 ? 0 : actualSpacing / 2,
+                right: index == _numericLength - 1 ? 0 : actualSpacing / 2,
               ),
-              child: Center(
-                child: TextField(
-                  maxLength: 1,
-                  obscureText: true,
-                  obscuringCharacter: '•',
-                  textAlign: TextAlign.center,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  style: TextStyle(
-                    color: isFilled ? Colors.white : const Color(0xFF334155),
-                    fontSize: fieldSize / 2.6,
-                    fontWeight: FontWeight.w700,
-                  ),
-                  decoration: const InputDecoration(
-                    counterText: "",
-                    border: InputBorder.none,
-                  ),
-                  onChanged: (value) {
-                    setState(() => _pinDigits[index] = value);
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 250),
+                width: fieldSize,
+                height: fieldSize,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color:
+                          isFilled
+                              ? const Color(0xFF667EEA).withOpacity(0.35)
+                              : Colors.grey.shade300,
+                      blurRadius: isFilled ? 18 : 14,
+                      offset:
+                          isFilled ? const Offset(0, 10) : const Offset(8, 8),
+                    ),
+                    const BoxShadow(
+                      color: Colors.white,
+                      blurRadius: 14,
+                      offset: Offset(-8, -8),
+                    ),
+                  ],
+                  gradient:
+                      isFilled
+                          ? const LinearGradient(
+                            colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
+                          )
+                          : null,
+                ),
+                child: Center(
+                  child: TextField(
+                    focusNode: _pinFocusNodes[index],
+                    maxLength: 1,
+                    obscureText: true,
+                    obscuringCharacter: '•',
+                    textAlign: TextAlign.center,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    style: TextStyle(
+                      color: isFilled ? Colors.white : const Color(0xFF334155),
+                      fontSize: fieldSize / 2.2,
+                      fontWeight: FontWeight.w700,
+                    ),
+                    decoration: const InputDecoration(
+                      counterText: "",
+                      border: InputBorder.none,
+                    ),
+                    onChanged: (value) {
+                      setState(() => _pinDigits[index] = value);
 
-                    if (value.isNotEmpty && index < _numericLength - 1) {
-                      FocusScope.of(context).nextFocus();
-                    } else if (value.isEmpty && index > 0) {
-                      FocusScope.of(context).previousFocus();
-                    }
-                  },
+                      if (value.isNotEmpty && index < _numericLength - 1) {
+                        Future.delayed(Duration(milliseconds: 50), () {
+                          _pinFocusNodes[index + 1].requestFocus();
+                        });
+                      } else if (value.isEmpty && index > 0) {
+                        Future.delayed(Duration(milliseconds: 50), () {
+                          _pinFocusNodes[index - 1].requestFocus();
+                        });
+                      }
+                    },
+                  ),
                 ),
               ),
             );
@@ -524,8 +539,17 @@ class _PasscodeCreationScreenState extends State<PasscodeCreationScreen>
                                 child: Text("6 Digits"),
                               ),
                             ],
-                            onChanged:
-                                (val) => setState(() => _numericLength = val!),
+                            onChanged: (val) {
+                              setState(() {
+                                _numericLength = val!;
+                                // Reset PIN digits when changing length
+                                _pinDigits = List.filled(6, '');
+                                // Clear all focus
+                                for (var node in _pinFocusNodes) {
+                                  node.unfocus();
+                                }
+                              });
+                            },
                           ),
                         ),
                       ],
@@ -617,16 +641,18 @@ class _PasscodeCreationScreenState extends State<PasscodeCreationScreen>
         child: SafeArea(
           child: Center(
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 450),
+              constraints: BoxConstraints(maxWidth: 450, minWidth: 300),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
+                padding: EdgeInsets.symmetric(
+                  horizontal: max(16, MediaQuery.of(context).size.width * 0.05),
+                ),
                 child: LayoutBuilder(
                   builder:
                       (context, constraints) => SingleChildScrollView(
                         child: Column(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
                             const SizedBox(height: 40),
-                            // Header
                             Column(
                               children: [
                                 Container(
@@ -736,7 +762,6 @@ class _PasscodeCreationScreenState extends State<PasscodeCreationScreen>
                                   ),
                                 ),
                             const SizedBox(height: 50),
-                            // Save button
                             MouseRegion(
                               onHover: (_) {},
                               child: GestureDetector(
@@ -803,10 +828,6 @@ class _PasscodeCreationScreenState extends State<PasscodeCreationScreen>
   }
 }
 
-/// -----------------------------------------------------
-///                ENTER PASSCODE SCREEN
-/// -----------------------------------------------------
-
 class EnterPasscodeScreen extends StatefulWidget {
   final User user;
   final FlutterSecureStorage secureStorage;
@@ -831,7 +852,6 @@ class _EnterPasscodeScreenState extends State<EnterPasscodeScreen>
   bool _obscureAlphanumeric = true;
   late AnimationController _shakeController;
   late Animation<double> _shakeAnimation;
-
   late List<FocusNode> _pinFocusNodes;
 
   @override
@@ -921,15 +941,24 @@ class _EnterPasscodeScreenState extends State<EnterPasscodeScreen>
   }
 
   Widget _buildPinFields(BoxConstraints constraints) {
-    final spacing = _numericLength == 6 ? 10.0 : 16.0;
+    // Responsive calculation for field sizes
+    final double maxWidth = constraints.maxWidth;
+    final double minSpacing = 10.0;
+    final double maxFieldSize = 70.0;
+    final double minFieldSize = 48.0;
 
-    final maxWidth = constraints.maxWidth;
-    final availableWidth = maxWidth - ((_numericLength - 1) * spacing) - 24;
-
-    final double fieldSize = (availableWidth / _numericLength).clamp(
-      52.0,
-      70.0,
+    // Calculate optimal field size
+    final double totalSpacing = (_numericLength - 1) * minSpacing;
+    final double availableWidth = maxWidth - totalSpacing - 48;
+    double fieldSize = (availableWidth / _numericLength).clamp(
+      minFieldSize,
+      maxFieldSize,
     );
+
+    // Adjust spacing for better visual balance
+    final double actualSpacing = ((maxWidth - (fieldSize * _numericLength)) /
+            (_numericLength + 1))
+        .clamp(minSpacing, 20.0);
 
     return AnimatedBuilder(
       animation: _shakeAnimation,
@@ -948,80 +977,94 @@ class _EnterPasscodeScreenState extends State<EnterPasscodeScreen>
           offset: offset,
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 40),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              physics: const NeverScrollableScrollPhysics(),
+            child: Center(
               child: Row(
-                mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
                 children: List.generate(_numericLength, (index) {
                   final filled = _pinDigits[index].isNotEmpty;
 
-                  return AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    width: fieldSize,
-                    height: fieldSize,
-                    margin: EdgeInsets.symmetric(horizontal: spacing / 2),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color:
-                              filled
-                                  ? const Color(0xFF667EEA).withOpacity(0.35)
-                                  : Colors.grey.shade300,
-                          blurRadius: filled ? 20 : 14,
-                          offset:
-                              filled ? const Offset(0, 10) : const Offset(8, 8),
-                        ),
-                        const BoxShadow(
-                          color: Colors.white,
-                          blurRadius: 14,
-                          offset: Offset(-8, -8),
-                        ),
-                      ],
-                      gradient:
-                          filled
-                              ? const LinearGradient(
-                                colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
-                              )
-                              : null,
+                  return Container(
+                    margin: EdgeInsets.only(
+                      left: index == 0 ? 0 : actualSpacing / 2,
+                      right:
+                          index == _numericLength - 1 ? 0 : actualSpacing / 2,
                     ),
-                    child: Center(
-                      child: TextField(
-                        focusNode: _pinFocusNodes[index],
-                        maxLength: 1,
-                        obscureText: true,
-                        obscuringCharacter: '•',
-                        textAlign: TextAlign.center,
-                        keyboardType: TextInputType.number,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly,
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      width: fieldSize,
+                      height: fieldSize,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color:
+                                filled
+                                    ? const Color(0xFF667EEA).withOpacity(0.35)
+                                    : Colors.grey.shade300,
+                            blurRadius: filled ? 20 : 14,
+                            offset:
+                                filled
+                                    ? const Offset(0, 10)
+                                    : const Offset(8, 8),
+                          ),
+                          const BoxShadow(
+                            color: Colors.white,
+                            blurRadius: 14,
+                            offset: Offset(-8, -8),
+                          ),
                         ],
-                        style: TextStyle(
-                          color:
-                              filled ? Colors.white : const Color(0xFF334155),
-                          fontSize: fieldSize / 2.6,
-                          fontWeight: FontWeight.w700,
-                        ),
-                        decoration: const InputDecoration(
-                          counterText: "",
-                          border: InputBorder.none,
-                        ),
-                        onChanged: (value) {
-                          setState(() => _pinDigits[index] = value);
+                        gradient:
+                            filled
+                                ? const LinearGradient(
+                                  colors: [
+                                    Color(0xFF667EEA),
+                                    Color(0xFF764BA2),
+                                  ],
+                                )
+                                : null,
+                      ),
+                      child: Center(
+                        child: TextField(
+                          focusNode: _pinFocusNodes[index],
+                          maxLength: 1,
+                          obscureText: true,
+                          obscuringCharacter: '•',
+                          textAlign: TextAlign.center,
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                          ],
+                          style: TextStyle(
+                            color:
+                                filled ? Colors.white : const Color(0xFF334155),
+                            fontSize: fieldSize / 2.2,
+                            fontWeight: FontWeight.w700,
+                          ),
+                          decoration: const InputDecoration(
+                            counterText: "",
+                            border: InputBorder.none,
+                          ),
+                          onChanged: (value) {
+                            setState(() => _pinDigits[index] = value);
 
-                          if (value.isNotEmpty && index < _numericLength - 1) {
-                            _pinFocusNodes[index + 1].requestFocus();
-                          } else if (value.isEmpty && index > 0) {
-                            _pinFocusNodes[index - 1].requestFocus();
-                          }
+                            if (value.isNotEmpty &&
+                                index < _numericLength - 1) {
+                              Future.delayed(Duration(milliseconds: 50), () {
+                                _pinFocusNodes[index + 1].requestFocus();
+                              });
+                            } else if (value.isEmpty && index > 0) {
+                              Future.delayed(Duration(milliseconds: 50), () {
+                                _pinFocusNodes[index - 1].requestFocus();
+                              });
+                            }
 
-                          if (_errorMessage.isNotEmpty) {
-                            setState(() => _errorMessage = '');
-                          }
-                        },
+                            if (_errorMessage.isNotEmpty) {
+                              setState(() => _errorMessage = '');
+                            }
+                          },
+                        ),
                       ),
                     ),
                   );
@@ -1195,16 +1238,18 @@ class _EnterPasscodeScreenState extends State<EnterPasscodeScreen>
         child: SafeArea(
           child: Center(
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 450),
+              constraints: BoxConstraints(maxWidth: 450, minWidth: 300),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
+                padding: EdgeInsets.symmetric(
+                  horizontal: max(16, MediaQuery.of(context).size.width * 0.05),
+                ),
                 child: LayoutBuilder(
                   builder:
                       (context, constraints) => SingleChildScrollView(
                         child: Column(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
                             const SizedBox(height: 40),
-                            // Header
                             Column(
                               children: [
                                 Container(
@@ -1257,8 +1302,6 @@ class _EnterPasscodeScreenState extends State<EnterPasscodeScreen>
                                 ),
                               ],
                             ),
-
-                            // Error message
                             if (_errorMessage.isNotEmpty)
                               Container(
                                 margin: const EdgeInsets.only(
@@ -1278,7 +1321,6 @@ class _EnterPasscodeScreenState extends State<EnterPasscodeScreen>
                                   ),
                                 ),
                                 child: Row(
-                                  mainAxisSize: MainAxisSize.min,
                                   children: [
                                     Icon(
                                       Icons.error_outline_rounded,
@@ -1286,21 +1328,22 @@ class _EnterPasscodeScreenState extends State<EnterPasscodeScreen>
                                       size: 20,
                                     ),
                                     const SizedBox(width: 12),
-                                    Text(
-                                      _errorMessage,
-                                      style: TextStyle(
-                                        color: Color(0xFF991B1B),
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w500,
+                                    Flexible(
+                                      child: Text(
+                                        _errorMessage,
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          color: Color(0xFF991B1B),
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w500,
+                                        ),
                                       ),
                                     ),
                                   ],
                                 ),
                               ),
-
                             const SizedBox(height: 20),
-
-                            // Passcode input
                             _savedType == PasscodeType.numeric
                                 ? _buildPinFields(constraints)
                                 : Container(
@@ -1354,10 +1397,7 @@ class _EnterPasscodeScreenState extends State<EnterPasscodeScreen>
                                     ),
                                   ),
                                 ),
-
                             const SizedBox(height: 40),
-
-                            // Unlock button
                             MouseRegion(
                               onHover: (_) {},
                               child: GestureDetector(
@@ -1410,10 +1450,7 @@ class _EnterPasscodeScreenState extends State<EnterPasscodeScreen>
                                 ),
                               ),
                             ),
-
                             const SizedBox(height: 24),
-
-                            // Forgot passcode
                             TextButton(
                               onPressed: _forgotPasscode,
                               style: TextButton.styleFrom(
@@ -1442,7 +1479,6 @@ class _EnterPasscodeScreenState extends State<EnterPasscodeScreen>
                                 ],
                               ),
                             ),
-
                             const SizedBox(height: 60),
                           ],
                         ),
