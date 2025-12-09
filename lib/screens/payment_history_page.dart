@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 class PaymentHistoryPage extends StatelessWidget {
   final Sale sale;
+  bool get isSale => sale.deliveryLink.isNotEmpty;
 
   const PaymentHistoryPage({super.key, required this.sale});
 
@@ -106,20 +107,42 @@ class PaymentHistoryPage extends StatelessWidget {
                 ),
               )
               : SliverPadding(
-                padding: EdgeInsets.symmetric(horizontal: 20),
+                padding: const EdgeInsets.symmetric(horizontal: 20),
                 sliver: SliverList(
                   delegate: SliverChildBuilderDelegate((context, index) {
-                    if (index == 0) return SizedBox.shrink();
+                    // ✅ Detect SALE baseline (only for Sale)
+                    final isSaleBaseline =
+                        index == 0 &&
+                        sale.paymentHistory.length > 1 &&
+                        sale.paymentHistory[0].amount == sale.amount;
 
+                    // ✅ Skip ONLY sale baseline
+                    if (isSaleBaseline) {
+                      return const SizedBox.shrink();
+                    }
+
+                    // ✅ RENTAL: show directly
+                    if (index == 0) {
+                      final payment = sale.paymentHistory[index];
+                      return _buildPaymentItem(
+                        amount: payment.amount.toDouble(),
+                        mode: payment.mode,
+                        date: payment.date,
+                        index: index,
+                        isLast: sale.paymentHistory.length == 1,
+                      );
+                    }
+
+                    // ✅ SALE: show difference-based payment
                     final current = sale.paymentHistory[index];
                     final previous = sale.paymentHistory[index - 1];
-                    final difference =
-                        (previous.amount - current.amount).toDouble();
-                    final mode = previous.mode;
+
+                    final amount =
+                        (previous.amount - current.amount).abs().toDouble();
 
                     return _buildPaymentItem(
-                      amount: difference,
-                      mode: mode,
+                      amount: amount,
+                      mode: previous.mode,
                       date: previous.date,
                       index: index,
                       isLast: index == sale.paymentHistory.length - 1,
@@ -188,8 +211,9 @@ class PaymentHistoryPage extends StatelessWidget {
                       curve: Curves.easeOut,
                       width: constraints.maxWidth * (paidPercentage / 100),
                       decoration: BoxDecoration(
-                        gradient: getProgressGradient(paidPercentage),
-
+                        gradient: LinearGradient(
+                          colors: [Colors.white, Colors.white.withOpacity(0.8)],
+                        ),
                         borderRadius: BorderRadius.circular(4),
                       ),
                     );

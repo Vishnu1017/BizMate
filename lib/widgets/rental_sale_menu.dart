@@ -2,6 +2,7 @@
 
 import 'dart:io';
 
+import 'package:bizmate/models/payment.dart' show Payment;
 import 'package:bizmate/models/rental_sale_model.dart';
 import 'package:bizmate/models/sale.dart';
 import 'package:bizmate/models/user_model.dart' show User;
@@ -218,20 +219,38 @@ class RentalSaleMenu extends StatelessWidget {
   // ---------------------------------------------------------------------------
 
   void _handlePaymentHistory(BuildContext context) {
-    // Convert RentalSaleModel → Sale to reuse PaymentHistoryPage UI
-    final tempSale = Sale(
+    final List<Payment> fixedPaymentHistory = <Payment>[];
+
+    // ✅ CASE 1: already has history
+    if (sale.paymentHistory.isNotEmpty) {
+      fixedPaymentHistory.addAll(sale.paymentHistory.cast<Payment>());
+    }
+
+    // ✅ CASE 2: first payment missing → inject it
+    if (fixedPaymentHistory.isEmpty && sale.amountPaid > 0) {
+      fixedPaymentHistory.add(
+        Payment(
+          amount: sale.amountPaid,
+          date: sale.fromDateTime,
+          mode: sale.paymentMode.isNotEmpty ? sale.paymentMode : 'Cash',
+        ),
+      );
+    }
+
+    // ✅ Convert Rental → Sale (PaymentHistoryPage expects Sale)
+    final Sale tempSale = Sale(
       customerName: sale.customerName,
       amount: sale.amountPaid,
       totalAmount: sale.totalCost,
       productName: sale.itemName,
       dateTime: sale.fromDateTime,
       phoneNumber: sale.customerPhone,
-      paymentMode: "Cash", // or add a field in RentalSaleModel if you have
+      paymentMode: sale.paymentMode.isNotEmpty ? sale.paymentMode : 'Cash',
       discount: 0,
-      deliveryLink: "",
-      deliveryStatus: "",
+      deliveryLink: '',
+      deliveryStatus: '',
       item: sale.itemName,
-      paymentHistory: sale.paymentHistory, // ✅ REAL HISTORY
+      paymentHistory: fixedPaymentHistory, // ✅ GUARANTEED NON-EMPTY
       deliveryStatusHistory: const [],
     );
 

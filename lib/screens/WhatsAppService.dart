@@ -15,71 +15,82 @@ class WhatsAppService {
     DateTime? dueDate,
     double? amount,
     String? invoiceNumber,
+
+    // ✅ NEW (dynamic – SAME as SaleOptionsMenu)
+    required String upiId,
+    required String businessName,
   }) async {
     try {
       final cleanedPhone = phone.replaceAll(RegExp(r'\D'), '');
 
-      if (cleanedPhone.length < 10 ||
-          !RegExp(r'^[0-9]+$').hasMatch(cleanedPhone)) {
+      if (cleanedPhone.length < 10) {
         AppSnackBar.showWarning(
           context,
-          message: "Please enter a valid 10-digit phone number",
-          duration: Duration(seconds: 2),
+          message: "Please enter a valid phone number",
+          duration: const Duration(seconds: 2),
         );
-
         return;
       }
 
       final customerName = name.isNotEmpty ? name : "there";
 
+      /// ✅ Amount handling
+      final amountText =
+          amount != null && amount > 0 ? amount.toStringAsFixed(2) : null;
+
+      /// ✅ UPI DEEP LINKS (same logic as PDF)
+      final gpay =
+          amountText != null
+              ? "gpay://upi/pay?pa=$upiId&pn=${Uri.encodeComponent(businessName)}&am=$amountText&cu=INR"
+              : "gpay://upi/pay?pa=$upiId&pn=${Uri.encodeComponent(businessName)}&cu=INR";
+
+      final phonePe =
+          amountText != null
+              ? "phonepe://pay?pa=$upiId&pn=${Uri.encodeComponent(businessName)}&am=$amountText&cu=INR"
+              : "phonepe://pay?pa=$upiId&pn=${Uri.encodeComponent(businessName)}&cu=INR";
+
+      final paytm =
+          amountText != null
+              ? "paytm://upi/pay?pa=$upiId&pn=${Uri.encodeComponent(businessName)}&am=$amountText&cu=INR"
+              : "paytm://upi/pay?pa=$upiId&pn=${Uri.encodeComponent(businessName)}&cu=INR";
+
+      /// ✅ DEFAULT MESSAGE
       String message =
-          "Hi $customerName! This is Shutter Life Photography. How can we help you today?";
+          "Hi $customerName!\n\nThis is $businessName. How can we help you today?";
 
-      if (purpose != null) {
-        switch (purpose) {
-          case 'payment_due':
-            if (dueDate != null && amount != null && invoiceNumber != null) {
-              message =
-                  "Dear $customerName,\n\nFriendly reminder from Shutter Life Photography:\n\n"
-                  "📅 Payment Due: ${DateFormat('dd MMM yyyy').format(dueDate)}\n"
-                  "💰 Amount: ₹${amount.toStringAsFixed(2)}\n"
-                  "📋 Invoice #: $invoiceNumber\n\n"
-                  "Payment Methods:\n"
-                  "• UPI: shutterlifephotography10@okaxis\n"
-                  "• Bank Transfer (Details attached)\n"
-                  "• Cash (At our studio)\n\n"
-                  "Please confirm once payment is made. Thank you for your prompt attention!\n\n"
-                  "Warm regards,\nAccounts Team\nShutter Life Photography";
-            } else {
-              message =
-                  "Dear $customerName,\n\nThis is a friendly reminder regarding your payment. "
-                  "Please contact us for invoice details.\n\n"
-                  "Warm regards,\nAccounts Team\nShutter Life Photography";
-            }
-            break;
-
-          default:
-            message =
-                "Hi $customerName! This is Shutter Life Photography. How can we help you today?";
-        }
+      /// ✅ PAYMENT DUE MESSAGE
+      if (purpose == 'payment_due' && amountText != null) {
+        message =
+            "Dear $customerName,\n\n"
+            "Friendly reminder from $businessName:\n\n"
+            "📅 Due Date: ${dueDate != null ? DateFormat('dd MMM yyyy').format(dueDate) : '-'}\n"
+            "💰 Amount: ₹$amountText\n"
+            "${invoiceNumber != null ? "📋 Invoice #: $invoiceNumber\n" : ""}\n"
+            "Tap to Pay securely:\n\n"
+            "👉 Google Pay:\n$gpay\n\n"
+            "👉 PhonePe:\n$phonePe\n\n"
+            "👉 Paytm:\n$paytm\n\n"
+            "Please confirm once payment is done.\n\n"
+            "Regards,\n$businessName";
       }
 
       final encodedMessage = Uri.encodeComponent(message);
-      final url1 = "https://wa.me/$cleanedPhone?text=$encodedMessage";
-      final url2 = "https://wa.me/91$cleanedPhone?text=$encodedMessage";
 
-      if (await canLaunchUrl(Uri.parse(url1))) {
-        await launchUrl(Uri.parse(url1), mode: LaunchMode.externalApplication);
-      } else if (await canLaunchUrl(Uri.parse(url2))) {
-        await launchUrl(Uri.parse(url2), mode: LaunchMode.externalApplication);
+      /// ✅ WhatsApp launch (India-safe)
+      final url = Uri.parse(
+        "https://wa.me/91$cleanedPhone?text=$encodedMessage",
+      );
+
+      if (await canLaunchUrl(url)) {
+        await launchUrl(url, mode: LaunchMode.externalApplication);
       } else {
-        throw Exception("WhatsApp is not installed or URL can't be launched");
+        throw Exception("WhatsApp not available");
       }
     } catch (e) {
       AppSnackBar.showError(
         context,
         message: "Couldn't open WhatsApp",
-        duration: Duration(seconds: 2),
+        duration: const Duration(seconds: 2),
       );
     }
   }
