@@ -358,7 +358,7 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
       );
 
       // ✅ Go back after save
-      Future.delayed(const Duration(milliseconds: 300), () {
+      Future.delayed(const Duration(milliseconds: 600), () {
         if (mounted) {
           Navigator.pop(context, true); // return success
         }
