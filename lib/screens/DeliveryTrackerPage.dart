@@ -1518,11 +1518,7 @@ class _LargeTitleDelegate extends SliverPersistentHeaderDelegate {
             left: 12,
             top: 12,
             child: _circleButton(
-              icon: HugeIcon(
-                icon: HugeIcons.strokeRoundedArrowLeft01,
-                color: Colors.black87,
-                size: 22,
-              ),
+              icon: Icon(Icons.arrow_back, color: Colors.black87, size: 22),
               onTap: onBack,
             ),
           ),

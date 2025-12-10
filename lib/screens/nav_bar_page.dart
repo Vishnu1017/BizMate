@@ -222,22 +222,29 @@ class _NavBarPageState extends State<NavBarPage>
                 Row(
                   children: [
                     // User profile
-                    Container(
-                      width: _scaleForWidth(screenWidth, 48),
-                      height: _scaleForWidth(screenWidth, 48),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: _primaryColor,
-                      ),
-                      child: Center(
-                        child: Text(
-                          widget.user.name.isNotEmpty
-                              ? widget.user.name[0].toUpperCase()
-                              : 'U',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                            fontSize: _scaleForWidth(screenWidth, 18),
+                    GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _currentIndex = 4; // ✅ Profile tab index
+                        });
+                      },
+                      child: Container(
+                        width: _scaleForWidth(screenWidth, 48),
+                        height: _scaleForWidth(screenWidth, 48),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: _primaryColor,
+                        ),
+                        child: Center(
+                          child: Text(
+                            widget.user.name.isNotEmpty
+                                ? widget.user.name[0].toUpperCase()
+                                : 'U',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                              fontSize: _scaleForWidth(screenWidth, 18),
+                            ),
                           ),
                         ),
                       ),
