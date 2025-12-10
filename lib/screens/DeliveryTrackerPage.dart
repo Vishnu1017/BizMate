@@ -356,6 +356,13 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
         message: 'Delivery updated successfully',
         duration: const Duration(seconds: 2),
       );
+
+      // ✅ Go back after save
+      Future.delayed(const Duration(milliseconds: 300), () {
+        if (mounted) {
+          Navigator.pop(context, true); // return success
+        }
+      });
     } catch (e) {
       debugPrint('Save error: $e');
       if (mounted) {
