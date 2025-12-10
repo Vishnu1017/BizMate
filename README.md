@@ -98,160 +98,92 @@ flutter build web    # Web
 <h2>📄 License</h2>
 <p>MIT License – see LICENSE file for details.</p>
 
-<style>
-  body {
-    background: #0e0f14;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-      Roboto, sans-serif;
-  }
+<h2>📸 Screenshots</h2>
 
-  .screenshots {
-    max-width: 1200px;
-    margin: auto;
-    padding: 32px 16px;
-    color: #fff;
-  }
+<h3>Splash & Home</h3>
+<table>
+  <tr>
+    <td><img src="assets/screenshots/SplashScreen.png" width="250"/></td>
+    <td><img src="assets/screenshots/Home_page.png" width="250"/></td>
+  </tr>
+  <tr>
+    <td><img src="assets/screenshots/dashborad.png" width="250"/></td>
+    <td></td>
+  </tr>
+</table>
 
-  .screenshots h2 {
-    font-size: 28px;
-    margin-bottom: 24px;
-  }
+<h3>Items</h3>
+<table>
+  <tr>
+    <td><img src="assets/screenshots/add_new_item.png" width="250"/></td>
+    <td><img src="assets/screenshots/add_new_item1.png" width="250"/></td>
+  </tr>
+  <tr>
+    <td><img src="assets/screenshots/add_new_items.png.png" width="250"/></td>
+    <td></td>
+  </tr>
+</table>
 
-  .section {
-    margin-bottom: 44px;
-  }
+<h3>Sales</h3>
+<table>
+  <tr>
+    <td><img src="assets/screenshots/add_new_sale.png" width="250"/></td>
+    <td><img src="assets/screenshots/add_new_sale1.png" width="250"/></td>
+  </tr>
+  <tr>
+    <td><img src="assets/screenshots/add_new_sale2.png" width="250"/></td>
+    <td><img src="assets/screenshots/edit_sale1.png" width="250"/></td>
+  </tr>
+  <tr>
+    <td><img src="assets/screenshots/edit_sale2.png" width="250"/></td>
+    <td></td>
+  </tr>
+</table>
 
-  .section-title {
-    font-size: 20px;
-    margin-bottom: 14px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
+<h3>Rentals</h3>
+<table>
+  <tr>
+    <td><img src="assets/screenshots/add_rental_gear.png" width="250"/></td>
+    <td><img src="assets/screenshots/add_rental_gear1.png" width="250"/></td>
+  </tr>
+  <tr>
+    <td><img src="assets/screenshots/add_rental_gear2.png" width="250"/></td>
+    <td><img src="assets/screenshots/rentak_items.png" width="250"/></td>
+  </tr>
+  <tr>
+    <td><img src="assets/screenshots/rental_customer.png" width="250"/></td>
+    <td><img src="assets/screenshots/rental_order.png" width="250"/></td>
+  </tr>
+  <tr>
+    <td><img src="assets/screenshots/rental_sale.png" width="250"/></td>
+    <td></td>
+  </tr>
+</table>
 
-  .section-title::after {
-    content: "";
-    flex: 1;
-    height: 1px;
-    background: linear-gradient(
-      to right,
-      rgba(255, 255, 255, 0.5),
-      transparent
-    );
-  }
+<h3>Customers</h3>
+<table>
+  <tr>
+    <td><img src="assets/screenshots/customer_page.png" width="250"/></td>
+    <td><img src="assets/screenshots/customer_whatsapp.png" width="250"/></td>
+  </tr>
+</table>
 
-  .slider {
-    display: flex;
-    gap: 18px;
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    scroll-behavior: smooth;
-    padding-bottom: 12px;
-  }
+<h3>Booking</h3>
+<table>
+  <tr>
+    <td><img src="assets/screenshots/booking_calendar.png" width="250"/></td>
+    <td><img src="assets/screenshots/date selection.png" width="250"/></td>
+  </tr>
+  <tr>
+    <td><img src="assets/screenshots/date_selecting_range.png" width="250"/></td>
+    <td></td>
+  </tr>
+</table>
 
-  .slider::-webkit-scrollbar {
-    display: none;
-  }
-
-  .slide {
-    flex: 0 0 240px;
-    scroll-snap-align: center;
-    background: rgba(255, 255, 255, 0.08);
-    border-radius: 18px;
-    padding: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    backdrop-filter: blur(12px);
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-  }
-
-  .slide:hover {
-    transform: translateY(-8px) scale(1.03);
-    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.85);
-  }
-
-  .slide img {
-    width: 100%;
-    border-radius: 14px;
-    display: block;
-  }
-
-  .slider {
-    cursor: grab;
-  }
-
-  .slider:active {
-    cursor: grabbing;
-  }
-</style>
-
-<div class="screenshots">
-  <h2>📸 Screenshots</h2>
-
-  <!-- Splash & Home -->
-  <div class="section">
-    <div class="slider">
-      <div class="slide"><img src="assets/screenshots/SplashScreen.png"width="250" /></div>
-      <div class="slide"><img src="assets/screenshots/Home_page.png" width="250"/></div>
-      <div class="slide"><img src="assets/screenshots/dashborad.png" width="250"/></div>
-    </div>
-  </div>
-
-  <!-- Items -->
-  <div class="section">
-    <div class="slider">
-      <div class="slide"><img src="assets/screenshots/add_new_item.png" width="250"/></div>
-      <div class="slide"><img src="assets/screenshots/add_new_item1.png" width="250"/></div>
-      <div class="slide"><img src="assets/screenshots/add_new_items.png.png" width="250"/></div>
-    </div>
-  </div>
-
-  <!-- Sales -->
-  <div class="section">
-    <div class="slider">
-      <div class="slide"><img src="assets/screenshots/add_new_sale.png" width="250"/></div>
-      <div class="slide"><img src="assets/screenshots/add_new_sale1.png" width="250"/></div>
-      <div class="slide"><img src="assets/screenshots/add_new_sale2.png" width="250"/></div>
-      <div class="slide"><img src="assets/screenshots/edit_sale1.png" width="250"/></div>
-      <div class="slide"><img src="assets/screenshots/edit_sale2.png" width="250"/></div>
-    </div>
-  </div>
-
-  <!-- Rentals -->
-  <div class="section">
-    <div class="slider">
-      <div class="slide"><img src="assets/screenshots/add_rental_gear.png" width="250"/></div>
-      <div class="slide"><img src="assets/screenshots/add_rental_gear1.png" width="250"/></div>
-      <div class="slide"><img src="assets/screenshots/add_rental_gear2.png" width="250"/></div>
-      <div class="slide"><img src="assets/screenshots/rentak_items.png" width="250"/></div>
-      <div class="slide"><img src="assets/screenshots/rental_customer.png"width="250" /></div>
-      <div class="slide"><img src="assets/screenshots/rental_order.png"width="250" /></div>
-      <div class="slide"><img src="assets/screenshots/rental_sale.png" width="250"/></div>
-    </div>
-  </div>
-
-  <!-- Customers -->
-  <div class="section">
-    <div class="slider">
-      <div class="slide"><img src="assets/screenshots/customer_page.png"width="250" /></div>
-      <div class="slide"><img src="assets/screenshots/customer_whatsapp.png" width="250"/></div>
-    </div>
-  </div>
-
-  <!-- Booking -->
-  <div class="section">
-    <div class="slider">
-      <div class="slide"><img src="assets/screenshots/booking_calendar.png" width="250"/></div>
-      <div class="slide"><img src="assets/screenshots/date selection.png" width="250"/></div>
-      <div class="slide"><img src="assets/screenshots/date_selecting_range.png" width="250"/></div>
-    </div>
-  </div>
-
-  <!-- Delivery -->
-  <div class="section">
-    <div class="slider">
-      <div class="slide"><img src="assets/screenshots/Delviery_tracker1.png"width="250"/></div>
-      <div class="slide"><img src="assets/screenshots/Delviery_tracker2.png" width="250"/></div>
-    </div>
-  </div>
-</div>
+<h3>Delivery</h3>
+<table>
+  <tr>
+    <td><img src="assets/screenshots/Delviery_tracker1.png" width="250"/></td>
+    <td><img src="assets/screenshots/Delviery_tracker2.png" width="250"/></td>
+  </tr>
+</table>
