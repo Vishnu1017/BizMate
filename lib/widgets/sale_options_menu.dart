@@ -315,7 +315,7 @@ class SaleOptionsMenu extends StatelessWidget {
         "&cu=INR";
 
     /// ✅ STEP 2: Encode UPI link fully (THIS FIXES AMOUNT ISSUE)
-    final String encodedUpiLink = Uri.encodeFull(upiIntent);
+    Uri.encodeFull(upiIntent);
 
     /// ✅ STEP 3: WhatsApp message
     final String message =
