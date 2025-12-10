@@ -2,7 +2,6 @@
 import 'dart:convert' show jsonEncode, jsonDecode;
 import 'dart:ui' show lerpDouble;
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:hugeicons/hugeicons.dart' show HugeIcon, HugeIcons;
 import 'package:url_launcher/url_launcher.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -59,6 +58,8 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
     with SingleTickerProviderStateMixin {
   final TextEditingController _linkController = TextEditingController();
   final TextEditingController _statusNotesController = TextEditingController();
+  String _ownerName = '';
+  String _ownerPhone = '';
 
   String? _selectedStatus;
   final List<String> statuses = [
@@ -142,6 +143,34 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
 
     _updateStatusNoteSuggestion();
     _loadHiveData();
+    _loadProfileUser();
+  }
+
+  Future<void> _loadProfileUser() async {
+    try {
+      final sessionBox = await Hive.openBox('session');
+      final email = sessionBox.get('currentUserEmail');
+
+      if (email == null) return;
+
+      final userBox = Hive.box('users');
+
+      dynamic user;
+      try {
+        user = userBox.values.firstWhere((u) => u.email == email);
+      } catch (_) {
+        user = null;
+      }
+
+      if (mounted && user != null) {
+        setState(() {
+          _ownerName = (user.name ?? '').toString();
+          _ownerPhone = (user.phone ?? '').toString();
+        });
+      }
+    } catch (_) {
+      // silent – app should never crash
+    }
   }
 
   void _initializeDeliveryHistory() {
@@ -416,14 +445,16 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
           "Note: These are the raw, unedited images from your session. "
           "The final edited versions will be shared separately once completed.\n\n"
           "Thanks,\n"
-          "Shutter Life Photography";
+          "${_ownerName.isNotEmpty ? _ownerName : 'Regards'}"
+          "${_ownerPhone.isNotEmpty ? '\n$_ownerPhone' : ''}";
     } else {
       message =
           "Hi $customerName,\n\n"
           "Your photos are now *$deliveryStatus*.\n"
           "Download here: $deliveryLink\n\n"
           "Thanks,\n"
-          "Shutter Life Photography";
+          "${_ownerName.isNotEmpty ? _ownerName : 'Regards'}"
+          "${_ownerPhone.isNotEmpty ? '\n$_ownerPhone' : ''}";
     }
 
     final url1 = "https://wa.me/$phone?text=${Uri.encodeComponent(message)}";

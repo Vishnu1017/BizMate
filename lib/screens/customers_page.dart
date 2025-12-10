@@ -1,6 +1,7 @@
 // ignore_for_file: deprecated_member_use
 
 import 'dart:io';
+import 'package:bizmate/models/user_model.dart';
 import 'package:bizmate/widgets/advanced_search_bar.dart'
     show AdvancedSearchBar;
 import 'package:bizmate/widgets/app_snackbar.dart';
@@ -26,11 +27,13 @@ class _CustomersPageState extends State<CustomersPage> {
   List<Map<String, String>> customers = [];
   List<Map<String, String>> filteredCustomers = [];
   String _searchQuery = "";
+  String profileName = '';
 
   @override
   void initState() {
     super.initState();
     fetchUniqueCustomers();
+    _loadProfileName(); // ✅ IMPORTANT
   }
 
   // ------------------- SEARCH -------------------
@@ -91,6 +94,29 @@ class _CustomersPageState extends State<CustomersPage> {
     setState(() {});
   }
 
+  Future<void> _loadProfileName() async {
+    final sessionBox = await Hive.openBox('session');
+    final email = sessionBox.get('currentUserEmail');
+
+    if (email == null) return;
+
+    final userBox = Hive.box<User>('users');
+
+    User? user;
+
+    try {
+      user = userBox.values.firstWhere((u) => u.email == email);
+    } catch (_) {
+      user = null;
+    }
+
+    if (mounted && user != null && user.name.trim().isNotEmpty) {
+      setState(() {
+        profileName = user!.name.trim(); // ✅ PROFILE NAME ONLY
+      });
+    }
+  }
+
   // ------------------- ALL EXISTING FUNCTIONS BELOW UNCHANGED -------------------
   // (generateAndShareAgreementPDF, _confirmDelete, _deleteCustomer,
   //  _makePhoneCall, _openWhatsApp, _buildPopupItem etc.)
@@ -99,6 +125,7 @@ class _CustomersPageState extends State<CustomersPage> {
   Future<void> generateAndShareAgreementPDF(String customerName) async {
     final pdf = pw.Document();
     final currentDate = DateFormat('MMMM dd, yyyy').format(DateTime.now());
+    final sender = profileName;
 
     checkbox(String label) => pw.Row(
       children: [
@@ -133,7 +160,7 @@ class _CustomersPageState extends State<CustomersPage> {
                 pw.Text('This agreement is made on $currentDate between:'),
                 pw.SizedBox(height: 12),
                 pw.Text('PHOTOGRAPHER: Vishnu Chandan'),
-                pw.Text('BUSINESS: Shutter Life Photography'),
+                pw.Text('BUSINESS: $sender'),
                 pw.Text('CLIENT: $customerName'),
                 pw.Divider(thickness: 1.2),
                 pw.SizedBox(height: 20),
@@ -198,7 +225,7 @@ class _CustomersPageState extends State<CustomersPage> {
                 pw.Divider(),
                 pw.Center(
                   child: pw.Text(
-                    'Thank you for choosing Shutter Life Photography!',
+                    'Thank you for choosing $sender!',
                     style: pw.TextStyle(fontStyle: pw.FontStyle.italic),
                   ),
                 ),
@@ -259,18 +286,82 @@ class _CustomersPageState extends State<CustomersPage> {
 
   void _openWhatsApp(String phone, String name, {String? purpose}) async {
     try {
-      final cleaned = phone.replaceAll(' ', '');
-      if (!RegExp(r'^[0-9]{10}$').hasMatch(cleaned)) {
-        AppSnackBar.showWarning(context, message: "Invalid phone number");
+      // ✅ Normalize phone (supports +91 / spaces)
+      String raw = phone.replaceAll(RegExp(r'[^\d+]'), '');
+      String waPhone;
+      final sender = profileName;
+
+      if (raw.startsWith('+')) {
+        waPhone = raw.substring(1);
+      } else if (raw.length == 10) {
+        waPhone = '91$raw';
+      } else {
+        waPhone = raw;
+      }
+
+      if (waPhone.length < 10) {
+        AppSnackBar.showWarning(
+          context,
+          message: "Invalid phone number",
+          duration: const Duration(seconds: 2),
+        );
         return;
       }
 
-      final msg = "Hi $name! This is Shutter Life Photography.";
-      final url1 = "https://wa.me/91$cleaned?text=${Uri.encodeComponent(msg)}";
+      // ✅ DIFFERENT MESSAGES BASED ON OPTION
+      late String message;
 
-      await launchUrl(Uri.parse(url1), mode: LaunchMode.externalApplication);
+      switch (purpose) {
+        case 'feedback':
+          message =
+              "Hello $name,\n\n"
+              "Thank you for choosing $sender.\n\n"
+              "We’d love to hear your feedback about your experience with us. "
+              "Your feedback helps us improve and serve you better.\n\n"
+              "Warm regards,\n$sender";
+          break;
+
+        case 'payment_received':
+          message =
+              "Hello $name,\n\n"
+              "We have successfully received your payment.\n\n"
+              "Thank you for choosing $sender. "
+              "Please feel free to contact us if you need the invoice or any further assistance.\n\n"
+              "Warm regards,\n$sender";
+          break;
+
+        case 'booking_confirmation':
+          message =
+              "Hello $name,\n\n"
+              "Your booking with $sender has been successfully confirmed.\n\n"
+              "We’ll coordinate with you closer to the scheduled date. "
+              "If you have any requirements or questions, feel free to reach out.\n\n"
+              "Warm regards,\n$sender";
+          break;
+
+        // ✅ DEFAULT
+        default:
+          message =
+              "Hello $name,\n\n"
+              "This is $sender.\n\n"
+              "How can we assist you today?\n\n"
+              "Warm regards,\n$sender";
+      }
+
+      final encoded = Uri.encodeComponent(message);
+      final uri = Uri.parse("https://wa.me/$waPhone?text=$encoded");
+
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        throw Exception("WhatsApp not available");
+      }
     } catch (_) {
-      AppSnackBar.showError(context, message: "Couldn't open WhatsApp");
+      AppSnackBar.showError(
+        context,
+        message: "Couldn't open WhatsApp",
+        duration: const Duration(seconds: 2),
+      );
     }
   }
 
@@ -487,14 +578,24 @@ class _CustomersPageState extends State<CustomersPage> {
                                             ),
                                           ),
                                           PopupMenuItem(
-                                            value: 'payment',
+                                            value: 'booking_confirmation',
                                             child: _buildPopupItem(
-                                              icon: Icons.currency_rupee,
-                                              color: Colors.green,
-                                              text: "Payment Confirmation",
+                                              icon: Icons.event_available,
+                                              color: Colors.indigo,
+                                              text: "Booking Confirmation",
                                               isSmallScreen: isSmallScreen,
                                             ),
                                           ),
+                                          PopupMenuItem(
+                                            value: 'payment_received',
+                                            child: _buildPopupItem(
+                                              icon: Icons.check_circle,
+                                              color: Colors.green,
+                                              text: "Payment Received",
+                                              isSmallScreen: isSmallScreen,
+                                            ),
+                                          ),
+
                                           PopupMenuItem(
                                             value: 'agreement',
                                             child: _buildPopupItem(

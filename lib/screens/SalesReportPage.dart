@@ -6,7 +6,6 @@ import 'package:bizmate/widgets/app_snackbar.dart' show AppSnackBar;
 import 'package:bizmate/widgets/modern_calendar_range.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:hugeicons/hugeicons.dart' show HugeIcon, HugeIcons;
 import 'package:intl/intl.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:path_provider/path_provider.dart';
@@ -36,7 +35,6 @@ class SalesReportPage extends StatefulWidget {
 class _SalesReportPageState extends State<SalesReportPage> {
   DateTimeRange? selectedRange;
   DateRangePreset? selectedPreset;
-
   bool _isLoadingPdf = false;
   bool _isLoadingCsv = false;
 
@@ -414,6 +412,27 @@ class _SalesReportPageState extends State<SalesReportPage> {
     }
   }
 
+  Future<User?> _getCurrentUser() async {
+    try {
+      final usersBox = await Hive.openBox<User>('users');
+      final sessionBox = await Hive.openBox('session');
+      final email = sessionBox.get('currentUserEmail');
+
+      if (email == null) return null;
+
+      for (final user in usersBox.values) {
+        if (user.email == email) {
+          return user;
+        }
+      }
+
+      return null;
+    } catch (e) {
+      debugPrint('User fetch failed: $e');
+      return null;
+    }
+  }
+
   Future<pw.Document> _generateSalesReportPdf(List<Sale> sales) async {
     final pdf = pw.Document();
     final dateFormat = DateFormat('dd/MM/yyyy');
@@ -424,6 +443,21 @@ class _SalesReportPageState extends State<SalesReportPage> {
 
     final prefs = await SharedPreferences.getInstance();
     final currentUserEmail = await _getCurrentUserEmailFromHive();
+    final currentUser = await _getCurrentUser();
+
+    final displayName =
+        currentUser?.name.isNotEmpty == true ? currentUser!.name : "User";
+
+    final phone =
+        currentUser?.phone.isNotEmpty == true ? currentUser!.phone : "";
+
+    final email =
+        currentUser?.email.isNotEmpty == true ? currentUser!.email : "";
+
+    final address =
+        currentUser?.address?.trim().isNotEmpty == true
+            ? currentUser!.address!
+            : '';
 
     final profileImagePath = prefs.getString(
       '${currentUserEmail}_profileImagePath',
@@ -498,7 +532,7 @@ class _SalesReportPageState extends State<SalesReportPage> {
                         crossAxisAlignment: pw.CrossAxisAlignment.start,
                         children: [
                           pw.Text(
-                            "Shutter Life Photography",
+                            displayName,
                             style: pw.TextStyle(
                               font: ttf,
                               fontSize: 16,
@@ -506,18 +540,21 @@ class _SalesReportPageState extends State<SalesReportPage> {
                               color: PdfColors.indigo800,
                             ),
                           ),
-                          pw.Text(
-                            "Phone: +91 63601 20253",
-                            style: pw.TextStyle(font: ttf),
-                          ),
-                          pw.Text(
-                            "Email: shutterlifephotography10@gmail.com",
-                            style: pw.TextStyle(font: ttf),
-                          ),
-                          pw.Text(
-                            "State: Karnataka - 61",
-                            style: pw.TextStyle(font: ttf),
-                          ),
+                          if (phone.isNotEmpty)
+                            pw.Text(
+                              "Phone: $phone",
+                              style: pw.TextStyle(font: ttf),
+                            ),
+                          if (email.isNotEmpty)
+                            pw.Text(
+                              "Email: $email",
+                              style: pw.TextStyle(font: ttf),
+                            ),
+                          if (address.trim().isNotEmpty)
+                            pw.Text(
+                              "Address: $address",
+                              style: pw.TextStyle(font: ttf),
+                            ),
                         ],
                       ),
                     ),
@@ -924,8 +961,8 @@ class _SalesReportPageState extends State<SalesReportPage> {
                 top: MediaQuery.of(context).padding.top + 8,
                 left: 12,
                 child: _modernCircleButton(
-                  customIcon: HugeIcon(
-                    icon: HugeIcons.strokeRoundedArrowLeft04,
+                  customIcon: Icon(
+                    Icons.arrow_back,
                     color: Colors.white,
                     size: 30,
                   ),

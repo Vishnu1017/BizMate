@@ -15,15 +15,30 @@ class WhatsAppService {
     DateTime? dueDate,
     double? amount,
     String? invoiceNumber,
-
-    // ✅ NEW (dynamic – SAME as SaleOptionsMenu)
     required String upiId,
     required String businessName,
   }) async {
     try {
-      final cleanedPhone = phone.replaceAll(RegExp(r'\D'), '');
+      // ✅ NORMALIZE PHONE NUMBER (SAFE)
+      String rawPhone = phone.trim();
 
-      if (cleanedPhone.length < 10) {
+      // Keep digits and +
+      rawPhone = rawPhone.replaceAll(RegExp(r'[^\d+]'), '');
+
+      late String whatsappPhone;
+
+      if (rawPhone.startsWith('+')) {
+        // +91xxxxxxx → 91xxxxxxxxxx
+        whatsappPhone = rawPhone.substring(1);
+      } else if (rawPhone.length == 10) {
+        // Local Indian number
+        whatsappPhone = '91$rawPhone';
+      } else {
+        // Already contains country code
+        whatsappPhone = rawPhone;
+      }
+
+      if (whatsappPhone.length < 10) {
         AppSnackBar.showWarning(
           context,
           message: "Please enter a valid phone number",
@@ -34,11 +49,10 @@ class WhatsAppService {
 
       final customerName = name.isNotEmpty ? name : "there";
 
-      /// ✅ Amount handling
       final amountText =
           amount != null && amount > 0 ? amount.toStringAsFixed(2) : null;
 
-      /// ✅ UPI DEEP LINKS (same logic as PDF)
+      /// ✅ UPI LINKS
       final gpay =
           amountText != null
               ? "gpay://upi/pay?pa=$upiId&pn=${Uri.encodeComponent(businessName)}&am=$amountText&cu=INR"
@@ -54,11 +68,10 @@ class WhatsAppService {
               ? "paytm://upi/pay?pa=$upiId&pn=${Uri.encodeComponent(businessName)}&am=$amountText&cu=INR"
               : "paytm://upi/pay?pa=$upiId&pn=${Uri.encodeComponent(businessName)}&cu=INR";
 
-      /// ✅ DEFAULT MESSAGE
+      /// ✅ MESSAGE
       String message =
           "Hi $customerName!\n\nThis is $businessName. How can we help you today?";
 
-      /// ✅ PAYMENT DUE MESSAGE
       if (purpose == 'payment_due' && amountText != null) {
         message =
             "Dear $customerName,\n\n"
@@ -76,9 +89,8 @@ class WhatsAppService {
 
       final encodedMessage = Uri.encodeComponent(message);
 
-      /// ✅ WhatsApp launch (India-safe)
       final url = Uri.parse(
-        "https://wa.me/91$cleanedPhone?text=$encodedMessage",
+        "https://wa.me/$whatsappPhone?text=$encodedMessage",
       );
 
       if (await canLaunchUrl(url)) {

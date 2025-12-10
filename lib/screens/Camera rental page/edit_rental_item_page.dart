@@ -429,24 +429,6 @@ class _EditRentalItemPageState extends State<EditRentalItemPage> {
       }
     }
 
-    // Helper function to get icon for condition
-    IconData getConditionIcon(String condition) {
-      switch (condition) {
-        case 'Brand New':
-          return Icons.new_releases_outlined;
-        case 'Excellent':
-          return Icons.star_outlined;
-        case 'Good':
-          return Icons.star_half_outlined;
-        case 'Fair':
-          return Icons.build_outlined;
-        case 'Needs Repair':
-          return Icons.construction_outlined;
-        default:
-          return Icons.info_outline;
-      }
-    }
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -504,13 +486,13 @@ class _EditRentalItemPageState extends State<EditRentalItemPage> {
                           ),
                         ),
                         const SizedBox(width: 12),
-                        Icon(
-                          getConditionIcon(condition),
-                          color: getConditionColor(condition),
-                          size: 18,
+                        Text(
+                          condition,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
-                        const SizedBox(width: 12),
-                        Text(condition),
                       ],
                     ),
                   );

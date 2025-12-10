@@ -15,7 +15,8 @@ class RentalPdfPreviewScreen extends StatelessWidget {
     super.key,
     required this.filePath,
     required this.sale,
-    required this.userName, required String customerName,
+    required this.userName,
+    required String customerName,
   });
 
   @override
@@ -125,7 +126,8 @@ Thanks for renting with us!
             AppSnackBar.showSuccess(
               context,
               message:
-                  "Message copied! Paste it in WhatsApp after selecting contact.",duration: Duration(seconds: 2)
+                  "Message copied! Paste it in WhatsApp after selecting contact.",
+              duration: Duration(seconds: 2),
             );
 
             await Future.delayed(const Duration(milliseconds: 300));
@@ -135,7 +137,7 @@ Thanks for renting with us!
               await Share.shareXFiles(
                 [file],
                 text: message,
-                subject: '📸 Rental Invoice from Shutter Life Photography',
+                subject: '📸 Rental Invoice from ${sale.customerName}',
               );
             } catch (e) {
               AppSnackBar.showError(

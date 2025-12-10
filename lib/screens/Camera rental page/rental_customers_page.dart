@@ -58,26 +58,45 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
 
       List<CustomerModel> loaded = [];
 
+      // ✅ Load from USER box first (highest priority)
       if (userBox != null && userBox!.containsKey("customers")) {
-        try {
-          loaded = List<CustomerModel>.from(
-            userBox!.get("customers", defaultValue: []),
-          );
-        } catch (_) {
-          loaded = [];
-        }
+        loaded = List<CustomerModel>.from(
+          userBox!.get("customers", defaultValue: []),
+        );
       }
 
+      // ✅ Fallback to global box
       if (loaded.isEmpty) {
         loaded = customerBox.values.toList();
       }
 
-      // SAFETY: ensure widget still mounted before updating state
+      // ✅ HARD DEDUPLICATION (by phone number)
+      final Map<String, CustomerModel> uniqueCustomers = {};
+
+      for (final customer in loaded) {
+        final phoneKey = customer.phone.trim();
+
+        // Keep the MOST RECENT customer entry
+        if (!uniqueCustomers.containsKey(phoneKey) ||
+            customer.createdAt.isAfter(uniqueCustomers[phoneKey]!.createdAt)) {
+          uniqueCustomers[phoneKey] = customer;
+        }
+      }
+
+      final dedupedList =
+          uniqueCustomers.values.toList()
+            ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+      // ✅ Persist cleaned list back (self-healing)
+      if (userBox != null) {
+        await userBox!.put("customers", dedupedList);
+      }
+
       if (!mounted) return;
 
       setState(() {
-        allCustomers = loaded.reversed.toList(); // full copy
-        customers = List.from(allCustomers); // display list
+        allCustomers = dedupedList;
+        customers = List.from(allCustomers);
         _isLoading = false;
       });
     } catch (e) {

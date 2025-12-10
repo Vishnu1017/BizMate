@@ -1229,15 +1229,15 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
                     Color conditionColor;
                     switch (condition) {
                       case 'Brand New':
-                        conditionColor = const Color(0xFF10B981);
+                        conditionColor = Colors.green;
                       case 'Excellent':
-                        conditionColor = const Color(0xFF22C55E);
+                        conditionColor = Colors.teal;
                       case 'Good':
-                        conditionColor = const Color(0xFFF59E0B);
+                        conditionColor = Colors.orange;
                       case 'Fair':
-                        conditionColor = const Color(0xFFEF4444);
+                        conditionColor = Colors.orangeAccent;
                       default:
-                        conditionColor = const Color(0xFF94A3B8);
+                        conditionColor = Colors.grey;
                     }
 
                     return DropdownMenuItem(

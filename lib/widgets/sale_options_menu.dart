@@ -268,10 +268,25 @@ class SaleOptionsMenu extends StatelessWidget {
 
   Future<void> _handlePaymentReminder(BuildContext context) async {
     final balanceAmount = sale.totalAmount - sale.amount;
-    final phone =
-        sale.phoneNumber.replaceAll('+91', '').replaceAll(' ', '').trim();
 
-    if (phone.isEmpty || phone.length < 10) {
+    // ✅ Normalize phone number (KEEP country code)
+    String rawPhone = sale.phoneNumber.trim();
+
+    // Remove spaces, hyphens etc (keep numbers and +)
+    rawPhone = rawPhone.replaceAll(RegExp(r'[^\d+]'), '');
+
+    // ✅ Convert to WhatsApp format (NO +)
+    String phone;
+    if (rawPhone.startsWith('+')) {
+      phone = rawPhone.replaceFirst('+', '');
+    } else if (rawPhone.length == 10) {
+      phone = '91$rawPhone'; // assume India
+    } else {
+      phone = rawPhone;
+    }
+
+    // ✅ Final validation
+    if (phone.length < 10) {
       AppSnackBar.showError(
         context,
         message: "Phone number not available or invalid",
@@ -287,45 +302,36 @@ class SaleOptionsMenu extends StatelessWidget {
       AppSnackBar.showWarning(
         context,
         message: "Please set your UPI ID in your profile first",
-        duration: Duration(seconds: 2),
+        duration: const Duration(seconds: 2),
       );
       return;
     }
 
-    String message;
-    if (sale.dateTime != null &&
-        balanceAmount != null &&
-        invoiceNumber != null) {
-      message =
-          "Dear ${sale.customerName},\n\nFriendly reminder from ${currentUserName.isNotEmpty ? currentUserName : ''}:\n\n"
-          "📅 Payment Due: ${DateFormat('dd MMM yyyy').format(sale.dateTime)}\n"
-          "💰 Amount: ₹${balanceAmount.toStringAsFixed(2)}\n"
-          "📋 Invoice #: $invoiceNumber\n\n"
-          "Payment Methods:\n"
-          "• UPI: ${currentUser!.upiId}\n"
-          "• Bank Transfer (Details attached)\n"
-          "• Cash (At our studio)\n\n"
-          "Please confirm once payment is made. Thank you for your prompt attention!\n\n"
-          "Warm regards,\nAccounts Team\n${currentUserName.isNotEmpty ? currentUserName : ''}";
-    } else {
-      message =
-          "Dear ${sale.customerName},\n\nThis is a friendly reminder regarding your payment. "
-          "Please contact us for invoice details.\n\n"
-          "Warm regards,\nAccounts Team\n${currentUserName.isNotEmpty ? currentUserName : ''}";
-    }
+    final String sender =
+        currentUserName.isNotEmpty ? currentUserName : 'Accounts Team';
+
+    final String message =
+        "Dear ${sale.customerName},\n\n"
+        "Friendly reminder from $sender:\n\n"
+        "📅 Payment Due: ${DateFormat('dd MMM yyyy').format(sale.dateTime)}\n"
+        "💰 Amount Due: ₹${balanceAmount.toStringAsFixed(2)}\n"
+        "${invoiceNumber != null ? "📋 Invoice #: $invoiceNumber\n" : ""}\n"
+        "Payment Methods:\n"
+        "• UPI: ${currentUser!.upiId}\n"
+        "• Bank Transfer (Details attached)\n"
+        "• Cash (At our studio)\n\n"
+        "Please confirm once payment is made.\n\n"
+        "Warm regards,\n$sender";
 
     try {
       final encodedMessage = Uri.encodeComponent(message);
-      final url1 = "https://wa.me/$phone?text=$encodedMessage";
-      final url2 = "https://wa.me/91$phone?text=$encodedMessage";
+      final uri = Uri.parse("https://wa.me/$phone?text=$encodedMessage");
 
-      canLaunchUrl(Uri.parse(url1)).then((canLaunch) {
-        if (canLaunch) {
-          launchUrl(Uri.parse(url1), mode: LaunchMode.externalApplication);
-        } else {
-          launchUrl(Uri.parse(url2), mode: LaunchMode.externalApplication);
-        }
-      });
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        throw Exception("WhatsApp not available");
+      }
     } catch (e) {
       AppSnackBar.showError(
         context,
