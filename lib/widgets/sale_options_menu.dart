@@ -267,25 +267,21 @@ class SaleOptionsMenu extends StatelessWidget {
   }
 
   Future<void> _handlePaymentReminder(BuildContext context) async {
-    final balanceAmount = sale.totalAmount - sale.amount;
+    final double balanceAmount = sale.totalAmount - sale.amount;
 
-    // ✅ Normalize phone number (KEEP country code)
+    // ✅ Normalize phone number
     String rawPhone = sale.phoneNumber.trim();
-
-    // Remove spaces, hyphens etc (keep numbers and +)
     rawPhone = rawPhone.replaceAll(RegExp(r'[^\d+]'), '');
 
-    // ✅ Convert to WhatsApp format (NO +)
     String phone;
     if (rawPhone.startsWith('+')) {
-      phone = rawPhone.replaceFirst('+', '');
+      phone = rawPhone.substring(1);
     } else if (rawPhone.length == 10) {
-      phone = '91$rawPhone'; // assume India
+      phone = '91$rawPhone';
     } else {
       phone = rawPhone;
     }
 
-    // ✅ Final validation
     if (phone.length < 10) {
       AppSnackBar.showError(
         context,
@@ -298,7 +294,7 @@ class SaleOptionsMenu extends StatelessWidget {
     final usersBox = Hive.box<User>('users');
     final currentUser = await _getCurrentUser(usersBox);
 
-    if (currentUser?.upiId.isEmpty ?? true) {
+    if (currentUser == null || currentUser.upiId.isEmpty) {
       AppSnackBar.showWarning(
         context,
         message: "Please set your UPI ID in your profile first",
@@ -310,32 +306,40 @@ class SaleOptionsMenu extends StatelessWidget {
     final String sender =
         currentUserName.isNotEmpty ? currentUserName : 'Accounts Team';
 
+    /// ✅ STEP 1: Build UPI intent (RAW)
+    final String upiIntent =
+        "upi://pay"
+        "?pa=${currentUser.upiId}"
+        "&pn=$sender"
+        "&am=${balanceAmount.toStringAsFixed(2)}"
+        "&cu=INR";
+
+    /// ✅ STEP 2: Encode UPI link fully (THIS FIXES AMOUNT ISSUE)
+    final String encodedUpiLink = Uri.encodeFull(upiIntent);
+
+    /// ✅ STEP 3: WhatsApp message
     final String message =
         "Dear ${sale.customerName},\n\n"
-        "Friendly reminder from $sender:\n\n"
-        "📅 Payment Due: ${DateFormat('dd MMM yyyy').format(sale.dateTime)}\n"
+        "Payment reminder from $sender 👋\n\n"
+        "📅 Due Date: ${DateFormat('dd MMM yyyy').format(sale.dateTime)}\n"
         "💰 Amount Due: ₹${balanceAmount.toStringAsFixed(2)}\n"
         "${invoiceNumber != null ? "📋 Invoice #: $invoiceNumber\n" : ""}\n"
-        "Payment Methods:\n"
-        "• UPI: ${currentUser!.upiId}\n"
-        "• Bank Transfer (Details attached)\n"
-        "• Cash (At our studio)\n\n"
-        "Please confirm once payment is made.\n\n"
-        "Warm regards,\n$sender";
+        "✅ Tap below to pay via UPI:\n"
+        "${currentUser.upiId}\n\n"
+        "Please confirm once payment is completed.\n\n"
+        "Regards,\n$sender";
 
     try {
-      final encodedMessage = Uri.encodeComponent(message);
-      final uri = Uri.parse("https://wa.me/$phone?text=$encodedMessage");
+      final String encodedMessage = Uri.encodeComponent(message);
+      final Uri whatsappUri = Uri.parse(
+        "https://wa.me/$phone?text=$encodedMessage",
+      );
 
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      } else {
-        throw Exception("WhatsApp not available");
-      }
+      await launchUrl(whatsappUri, mode: LaunchMode.externalApplication);
     } catch (e) {
       AppSnackBar.showError(
         context,
-        message: "Couldn't open WhatsApp",
+        message: "Unable to open WhatsApp on this device",
         duration: const Duration(seconds: 2),
       );
     }
