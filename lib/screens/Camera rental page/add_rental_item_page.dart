@@ -1221,7 +1221,7 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
                 child: Icon(
                   Icons.expand_more_rounded,
                   color: Colors.grey[600],
-                  size: isDesktop ? 28 : (isTablet ? 26 : 24),
+                  size: isDesktop ? 26 : (isTablet ? 24 : 20),
                 ),
               ),
               items:
@@ -1250,8 +1250,8 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
                         child: Row(
                           children: [
                             Container(
-                              width: isDesktop ? 14 : (isTablet ? 13 : 12),
-                              height: isDesktop ? 14 : (isTablet ? 13 : 12),
+                              width: isDesktop ? 12 : (isTablet ? 11 : 10),
+                              height: isDesktop ? 12 : (isTablet ? 11 : 10),
                               decoration: BoxDecoration(
                                 color: conditionColor,
                                 shape: BoxShape.circle,
@@ -1371,13 +1371,13 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
             Icon(
               icon,
               color: isSelected ? color : Colors.grey[600],
-              size: 20 * Scale,
+              size: 16 * Scale,
             ),
             SizedBox(width: isDesktop ? 12 : 8),
             Text(
               label,
               style: TextStyle(
-                fontSize: 12 * Scale,
+                fontSize: 10 * Scale,
                 fontWeight: FontWeight.w600,
                 color: isSelected ? color : Colors.grey[700],
               ),
