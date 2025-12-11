@@ -422,7 +422,7 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
 
   Future<void> _initBoxes() async {
     try {
-      // Initialize session box
+      // SESSION BOX
       if (!Hive.isBoxOpen('session')) {
         await Hive.openBox('session');
         if (!mounted) return;
@@ -445,59 +445,72 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
         userBox = Hive.box("userdata_$safeEmail");
       }
 
-      // Customers box
+      // CUSTOMERS BOX
       if (!Hive.isBoxOpen('customers')) {
         await Hive.openBox<CustomerModel>('customers');
         if (!mounted) return;
       }
-
       customerBox = Hive.box<CustomerModel>('customers');
 
-      // Rental sales box
+      // RENTAL SALES BOX
       if (!Hive.isBoxOpen('rental_sales')) {
         await Hive.openBox<RentalSaleModel>('rental_sales');
         if (!mounted) return;
       }
-
       salesBox = Hive.box<RentalSaleModel>('rental_sales');
     } catch (e) {
       debugPrint('Error initializing Hive boxes: $e');
-
       if (mounted) {
         AppSnackBar.showError(
           context,
           message: 'Error initializing database: $e',
-          duration: Duration(seconds: 2),
         );
       }
     } finally {
       if (!mounted) return;
-
-      setState(() {
-        _isLoading = false;
-      });
+      setState(() => _isLoading = false);
     }
 
     void loadCustomers() {
       try {
-        final customers = customerBox.values.toList();
+        List<CustomerModel> loaded = [];
 
-        final Set<String> seen = {};
-        final List<Map<String, String>> uniqueCustomers = [];
+        // 1️⃣ Load from user-specific box FIRST
+        if (userBox != null && userBox!.containsKey("customers")) {
+          loaded = List<CustomerModel>.from(
+            userBox!.get("customers", defaultValue: []),
+          );
+        }
 
-        for (final c in customers) {
-          final key = "${c.name}_${c.phone}";
-          if (!seen.contains(key)) {
-            seen.add(key);
-            uniqueCustomers.add({'name': c.name, 'phone': c.phone});
+        // 2️⃣ Fallback to main customers box
+        if (loaded.isEmpty) {
+          loaded = customerBox.values.toList();
+        }
+
+        // 3️⃣ Deduplicate by phone (same logic as RentalCustomersPage)
+        final Map<String, CustomerModel> unique = {};
+        for (final c in loaded) {
+          final key = c.phone.trim();
+
+          if (!unique.containsKey(key) ||
+              c.createdAt.isAfter(unique[key]!.createdAt)) {
+            unique[key] = c;
           }
         }
 
-        setState(() {
-          customerList = uniqueCustomers;
-        });
-      } catch (_) {
-        setState(() => customerList = []);
+        final cleanedList =
+            unique.values.toList()
+              ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+        // 4️⃣ Convert to simple map list for your picker UI
+        customerList =
+            cleanedList.map((c) => {"name": c.name, "phone": c.phone}).toList();
+
+        setState(() {});
+      } catch (e) {
+        debugPrint("Error loading customers: $e");
+        customerList = [];
+        setState(() {});
       }
     }
 
