@@ -83,7 +83,7 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
     );
 
     _confettiController = ConfettiController(
-      duration: const Duration(seconds: 3),
+      duration: const Duration(seconds: 2),
     );
 
     _animationController.forward();
