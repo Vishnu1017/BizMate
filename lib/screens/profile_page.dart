@@ -1,6 +1,7 @@
 // ignore_for_file: unused_local_variable
 
 import 'dart:io';
+import 'package:bizmate/services/image_compression_service.dart';
 import 'package:bizmate/widgets/app_snackbar.dart' show AppSnackBar;
 import 'package:bizmate/widgets/confirm_delete_dialog.dart'
     show showConfirmDialog;
@@ -1617,7 +1618,13 @@ class _ProfilePageState extends State<ProfilePage>
         return;
       }
 
-      final file = File(picked.path);
+      final originalFile = File(picked.path);
+
+      final compressedFile = await ImageCompressionService.compressProfileImage(
+        originalFile: originalFile,
+      );
+
+      final file = compressedFile ?? originalFile;
       final prefs = await SharedPreferences.getInstance();
 
       await prefs.setString('${widget.user.email}_profileImagePath', file.path);

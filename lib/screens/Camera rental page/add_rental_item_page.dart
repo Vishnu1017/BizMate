@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:bizmate/models/rental_item.dart';
+import 'package:bizmate/services/image_compression_service.dart';
 import 'package:bizmate/widgets/app_snackbar.dart' show AppSnackBar;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -110,7 +111,7 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
       await folder.create(recursive: true);
     }
 
-    final fileName = "${DateTime.now().millisecondsSinceEpoch}.jpg";
+    final fileName = "${DateTime.now().millisecondsSinceEpoch}.webp";
     final newImage = File("${folder.path}/$fileName");
 
     return File(path).copy(newImage.path);
@@ -130,7 +131,20 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
       final pickedFile = await _picker.pickImage(source: result);
       if (pickedFile != null) {
         HapticFeedback.selectionClick();
-        final savedFile = await _saveImagePermanently(pickedFile.path);
+
+        final originalFile = File(pickedFile.path);
+
+        // ✅ COMPRESS → WEBP (LOSSY 75–80)
+        final compressedFile = await ImageCompressionService.toWebPLossy(
+          inputFile: originalFile,
+          quality: 78, // safely clamped internally (75–80)
+        );
+
+        // ✅ SAVE ONLY COMPRESSED FILE
+        final savedFile = await _saveImagePermanently(
+          (compressedFile ?? originalFile).path,
+        );
+
         setState(() => _selectedImage = savedFile);
       }
     }
@@ -1393,7 +1407,7 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
       children: [
         Expanded(
           child: AnimatedContainer(
-            duration: const Duration(milliseconds: 300),
+            duration: const Duration(milliseconds: 140),
             height: 50 * Scale,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(16 * Scale),
@@ -1412,9 +1426,9 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
                       ? null
                       : [
                         BoxShadow(
-                          color: const Color(0xFF6366F1).withOpacity(0.3),
-                          blurRadius: 20,
-                          offset: const Offset(0, 8),
+                          color: const Color(0xFF6366F1).withOpacity(0.25),
+                          blurRadius: 14, // ⬅️ less blur
+                          offset: const Offset(0, 4), // ⬅️ less lift
                         ),
                       ],
             ),
@@ -1447,7 +1461,7 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
                           ),
                           SizedBox(width: 8 * Scale),
                           Text(
-                            'Add to Inventory',
+                            'Add Gear',
                             style: TextStyle(
                               fontSize: 12 * Scale,
                               fontWeight: FontWeight.w700,
@@ -1471,7 +1485,7 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
             decoration: BoxDecoration(
               color: const Color(0xFFF1F5F9),
               borderRadius: BorderRadius.circular(isDesktop ? 18 : 16),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
+              border: Border.all(color: const Color(0xFFE2E8F0), width: 1.2),
             ),
             child: Material(
               color: Colors.transparent,

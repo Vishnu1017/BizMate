@@ -44,6 +44,7 @@ dependencies:
   pdfx: ^2.6.0
   printing: ^5.14.2
   flutter_email_sender: ^7.0.0
+  flutter_image_compress: ^2.1.0
   share_plus: ^7.0.0
   local_auth: ^2.2.1
   flutter_secure_storage: ^8.0.0
