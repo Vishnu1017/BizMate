@@ -659,6 +659,7 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
   void saveSale() async {
     setState(() => isLoading = true);
 
+    // 🔹 Get current logged-in user
     final sessionBox = await Hive.openBox('session');
     final currentEmail = sessionBox.get("currentUserEmail");
 
@@ -672,43 +673,64 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
       return;
     }
 
+    // 🔹 Open user-specific box
     final safeEmail = currentEmail.replaceAll('.', '_').replaceAll('@', '_');
     final userBox = await Hive.openBox('userdata_$safeEmail');
 
+    // 🔹 Create payment entry
     final newPayment = Payment(
       amount: double.tryParse(amountController.text) ?? 0,
       date: DateTime.now(),
       mode: _selectedMode,
     );
 
+    // 🔥 CRITICAL FIX: Merge selected DATE + current TIME
+    final now = DateTime.now();
+    final saleDateTime = DateTime(
+      selectedDate.year,
+      selectedDate.month,
+      selectedDate.day,
+      now.hour,
+      now.minute,
+      now.second,
+      now.millisecond,
+    );
+
+    // 🔹 Create sale
     final sale = Sale(
-      customerName: customerController.text,
-      item: productController.text,
-      phoneNumber: phoneController.text,
+      customerName: customerController.text.trim(),
+      item: productController.text.trim(),
+      productName: productController.text.trim(),
+      phoneNumber: phoneController.text.trim(),
       amount: newPayment.amount,
       totalAmount: double.tryParse(totalAmountController.text) ?? 0,
-      dateTime: selectedDate,
+      dateTime: saleDateTime, // ✅ UNIQUE per sale
       deliveryStatus: 'All Non Editing Images',
       paymentHistory: [newPayment],
       discount: totalDiscount,
-      productName: productController.text,
     );
 
-    List<Sale> userSales = List<Sale>.from(
+    // 🔹 Fetch existing sales (DO NOT overwrite)
+    final List<Sale> userSales = List<Sale>.from(
       userBox.get("sales", defaultValue: <Sale>[]),
     );
+
+    // 🔹 Append new sale
     userSales.add(sale);
 
+    // 🔹 Save back to Hive
     await userBox.put("sales", userSales);
 
     setState(() => isLoading = false);
 
+    // 🔹 Success feedback
     AppSnackBar.showSuccess(
       context,
       message: "Sale saved successfully!",
       duration: const Duration(seconds: 2),
     );
 
+    // 🔹 Exit screen
     await Future.delayed(const Duration(milliseconds: 800));
     if (mounted) Navigator.pop(context);
   }
