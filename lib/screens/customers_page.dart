@@ -32,8 +32,10 @@ class _CustomersPageState extends State<CustomersPage> {
   @override
   void initState() {
     super.initState();
-    fetchUniqueCustomers();
-    _loadProfileName(); // ✅ IMPORTANT
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      fetchUniqueCustomers();
+      _loadProfileName();
+    });
   }
 
   // ------------------- SEARCH -------------------
@@ -63,7 +65,10 @@ class _CustomersPageState extends State<CustomersPage> {
 
   // ------------------- LOAD CUSTOMERS -------------------
   void fetchUniqueCustomers() async {
-    final sessionBox = await Hive.openBox('session');
+    if (!Hive.isBoxOpen('session')) {
+      await Hive.openBox('session');
+    }
+    final sessionBox = Hive.box('session');
     final email = sessionBox.get('currentUserEmail');
 
     if (email == null) {
@@ -74,7 +79,10 @@ class _CustomersPageState extends State<CustomersPage> {
     }
 
     final safeEmail = email.replaceAll('.', '_').replaceAll('@', '_');
-    final userBox = await Hive.openBox('userdata_$safeEmail');
+    if (!Hive.isBoxOpen('userdata_$safeEmail')) {
+      await Hive.openBox('userdata_$safeEmail');
+    }
+    final userBox = Hive.box('userdata_$safeEmail');
 
     List<Sale> sales = List<Sale>.from(userBox.get("sales", defaultValue: []));
 
@@ -85,7 +93,10 @@ class _CustomersPageState extends State<CustomersPage> {
       final key = "${sale.customerName}_${sale.phoneNumber}";
       if (!seen.contains(key)) {
         seen.add(key);
-        uniqueList.add({'name': sale.customerName, 'phone': sale.phoneNumber});
+        uniqueList.add({
+          'name': sale.customerName.trim(),
+          'phone': sale.phoneNumber.trim(),
+        });
       }
     }
 
