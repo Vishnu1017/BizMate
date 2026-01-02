@@ -31,6 +31,9 @@ class User extends HiveObject {
   @HiveField(8)
   String? address;
 
+  @HiveField(9)
+  String? location;
+
   User({
     required this.name,
     required this.email,
@@ -38,6 +41,7 @@ class User extends HiveObject {
     required this.password,
     required this.role,
     this.address = '',
+    this.location = '',
     this.upiId = '',
     this.imageUrl = '', // ✅ Default value avoids missing argument errors
   });

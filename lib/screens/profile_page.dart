@@ -39,6 +39,7 @@ class _ProfilePageState extends State<ProfilePage>
   late String email;
   late String phone;
   late String upiId;
+  String location = 'India';
   File? _profileImage;
   final picker = ImagePicker();
   bool _isImageLoading = false;
@@ -49,6 +50,7 @@ class _ProfilePageState extends State<ProfilePage>
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<double> _slideAnimation;
+  double scale = 1.0;
 
   final List<String> roles = [
     'None',
@@ -63,11 +65,12 @@ class _ProfilePageState extends State<ProfilePage>
     'Entrepreneur',
   ];
 
-  late TextEditingController _nameController;
-  late TextEditingController _roleController;
-  late TextEditingController _emailController;
-  late TextEditingController _phoneController;
-  late TextEditingController _upiController;
+  final _nameController = TextEditingController();
+  final _roleController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _upiController = TextEditingController();
+  final _locationController = TextEditingController();
 
   final FlutterSecureStorage _secureStorage = FlutterSecureStorage(
     aOptions: const AndroidOptions(encryptedSharedPreferences: true),
@@ -107,12 +110,17 @@ class _ProfilePageState extends State<ProfilePage>
     phone = user.phone;
     role = user.role;
     upiId = user.upiId;
+    location =
+        user.location?.trim().isNotEmpty == true
+            ? user.location!.trim()
+            : 'India';
 
-    _nameController = TextEditingController(text: name);
-    _roleController = TextEditingController(text: role);
-    _emailController = TextEditingController(text: email);
-    _phoneController = TextEditingController(text: phone);
-    _upiController = TextEditingController(text: upiId);
+    _nameController.text = name;
+    _roleController.text = role;
+    _emailController.text = email;
+    _phoneController.text = phone;
+    _upiController.text = upiId;
+    _locationController.text = location;
 
     _loadImage();
     _loadRentalSetting();
@@ -127,6 +135,7 @@ class _ProfilePageState extends State<ProfilePage>
     _emailController.dispose();
     _phoneController.dispose();
     _upiController.dispose();
+    _locationController.dispose();
     super.dispose();
   }
 
@@ -1662,6 +1671,7 @@ class _ProfilePageState extends State<ProfilePage>
         _emailController.text = email;
         _phoneController.text = phone;
         _upiController.text = upiId;
+        _locationController.text = location;
       }
     });
   }
@@ -1682,6 +1692,7 @@ class _ProfilePageState extends State<ProfilePage>
         existingUser.phone = _phoneController.text.trim();
         existingUser.role = _roleController.text.trim();
         existingUser.upiId = _upiController.text.trim();
+        existingUser.location = _locationController.text.trim();
 
         await existingUser.save();
 
@@ -1691,6 +1702,10 @@ class _ProfilePageState extends State<ProfilePage>
           email = existingUser.email;
           phone = existingUser.phone;
           upiId = existingUser.upiId;
+          location =
+              existingUser.location?.trim().isNotEmpty == true
+                  ? existingUser.location!.trim()
+                  : 'India';
           _isEditing = false;
         });
 
@@ -1958,7 +1973,10 @@ class _ProfilePageState extends State<ProfilePage>
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Container(
-                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 14 * scale,
+                    vertical: 6 * scale,
+                  ),
                   decoration: BoxDecoration(
                     color: Color(0xFFF1F5F9),
                     borderRadius: BorderRadius.circular(12),
@@ -1966,7 +1984,7 @@ class _ProfilePageState extends State<ProfilePage>
                   child: Text(
                     'PROFILE',
                     style: TextStyle(
-                      fontSize: 12,
+                      fontSize: 10 * scale,
                       fontWeight: FontWeight.bold,
                       color: Color(0xFF475569),
                       letterSpacing: 1.5,
@@ -1977,7 +1995,7 @@ class _ProfilePageState extends State<ProfilePage>
                   icon: Icon(
                     Icons.more_vert_rounded,
                     color: Color(0xFF64748B),
-                    size: 28,
+                    size: 20 * scale,
                   ),
                   color: Colors.white,
                   surfaceTintColor: Colors.transparent,
@@ -1998,7 +2016,7 @@ class _ProfilePageState extends State<ProfilePage>
                         child: Row(
                           children: [
                             Container(
-                              padding: const EdgeInsets.all(8),
+                              padding: EdgeInsets.all(6 * scale),
                               decoration: BoxDecoration(
                                 color: Color(0xFF3B82F6).withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(10),
@@ -2006,14 +2024,14 @@ class _ProfilePageState extends State<ProfilePage>
                               child: Icon(
                                 Icons.edit,
                                 color: Color(0xFF3B82F6),
-                                size: 18,
+                                size: 12 * scale,
                               ),
                             ),
-                            SizedBox(width: 12),
+                            SizedBox(width: 10 * scale),
                             Text(
                               'Edit Profile',
                               style: TextStyle(
-                                fontSize: 14,
+                                fontSize: 12 * scale,
                                 fontWeight: FontWeight.w600,
                                 color: Color(0xFF1E293B),
                               ),
@@ -2034,8 +2052,8 @@ class _ProfilePageState extends State<ProfilePage>
               alignment: Alignment.center,
               children: [
                 Container(
-                  width: isSmallScreen ? 120 : 140,
-                  height: isSmallScreen ? 120 : 140,
+                  width: 110 * scale,
+                  height: 110 * scale,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     gradient: LinearGradient(
@@ -2051,11 +2069,14 @@ class _ProfilePageState extends State<ProfilePage>
                   child: Stack(
                     children: [
                       Container(
-                        width: isSmallScreen ? 100 : 120,
-                        height: isSmallScreen ? 100 : 120,
+                        width: 90 * scale,
+                        height: 90 * scale,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 4),
+                          border: Border.all(
+                            color: Colors.white,
+                            width: 4 * scale,
+                          ),
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black.withOpacity(0.1),
@@ -2093,7 +2114,7 @@ class _ProfilePageState extends State<ProfilePage>
                                                 ? name[0].toUpperCase()
                                                 : 'U',
                                             style: TextStyle(
-                                              fontSize: 36,
+                                              fontSize: 32 * scale,
                                               fontWeight: FontWeight.bold,
                                               color: Colors.white,
                                             ),
@@ -2117,7 +2138,7 @@ class _ProfilePageState extends State<ProfilePage>
                                             ? name[0].toUpperCase()
                                             : 'U',
                                         style: TextStyle(
-                                          fontSize: 36,
+                                          fontSize: 32 * scale,
                                           fontWeight: FontWeight.bold,
                                           color: Colors.white,
                                         ),
@@ -2130,7 +2151,7 @@ class _ProfilePageState extends State<ProfilePage>
                         bottom: 0,
                         right: 0,
                         child: Container(
-                          padding: EdgeInsets.all(10),
+                          padding: EdgeInsets.all(6 * scale),
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             color: Color(0xFF3B82F6),
@@ -2143,7 +2164,7 @@ class _ProfilePageState extends State<ProfilePage>
                           ),
                           child: HugeIcon(
                             icon: HugeIcons.strokeRoundedCameraAdd01,
-                            size: 18,
+                            size: 16 * scale,
                             color: Colors.white,
                           ),
                         ),
@@ -2175,7 +2196,7 @@ class _ProfilePageState extends State<ProfilePage>
                 : Text(
                   name,
                   style: TextStyle(
-                    fontSize: isSmallScreen ? 24 : 28,
+                    fontSize: 22 * scale,
                     fontWeight: FontWeight.bold,
                     color: Color(0xFF1E293B),
                     letterSpacing: 0.5,
@@ -2199,12 +2220,16 @@ class _ProfilePageState extends State<ProfilePage>
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       // Using Material Icon instead of HugeIcon to fix the List issue
-                      Icon(Icons.work, size: 16, color: Color(0xFF3B82F6)),
+                      Icon(
+                        Icons.work_rounded,
+                        size: 16 * scale,
+                        color: Color(0xFF3B82F6),
+                      ),
                       SizedBox(width: 8),
                       Text(
                         role,
                         style: TextStyle(
-                          fontSize: 14,
+                          fontSize: 12 * scale,
                           fontWeight: FontWeight.w600,
                           color: Color(0xFF475569),
                         ),
@@ -2376,47 +2401,12 @@ class _ProfilePageState extends State<ProfilePage>
               isSmallScreen,
             ),
             SizedBox(height: 16),
-            Container(
-              padding: EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Color(0xFFF8FAFC),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Color(0xFFE2E8F0)),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.location_city_rounded,
-                    color: Color(0xFF64748B),
-                    size: 20,
-                  ),
-                  SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Location',
-                          style: TextStyle(
-                            color: Color(0xFF94A3B8),
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        SizedBox(height: 4),
-                        Text(
-                          'Bangalore, India',
-                          style: TextStyle(
-                            color: Color(0xFF1E293B),
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+            _buildInfoRow(
+              Icons.location_city_rounded,
+              'Location',
+              _locationController,
+              location.isNotEmpty ? location : 'India',
+              isSmallScreen,
             ),
           ],
         ),
@@ -2451,7 +2441,7 @@ class _ProfilePageState extends State<ProfilePage>
           ),
         )
         : Container(
-          padding: EdgeInsets.all(16),
+          padding: EdgeInsets.all(12 * scale),
           decoration: BoxDecoration(
             color: Color(0xFFF8FAFC),
             borderRadius: BorderRadius.circular(12),
@@ -2459,7 +2449,7 @@ class _ProfilePageState extends State<ProfilePage>
           ),
           child: Row(
             children: [
-              Icon(icon, color: Color(0xFF64748B), size: 20),
+              Icon(icon, color: Color(0xFF64748B), size: 16 * scale),
               SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -2469,7 +2459,7 @@ class _ProfilePageState extends State<ProfilePage>
                       label,
                       style: TextStyle(
                         color: Color(0xFF64748B),
-                        fontSize: 12,
+                        fontSize: 10 * scale,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -2480,7 +2470,7 @@ class _ProfilePageState extends State<ProfilePage>
                           : "No $label",
                       style: TextStyle(
                         color: Color(0xFF1E293B),
-                        fontSize: 16,
+                        fontSize: 12 * scale,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -2508,7 +2498,7 @@ class _ProfilePageState extends State<ProfilePage>
         border: Border.all(color: Color(0xFFF1F5F9), width: 1),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: EdgeInsets.all(16 * scale),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -2518,8 +2508,8 @@ class _ProfilePageState extends State<ProfilePage>
                 Row(
                   children: [
                     Container(
-                      width: 8,
-                      height: 8,
+                      width: 6 * scale,
+                      height: 6 * scale,
                       margin: EdgeInsets.only(right: 8),
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
@@ -2531,7 +2521,7 @@ class _ProfilePageState extends State<ProfilePage>
                     Text(
                       'SECURITY',
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 10 * scale,
                         fontWeight: FontWeight.bold,
                         color: Color(0xFF475569),
                         letterSpacing: 2,
@@ -2540,7 +2530,10 @@ class _ProfilePageState extends State<ProfilePage>
                   ],
                 ),
                 Container(
-                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 8 * scale,
+                    vertical: 5 * scale,
+                  ),
                   decoration: BoxDecoration(
                     color:
                         _isPasscodeEnabled
@@ -2557,8 +2550,8 @@ class _ProfilePageState extends State<ProfilePage>
                   child: Row(
                     children: [
                       Container(
-                        width: 6,
-                        height: 6,
+                        width: 4 * scale,
+                        height: 4 * scale,
                         margin: EdgeInsets.only(right: 6),
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
@@ -2571,7 +2564,7 @@ class _ProfilePageState extends State<ProfilePage>
                       Text(
                         _isPasscodeEnabled ? 'ACTIVE' : 'INACTIVE',
                         style: TextStyle(
-                          fontSize: 10,
+                          fontSize: 8 * scale,
                           fontWeight: FontWeight.bold,
                           color:
                               _isPasscodeEnabled
@@ -2590,7 +2583,7 @@ class _ProfilePageState extends State<ProfilePage>
             Text(
               'App Passcode',
               style: TextStyle(
-                fontSize: isSmallScreen ? 22 : 24,
+                fontSize: 16 * scale,
                 fontWeight: FontWeight.bold,
                 color: Color(0xFF1E293B),
                 letterSpacing: 0.5,
@@ -2601,13 +2594,16 @@ class _ProfilePageState extends State<ProfilePage>
 
             Text(
               'Secure your app with a 4-digit passcode',
-              style: TextStyle(color: Color(0xFF64748B), fontSize: 14),
+              style: TextStyle(color: Color(0xFF64748B), fontSize: 10 * scale),
             ),
 
             SizedBox(height: 24),
 
             Container(
-              padding: EdgeInsets.all(16),
+              padding: EdgeInsets.symmetric(
+                horizontal: 12 * scale,
+                vertical: 6 * scale,
+              ),
               decoration: BoxDecoration(
                 color: Color(0xFFF8FAFC),
                 borderRadius: BorderRadius.circular(16),
@@ -2622,7 +2618,7 @@ class _ProfilePageState extends State<ProfilePage>
                       Text(
                         'STATUS',
                         style: TextStyle(
-                          fontSize: 12,
+                          fontSize: 8 * scale,
                           color: Color(0xFF64748B),
                           fontWeight: FontWeight.w600,
                           letterSpacing: 1.5,
@@ -2632,7 +2628,7 @@ class _ProfilePageState extends State<ProfilePage>
                       Text(
                         _isPasscodeEnabled ? 'Protected' : 'Unprotected',
                         style: TextStyle(
-                          fontSize: 20,
+                          fontSize: 16 * scale,
                           fontWeight: FontWeight.bold,
                           color: Color(0xFF1E293B),
                         ),
@@ -2640,7 +2636,7 @@ class _ProfilePageState extends State<ProfilePage>
                     ],
                   ),
                   Transform.scale(
-                    scale: 1.2,
+                    scale: 0.8 * scale,
                     child: Switch(
                       value: _isPasscodeEnabled,
                       activeColor: Colors.white,
@@ -2697,19 +2693,22 @@ class _ProfilePageState extends State<ProfilePage>
               children: [
                 Icon(
                   _isPasscodeEnabled ? Icons.shield : Icons.shield_outlined,
-                  size: 18,
+                  size: 14 * scale,
                   color:
                       _isPasscodeEnabled
                           ? Color(0xFF10B981)
                           : Color(0xFFF59E0B),
                 ),
-                SizedBox(width: 12),
+                SizedBox(width: 8 * scale),
                 Expanded(
                   child: Text(
                     _isPasscodeEnabled
                         ? 'Your app is secured with a passcode'
                         : 'Enable passcode protection for added security',
-                    style: TextStyle(color: Color(0xFF64748B), fontSize: 14),
+                    style: TextStyle(
+                      color: Color(0xFF64748B),
+                      fontSize: 10 * scale,
+                    ),
                   ),
                 ),
               ],
@@ -2736,7 +2735,7 @@ class _ProfilePageState extends State<ProfilePage>
         border: Border.all(color: Color(0xFFF1F5F9), width: 1),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: EdgeInsets.all(16 * scale),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -2746,8 +2745,8 @@ class _ProfilePageState extends State<ProfilePage>
                 Row(
                   children: [
                     Container(
-                      width: 8,
-                      height: 8,
+                      width: 6 * scale,
+                      height: 6 * scale,
                       margin: EdgeInsets.only(right: 8),
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
@@ -2759,7 +2758,7 @@ class _ProfilePageState extends State<ProfilePage>
                     Text(
                       'RENTAL',
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 10 * scale,
                         fontWeight: FontWeight.bold,
                         color: Color(0xFF475569),
                         letterSpacing: 2,
@@ -2768,7 +2767,10 @@ class _ProfilePageState extends State<ProfilePage>
                   ],
                 ),
                 Container(
-                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 8 * scale,
+                    vertical: 5 * scale,
+                  ),
                   decoration: BoxDecoration(
                     color:
                         _isRentalEnabled
@@ -2785,8 +2787,8 @@ class _ProfilePageState extends State<ProfilePage>
                   child: Row(
                     children: [
                       Container(
-                        width: 6,
-                        height: 6,
+                        width: 4 * scale,
+                        height: 4 * scale,
                         margin: EdgeInsets.only(right: 6),
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
@@ -2799,7 +2801,7 @@ class _ProfilePageState extends State<ProfilePage>
                       Text(
                         _isRentalEnabled ? 'LIVE' : 'OFFLINE',
                         style: TextStyle(
-                          fontSize: 10,
+                          fontSize: 8 * scale,
                           fontWeight: FontWeight.bold,
                           color:
                               _isRentalEnabled
@@ -2818,7 +2820,7 @@ class _ProfilePageState extends State<ProfilePage>
             Text(
               'Rental Page',
               style: TextStyle(
-                fontSize: isSmallScreen ? 22 : 24,
+                fontSize: 16 * scale,
                 fontWeight: FontWeight.bold,
                 color: Color(0xFF1E293B),
                 letterSpacing: 0.5,
@@ -2829,13 +2831,16 @@ class _ProfilePageState extends State<ProfilePage>
 
             Text(
               'Control rental page visibility for users',
-              style: TextStyle(color: Color(0xFF64748B), fontSize: 14),
+              style: TextStyle(color: Color(0xFF64748B), fontSize: 10 * scale),
             ),
 
             SizedBox(height: 24),
 
             Container(
-              padding: EdgeInsets.all(16),
+              padding: EdgeInsets.symmetric(
+                horizontal: 12 * scale,
+                vertical: 6 * scale,
+              ),
               decoration: BoxDecoration(
                 color: Color(0xFFF8FAFC),
                 borderRadius: BorderRadius.circular(16),
@@ -2850,7 +2855,7 @@ class _ProfilePageState extends State<ProfilePage>
                       Text(
                         'STATUS',
                         style: TextStyle(
-                          fontSize: 12,
+                          fontSize: 8 * scale,
                           color: Color(0xFF64748B),
                           fontWeight: FontWeight.w600,
                           letterSpacing: 1.5,
@@ -2860,7 +2865,7 @@ class _ProfilePageState extends State<ProfilePage>
                       Text(
                         _isRentalEnabled ? 'Enabled' : 'Disabled',
                         style: TextStyle(
-                          fontSize: 20,
+                          fontSize: 16 * scale,
                           fontWeight: FontWeight.bold,
                           color: Color(0xFF1E293B),
                         ),
@@ -2868,7 +2873,7 @@ class _ProfilePageState extends State<ProfilePage>
                     ],
                   ),
                   Transform.scale(
-                    scale: 1.2,
+                    scale: 0.8 * scale,
                     child: Switch(
                       value: _isRentalEnabled,
                       activeColor: Colors.white,
@@ -2894,17 +2899,20 @@ class _ProfilePageState extends State<ProfilePage>
               children: [
                 Icon(
                   _isRentalEnabled ? Icons.visibility : Icons.visibility_off,
-                  size: 18,
+                  size: 14 * scale,
                   color:
                       _isRentalEnabled ? Color(0xFF10B981) : Color(0xFFEF4444),
                 ),
-                SizedBox(width: 12),
+                SizedBox(width: 8 * scale),
                 Expanded(
                   child: Text(
                     _isRentalEnabled
                         ? 'Rental page is visible in Home Page'
                         : 'Rental page is hidden from Home Page',
-                    style: TextStyle(color: Color(0xFF64748B), fontSize: 14),
+                    style: TextStyle(
+                      color: Color(0xFF64748B),
+                      fontSize: 10 * scale,
+                    ),
                   ),
                 ),
               ],

@@ -62,10 +62,26 @@ class SaleOptionsMenu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return PopupMenuButton<String>(
-      icon: Icon(Icons.more_vert, size: isSmallScreen ? 20 : 24),
-      onSelected: (value) => _handleMenuSelection(value, context),
-      itemBuilder: (context) => _buildMenuItems(),
+    return FutureBuilder<bool>(
+      future: _isPhotographer(),
+      builder: (context, snapshot) {
+        final isPhotographer = snapshot.data == true;
+
+        return PopupMenuButton<String>(
+          icon: Icon(Icons.more_vert, size: isSmallScreen ? 20 : 24),
+          onSelected: (value) => _handleMenuSelection(value, context),
+          itemBuilder: (context) {
+            final items = _buildMenuItems();
+
+            // ❌ Remove tracker for non-photographers
+            if (!isPhotographer) {
+              items.removeWhere((item) => item.value == 'delivery_tracker');
+            }
+
+            return items;
+          },
+        );
+      },
     );
   }
 
@@ -158,6 +174,30 @@ class SaleOptionsMenu extends StatelessWidget {
         ),
       ),
     ];
+  }
+
+  Future<bool> _isPhotographer() async {
+    final sessionBox = await Hive.openBox('session');
+    final email = sessionBox.get('currentUserEmail');
+
+    if (email == null) return false;
+
+    final usersBox = Hive.box<User>('users');
+    final user = usersBox.values.firstWhere(
+      (u) => u.email.trim().toLowerCase() == email.trim().toLowerCase(),
+      orElse:
+          () => User(
+            name: '',
+            email: '',
+            phone: '',
+            password: '',
+            role: '',
+            upiId: '',
+            imageUrl: '',
+          ),
+    );
+
+    return user.role.toLowerCase() == 'photographer';
   }
 
   Future<void> _handleMenuSelection(String value, BuildContext context) async {

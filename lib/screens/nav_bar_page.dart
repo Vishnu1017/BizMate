@@ -45,6 +45,7 @@ class _NavBarPageState extends State<NavBarPage>
   int _currentIndex = 0;
   bool _isRentalEnabled = false;
   String welcomeMessage = "";
+  double scale = 1.0;
 
   // Modern color palette
   final Color _primaryColor = const Color(0xFF1A237E);
@@ -229,8 +230,8 @@ class _NavBarPageState extends State<NavBarPage>
                         });
                       },
                       child: Container(
-                        width: _scaleForWidth(screenWidth, 48),
-                        height: _scaleForWidth(screenWidth, 48),
+                        width: _scaleForWidth(screenWidth, 44 * scale),
+                        height: _scaleForWidth(screenWidth, 44 * scale),
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: _primaryColor,
@@ -243,7 +244,7 @@ class _NavBarPageState extends State<NavBarPage>
                             style: TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.w600,
-                              fontSize: _scaleForWidth(screenWidth, 18),
+                              fontSize: _scaleForWidth(screenWidth, 18 * scale),
                             ),
                           ),
                         ),
@@ -274,7 +275,7 @@ class _NavBarPageState extends State<NavBarPage>
                                     .replaceAll('!', '')
                                 : widget.user.name,
                             style: TextStyle(
-                              fontSize: _scaleForWidth(screenWidth, 16),
+                              fontSize: _scaleForWidth(screenWidth, 16 * scale),
                               color: _textPrimary,
                               fontWeight: FontWeight.w700,
                             ),
@@ -303,7 +304,9 @@ class _NavBarPageState extends State<NavBarPage>
                         ),
 
                         if (isPhotographer && _isRentalEnabled)
-                          SizedBox(width: _scaleForWidth(screenWidth, 12)),
+                          SizedBox(
+                            width: _scaleForWidth(screenWidth, 10 * scale),
+                          ),
 
                         // Camera rental button
                         if (isPhotographer && _isRentalEnabled)
@@ -321,10 +324,10 @@ class _NavBarPageState extends State<NavBarPage>
                     Text(
                       _titles[_currentIndex],
                       style: TextStyle(
-                        fontSize: _scaleForWidth(screenWidth, 28),
+                        fontSize: _scaleForWidth(screenWidth, 24 * scale),
                         color: _textPrimary,
                         fontWeight: FontWeight.w800,
-                        letterSpacing: -0.4,
+                        letterSpacing: -0.4 * scale,
                       ),
                     ),
                   ],
@@ -334,8 +337,8 @@ class _NavBarPageState extends State<NavBarPage>
 
                 // Progress indicator
                 Container(
-                  height: _scaleForWidth(screenWidth, 3),
-                  width: _scaleForWidth(screenWidth, 60),
+                  height: _scaleForWidth(screenWidth, 2.5 * scale),
+                  width: _scaleForWidth(screenWidth, 50 * scale),
                   decoration: BoxDecoration(
                     color: _primaryColor,
                     borderRadius: BorderRadius.circular(1.5),
@@ -364,8 +367,8 @@ class _NavBarPageState extends State<NavBarPage>
           borderRadius: BorderRadius.circular(12),
           onTap: onTap,
           child: Container(
-            width: _scaleForWidth(screenWidth, 44),
-            height: _scaleForWidth(screenWidth, 44),
+            width: _scaleForWidth(screenWidth, 36 * scale),
+            height: _scaleForWidth(screenWidth, 36 * scale),
             decoration: BoxDecoration(
               color: _backgroundColor,
               borderRadius: BorderRadius.circular(12),
@@ -374,7 +377,7 @@ class _NavBarPageState extends State<NavBarPage>
             child: Icon(
               icon,
               color: _textSecondary,
-              size: _scaleForWidth(screenWidth, 20),
+              size: _scaleForWidth(screenWidth, 20 * scale),
             ),
           ),
         ),
@@ -404,8 +407,8 @@ class _NavBarPageState extends State<NavBarPage>
             );
           },
           child: Container(
-            width: _scaleForWidth(screenWidth, 44),
-            height: _scaleForWidth(screenWidth, 44),
+            width: _scaleForWidth(screenWidth, 36 * scale),
+            height: _scaleForWidth(screenWidth, 36 * scale),
             decoration: BoxDecoration(
               color: _backgroundColor,
               borderRadius: BorderRadius.circular(12),
@@ -417,14 +420,14 @@ class _NavBarPageState extends State<NavBarPage>
                 HugeIcon(
                   icon: HugeIcons.strokeRoundedCameraAdd01,
                   color: _textSecondary,
-                  size: _scaleForWidth(screenWidth, 24),
+                  size: _scaleForWidth(screenWidth, 22 * scale),
                 ),
                 Positioned(
                   bottom: 3,
                   child: Container(
                     padding: EdgeInsets.symmetric(
-                      horizontal: _scaleForWidth(screenWidth, 4),
-                      vertical: _scaleForWidth(screenWidth, 1.5),
+                      horizontal: _scaleForWidth(screenWidth, 1.5 * scale),
+                      vertical: _scaleForWidth(screenWidth, 0.5 * scale),
                     ),
                     decoration: BoxDecoration(
                       color: Colors.redAccent,
@@ -434,7 +437,7 @@ class _NavBarPageState extends State<NavBarPage>
                       "Rental",
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: _scaleForWidth(screenWidth, 9),
+                        fontSize: _scaleForWidth(screenWidth, 8 * scale),
                         fontWeight: FontWeight.w700,
                       ),
                     ),

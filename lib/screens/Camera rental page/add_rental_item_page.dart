@@ -1015,6 +1015,23 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
 
               return null;
             },
+            onChanged: (value) {
+              if (value.isEmpty) return;
+
+              // Capitalize first letter only
+              final capitalized =
+                  value[0].toUpperCase() +
+                  (value.length > 1 ? value.substring(1) : '');
+
+              if (capitalized != value) {
+                controller.value = controller.value.copyWith(
+                  text: capitalized,
+                  selection: TextSelection.collapsed(
+                    offset: capitalized.length,
+                  ),
+                );
+              }
+            },
           ),
         ),
       ],
