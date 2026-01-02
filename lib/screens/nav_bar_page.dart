@@ -283,7 +283,7 @@ class _NavBarPageState extends State<NavBarPage>
                         ],
                       ),
                     ),
-
+                    SizedBox(width: _scaleForWidth(screenWidth, 12 * scale)),
                     // Action buttons
                     Row(
                       mainAxisSize: MainAxisSize.min,
