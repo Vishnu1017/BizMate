@@ -2954,13 +2954,13 @@ class _ProfilePageState extends State<ProfilePage>
                   Icon(
                     Icons.logout_rounded,
                     color: Color(0xFF64748B),
-                    size: 20,
+                    size: 18 * scale,
                   ),
                   SizedBox(width: 10),
                   Text(
                     'Logout',
                     style: TextStyle(
-                      fontSize: 16,
+                      fontSize: 14 * scale,
                       color: Color(0xFF64748B),
                       fontWeight: FontWeight.w600,
                     ),
@@ -2971,7 +2971,7 @@ class _ProfilePageState extends State<ProfilePage>
           ),
         ),
 
-        SizedBox(width: 16),
+        SizedBox(width: 16 * scale),
 
         Expanded(
           child: Container(
@@ -3002,13 +3002,13 @@ class _ProfilePageState extends State<ProfilePage>
                   Icon(
                     Icons.delete_forever_rounded,
                     color: Colors.white,
-                    size: 20,
+                    size: 18 * scale,
                   ),
                   SizedBox(width: 10),
                   Text(
                     'Delete',
                     style: TextStyle(
-                      fontSize: 16,
+                      fontSize: 14 * scale,
                       color: Colors.white,
                       fontWeight: FontWeight.w600,
                     ),
