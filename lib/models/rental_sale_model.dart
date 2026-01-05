@@ -76,4 +76,6 @@ class RentalSaleModel extends HiveObject {
   }
 
   double get balanceDue => totalCost - amountPaid;
+  double get originalTotal => ratePerDay * numberOfDays;
+  double get discount => (originalTotal - totalCost).clamp(0, double.infinity);
 }

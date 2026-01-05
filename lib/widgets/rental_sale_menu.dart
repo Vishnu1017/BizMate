@@ -523,9 +523,19 @@ class RentalSaleMenu extends StatelessWidget {
       final itemName = (sale.itemName.isNotEmpty) ? sale.itemName : 'N/A';
       final ratePerDay = sale.ratePerDay.toStringAsFixed(2);
       final numberOfDays = sale.numberOfDays.toString();
+      // ignore: unused_local_variable
       final totalCost = sale.totalCost.toStringAsFixed(2);
+      final double originalTotal = sale.ratePerDay * sale.numberOfDays;
+      final double discountAmount = (originalTotal - sale.totalCost).clamp(
+        0,
+        double.infinity,
+      );
+      final double finalTotal = sale.totalCost;
+      final double balanceAfterDiscount =
+          (finalTotal - sale.amountPaid).clamp(0, double.infinity).toDouble();
       final invoiceDate = DateFormat('dd-MM-yyyy').format(DateTime.now());
       final profileImage = await _getProfileImage();
+
       final gpayIcon =
           (await rootBundle.load('assets/icons/Gpay.png')).buffer.asUint8List();
 
@@ -702,7 +712,7 @@ class RentalSaleMenu extends StatelessWidget {
                               ),
                             ),
 
-                            pw.SizedBox(height: 7),
+                            pw.SizedBox(height: 40),
 
                             // ⬇️ CLICKABLE UPI PAYMENT LINK
                             pw.Container(
@@ -788,18 +798,98 @@ class RentalSaleMenu extends StatelessWidget {
                             },
                             children: [
                               _buildTableRow('Item', itemName, ttf),
-                              _buildTableRow('Rate/Day', '₹ $ratePerDay', ttf),
+                              _buildTableRow(
+                                'Rate / Day',
+                                '₹ $ratePerDay',
+                                ttf,
+                              ),
                               _buildTableRow('Days', numberOfDays, ttf),
-                              _buildTableRow('Total', '₹ $totalCost', ttf),
+                              pw.TableRow(
+                                children: [
+                                  pw.Padding(
+                                    padding: const pw.EdgeInsets.all(6),
+                                    child: pw.Text(
+                                      'Sub Total',
+                                      style: pw.TextStyle(
+                                        fontWeight: pw.FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                  pw.Padding(
+                                    padding: const pw.EdgeInsets.all(6),
+                                    child: pw.Text(
+                                      '₹ ${originalTotal.toStringAsFixed(2)}',
+                                      style: pw.TextStyle(font: ttf),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              pw.TableRow(
+                                children: [
+                                  pw.Padding(
+                                    padding: const pw.EdgeInsets.all(6),
+                                    child: pw.Text(
+                                      'Discount',
+                                      style: pw.TextStyle(
+                                        fontWeight: pw.FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                  pw.Padding(
+                                    padding: const pw.EdgeInsets.all(6),
+                                    child: pw.Text(
+                                      discountAmount > 0
+                                          ? '- ₹ ${discountAmount.toStringAsFixed(2)}'
+                                          : '₹ 0.00',
+                                      style: pw.TextStyle(font: ttf),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              pw.TableRow(
+                                children: [
+                                  pw.Padding(
+                                    padding: const pw.EdgeInsets.all(6),
+                                    child: pw.Text(
+                                      'Total',
+                                      style: pw.TextStyle(
+                                        fontWeight: pw.FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                  pw.Padding(
+                                    padding: const pw.EdgeInsets.all(6),
+                                    child: pw.Text(
+                                      '₹ ${finalTotal.toStringAsFixed(2)}',
+                                      style: pw.TextStyle(font: ttf),
+                                    ),
+                                  ),
+                                ],
+                              ),
                               _buildTableRow(
                                 'Paid',
                                 '₹ ${sale.amountPaid.toStringAsFixed(2)}',
                                 ttf,
                               ),
-                              _buildTableRow(
-                                'Balance',
-                                '₹ ${(sale.totalCost - sale.amountPaid).toStringAsFixed(2)}',
-                                ttf,
+                              pw.TableRow(
+                                children: [
+                                  pw.Padding(
+                                    padding: const pw.EdgeInsets.all(6),
+                                    child: pw.Text(
+                                      'Balance',
+                                      style: pw.TextStyle(
+                                        fontWeight: pw.FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                  pw.Padding(
+                                    padding: const pw.EdgeInsets.all(6),
+                                    child: pw.Text(
+                                      '₹ ${balanceAfterDiscount.toStringAsFixed(2)}',
+                                      style: pw.TextStyle(font: ttf),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),

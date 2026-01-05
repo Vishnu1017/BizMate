@@ -1019,6 +1019,28 @@ class SaleOptionsMenu extends StatelessWidget {
                       },
                       children: [
                         pw.TableRow(
+                          children: [
+                            pw.Padding(
+                              padding: const pw.EdgeInsets.all(6),
+                              child: pw.Text(
+                                'Package Name',
+                                style: pw.TextStyle(
+                                  fontWeight: pw.FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            pw.Padding(
+                              padding: const pw.EdgeInsets.all(6),
+                              child: pw.Text(
+                                sale.productName.isNotEmpty
+                                    ? sale.productName
+                                    : 'N/A',
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        pw.TableRow(
                           decoration: pw.BoxDecoration(
                             color: PdfColors.indigo100,
                           ),
