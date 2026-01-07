@@ -1974,7 +1974,7 @@ class _ProfilePageState extends State<ProfilePage>
               children: [
                 Container(
                   padding: EdgeInsets.symmetric(
-                    horizontal: 14 * scale,
+                    horizontal: 12 * scale,
                     vertical: 6 * scale,
                   ),
                   decoration: BoxDecoration(
@@ -2045,7 +2045,7 @@ class _ProfilePageState extends State<ProfilePage>
               ],
             ),
 
-            SizedBox(height: 20),
+            SizedBox(height: 12 * scale),
 
             // Profile Image
             Stack(
