@@ -51,7 +51,7 @@ web/
 <h3>Prerequisites</h3>
 <ul>
   <li>Flutter 3.x or higher</li>
-  <li>Dart 3.x</li>
+  <li>Dart 3.x or higher</li>
   <li>Android 5.0+ for biometric authentication</li>
 </ul>
 
