@@ -20,6 +20,8 @@ class _CalendarPageState extends State<CalendarPage> {
   /// Mixed events (Sale + RentalSaleModel)
   Map<DateTime, List<dynamic>> _events = {};
 
+  double scale = 1.0;
+
   @override
   void initState() {
     super.initState();
@@ -108,294 +110,293 @@ class _CalendarPageState extends State<CalendarPage> {
     final media = MediaQuery.of(context);
     final isTablet = media.size.width >= 600;
     final horizontalPadding = isTablet ? 24.0 : 16.0;
-    double scale = 1.0;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF3F4F8),
-      body: SafeArea(
-        child: Column(
-          children: [
-            // TOP APP BAR + SUMMARY
-            Padding(
-              padding: EdgeInsets.fromLTRB(
-                horizontalPadding,
-                8,
-                horizontalPadding,
-                4,
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: EdgeInsets.all(8 * scale),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 8,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: const Icon(
-                      Icons.calendar_month_rounded,
-                      color: Color(0xFF6366F1),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          "Booking Calendar",
-                          style: TextStyle(
-                            fontSize: isTablet ? 22 : 18,
-                            fontWeight: FontWeight.w700,
-                            color: const Color(0xFF0F172A),
-                          ),
-                        ),
-                        SizedBox(height: 2 * scale),
-                        Text(
-                          _selectedDay == null
-                              ? "View all your shoots & rentals"
-                              : DateFormat(
-                                'EEEE, dd MMM yyyy',
-                              ).format(_selectedDay!),
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey.shade600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
 
-            // CALENDAR CARD
-            Padding(
-              padding: EdgeInsets.fromLTRB(
-                horizontalPadding,
-                8 * scale,
-                horizontalPadding,
-                8 * scale,
+      // ✅ PROPER APP BAR
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(70),
+        child: AppBar(
+          elevation: 0,
+          backgroundColor: Colors.transparent,
+
+          // ✅ SHOW BACK ARROW
+          automaticallyImplyLeading: false,
+          leading: IconButton(
+            icon: const Icon(
+              Icons.arrow_back,
+              color: Color(0xFF0F172A),
+              size: 20,
+            ),
+            onPressed: () {
+              Navigator.pop(context);
+            },
+          ),
+
+          titleSpacing: horizontalPadding,
+          title: Row(
+            children: [
+              Container(
+                padding: EdgeInsets.all(8 * scale),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.calendar_month_rounded,
+                  color: Color(0xFF6366F1),
+                ),
               ),
-              child: _glassContainer(
-                child: TableCalendar<dynamic>(
-                  focusedDay: _focusedDay,
-                  firstDay: DateTime.utc(2020, 1, 1),
-                  lastDay: DateTime.utc(2100, 12, 31),
-                  selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-                  onDaySelected: (selected, focused) {
-                    setState(() {
-                      _selectedDay = DateTime.utc(
-                        selected.year,
-                        selected.month,
-                        selected.day,
-                      );
-                      _focusedDay = focused;
-                    });
-                  },
-                  eventLoader: _getEventsForDay,
-                  headerStyle: HeaderStyle(
-                    titleCentered: true,
-                    formatButtonVisible: false,
-                    titleTextStyle: TextStyle(
-                      fontSize: isTablet ? 18 : 16,
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFF111827),
-                    ),
-                    leftChevronIcon: const Icon(
-                      Icons.chevron_left_rounded,
-                      color: Color(0xFF4B5563),
-                    ),
-                    rightChevronIcon: const Icon(
-                      Icons.chevron_right_rounded,
-                      color: Color(0xFF4B5563),
-                    ),
-                  ),
-                  calendarStyle: CalendarStyle(
-                    outsideDaysVisible: false,
-                    defaultTextStyle: const TextStyle(fontSize: 13),
-                    weekendTextStyle: const TextStyle(
-                      fontSize: 13,
-                      color: Color(0xFF6366F1),
-                    ),
-                    todayDecoration: BoxDecoration(
-                      color: const Color(0xFF6366F1).withOpacity(0.15),
-                      shape: BoxShape.circle,
-                    ),
-                    selectedDecoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      "Booking Calendar",
+                      style: TextStyle(
+                        fontSize: isTablet ? 22 : 18,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF0F172A),
                       ),
-                      shape: BoxShape.circle,
                     ),
-                    markerDecoration: const BoxDecoration(
-                      color: Color(0xFFF97316),
-                      shape: BoxShape.circle,
+                    const SizedBox(height: 2),
+                    Text(
+                      _selectedDay == null
+                          ? "View all your shoots & rentals"
+                          : DateFormat(
+                            'EEEE, dd MMM yyyy',
+                          ).format(_selectedDay!),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey.shade600,
+                      ),
                     ),
-                    markersAlignment: Alignment.bottomCenter,
-                    markersMaxCount: 3,
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+
+      // BODY
+      body: Column(
+        children: [
+          // CALENDAR CARD
+          Padding(
+            padding: EdgeInsets.fromLTRB(
+              horizontalPadding,
+              12,
+              horizontalPadding,
+              8,
+            ),
+            child: _glassContainer(
+              child: TableCalendar<dynamic>(
+                focusedDay: _focusedDay,
+                firstDay: DateTime.utc(2020, 1, 1),
+                lastDay: DateTime.utc(2100, 12, 31),
+                selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+                onDaySelected: (selected, focused) {
+                  setState(() {
+                    _selectedDay = DateTime.utc(
+                      selected.year,
+                      selected.month,
+                      selected.day,
+                    );
+                    _focusedDay = focused;
+                  });
+                },
+                eventLoader: _getEventsForDay,
+                headerStyle: HeaderStyle(
+                  titleCentered: true,
+                  formatButtonVisible: false,
+                  titleTextStyle: TextStyle(
+                    fontSize: isTablet ? 18 : 16,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF111827),
+                  ),
+                ),
+                calendarStyle: CalendarStyle(
+                  outsideDaysVisible: false,
+                  todayDecoration: BoxDecoration(
+                    color: const Color(0xFF6366F1).withOpacity(0.15),
+                    shape: BoxShape.circle,
+                  ),
+                  selectedDecoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+                    ),
+                    shape: BoxShape.circle,
+                  ),
+                  markerDecoration: const BoxDecoration(
+                    color: Color(0xFFF97316),
+                    shape: BoxShape.circle,
                   ),
                 ),
               ),
             ),
+          ),
 
-            // SMALL SUMMARY ROW FOR SELECTED DAY
-            Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: horizontalPadding,
-                vertical: 6 * scale,
-              ),
-              child: Row(
-                children: [
-                  Text(
-                    "Day summary",
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.grey.shade700,
-                    ),
+          // DAY SUMMARY
+          Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: horizontalPadding,
+              vertical: 6,
+            ),
+            child: Row(
+              children: [
+                Text(
+                  "Day Summary",
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey.shade700,
                   ),
-                  const Spacer(),
-                  if (_selectedDay != null)
-                    _buildSummaryChip(
-                      count:
-                          _getEventsForDay(
-                            _selectedDay!,
-                          ).where((e) => e is Sale).length,
-                      label: "Sales",
-                      color: Colors.blue,
-                    ),
-                  const SizedBox(width: 6),
-                  if (_selectedDay != null)
-                    _buildSummaryChip(
-                      count:
-                          _getEventsForDay(
-                            _selectedDay!,
-                          ).where((e) => e is RentalSaleModel).length,
-                      label: "Rentals",
-                      color: Colors.deepPurple,
-                    ),
-                ],
-              ),
+                ),
+                const Spacer(),
+                if (_selectedDay != null)
+                  _buildSummaryChip(
+                    count:
+                        _getEventsForDay(
+                          _selectedDay!,
+                        ).whereType<Sale>().length,
+                    label: "Sales",
+                    color: Colors.blue,
+                  ),
+                const SizedBox(width: 6),
+                if (_selectedDay != null)
+                  _buildSummaryChip(
+                    count:
+                        _getEventsForDay(
+                          _selectedDay!,
+                        ).whereType<RentalSaleModel>().length,
+                    label: "Rentals",
+                    color: Colors.deepPurple,
+                  ),
+              ],
             ),
+          ),
 
-            // EVENTS LIST
-            Expanded(
-              child:
-                  _selectedDay == null
-                      ? const Center(child: Text("No date selected"))
-                      : LayoutBuilder(
-                        builder: (context, constraints) {
-                          final isWide = constraints.maxWidth > 700;
-                          final listPadding = EdgeInsets.fromLTRB(
-                            isWide ? (constraints.maxWidth - 700) / 2 + 16 : 16,
-                            8,
-                            isWide ? (constraints.maxWidth - 700) / 2 + 16 : 16,
-                            16,
-                          );
+          // EVENTS LIST
+          Expanded(
+            child:
+                _selectedDay == null
+                    ? const Center(child: Text("No date selected"))
+                    : LayoutBuilder(
+                      builder: (context, constraints) {
+                        final isWide = constraints.maxWidth > 700;
+                        final listPadding = EdgeInsets.fromLTRB(
+                          isWide ? (constraints.maxWidth - 700) / 2 + 16 : 16,
+                          8,
+                          isWide ? (constraints.maxWidth - 700) / 2 + 16 : 16,
+                          16,
+                        );
 
-                          final events = _getEventsForDay(_selectedDay!);
+                        final events = _getEventsForDay(_selectedDay!);
 
-                          if (events.isEmpty) {
-                            return Padding(
-                              padding: listPadding,
-                              child: Center(
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      Icons.event_busy_rounded,
-                                      size: 40,
-                                      color: Colors.grey.shade400,
-                                    ),
-                                    SizedBox(height: 12 * scale),
-                                    Text(
-                                      "No bookings for this day",
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.grey.shade600,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          }
-
-                          return ListView.builder(
+                        if (events.isEmpty) {
+                          return Padding(
                             padding: listPadding,
-                            itemCount: events.length,
-                            itemBuilder: (context, index) {
-                              final event = events[index];
-
-                              if (event is Sale) {
-                                return Padding(
-                                  padding: EdgeInsets.only(bottom: 10 * scale),
-                                  child: _eventCard(
-                                    icon: Icons.shopping_cart_rounded,
-                                    title: event.customerName,
-                                    subtitle:
-                                        "₹ ${event.totalAmount.toStringAsFixed(2)} • ${event.deliveryStatus}",
-                                    color: const Color(0xFF2563EB),
-                                    tag: "SALE",
-                                    extra: Text(
-                                      "Shoot date: ${DateFormat('dd MMM yyyy, hh:mm a').format(event.dateTime)}",
-                                      style: _timeStyle,
+                            child: Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.event_busy_rounded,
+                                    size: 40,
+                                    color: Colors.grey.shade400,
+                                  ),
+                                  SizedBox(height: 12 * scale),
+                                  Text(
+                                    "No bookings for this day",
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.grey.shade600,
                                     ),
                                   ),
-                                );
-                              }
-
-                              if (event is RentalSaleModel) {
-                                final from = DateFormat(
-                                  'dd MMM yyyy, hh:mm a',
-                                ).format(event.fromDateTime);
-                                final to = DateFormat(
-                                  'dd MMM yyyy, hh:mm a',
-                                ).format(event.toDateTime);
-
-                                return Padding(
-                                  padding: EdgeInsets.only(bottom: 10 * scale),
-                                  child: _eventCard(
-                                    icon: Icons.photo_camera_rounded,
-                                    title: event.customerName,
-                                    subtitle:
-                                        "₹ ${event.totalCost.toStringAsFixed(2)} • ${event.itemName}",
-                                    color: const Color(0xFF7C3AED),
-                                    tag: "RENTAL",
-                                    extra: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text("From: $from", style: _timeStyle),
-                                        Text("To:   $to", style: _timeStyle),
-                                      ],
-                                    ),
-                                  ),
-                                );
-                              }
-
-                              return const SizedBox.shrink();
-                            },
+                                ],
+                              ),
+                            ),
                           );
-                        },
-                      ),
-            ),
-          ],
-        ),
+                        }
+
+                        return ListView.builder(
+                          padding: listPadding,
+                          itemCount: events.length,
+                          itemBuilder: (context, index) {
+                            final event = events[index];
+
+                            if (event is Sale) {
+                              return Padding(
+                                padding: EdgeInsets.only(bottom: 10 * scale),
+                                child: _eventCard(
+                                  icon: Icons.shopping_cart_rounded,
+                                  title: event.customerName,
+                                  subtitle:
+                                      "₹ ${event.totalAmount.toStringAsFixed(2)} • ${event.deliveryStatus}",
+                                  color: const Color(0xFF2563EB),
+                                  tag: "SALE",
+                                  extra: Text(
+                                    "Shoot date: ${DateFormat('dd MMM yyyy, hh:mm a').format(event.dateTime)}",
+                                    style: _timeStyle,
+                                  ),
+                                ),
+                              );
+                            }
+
+                            if (event is RentalSaleModel) {
+                              final from = DateFormat(
+                                'dd MMM yyyy, hh:mm a',
+                              ).format(event.fromDateTime);
+                              final to = DateFormat(
+                                'dd MMM yyyy, hh:mm a',
+                              ).format(event.toDateTime);
+
+                              return Padding(
+                                padding: EdgeInsets.only(bottom: 10 * scale),
+                                child: _eventCard(
+                                  icon: Icons.photo_camera_rounded,
+                                  title: event.customerName,
+                                  subtitle:
+                                      "₹ ${event.totalCost.toStringAsFixed(2)} • ${event.itemName}",
+                                  color: const Color(0xFF7C3AED),
+                                  tag: "RENTAL",
+                                  extra: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text("From: $from", style: _timeStyle),
+                                      Text("To:   $to", style: _timeStyle),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            }
+
+                            return const SizedBox.shrink();
+                          },
+                        );
+                      },
+                    ),
+          ),
+        ],
       ),
     );
   }
 
   // ---------------------------------------------------------------------------
-  // UI HELPERS
+  // HELPERS (UNCHANGED)
   // ---------------------------------------------------------------------------
 
   Widget _glassContainer({required Widget child}) {
@@ -411,18 +412,9 @@ class _CalendarPageState extends State<CalendarPage> {
                 Colors.white.withOpacity(0.85),
                 Colors.white.withOpacity(0.65),
               ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: Colors.white.withOpacity(0.6), width: 1),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.06),
-                blurRadius: 18,
-                offset: const Offset(0, 8),
-              ),
-            ],
+            border: Border.all(color: Colors.white.withOpacity(0.6)),
           ),
           child: child,
         ),
@@ -438,71 +430,41 @@ class _CalendarPageState extends State<CalendarPage> {
     required String tag,
     required Widget? extra,
   }) {
-    return _glassContainer(
-      child: Padding(
-        padding: EdgeInsets.symmetric(
-          vertical: 10 * scale,
-          horizontal: 4 * scale,
-        ),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: _glassContainer(
         child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Icon
             CircleAvatar(
-              radius: 18 * scale, // 👈 avatar size (diameter = 44)
               backgroundColor: color.withOpacity(0.12),
-              child: Icon(icon, color: color, size: 18 * scale),
+              child: Icon(icon, color: color),
             ),
             const SizedBox(width: 12),
-
-            // Texts
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 12 * scale,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF0F172A),
-                    ),
+                    style: const TextStyle(fontWeight: FontWeight.w700),
                   ),
-                  SizedBox(height: 4 * scale),
-                  Text(
-                    subtitle,
-                    style: TextStyle(
-                      fontSize: 10 * scale,
-                      color: Colors.grey.shade700,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  if (extra != null) ...[SizedBox(height: 6 * scale), extra],
+                  Text(subtitle, style: TextStyle(color: Colors.grey.shade600)),
+                  if (extra != null) extra,
                 ],
               ),
             ),
-
-            const SizedBox(width: 8),
-
-            // Tag
             Container(
-              padding: EdgeInsets.symmetric(
-                horizontal: 10 * scale,
-                vertical: 4 * scale,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
                 color: color,
                 borderRadius: BorderRadius.circular(999),
               ),
               child: Text(
                 tag,
-                style: TextStyle(
+                style: const TextStyle(
                   color: Colors.white,
-                  fontSize: 9 * scale,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.6,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ),
@@ -517,50 +479,22 @@ class _CalendarPageState extends State<CalendarPage> {
     required String label,
     required Color color,
   }) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      padding: EdgeInsets.symmetric(horizontal: 8 * scale, vertical: 4 * scale),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(count > 0 ? 0.12 : 0.05),
+        color: color.withOpacity(0.12),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: color.withOpacity(count > 0 ? 0.5 : 0.2)),
       ),
-      child: Row(
-        children: [
-          Container(
-            width: 8,
-            height: 8 * scale,
-            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-          ),
-          const SizedBox(width: 4),
-          Text(
-            "$count $label",
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: color.darken(),
-            ),
-          ),
-        ],
+      child: Text(
+        "$count $label",
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: color,
+        ),
       ),
     );
   }
 
-  TextStyle get _timeStyle => TextStyle(
-    fontSize: 9 * scale,
-    color: Colors.grey.shade800,
-    fontWeight: FontWeight.w500,
-  );
-
-  double scale = 1.0;
-}
-
-// Small extension just for slightly darker text color
-extension _ColorDarken on Color {
-  Color darken([double amount = .15]) {
-    assert(amount >= 0 && amount <= 1);
-    final hsl = HSLColor.fromColor(this);
-    final hslDark = hsl.withLightness((hsl.lightness - amount).clamp(0.0, 1.0));
-    return hslDark.toColor();
-  }
+  TextStyle get _timeStyle => const TextStyle(fontSize: 11);
 }

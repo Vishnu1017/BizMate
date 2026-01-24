@@ -191,7 +191,7 @@ class DiscountTaxWidget extends StatelessWidget {
         border: Border.all(color: Colors.grey.shade400),
       ),
       child: DropdownButtonFormField<String>(
-        value: value,
+        initialValue: value,
         decoration: InputDecoration(labelText: label, border: InputBorder.none),
         items:
             options

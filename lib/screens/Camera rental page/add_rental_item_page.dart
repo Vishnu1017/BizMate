@@ -1018,16 +1018,19 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
             onChanged: (value) {
               if (value.isEmpty) return;
 
+              final cursorPosition = controller.selection.baseOffset;
+
               // Capitalize first letter only
               final capitalized =
                   value[0].toUpperCase() +
                   (value.length > 1 ? value.substring(1) : '');
 
+              // Only update if text actually changed
               if (capitalized != value) {
                 controller.value = controller.value.copyWith(
                   text: capitalized,
                   selection: TextSelection.collapsed(
-                    offset: capitalized.length,
+                    offset: cursorPosition.clamp(0, capitalized.length),
                   ),
                 );
               }

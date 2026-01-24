@@ -743,7 +743,7 @@ class _HomePageState extends State<HomePage>
                                         currentUserEmail: _currentUserEmail,
                                         parentContext: context,
                                       )
-                                      : Container(
+                                      : SizedBox(
                                         width: isSmallScreen ? 20 : 24,
                                         child: Center(
                                           child: SizedBox(
@@ -769,7 +769,7 @@ class _HomePageState extends State<HomePage>
                                         currentUserEmail: _currentUserEmail,
                                         parentContext: context,
                                       )
-                                      : Container(
+                                      : SizedBox(
                                         width: 16,
                                         child: Center(
                                           child: SizedBox(

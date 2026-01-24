@@ -820,7 +820,7 @@ class _LoginScreenState extends State<LoginScreen>
 
                       if (isCreating)
                         DropdownButtonFormField<String>(
-                          value: selectedRole,
+                          initialValue: selectedRole,
                           dropdownColor: Colors.blue.shade900,
                           icon: const Icon(
                             Icons.arrow_drop_down,

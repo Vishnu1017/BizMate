@@ -288,8 +288,9 @@ class _CustomersPageState extends State<CustomersPage> {
 
   void _makePhoneCall(String phone) async {
     String cleaned = phone.replaceAll(RegExp(r'[^0-9+]'), '');
-    if (!cleaned.startsWith('+') && cleaned.length == 10)
+    if (!cleaned.startsWith('+') && cleaned.length == 10) {
       cleaned = '+91$cleaned';
+    }
 
     final uri = Uri.parse('tel:$cleaned');
     if (await canLaunchUrl(uri)) launchUrl(uri);

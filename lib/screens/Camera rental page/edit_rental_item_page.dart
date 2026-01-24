@@ -448,7 +448,7 @@ class _EditRentalItemPageState extends State<EditRentalItemPage> {
             border: Border.all(color: Color(0xFFE5E7EB), width: 1.5),
           ),
           child: DropdownButtonFormField<String>(
-            value: condition,
+            initialValue: condition,
             dropdownColor: Colors.white,
             icon: const Icon(
               Icons.keyboard_arrow_down_rounded,
@@ -525,7 +525,7 @@ class _EditRentalItemPageState extends State<EditRentalItemPage> {
             border: Border.all(color: Color(0xFFE5E7EB), width: 1.5),
           ),
           child: DropdownButtonFormField<String>(
-            value: availability,
+            initialValue: availability,
             dropdownColor: Colors.white,
             icon: const Icon(
               Icons.keyboard_arrow_down_rounded,

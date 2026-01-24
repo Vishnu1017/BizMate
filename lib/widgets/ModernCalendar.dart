@@ -10,12 +10,12 @@ class ModernCalendar extends StatefulWidget {
   final DateTime? endDate;
 
   const ModernCalendar({
-    Key? key,
+    super.key,
     this.selectedDate,
     required this.onDateSelected,
     this.startDate,
     this.endDate,
-  }) : super(key: key);
+  });
 
   @override
   State<ModernCalendar> createState() => _ModernCalendarState();

@@ -26,7 +26,7 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
   DateTime selectedDate = DateTime.now();
   bool isLoading = false;
   bool isFullyPaid = false;
-  String _selectedMode = 'Cash';
+  final String _selectedMode = 'Cash';
   bool isCustomerSelectedFromList = false;
   double scale = 1.0;
   late final screenWidth = MediaQuery.of(context).size.width;
@@ -745,7 +745,7 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
       ),
       hintText: "Enter $label",
       hintStyle: TextStyle(color: Colors.grey.shade400),
-      prefixIcon: Container(
+      prefixIcon: SizedBox(
         width: 56,
         child: Icon(icon, color: const Color(0xFF667EEA), size: 22),
       ),
@@ -782,12 +782,15 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
 
   EdgeInsets _responsivePadding(BoxConstraints constraints) {
     final w = constraints.maxWidth;
-    if (w >= 1200)
+    if (w >= 1200) {
       return const EdgeInsets.symmetric(horizontal: 48, vertical: 24);
-    if (w >= 900)
+    }
+    if (w >= 900) {
       return const EdgeInsets.symmetric(horizontal: 32, vertical: 20);
-    if (w >= 600)
+    }
+    if (w >= 600) {
       return const EdgeInsets.symmetric(horizontal: 20, vertical: 16);
+    }
     return const EdgeInsets.symmetric(horizontal: 12, vertical: 12);
   }
 
@@ -845,30 +848,36 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                                   ? 'Enter customer name'
                                   : null,
                       onChanged: (value) {
-                        if (value.isNotEmpty &&
-                            value[0] != value[0].toUpperCase()) {
-                          customerController.text = value.splitMapJoin(
-                            ' ',
-                            onNonMatch:
-                                (word) =>
-                                    word.isNotEmpty
-                                        ? word[0].toUpperCase() +
-                                            (word.length > 1
-                                                ? word
-                                                    .substring(1)
-                                                    .toLowerCase()
-                                                : '')
-                                        : '',
-                          );
+                        if (value.isEmpty) return;
+
+                        final cursorPosition =
+                            customerController.selection.baseOffset;
+
+                        final formatted = value.splitMapJoin(
+                          ' ',
+                          onNonMatch:
+                              (word) =>
+                                  word.isNotEmpty
+                                      ? word[0].toUpperCase() +
+                                          (word.length > 1
+                                              ? word.substring(1).toLowerCase()
+                                              : '')
+                                      : '',
+                        );
+
+                        if (formatted != value) {
                           customerController
-                              .selection = TextSelection.fromPosition(
-                            TextPosition(
-                              offset: customerController.text.length,
+                              .value = customerController.value.copyWith(
+                            text: formatted,
+                            selection: TextSelection.collapsed(
+                              offset: cursorPosition.clamp(0, formatted.length),
                             ),
                           );
                         }
-                        if (isCustomerSelectedFromList)
+
+                        if (isCustomerSelectedFromList) {
                           setState(() => isCustomerSelectedFromList = false);
+                        }
                       },
                     ),
                     const SizedBox(height: 16),
@@ -877,15 +886,18 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                       keyboardType: TextInputType.phone,
                       decoration: customInput("Phone Number", Icons.phone),
                       validator: (val) {
-                        if (val == null || val.trim().isEmpty)
+                        if (val == null || val.trim().isEmpty) {
                           return 'Enter phone number';
-                        if (!RegExp(r'^[0-9]{10}$').hasMatch(val))
+                        }
+                        if (!RegExp(r'^[0-9]{10}$').hasMatch(val)) {
                           return 'Enter valid 10-digit number';
+                        }
                         return null;
                       },
                       onChanged: (value) {
-                        if (isCustomerSelectedFromList)
+                        if (isCustomerSelectedFromList) {
                           setState(() => isCustomerSelectedFromList = false);
+                        }
                       },
                     ),
                   ],

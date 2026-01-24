@@ -168,7 +168,7 @@ class RentalSaleMenu extends StatelessWidget {
     await showConfirmDialog(
       context: context,
       title: "Delete Sale?",
-      message: "Are you sure you want to remove this item permanently?",
+      message: "This will permanently delete this rental entry. Are you sure?",
       icon: Icons.warning_amber_rounded,
       iconColor: Colors.redAccent,
       onConfirm: () async {
@@ -177,28 +177,32 @@ class RentalSaleMenu extends StatelessWidget {
           final List<RentalSaleModel> persisted =
               (raw as List).map((e) => e as RentalSaleModel).toList();
 
-          // Prefer originalIndex if in range
-          if (originalIndex >= 0 && originalIndex < persisted.length) {
-            persisted.removeAt(originalIndex);
-          } else {
-            // Fallback: remove by matching fields
-            final idx = persisted.indexWhere((s) => _isSameSale(s, sale));
-            if (idx != -1) {
-              persisted.removeAt(idx);
-            }
-          }
+          final beforeCount = persisted.length;
+
+          // 🔥 REMOVE ALL SALES BELONGING TO THIS GROUP
+          persisted.removeWhere((s) {
+            return s.customerName == sale.customerName &&
+                s.customerPhone == sale.customerPhone &&
+                s.fromDateTime == sale.fromDateTime &&
+                s.toDateTime == sale.toDateTime;
+          });
+
+          final deletedCount = beforeCount - persisted.length;
 
           await userBox.put('rental_sales', persisted);
 
           AppSnackBar.showSuccess(
             parentContext,
-            message: "${sale.customerName} deleted successfully.",
+            message:
+                deletedCount > 1
+                    ? "$deletedCount items deleted successfully"
+                    : "Rental deleted successfully",
             duration: const Duration(seconds: 2),
           );
         } catch (e) {
           AppSnackBar.showError(
             parentContext,
-            message: "Failed to delete sale: $e",
+            message: "Failed to delete rental: $e",
             duration: const Duration(seconds: 2),
           );
         }
@@ -508,6 +512,20 @@ class RentalSaleMenu extends StatelessWidget {
   }
 
   Future<void> _handleSharePdf(BuildContext context) async {
+    final List<String> itemList =
+        sale.itemName
+            .split(',')
+            .map((e) => e.trim())
+            .where((e) => e.isNotEmpty)
+            .toList();
+
+    final bool hasMultipleItems = itemList.length > 1;
+
+    final String itemLabel = hasMultipleItems ? 'Items' : 'Item';
+
+    final String itemDisplayValue =
+        hasMultipleItems ? itemList.join(' , ') : itemList.first;
+
     try {
       final pdf = pw.Document();
       final ttf = pw.Font.ttf(
@@ -520,7 +538,6 @@ class RentalSaleMenu extends StatelessWidget {
           (sale.customerName.isNotEmpty) ? sale.customerName : 'N/A';
       final customerPhone =
           (sale.customerPhone.isNotEmpty) ? sale.customerPhone : 'N/A';
-      final itemName = (sale.itemName.isNotEmpty) ? sale.itemName : 'N/A';
       final ratePerDay = sale.ratePerDay.toStringAsFixed(2);
       final numberOfDays = sale.numberOfDays.toString();
       // ignore: unused_local_variable
@@ -797,7 +814,7 @@ class RentalSaleMenu extends StatelessWidget {
                               1: const pw.FlexColumnWidth(2),
                             },
                             children: [
-                              _buildTableRow('Item', itemName, ttf),
+                              _buildTableRow(itemLabel, itemDisplayValue, ttf),
                               _buildTableRow(
                                 'Rate / Day',
                                 '₹ $ratePerDay',

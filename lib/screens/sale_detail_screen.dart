@@ -920,8 +920,9 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                     ),
                     validator: (value) {
                       if (isRequired) {
-                        if (value == null || value.trim().isEmpty)
+                        if (value == null || value.trim().isEmpty) {
                           return "$label required";
+                        }
                         if (label.toLowerCase().contains("phone")) {
                           final cleaned = value.trim();
                           if (!RegExp(r'^[0-9]+$').hasMatch(cleaned) ||

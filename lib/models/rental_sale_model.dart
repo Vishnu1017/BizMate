@@ -65,9 +65,11 @@ class RentalSaleModel extends HiveObject {
     this.paymentMode = 'Cash',
     this.amountPaid = 0,
     DateTime? rentalDateTime,
-    List<Payment>? paymentHistory, // ⭐ ALLOW NULL FOR OLD DATA
+    List<Payment>? paymentHistory,
   }) : rentalDateTime = rentalDateTime ?? DateTime.now(),
-       paymentHistory = paymentHistory ?? []; // ⭐ DEFAULT
+       paymentHistory = paymentHistory ?? [];
+
+  // ================== GETTERS ==================
 
   String get saleStatus {
     if (amountPaid >= totalCost) return 'PAID';
@@ -78,4 +80,33 @@ class RentalSaleModel extends HiveObject {
   double get balanceDue => totalCost - amountPaid;
   double get originalTotal => ratePerDay * numberOfDays;
   double get discount => (originalTotal - totalCost).clamp(0, double.infinity);
+
+  // ================== COPY WITH ==================
+  // ⭐ REQUIRED FOR GROUPING MULTIPLE ITEMS INTO ONE CARD
+  // ⭐ DOES NOT CHANGE EXISTING BEHAVIOR
+
+  RentalSaleModel copyWith({
+    String? itemName,
+    double? totalCost,
+    double? amountPaid,
+    List<Payment>? paymentHistory,
+  }) {
+    return RentalSaleModel(
+      id: id,
+      customerName: customerName,
+      customerPhone: customerPhone,
+      itemName: itemName ?? this.itemName,
+      ratePerDay: ratePerDay,
+      numberOfDays: numberOfDays,
+      totalCost: totalCost ?? this.totalCost,
+      fromDateTime: fromDateTime,
+      toDateTime: toDateTime,
+      imageUrl: imageUrl,
+      pdfFilePath: pdfFilePath,
+      paymentMode: paymentMode,
+      amountPaid: amountPaid ?? this.amountPaid,
+      rentalDateTime: rentalDateTime,
+      paymentHistory: paymentHistory ?? List<Payment>.from(this.paymentHistory),
+    );
+  }
 }

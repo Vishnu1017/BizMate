@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:ui';
+import 'package:bizmate/services/rental_cart.dart';
 import 'package:bizmate/widgets/app_snackbar.dart' show AppSnackBar;
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
@@ -16,14 +17,14 @@ class RentalAddCustomerPage extends StatefulWidget {
   final DateTime? toDateTime;
 
   const RentalAddCustomerPage({
-    Key? key,
+    super.key,
     required this.rentalItem,
     required this.noOfDays,
     required this.ratePerDay,
     required this.totalAmount,
     this.fromDateTime,
     this.toDateTime,
-  }) : super(key: key);
+  });
 
   @override
   State<RentalAddCustomerPage> createState() => _RentalAddCustomerPageState();
@@ -580,14 +581,6 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
 
   Future<void> saveCustomerAndSale() async {
     if (!_formKey.currentState!.validate()) return;
-    if (fromDateTime == null || toDateTime == null) {
-      AppSnackBar.showWarning(
-        context,
-        message: 'Please select both From & To dates',
-        duration: Duration(seconds: 2),
-      );
-      return;
-    }
     if (_isSaving) return;
 
     setState(() => _isSaving = true);
@@ -595,75 +588,82 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
     try {
       final summary = calculateSummary();
 
-      // Save customer to user-specific box if available
+      // 1️⃣ SAVE CUSTOMER (ONCE)
       final newCustomer = CustomerModel(
         name: nameController.text.trim(),
         phone: phoneController.text.trim(),
         createdAt: DateTime.now(),
       );
 
-      // Save to both boxes for compatibility
       await customerBox.add(newCustomer);
 
-      // Also save to user-specific box if available
       if (userBox != null) {
-        List<CustomerModel> userCustomers = [];
-        try {
-          userCustomers = List<CustomerModel>.from(
-            userBox!.get("customers", defaultValue: []),
-          );
-        } catch (_) {
-          userCustomers = [];
-        }
-        userCustomers.add(newCustomer);
-        await userBox!.put("customers", userCustomers);
+        List<CustomerModel> list = List<CustomerModel>.from(
+          userBox!.get("customers", defaultValue: []),
+        );
+        list.add(newCustomer);
+        await userBox!.put("customers", list);
       }
 
-      // Save rental sale - using only existing parameters
-      final newRental = RentalSaleModel(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        customerName: nameController.text.trim(),
-        customerPhone: phoneController.text.trim(),
-        itemName: widget.rentalItem.name,
-        ratePerDay: widget.ratePerDay,
-        numberOfDays: widget.noOfDays,
-        totalCost: summary['total']!, // Use calculated total with discount/tax
-        fromDateTime: fromDateTime!,
-        toDateTime: toDateTime!,
-        imageUrl: widget.rentalItem.imagePath,
-      );
+      // 2️⃣ IF CART EMPTY → FALLBACK (OLD BEHAVIOR)
+      if (RentalCart.isEmpty) {
+        final rental = RentalSaleModel(
+          id: DateTime.now().millisecondsSinceEpoch.toString(),
+          customerName: newCustomer.name,
+          customerPhone: newCustomer.phone,
+          itemName: widget.rentalItem.name,
+          ratePerDay: widget.ratePerDay,
+          numberOfDays: widget.noOfDays,
+          totalCost: summary['total']!,
+          fromDateTime: fromDateTime!,
+          toDateTime: toDateTime!,
+          imageUrl: widget.rentalItem.imagePath,
+        );
 
-      // Save to both boxes for compatibility
-      await salesBox.add(newRental);
+        await salesBox.add(rental);
 
-      // Also save to user-specific box if available
-      if (userBox != null) {
-        List<RentalSaleModel> userRentalSales = [];
-        try {
-          userRentalSales = List<RentalSaleModel>.from(
+        if (userBox != null) {
+          List<RentalSaleModel> list = List<RentalSaleModel>.from(
             userBox!.get("rental_sales", defaultValue: []),
           );
-        } catch (_) {
-          userRentalSales = [];
+          list.add(rental);
+          await userBox!.put("rental_sales", list);
         }
-        userRentalSales.add(newRental);
-        await userBox!.put("rental_sales", userRentalSales);
       }
 
-      AppSnackBar.showSuccess(
-        context,
-        message: 'Sale and customer saved successfully!',
-        duration: Duration(seconds: 2),
-      );
+      // 3️⃣ SAVE MULTIPLE ITEMS (NEW FEATURE)
+      for (final cartItem in RentalCart.items) {
+        final sale = RentalSaleModel(
+          id: DateTime.now().millisecondsSinceEpoch.toString(),
+          customerName: newCustomer.name,
+          customerPhone: newCustomer.phone,
+          itemName: cartItem.item.name,
+          ratePerDay: cartItem.ratePerDay,
+          numberOfDays: cartItem.noOfDays,
+          totalCost: cartItem.totalAmount,
+          fromDateTime: cartItem.fromDateTime,
+          toDateTime: cartItem.toDateTime,
+          imageUrl: cartItem.item.imagePath,
+        );
+
+        await salesBox.add(sale);
+
+        if (userBox != null) {
+          List<RentalSaleModel> list = List<RentalSaleModel>.from(
+            userBox!.get("rental_sales", defaultValue: []),
+          );
+          list.add(sale);
+          await userBox!.put("rental_sales", list);
+        }
+      }
+
+      RentalCart.clear();
+
+      AppSnackBar.showSuccess(context, message: "Rental saved successfully");
 
       Navigator.pop(context, true);
     } catch (e) {
-      debugPrint('Error saving sale: $e');
-      AppSnackBar.showError(
-        context,
-        message: 'Failed to save data: $e',
-        duration: Duration(seconds: 2),
-      );
+      AppSnackBar.showError(context, message: "Failed to save rental");
     } finally {
       setState(() => _isSaving = false);
     }
@@ -738,11 +738,18 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
         validator: validator,
         onChanged: (value) {
           if (label == "Customer Name" && value.isNotEmpty) {
-            final formatted = value[0].toUpperCase() + value.substring(1);
+            final cursorPosition = controller.selection.baseOffset;
+
+            final formatted =
+                value[0].toUpperCase() +
+                (value.length > 1 ? value.substring(1) : '');
+
             if (formatted != value) {
               controller.value = controller.value.copyWith(
                 text: formatted,
-                selection: TextSelection.collapsed(offset: formatted.length),
+                selection: TextSelection.collapsed(
+                  offset: cursorPosition.clamp(0, formatted.length),
+                ),
               );
             }
           }
@@ -775,7 +782,7 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
         border: Border.all(color: Colors.white.withOpacity(0.3), width: 1.5),
       ),
       child: DropdownButtonFormField<String>(
-        value: value,
+        initialValue: value,
         decoration: InputDecoration(
           labelText: label,
           labelStyle: TextStyle(

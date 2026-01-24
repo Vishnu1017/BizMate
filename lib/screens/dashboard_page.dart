@@ -512,7 +512,7 @@ class _DashboardPageState extends State<DashboardPage> {
                                   LineChartData(
                                     minX: 0,
                                     maxX:
-                                        salesData.length > 0
+                                        salesData.isNotEmpty
                                             ? salesData.length.toDouble() - 1
                                             : 1,
                                     minY: 0,

@@ -48,7 +48,7 @@ class SaleOptionsMenu extends StatelessWidget {
   }
 
   const SaleOptionsMenu({
-    Key? key,
+    super.key,
     required this.sale,
     required this.originalIndex,
     required this.box,
@@ -58,7 +58,7 @@ class SaleOptionsMenu extends StatelessWidget {
     required this.currentUserPhone,
     required this.currentUserEmail,
     required this.parentContext,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

@@ -334,7 +334,7 @@ class _SelectItemsScreenState extends State<SelectItemsScreen> {
             columns = 2; // phones
           }
 
-          return Container(
+          return SizedBox(
             height: height * 0.75,
             child: BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
@@ -855,6 +855,7 @@ class _SelectItemsScreenState extends State<SelectItemsScreen> {
     double scale = 1.0;
     final isTablet = screenWidth >= 600 && screenWidth < 1000;
     bool isItemSelectedFromList = false;
+    final bool isTaxRateEnabled = selectedTaxType == 'With Tax';
 
     // Important: put page content inside a scrollable with extra bottom padding so keyboard won't cause overflow
     return GestureDetector(
@@ -1008,33 +1009,40 @@ class _SelectItemsScreenState extends State<SelectItemsScreen> {
                                   // TYPING + AUTO CAPITALIZATION
                                   // -------------------
                                   onChanged: (value) {
-                                    if (value.isNotEmpty &&
-                                        value[0] != value[0].toUpperCase()) {
-                                      itemController.text = value.splitMapJoin(
-                                        ' ',
-                                        onNonMatch:
-                                            (word) =>
-                                                word.isNotEmpty
-                                                    ? word[0].toUpperCase() +
-                                                        (word.length > 1
-                                                            ? word
-                                                                .substring(1)
-                                                                .toLowerCase()
-                                                            : '')
-                                                    : '',
-                                      );
+                                    if (value.isEmpty) return;
 
-                                      // Keep cursor at end
-                                      itemController.selection =
-                                          TextSelection.fromPosition(
-                                            TextPosition(
-                                              offset:
-                                                  itemController.text.length,
+                                    final cursorPosition =
+                                        itemController.selection.baseOffset;
+
+                                    final formatted = value.splitMapJoin(
+                                      ' ',
+                                      onNonMatch:
+                                          (word) =>
+                                              word.isNotEmpty
+                                                  ? word[0].toUpperCase() +
+                                                      (word.length > 1
+                                                          ? word
+                                                              .substring(1)
+                                                              .toLowerCase()
+                                                          : '')
+                                                  : '',
+                                    );
+
+                                    if (formatted != value) {
+                                      itemController.value = itemController
+                                          .value
+                                          .copyWith(
+                                            text: formatted,
+                                            selection: TextSelection.collapsed(
+                                              offset: cursorPosition.clamp(
+                                                0,
+                                                formatted.length,
+                                              ),
                                             ),
                                           );
                                     }
 
-                                    // If user is typing after selecting from list, reset flag
+                                    // Reset list-selection flag if user types manually
                                     if (isItemSelectedFromList) {
                                       setState(() {
                                         isItemSelectedFromList = false;
@@ -1230,48 +1238,68 @@ class _SelectItemsScreenState extends State<SelectItemsScreen> {
                                     ),
                                     const SizedBox(width: 12),
                                     Expanded(
-                                      child: Container(
-                                        decoration: BoxDecoration(
-                                          color: Colors.white,
-                                          borderRadius: BorderRadius.circular(
-                                            12,
-                                          ),
-                                          border: Border.all(
-                                            color: Colors.grey.shade300,
-                                          ),
-                                        ),
-                                        child: Padding(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 12,
-                                          ),
-                                          child: DropdownButtonHideUnderline(
-                                            child: DropdownButton<String>(
-                                              value: selectedTaxRate,
-                                              style: TextStyle(
-                                                fontSize: 12 * scale,
-                                                color: Colors.black,
+                                      child: Opacity(
+                                        opacity: isTaxRateEnabled ? 1.0 : 0.5,
+                                        child: IgnorePointer(
+                                          ignoring: !isTaxRateEnabled,
+                                          child: Container(
+                                            decoration: BoxDecoration(
+                                              color: Colors.white,
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                              border: Border.all(
+                                                color:
+                                                    isTaxRateEnabled
+                                                        ? Colors.grey.shade300
+                                                        : Colors.grey.shade200,
                                               ),
-                                              isExpanded: true,
-                                              icon: const Icon(
-                                                Icons.arrow_drop_down,
+                                            ),
+                                            child: Padding(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 12,
+                                                  ),
+                                              child: DropdownButtonHideUnderline(
+                                                child: DropdownButton<String>(
+                                                  value: selectedTaxRate,
+                                                  isExpanded: true,
+                                                  icon: const Icon(
+                                                    Icons.arrow_drop_down,
+                                                  ),
+                                                  hint: const Text("Tax Rate"),
+                                                  style: TextStyle(
+                                                    fontSize: 12 * scale,
+                                                    color:
+                                                        isTaxRateEnabled
+                                                            ? Colors.black
+                                                            : Colors
+                                                                .grey
+                                                                .shade600,
+                                                  ),
+                                                  items:
+                                                      taxRateOptions.map((
+                                                        String value,
+                                                      ) {
+                                                        return DropdownMenuItem<
+                                                          String
+                                                        >(
+                                                          value: value,
+                                                          child: Text(value),
+                                                        );
+                                                      }).toList(),
+
+                                                  /// 🔥 ENABLE / DISABLE HERE
+                                                  onChanged:
+                                                      isTaxRateEnabled
+                                                          ? (value) {
+                                                            setState(() {
+                                                              selectedTaxRate =
+                                                                  value;
+                                                            });
+                                                          }
+                                                          : null,
+                                                ),
                                               ),
-                                              hint: const Text("Tax Rate"),
-                                              items:
-                                                  taxRateOptions.map((
-                                                    String value,
-                                                  ) {
-                                                    return DropdownMenuItem<
-                                                      String
-                                                    >(
-                                                      value: value,
-                                                      child: Text(value),
-                                                    );
-                                                  }).toList(),
-                                              onChanged: (value) {
-                                                setState(() {
-                                                  selectedTaxRate = value;
-                                                });
-                                              },
                                             ),
                                           ),
                                         ),

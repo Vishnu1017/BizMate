@@ -85,12 +85,15 @@ class _CameraRentalNavBarState extends State<CameraRentalNavBar> {
   }
 
   EdgeInsets _pagePadding(double width) {
-    if (width <= _kCompactMax)
+    if (width <= _kCompactMax) {
       return const EdgeInsets.symmetric(horizontal: 14, vertical: 12);
-    if (width <= _kLargePhoneMax)
+    }
+    if (width <= _kLargePhoneMax) {
       return const EdgeInsets.symmetric(horizontal: 20, vertical: 16);
-    if (width <= _kTabletMax)
+    }
+    if (width <= _kTabletMax) {
       return const EdgeInsets.symmetric(horizontal: 28, vertical: 20);
+    }
     return const EdgeInsets.symmetric(horizontal: 48, vertical: 24);
   }
 
@@ -310,19 +313,19 @@ class _CameraRentalNavBarState extends State<CameraRentalNavBar> {
     return Container(
       margin: EdgeInsets.symmetric(
         horizontal: horizontalMargin,
-        vertical: _scaleForWidth(screenWidth, 12),
+        vertical: _scaleForWidth(screenWidth, 14),
       ),
       constraints: const BoxConstraints(maxWidth: 900),
-      height: _scaleForWidth(screenWidth, 72),
+      height: _scaleForWidth(screenWidth, 70),
       decoration: BoxDecoration(
         color: _surfaceColor,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(18),
         border: Border.all(color: _dividerColor),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 20,
-            offset: const Offset(0, 4),
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 22,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
@@ -362,42 +365,66 @@ class _CameraRentalNavBarState extends State<CameraRentalNavBar> {
 
     return Expanded(
       child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
         onTap: () {
           setState(() {
             _currentIndex = index;
           });
         },
-        child: Container(
-          color: Colors.transparent,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 280),
+          curve: Curves.easeOutCubic,
+          transform: Matrix4.translationValues(
+            0,
+            isSelected ? -6 : 0, // 🔥 POP-UP EFFECT
+            0,
+          ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              // ICON WITH SOFT GLOW
               Container(
-                width: _scaleForWidth(screenWidth, 36),
-                height: _scaleForWidth(screenWidth, 36),
+                width: _scaleForWidth(screenWidth, 42),
+                height: _scaleForWidth(screenWidth, 42),
                 decoration: BoxDecoration(
-                  shape: BoxShape.circle,
+                  borderRadius: BorderRadius.circular(12),
                   color:
                       isSelected
-                          ? _primaryColor.withOpacity(0.1)
+                          ? _primaryColor.withOpacity(0.12)
                           : Colors.transparent,
-                  border: Border.all(
-                    color:
-                        isSelected
-                            ? _primaryColor.withOpacity(0.3)
-                            : Colors.transparent,
-                  ),
+                  boxShadow:
+                      isSelected
+                          ? [
+                            BoxShadow(
+                              color: _primaryColor.withOpacity(0.18),
+                              blurRadius: 22,
+                              offset: const Offset(0, 6),
+                            ),
+                          ]
+                          : [],
                 ),
                 child: Icon(
                   isSelected ? filledIcon : outlineIcon,
                   color: isSelected ? _primaryColor : _textSecondary,
                   size:
                       isSelected
-                          ? _scaleForWidth(screenWidth, 27)
-                          : _scaleForWidth(screenWidth, 25),
+                          ? _scaleForWidth(screenWidth, 26)
+                          : _scaleForWidth(screenWidth, 24),
                 ),
               ),
-              SizedBox(height: _scaleForWidth(screenWidth, 6)),
+
+              const SizedBox(height: 4),
+
+              // MICRO INDICATOR DOT
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 250),
+                width: isSelected ? 6 : 0,
+                height: 6,
+                decoration: BoxDecoration(
+                  color: _primaryColor,
+                  shape: BoxShape.circle,
+                ),
+              ),
             ],
           ),
         ),

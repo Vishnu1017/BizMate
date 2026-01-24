@@ -27,6 +27,18 @@ Future<void> main() async {
   try {
     WidgetsFlutterBinding.ensureInitialized();
 
+    // ✅ GLOBAL EDGE-TO-EDGE (BEST PRACTICE)
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+
+    // Optional polish
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        systemNavigationBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+      ),
+    );
+
     await _initializeHive();
     await _initializeDefaultProfileImage();
 

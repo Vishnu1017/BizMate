@@ -49,9 +49,58 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
     }
   }
 
+  int _findOriginalSaleIndex(
+    List<RentalSaleModel> allSales,
+    RentalSaleModel groupedSale,
+  ) {
+    return allSales.indexWhere((s) => s.id == groupedSale.id);
+  }
+
+  double scale = 1.0;
+
+  double _calculatedRatePerDay(RentalSaleModel sale) {
+    if (sale.numberOfDays <= 0) return 0;
+    return sale.totalCost / sale.numberOfDays;
+  }
+
   late Box userBox;
   bool _isLoading = true;
   List<RentalSaleModel> rentalSales = [];
+
+  bool _hasMultipleItems(RentalSaleModel sale) {
+    return sale.itemName.split(',').length > 1;
+  }
+
+  List<String> _getItemNames(RentalSaleModel sale) {
+    return sale.itemName
+        .split(',')
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty)
+        .toList();
+  }
+
+  List<RentalSaleModel> _groupSales(List<RentalSaleModel> sales) {
+    final Map<String, RentalSaleModel> grouped = {};
+
+    for (final sale in sales) {
+      final key =
+          '${sale.customerName}_${sale.customerPhone}_${sale.fromDateTime}_${sale.toDateTime}';
+
+      if (grouped.containsKey(key)) {
+        final existing = grouped[key]!;
+
+        grouped[key] = existing.copyWith(
+          itemName: '${existing.itemName}, ${sale.itemName}',
+          totalCost: existing.totalCost + sale.totalCost,
+          amountPaid: existing.amountPaid + sale.amountPaid,
+        );
+      } else {
+        grouped[key] = sale;
+      }
+    }
+
+    return grouped.values.toList();
+  }
 
   // Search functionality variables
   String _searchQuery = "";
@@ -125,11 +174,93 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
   }
 
   Widget _buildImage(RentalSaleModel sale, double size) {
-    // Dynamic size for larger screens
     final screenWidth = MediaQuery.of(context).size.width;
     final isTabletOrDesktop = screenWidth > 700;
     final adjustedSize = isTabletOrDesktop ? size + 8 : size;
 
+    // ✅ MULTI-ITEM CASE → CUSTOMER LETTER
+    if (_hasMultipleItems(sale)) {
+      final count = _getItemNames(sale).length;
+
+      return SizedBox(
+        width: adjustedSize,
+        height: adjustedSize,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            // BACK CARD
+            Positioned(
+              left: 8,
+              top: 8,
+              child: Container(
+                width: adjustedSize - 8,
+                height: adjustedSize - 8,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(18),
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.blueGrey.shade300,
+                      Colors.blueGrey.shade500,
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+            // FRONT CARD
+            Container(
+              width: adjustedSize - 8,
+              height: adjustedSize - 8,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(18),
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF667eea), Color(0xFF764ba2)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.15),
+                    blurRadius: 16,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: const Center(
+                child: Icon(
+                  Icons.photo_camera_rounded,
+                  color: Colors.white,
+                  size: 32,
+                ),
+              ),
+            ),
+
+            // COUNT BADGE
+            Positioned(
+              right: -6,
+              top: -6,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.black87,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  "+$count",
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // ✅ SINGLE ITEM → EXISTING IMAGE LOGIC
     return Container(
       width: adjustedSize,
       height: adjustedSize,
@@ -153,31 +284,16 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
         child: FutureBuilder<bool>(
           future: _checkImageExists(sale.imageUrl),
           builder: (context, snapshot) {
-            // if (snapshot.connectionState == ConnectionState.waiting) {
-            //   return Container(
-            //     decoration: const BoxDecoration(
-            //       gradient: LinearGradient(
-            //         colors: [Color(0xFF667eea), Color(0xFF764ba2)],
-            //         begin: Alignment.topLeft,
-            //         end: Alignment.bottomRight,
-            //       ),
-            //     ),
-            //     child: const Center(
-            //       child: CircularProgressIndicator(color: Colors.white),
-            //     ),
-            //   );
-            // }
             if (snapshot.hasData && snapshot.data == true) {
               return Image.file(
                 File(sale.imageUrl!),
                 fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
+                errorBuilder: (_, __, ___) {
                   return _buildPlaceholderImage();
                 },
               );
-            } else {
-              return _buildPlaceholderImage();
             }
+            return _buildPlaceholderImage();
           },
         ),
       ),
@@ -400,6 +516,8 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
         child: InkWell(
           borderRadius: BorderRadius.circular(radius),
           onTap: () async {
+            if (index < 0) return;
+
             await Navigator.push(
               context,
               MaterialPageRoute(
@@ -412,6 +530,7 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
               ),
             );
           },
+
           child: Padding(
             padding: padding,
             child:
@@ -425,6 +544,8 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
   }
 
   Widget _buildWideLayout(RentalSaleModel sale, int index) {
+    final items = _getItemNames(sale);
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -436,13 +557,29 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
             children: [
               _buildHeaderRow(sale, index),
               const SizedBox(height: 8),
-              Text(
-                sale.itemName,
-                style: const TextStyle(
-                  fontSize: 16,
-                  color: Colors.black87,
-                  fontWeight: FontWeight.w600,
-                ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    items.take(2).join(', '),
+                    style: TextStyle(
+                      fontSize: 12 * scale,
+                      color: Colors.black87,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  if (items.length > 2)
+                    Text(
+                      "+${items.length - 2} more",
+                      style: TextStyle(
+                        fontSize: 12 * scale,
+                        color: Colors.grey.shade600,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                ],
               ),
               const SizedBox(height: 8),
               _buildDetailsRow(sale),
@@ -458,6 +595,7 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
   Widget _buildMobileLayout(RentalSaleModel sale, int index) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isSmallPhone = screenWidth < 360;
+    final items = _getItemNames(sale);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -473,13 +611,30 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
                 children: [
                   _buildHeaderRow(sale, index),
                   const SizedBox(height: 6),
-                  Text(
-                    sale.itemName,
-                    style: TextStyle(
-                      fontSize: isSmallPhone ? 13 : 14,
-                      color: Colors.black87,
-                      fontWeight: FontWeight.w600,
-                    ),
+
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        items.take(2).join(', '),
+                        style: TextStyle(
+                          fontSize: 8 * scale,
+                          color: Colors.black87,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      if (items.length > 2)
+                        Text(
+                          "+${items.length - 2} more",
+                          style: TextStyle(
+                            fontSize: 10 * scale,
+                            color: Colors.grey.shade600,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                    ],
                   ),
                 ],
               ),
@@ -496,8 +651,6 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
 
   Widget _buildHeaderRow(RentalSaleModel sale, int index) {
     final customerPhone = sale.customerPhone.trim();
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isSmallPhone = screenWidth < 360;
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -510,7 +663,7 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
               Text(
                 sale.customerName,
                 style: TextStyle(
-                  fontSize: isSmallPhone ? 16 : 18,
+                  fontSize: 16 * scale,
                   fontWeight: FontWeight.w700,
                   color: const Color(0xFF1a1a1a),
                 ),
@@ -521,12 +674,16 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
                 const SizedBox(height: 2),
                 Row(
                   children: [
-                    Icon(Icons.phone, size: 12, color: Colors.grey.shade600),
-                    const SizedBox(width: 4),
+                    Icon(
+                      Icons.phone,
+                      size: 12 * scale,
+                      color: Colors.grey.shade600,
+                    ),
+                    SizedBox(width: 4 * scale),
                     Text(
                       customerPhone,
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 12 * scale,
                         color: Colors.grey.shade600,
                         fontWeight: FontWeight.w500,
                       ),
@@ -581,7 +738,8 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
                   constraints: BoxConstraints(maxWidth: maxChipWidth),
                   child: _buildDetailChip(
                     icon: Icons.currency_rupee,
-                    value: '${sale.ratePerDay.toStringAsFixed(0)}/day',
+                    value:
+                        '₹${_calculatedRatePerDay(sale).toStringAsFixed(0)}/day',
                   ),
                 ),
               ],
@@ -900,8 +1058,9 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
                       (a, b) => b.rentalDateTime.compareTo(a.rentalDateTime),
                     );
 
-                    List<RentalSaleModel> filteredSales =
-                        List<RentalSaleModel>.from(allSales);
+                    List<RentalSaleModel> filteredSales = _groupSales(
+                      List<RentalSaleModel>.from(allSales),
+                    );
 
                     if (_searchQuery.isNotEmpty) {
                       final query = _searchQuery.toLowerCase();
@@ -1007,9 +1166,11 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
                                     itemCount: filteredSales.length,
                                     itemBuilder: (context, index) {
                                       final sale = filteredSales[index];
-                                      final originalIndex = allSales.indexOf(
-                                        sale,
-                                      );
+                                      final originalIndex =
+                                          _findOriginalSaleIndex(
+                                            allSales,
+                                            sale,
+                                          );
 
                                       return LayoutBuilder(
                                         builder: (context, cardConstraints) {

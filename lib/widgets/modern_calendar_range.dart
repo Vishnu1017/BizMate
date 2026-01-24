@@ -11,13 +11,13 @@ class ModernCalendarRange extends StatefulWidget {
   final DateTime? maxDate;
 
   const ModernCalendarRange({
-    Key? key,
+    super.key,
     this.selectedStartDate,
     this.selectedEndDate,
     required this.onRangeSelected,
     this.minDate,
     this.maxDate,
-  }) : super(key: key);
+  });
 
   @override
   State<ModernCalendarRange> createState() => _ModernCalendarRangeState();
@@ -214,11 +214,13 @@ class _ModernCalendarRangeState extends State<ModernCalendarRange> {
   }
 
   String _getSelectedRangeText() {
-    if (_selectedStartDate == null && _selectedEndDate == null)
+    if (_selectedStartDate == null && _selectedEndDate == null) {
       return "Select a date range";
+    }
 
-    if (_selectedStartDate != null && _selectedEndDate == null)
+    if (_selectedStartDate != null && _selectedEndDate == null) {
       return "Start: ${DateFormat('MMM dd, yyyy').format(_selectedStartDate!)} - Select end date";
+    }
 
     if (_selectedStartDate != null && _selectedEndDate != null) {
       final start = DateFormat('MMM dd, yyyy').format(_selectedStartDate!);

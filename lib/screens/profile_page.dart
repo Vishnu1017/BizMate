@@ -1,6 +1,7 @@
 // ignore_for_file: unused_local_variable
 
 import 'dart:io';
+import 'dart:ui';
 import 'package:bizmate/services/image_compression_service.dart';
 import 'package:bizmate/widgets/app_snackbar.dart' show AppSnackBar;
 import 'package:bizmate/widgets/confirm_delete_dialog.dart'
@@ -18,13 +19,18 @@ import 'login_screen.dart';
 
 class ProfilePage extends StatefulWidget {
   final User user;
+  final String userEmail;
   final Future<void> Function()? onRentalStatusChanged;
+  final ValueChanged<String>? onNameChanged;
+  final void Function(String updatedName)? onProfileUpdated;
 
   const ProfilePage({
     super.key,
     required this.user,
+    required this.userEmail,
     this.onRentalStatusChanged,
-    required String userEmail,
+    this.onProfileUpdated,
+    this.onNameChanged, // ✅ ADD THIS
   });
 
   @override
@@ -1418,7 +1424,7 @@ class _ProfilePageState extends State<ProfilePage>
 
     if (passcodeType == "alphanumeric") {
       requirements = [
-        {"text": "At least 8 characters", "met": currentText.length >= 8},
+        {"text": "Exactly 18 characters", "met": currentText.length == 18},
         {
           "text": "Contains letters",
           "met": RegExp(r'[a-zA-Z]').hasMatch(currentText),
@@ -1463,40 +1469,38 @@ class _ProfilePageState extends State<ProfilePage>
             ),
           ),
           SizedBox(height: isSmallScreen ? 6.0 : 8.0),
-          ...requirements
-              .map(
-                (req) => Padding(
-                  padding: EdgeInsets.only(bottom: isSmallScreen ? 4.0 : 6.0),
-                  child: Row(
-                    children: [
-                      Icon(
+          ...requirements.map(
+            (req) => Padding(
+              padding: EdgeInsets.only(bottom: isSmallScreen ? 4.0 : 6.0),
+              child: Row(
+                children: [
+                  Icon(
+                    req["met"]
+                        ? Icons.check_circle_rounded
+                        : Icons.circle_outlined,
+                    size: iconSize,
+                    color:
                         req["met"]
-                            ? Icons.check_circle_rounded
-                            : Icons.circle_outlined,
-                        size: iconSize,
+                            ? const Color(0xFF10B981)
+                            : const Color(0xFF94A3B8),
+                  ),
+                  SizedBox(width: isSmallScreen ? 6.0 : 8.0),
+                  Expanded(
+                    child: Text(
+                      req["text"],
+                      style: TextStyle(
+                        fontSize: requirementsFontSize,
                         color:
                             req["met"]
                                 ? const Color(0xFF10B981)
-                                : const Color(0xFF94A3B8),
+                                : const Color(0xFF64748B),
                       ),
-                      SizedBox(width: isSmallScreen ? 6.0 : 8.0),
-                      Expanded(
-                        child: Text(
-                          req["text"],
-                          style: TextStyle(
-                            fontSize: requirementsFontSize,
-                            color:
-                                req["met"]
-                                    ? const Color(0xFF10B981)
-                                    : const Color(0xFF64748B),
-                          ),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
-                ),
-              )
-              .toList(),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -1663,16 +1667,30 @@ class _ProfilePageState extends State<ProfilePage>
   }
 
   void _toggleEditing() {
-    setState(() {
-      _isEditing = !_isEditing;
-      if (!_isEditing) {
-        _nameController.text = name;
-        _roleController.text = role;
-        _emailController.text = email;
-        _phoneController.text = phone;
-        _upiController.text = upiId;
-        _locationController.text = location;
-      }
+    // 🔥 RELEASE KEYBOARD & TOUCH LOCK
+    FocusScope.of(context).unfocus();
+
+    // 🔥 ENSURE OVERLAYS / MENUS ARE CLOSED
+    if (Navigator.canPop(context)) {
+      Navigator.pop(context);
+    }
+
+    // 🔥 FRAME-SAFE STATE CHANGE
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+
+      setState(() {
+        _isEditing = !_isEditing;
+
+        if (!_isEditing) {
+          _nameController.text = name;
+          _roleController.text = role;
+          _emailController.text = email;
+          _phoneController.text = phone;
+          _upiController.text = upiId;
+          _locationController.text = location;
+        }
+      });
     });
   }
 
@@ -1688,6 +1706,7 @@ class _ProfilePageState extends State<ProfilePage>
         final existingUser = box.get(userKey)!;
 
         existingUser.name = _nameController.text.trim();
+        widget.onProfileUpdated?.call(existingUser.name);
         existingUser.email = _emailController.text.trim();
         existingUser.phone = _phoneController.text.trim();
         existingUser.role = _roleController.text.trim();
@@ -1708,6 +1727,14 @@ class _ProfilePageState extends State<ProfilePage>
                   : 'India';
           _isEditing = false;
         });
+
+        setState(() {
+          name = existingUser.name;
+          _isEditing = false;
+        });
+
+        // 🔥 NOTIFY NAV BAR IMMEDIATELY
+        widget.onProfileUpdated?.call(existingUser.name);
 
         AppSnackBar.showSuccess(
           context,
@@ -1751,6 +1778,143 @@ class _ProfilePageState extends State<ProfilePage>
     } finally {
       setState(() => _isLoggingOut = false);
     }
+  }
+
+  void _showContextBubble(Offset position) {
+    final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
+
+    showMenu(
+      context: context,
+      color: Colors.transparent,
+      elevation: 0,
+
+      // 👇 FORCE RIGHT SIDE POSITION
+      position: RelativeRect.fromLTRB(
+        overlay.size.width - 20, // RIGHT EDGE
+        position.dy - 20, // Y position
+        10, // small right margin
+        overlay.size.height,
+      ),
+
+      items: [
+        PopupMenuItem(padding: EdgeInsets.zero, child: _glassContextBubble()),
+      ],
+    );
+  }
+
+  Widget _glassContextBubble() {
+    return TweenAnimationBuilder<double>(
+      duration: const Duration(milliseconds: 240),
+      curve: Curves.easeOut,
+      tween: Tween(begin: 0.85, end: 1),
+      builder: (context, scale, child) {
+        return Transform.scale(scale: scale, child: child);
+      },
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(40),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+          child: Container(
+            width: 215 * scale,
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(40),
+              color: Colors.white.withOpacity(0.65),
+              border: Border.all(
+                color: Colors.black.withOpacity(0.25),
+                width: 1.2,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.18),
+                  blurRadius: 30,
+                  offset: const Offset(0, 16),
+                ),
+                BoxShadow(
+                  color: Colors.white.withOpacity(0.5),
+                  blurRadius: 12,
+                  offset: const Offset(-4, -4),
+                ),
+              ],
+            ),
+
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(32),
+                splashColor: Colors.blue.withOpacity(0.12),
+                highlightColor: Colors.transparent,
+                onTap: () {
+                  Navigator.pop(context);
+                  _toggleEditing();
+                },
+                child: Row(
+                  children: [
+                    // NEUMORPHIC ICON
+                    Container(
+                      width: 25 * scale,
+                      height: 25 * scale,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white.withOpacity(0.9),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.18),
+                            blurRadius: 10,
+                            offset: const Offset(4, 4),
+                          ),
+                          BoxShadow(
+                            color: Colors.white.withOpacity(0.9),
+                            blurRadius: 10,
+                            offset: const Offset(-4, -4),
+                          ),
+                        ],
+                      ),
+                      child: Icon(
+                        Icons.edit_rounded,
+                        size: 14 * scale,
+                        color: Color(0xFF2563EB),
+                      ),
+                    ),
+
+                    SizedBox(width: 10 * scale),
+
+                    // TEXT
+                    Expanded(
+                      child: Text(
+                        "Edit Profile",
+                        style: TextStyle(
+                          fontSize: 12 * scale,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF0F172A),
+                          letterSpacing: 0.3,
+                        ),
+                      ),
+                    ),
+
+                    // SUBTLE DOT INDICATOR
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: const Color(0xFF22C55E),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF22C55E).withOpacity(0.6),
+                            blurRadius: 6,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   Future<void> deleteCurrentUser(String email) async {
@@ -1912,28 +2076,27 @@ class _ProfilePageState extends State<ProfilePage>
                             children: [
                               // Profile Header Card
                               _buildProfileHeader(isSmallScreen),
-                              SizedBox(height: 30),
+                              SizedBox(height: 10 * scale),
 
                               // Personal Info Section
                               _buildPersonalInfoSection(isSmallScreen),
 
                               // Security Section (for all users)
                               if (!_isEditing) ...[
-                                SizedBox(height: 24),
+                                SizedBox(height: 10 * scale),
                                 _buildSecuritySection(isSmallScreen),
                               ],
 
                               // Rental Section (for photographers only)
                               if (role == 'Photographer' && !_isEditing) ...[
-                                SizedBox(height: 24),
+                                SizedBox(height: 10 * scale),
                                 _buildRentalSection(isSmallScreen),
                               ],
 
                               // Action Buttons
                               if (!_isEditing) ...[
-                                SizedBox(height: 30),
+                                SizedBox(height: 15 * scale),
                                 _buildActionButtons(isSmallScreen),
-                                SizedBox(height: 20),
                               ],
                             ],
                           ),
@@ -1951,362 +2114,247 @@ class _ProfilePageState extends State<ProfilePage>
   }
 
   Widget _buildProfileHeader(bool isSmallScreen) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 30,
-            spreadRadius: 5,
-            offset: Offset(0, 10),
-          ),
-        ],
-        border: Border.all(color: Color(0xFFF1F5F9), width: 1),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 12 * scale,
-                    vertical: 6 * scale,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Color(0xFFF1F5F9),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    'PROFILE',
-                    style: TextStyle(
-                      fontSize: 10 * scale,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF475569),
-                      letterSpacing: 1.5,
-                    ),
-                  ),
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 6 * scale),
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          /// ACCENT SPINE
+          Positioned(
+            left: 0,
+            top: 0,
+            bottom: 0,
+            child: Container(
+              width: 4,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(4),
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF2563EB), Color(0xFF020617)],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
                 ),
-                PopupMenuButton<String>(
-                  icon: Icon(
-                    Icons.more_vert_rounded,
-                    color: Color(0xFF64748B),
-                    size: 20 * scale,
-                  ),
-                  color: Colors.white,
-                  surfaceTintColor: Colors.transparent,
-                  elevation: 10,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    side: BorderSide(color: Color(0xFFF1F5F9)),
-                  ),
-                  onSelected: (value) {
-                    if (value == 'edit') {
-                      _toggleEditing();
-                    }
-                  },
-                  itemBuilder: (BuildContext context) {
-                    return [
-                      PopupMenuItem<String>(
-                        value: 'edit',
-                        child: Row(
-                          children: [
-                            Container(
-                              padding: EdgeInsets.all(6 * scale),
-                              decoration: BoxDecoration(
-                                color: Color(0xFF3B82F6).withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Icon(
-                                Icons.edit,
-                                color: Color(0xFF3B82F6),
-                                size: 12 * scale,
-                              ),
-                            ),
-                            SizedBox(width: 10 * scale),
-                            Text(
-                              'Edit Profile',
-                              style: TextStyle(
-                                fontSize: 12 * scale,
-                                fontWeight: FontWeight.w600,
-                                color: Color(0xFF1E293B),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ];
-                  },
-                ),
-              ],
+              ),
             ),
+          ),
 
-            SizedBox(height: 12 * scale),
-
-            // Profile Image
-            Stack(
-              alignment: Alignment.center,
+          /// MAIN CONTENT
+          Padding(
+            padding: EdgeInsets.only(left: 18 * scale),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  width: 110 * scale,
-                  height: 110 * scale,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: LinearGradient(
-                      colors: [
-                        Color(0xFF3B82F6).withOpacity(0.1),
-                        Color(0xFF10B981).withOpacity(0.1),
-                      ],
+                /// TOP ROW
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      "PROFILE",
+                      style: TextStyle(
+                        fontSize: 10 * scale,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 1.0,
+                        color: Colors.black,
+                      ),
                     ),
-                  ),
+                    GestureDetector(
+                      onTapDown: (details) {
+                        _showContextBubble(details.globalPosition);
+                      },
+                      child: Icon(
+                        Icons.more_vert_rounded,
+                        size: 20 * scale,
+                        color: Color(0xFF020617),
+                      ),
+                    ),
+                  ],
                 ),
-                GestureDetector(
-                  onTap: _pickImage,
-                  child: Stack(
-                    children: [
-                      Container(
-                        width: 90 * scale,
-                        height: 90 * scale,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: Colors.white,
-                            width: 4 * scale,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
-                              blurRadius: 20,
-                              spreadRadius: 2,
+
+                SizedBox(height: 14 * scale),
+
+                /// IDENTITY ROW
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    /// CORNER AVATAR BADGE
+                    GestureDetector(
+                      onTap: _pickImage,
+                      child: Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          Container(
+                            width: 56 * scale,
+                            height: 56 * scale,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(16),
+                              color: const Color(0xFF020617),
                             ),
-                          ],
-                        ),
-                        child: ClipOval(
-                          child:
-                              _isImageLoading
-                                  ? Center(
-                                    child: CircularProgressIndicator(
-                                      color: Color(0xFF3B82F6),
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                  : _profileImage != null && _isImageSaved
-                                  ? Image.file(
-                                    _profileImage!,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (context, error, stackTrace) {
-                                      return Container(
-                                        decoration: BoxDecoration(
-                                          gradient: LinearGradient(
-                                            colors: [
-                                              Color(0xFF3B82F6),
-                                              Color(0xFF1D4ED8),
-                                            ],
-                                          ),
-                                        ),
-                                        child: Center(
-                                          child: Text(
-                                            name.isNotEmpty
-                                                ? name[0].toUpperCase()
-                                                : 'U',
-                                            style: TextStyle(
-                                              fontSize: 32 * scale,
-                                              fontWeight: FontWeight.bold,
-                                              color: Colors.white,
-                                            ),
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                  )
-                                  : Container(
-                                    decoration: BoxDecoration(
-                                      gradient: LinearGradient(
-                                        colors: [
-                                          Color(0xFF3B82F6),
-                                          Color(0xFF1D4ED8),
-                                        ],
-                                      ),
-                                    ),
-                                    child: Center(
-                                      child: Text(
-                                        name.isNotEmpty
-                                            ? name[0].toUpperCase()
-                                            : 'U',
-                                        style: TextStyle(
-                                          fontSize: 32 * scale,
-                                          fontWeight: FontWeight.bold,
+                            padding: EdgeInsets.all(2.5 * scale),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child:
+                                  _isImageLoading
+                                      ? const Center(
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
                                           color: Colors.white,
                                         ),
+                                      )
+                                      : _profileImage != null && _isImageSaved
+                                      ? Image.file(
+                                        _profileImage!,
+                                        fit: BoxFit.cover,
+                                      )
+                                      : Center(
+                                        child: Text(
+                                          name.isNotEmpty
+                                              ? name[0].toUpperCase()
+                                              : 'U',
+                                          style: TextStyle(
+                                            fontSize: 22 * scale,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white,
+                                          ),
+                                        ),
                                       ),
-                                    ),
-                                  ),
-                        ),
-                      ),
-                      Positioned(
-                        bottom: 0,
-                        right: 0,
-                        child: Container(
-                          padding: EdgeInsets.all(6 * scale),
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Color(0xFF3B82F6),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Color(0xFF3B82F6).withOpacity(0.3),
-                                blurRadius: 10,
+                            ),
+                          ),
+
+                          /// CAMERA MARK
+                          Positioned(
+                            bottom: -4,
+                            right: -4,
+                            child: Container(
+                              padding: const EdgeInsets.all(5),
+                              decoration: const BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Color(0xFF2563EB),
                               ),
-                            ],
-                          ),
-                          child: HugeIcon(
-                            icon: HugeIcons.strokeRoundedCameraAdd01,
-                            size: 16 * scale,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-
-            SizedBox(height: 20),
-
-            // Name
-            _isEditing
-                ? TextField(
-                  controller: _nameController,
-                  style: TextStyle(
-                    fontSize: isSmallScreen ? 24 : 28,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF1E293B),
-                    letterSpacing: 0.5,
-                  ),
-                  textAlign: TextAlign.center,
-                  decoration: InputDecoration(
-                    border: InputBorder.none,
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                )
-                : Text(
-                  name,
-                  style: TextStyle(
-                    fontSize: 22 * scale,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF1E293B),
-                    letterSpacing: 0.5,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-
-            SizedBox(height: 10),
-
-            // Role - FIXED: Using Icon instead of HugeIcon to avoid the List issue
-            _isEditing
-                ? _buildRoleDropdown()
-                : Container(
-                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: Color(0xFFF1F5F9),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Color(0xFFE2E8F0)),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Using Material Icon instead of HugeIcon to fix the List issue
-                      Icon(
-                        Icons.work_rounded,
-                        size: 16 * scale,
-                        color: Color(0xFF3B82F6),
-                      ),
-                      SizedBox(width: 8),
-                      Text(
-                        role,
-                        style: TextStyle(
-                          fontSize: 12 * scale,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF475569),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-            if (_isEditing) ...[
-              SizedBox(height: 20),
-              Row(
-                children: [
-                  Expanded(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Color(0xFFE2E8F0)),
-                      ),
-                      child: TextButton(
-                        onPressed: _toggleEditing,
-                        style: TextButton.styleFrom(
-                          padding: EdgeInsets.symmetric(vertical: 16),
-                        ),
-                        child: Text(
-                          'Cancel',
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Color(0xFF64748B),
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  SizedBox(width: 16),
-                  Expanded(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [Color(0xFF3B82F6), Color(0xFF1D4ED8)],
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Color(0xFF3B82F6).withOpacity(0.3),
-                            blurRadius: 15,
+                              child: HugeIcon(
+                                icon: HugeIcons.strokeRoundedCameraAdd01,
+                                size: 10 * scale,
+                                color: Colors.white,
+                              ),
+                            ),
                           ),
                         ],
                       ),
-                      child: TextButton(
-                        onPressed: _saveProfile,
-                        style: TextButton.styleFrom(
-                          padding: EdgeInsets.symmetric(vertical: 16),
-                        ),
-                        child: Text(
-                          'Save',
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
+                    ),
+
+                    SizedBox(width: 14 * scale),
+
+                    /// TEXT
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _isEditing
+                              ? TextField(
+                                controller: _nameController,
+                                onChanged: (value) {
+                                  // 🔥 DO NOT TOUCH `name`
+                                  // Only update navbar preview
+                                  widget.onNameChanged?.call(value);
+                                },
+
+                                style: TextStyle(
+                                  fontSize: 22 * scale,
+                                  fontWeight: FontWeight.w900,
+                                  color: const Color(0xFF020617),
+                                ),
+                                decoration: const InputDecoration(
+                                  border: InputBorder.none,
+                                ),
+                              )
+                              : Text(
+                                name,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 18 * scale,
+                                  fontWeight: FontWeight.w900,
+                                  color: const Color(0xFF020617),
+                                ),
+                              ),
+
+                          _isEditing
+                              ? _buildRoleDropdown()
+                              : Text(
+                                role,
+                                style: TextStyle(
+                                  fontSize: 12 * scale,
+                                  color: const Color(0xFF64748B),
+                                ),
+                              ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+
+                /// ACTIONS
+                if (_isEditing) ...[
+                  SizedBox(height: 18 * scale),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextButton(
+                          onPressed: _toggleEditing,
+                          style: TextButton.styleFrom(
+                            padding: EdgeInsets.symmetric(vertical: 12 * scale),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                              side: const BorderSide(
+                                color: Colors.black,
+                                width: 1.2,
+                              ),
+                            ),
+                          ),
+                          child: Text(
+                            'Cancel',
+                            style: TextStyle(
+                              fontSize: 12 * scale,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black,
+                            ),
                           ),
                         ),
                       ),
-                    ),
+                      SizedBox(width: 12 * scale),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: _saveProfile,
+                          style: ElevatedButton.styleFrom(
+                            elevation: 0,
+                            backgroundColor: const Color(0xFF020617),
+                            padding: EdgeInsets.symmetric(vertical: 12 * scale),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                          ),
+                          child: Text(
+                            'Save',
+                            style: TextStyle(
+                              fontSize: 12 * scale,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
-              ),
-            ],
-          ],
-        ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildRoleDropdown() {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      padding: EdgeInsets.symmetric(horizontal: 14 * scale),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -2321,7 +2369,7 @@ class _ProfilePageState extends State<ProfilePage>
           dropdownColor: Colors.white,
           icon: Icon(Icons.arrow_drop_down, color: Color(0xFF64748B)),
           style: TextStyle(
-            fontSize: 16,
+            fontSize: 12 * scale,
             color: Color(0xFF1E293B),
             fontWeight: FontWeight.w600,
           ),
@@ -2639,7 +2687,7 @@ class _ProfilePageState extends State<ProfilePage>
                     scale: 0.8 * scale,
                     child: Switch(
                       value: _isPasscodeEnabled,
-                      activeColor: Colors.white,
+                      activeThumbColor: Colors.white,
                       activeTrackColor: Color(0xFF10B981),
                       inactiveThumbColor: Colors.white,
                       inactiveTrackColor: Color(0xFFEF4444),
@@ -2876,7 +2924,7 @@ class _ProfilePageState extends State<ProfilePage>
                     scale: 0.8 * scale,
                     child: Switch(
                       value: _isRentalEnabled,
-                      activeColor: Colors.white,
+                      activeThumbColor: Colors.white,
                       activeTrackColor: Color(0xFF10B981),
                       inactiveThumbColor: Colors.white,
                       inactiveTrackColor: Color(0xFFEF4444),

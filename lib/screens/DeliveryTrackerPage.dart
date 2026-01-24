@@ -100,7 +100,7 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
   late final Animation<double> _fadeAnimation;
 
   int? _invoiceNumber;
-  bool _isSendingWhatsApp = false;
+  final bool _isSendingWhatsApp = false;
   bool _isSaving = false;
 
   // Store the Hive key separately

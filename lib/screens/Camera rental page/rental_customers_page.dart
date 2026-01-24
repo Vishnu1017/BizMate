@@ -13,8 +13,7 @@ import '../../../models/customer_model.dart';
 class RentalCustomersPage extends StatefulWidget {
   final String userEmail;
 
-  const RentalCustomersPage({Key? key, required this.userEmail})
-    : super(key: key);
+  const RentalCustomersPage({super.key, required this.userEmail});
 
   @override
   State<RentalCustomersPage> createState() => _RentalCustomersPageState();

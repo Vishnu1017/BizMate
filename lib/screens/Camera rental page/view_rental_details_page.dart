@@ -1,14 +1,18 @@
 import 'dart:io';
+import 'package:bizmate/models/rental_cart_item.dart';
 import 'package:bizmate/models/rental_item.dart';
 import 'package:bizmate/models/customer_model.dart';
 import 'package:bizmate/models/rental_sale_model.dart' show RentalSaleModel;
 import 'package:bizmate/screens/Camera%20rental%20page/rental_add_customer_page.dart'
     show RentalAddCustomerPage;
+import 'package:bizmate/screens/Camera%20rental%20page/rental_cart_preview_page.dart';
+import 'package:bizmate/services/rental_cart.dart';
 import 'package:bizmate/widgets/ModernCalendar.dart' show ModernCalendar;
 import 'package:bizmate/widgets/app_snackbar.dart' show AppSnackBar;
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:intl/intl.dart';
+import 'package:unicons/unicons.dart';
 
 class ViewRentalDetailsPage extends StatefulWidget {
   final RentalItem item;
@@ -18,26 +22,53 @@ class ViewRentalDetailsPage extends StatefulWidget {
   final String availability;
 
   const ViewRentalDetailsPage({
-    Key? key,
+    super.key,
     required this.item,
     required this.name,
     required this.imageUrl,
     required this.pricePerDay,
     required this.availability,
-  }) : super(key: key);
+  });
 
   @override
   State<ViewRentalDetailsPage> createState() => _ViewRentalDetailsPageState();
 }
 
 class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
+  final GlobalKey _addButtonKey = GlobalKey();
+  final GlobalKey _cartButtonKey = GlobalKey();
+
+  final ValueNotifier<int> _cartCount = ValueNotifier<int>(0);
+
   DateTime? fromDate;
   DateTime? toDate;
   String? selectedFromTime;
   String? selectedToTime;
+  double scale = 1.0;
 
   int noOfDays = 0;
   double totalAmount = 0.0;
+
+  bool _validateAddToCart(DateTime from, DateTime to) {
+    for (final cartItem in RentalCart.items) {
+      if (cartItem.item.name == widget.item.name) {
+        final cartFrom = cartItem.fromDateTime;
+        final cartTo = cartItem.toDateTime;
+
+        final isOverlap = from.isBefore(cartTo) && to.isAfter(cartFrom);
+
+        if (isOverlap) {
+          AppSnackBar.showError(
+            context,
+            message: "This item is already added for overlapping dates",
+            duration: const Duration(seconds: 2),
+          );
+          return false;
+        }
+      }
+    }
+    return true;
+  }
 
   final List<String> timeSlots = [
     '10:00 AM',
@@ -60,6 +91,78 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
   void initState() {
     super.initState();
     _loadUserData();
+    _cartCount.value = RentalCart.items.length;
+  }
+
+  @override
+  void dispose() {
+    _cartCount.dispose();
+    super.dispose();
+  }
+
+  void _syncAvailabilityWithCart() {
+    final existsInCart = RentalCart.items.any(
+      (cartItem) => cartItem.item.name == widget.item.name,
+    );
+
+    setState(() {
+      availabilityStatus = existsInCart ? "Unavailable" : "Available";
+    });
+  }
+
+  void _animateAddToCart() {
+    final overlay = Overlay.of(context);
+
+    final addBox =
+        _addButtonKey.currentContext?.findRenderObject() as RenderBox?;
+    final cartBox =
+        _cartButtonKey.currentContext?.findRenderObject() as RenderBox?;
+
+    if (addBox == null || cartBox == null) return;
+
+    final addPos = addBox.localToGlobal(Offset.zero);
+    final cartPos = cartBox.localToGlobal(Offset.zero);
+
+    final entry = OverlayEntry(
+      builder: (context) {
+        return TweenAnimationBuilder<Offset>(
+          tween: Tween(begin: addPos, end: cartPos),
+          duration: const Duration(milliseconds: 700),
+          curve: Curves.easeInOutCubic,
+          builder: (_, value, child) {
+            return Positioned(left: value.dx, top: value.dy, child: child!);
+          },
+          child: Material(
+            color: Colors.transparent,
+            child: Container(
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(
+                color: Colors.orange.shade600,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.orange.withOpacity(0.5),
+                    blurRadius: 12,
+                  ),
+                ],
+              ),
+              child: const Icon(
+                Icons.shopping_cart,
+                size: 16,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        );
+      },
+    );
+
+    overlay.insert(entry);
+
+    Future.delayed(const Duration(milliseconds: 750), () {
+      entry.remove();
+    });
   }
 
   void _loadUserData() {
@@ -301,14 +404,8 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
   }) {
     final width = MediaQuery.of(context).size.width;
     final bool isTablet = width >= 600;
-    final bool isWide = width >= 900;
 
-    final horizontal =
-        isWide
-            ? width * 0.18
-            : isTablet
-            ? width * 0.12
-            : 20.0;
+    final horizontal = 14 * scale;
 
     return Container(
       margin:
@@ -335,25 +432,16 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
   }
 
   Widget _buildDateTimeButton(bool isFrom) {
-    final width = MediaQuery.of(context).size.width;
-    final bool isVerySmall = width < 360;
-    final bool isTablet = width >= 600;
-
     final dateTime = isFrom ? fromDate : toDate;
     final label = isFrom ? "From" : "To";
     final icon = isFrom ? Icons.calendar_today : Icons.calendar_month;
 
     return Expanded(
       child: Container(
-        height:
-            isTablet
-                ? 60
-                : isVerySmall
-                ? 50
-                : 55,
+        height: 55 * scale,
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(isTablet ? 18 : 15),
+          borderRadius: BorderRadius.circular(15 * scale),
           boxShadow: [
             BoxShadow(
               color: Colors.grey.shade300,
@@ -369,19 +457,15 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
         ),
         child: Material(
           color: Colors.transparent,
-          borderRadius: BorderRadius.circular(isTablet ? 18 : 15),
+          borderRadius: BorderRadius.circular(15 * scale),
           child: InkWell(
             onTap: () => pickDate(isFrom),
-            borderRadius: BorderRadius.circular(isTablet ? 18 : 15),
+            borderRadius: BorderRadius.circular(15 * scale),
             child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: isTablet ? 18 : 16),
+              padding: EdgeInsets.symmetric(horizontal: 16 * scale),
               child: Row(
                 children: [
-                  Icon(
-                    icon,
-                    color: Colors.blue.shade600,
-                    size: isTablet ? 22 : 20,
-                  ),
+                  Icon(icon, color: Colors.blue.shade600, size: 16 * scale),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
@@ -393,12 +477,7 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
                             dateTime == null
                                 ? Colors.grey.shade500
                                 : Colors.grey.shade800,
-                        fontSize:
-                            isVerySmall
-                                ? 12
-                                : isTablet
-                                ? 15
-                                : 14,
+                        fontSize: 12 * scale,
                         fontWeight: FontWeight.w500,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -414,17 +493,13 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
   }
 
   Widget _buildTimeDropdown(bool isFrom) {
-    final width = MediaQuery.of(context).size.width;
-    final bool isVerySmall = width < 360;
-    final bool isTablet = width >= 600;
-
     final value = isFrom ? selectedFromTime : selectedToTime;
     final label = isFrom ? "From Time" : "To Time";
 
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(isTablet ? 18 : 15),
+        borderRadius: BorderRadius.circular(15 * scale),
         boxShadow: [
           BoxShadow(
             color: Colors.grey.shade300,
@@ -439,7 +514,7 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
         ],
       ),
       child: DropdownButtonFormField<String>(
-        value: value,
+        initialValue: value,
         items:
             timeSlots
                 .map(
@@ -450,12 +525,7 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
                       style: TextStyle(
                         color: Colors.grey.shade800,
                         fontWeight: FontWeight.w500,
-                        fontSize:
-                            isVerySmall
-                                ? 12
-                                : isTablet
-                                ? 15
-                                : 14,
+                        fontSize: 12 * scale,
                       ),
                     ),
                   ),
@@ -476,12 +546,7 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
           labelStyle: TextStyle(
             color: Colors.grey.shade600,
             fontWeight: FontWeight.w500,
-            fontSize:
-                isVerySmall
-                    ? 12
-                    : isTablet
-                    ? 14
-                    : 13,
+            fontSize: 12 * scale,
           ),
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(horizontal: 16),
@@ -497,15 +562,9 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
   }
 
   Widget _buildStatusIndicator() {
-    final width = MediaQuery.of(context).size.width;
-    final bool isVerySmall = width < 360;
-
     final isAvailable = availabilityStatus == "Available";
     return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: isVerySmall ? 12 : 16,
-        vertical: 8,
-      ),
+      padding: EdgeInsets.symmetric(horizontal: 8 * scale, vertical: 6 * scale),
       decoration: BoxDecoration(
         color: isAvailable ? Colors.green.shade50 : Colors.red.shade50,
         borderRadius: BorderRadius.circular(20),
@@ -519,15 +578,15 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
           Icon(
             isAvailable ? Icons.check_circle : Icons.error,
             color: isAvailable ? Colors.green.shade600 : Colors.red.shade600,
-            size: 16,
+            size: 14 * scale,
           ),
-          const SizedBox(width: 6),
+          SizedBox(width: 4 * scale),
           Text(
             availabilityStatus,
             style: TextStyle(
               color: isAvailable ? Colors.green.shade800 : Colors.red.shade800,
               fontWeight: FontWeight.w600,
-              fontSize: isVerySmall ? 11 : 12,
+              fontSize: 10 * scale,
             ),
           ),
         ],
@@ -536,9 +595,6 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
   }
 
   Widget _buildPriceCard() {
-    final width = MediaQuery.of(context).size.width;
-    final bool isTablet = width >= 600;
-
     return _buildNeumorphicCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -546,7 +602,7 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: EdgeInsets.all(6 * scale),
                 decoration: BoxDecoration(
                   color: Colors.blue.shade50,
                   borderRadius: BorderRadius.circular(12),
@@ -554,14 +610,14 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
                 child: Icon(
                   Icons.attach_money_rounded,
                   color: Colors.blue.shade600,
-                  size: 20,
+                  size: 16,
                 ),
               ),
               const SizedBox(width: 12),
               Text(
                 "Pricing Details",
                 style: TextStyle(
-                  fontSize: isTablet ? 20 : 18,
+                  fontSize: 14 * scale,
                   fontWeight: FontWeight.w700,
                   color: Colors.grey.shade800,
                 ),
@@ -579,7 +635,7 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
               selectedFromTime != null &&
               selectedToTime != null)
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4),
+              padding: EdgeInsets.symmetric(vertical: 4 * scale),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -588,44 +644,47 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
                     style: TextStyle(
                       color: Colors.grey.shade600,
                       fontWeight: FontWeight.w500,
-                      fontSize: isTablet ? 14 : 13,
+                      fontSize: 13 * scale,
                     ),
                   ),
                   _buildStatusIndicator(),
                 ],
               ),
             ),
-          Divider(height: 24, color: Colors.grey.shade300),
+          Divider(height: 24 * scale, color: Colors.grey.shade300),
           _buildPriceRow(
             "Total Amount",
             "₹${totalAmount.toStringAsFixed(0)}",
             isTotal: true,
           ),
-          const SizedBox(height: 20),
+          SizedBox(height: 16 * scale),
           Row(
             children: [
+              // ================= PRIMARY : BOOK NOW =================
               Expanded(
+                flex: 2,
                 child: Container(
-                  height: isTablet ? 58 : 55,
+                  height: 54 * scale,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [Colors.blue.shade600, Colors.blue.shade800],
+                      colors: [Colors.blue.shade700, Colors.blue.shade900],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
-                    borderRadius: BorderRadius.circular(15),
+                    borderRadius: BorderRadius.circular(18),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.blue.shade300,
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
+                        color: Colors.blue.withOpacity(0.35),
+                        blurRadius: 14,
+                        offset: const Offset(0, 6),
                       ),
                     ],
                   ),
                   child: Material(
                     color: Colors.transparent,
-                    borderRadius: BorderRadius.circular(15),
+                    borderRadius: BorderRadius.circular(18),
                     child: InkWell(
+                      borderRadius: BorderRadius.circular(18),
                       onTap: () async {
                         if (!_validateBooking()) return;
 
@@ -660,22 +719,21 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
                           });
                         }
                       },
-                      borderRadius: BorderRadius.circular(15),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(
-                            Icons.shopping_cart_checkout,
+                            Icons.shopping_cart_checkout_rounded,
                             color: Colors.white,
-                            size: 20,
+                            size: 14 * scale,
                           ),
-                          const SizedBox(width: 8),
+                          SizedBox(width: 6 * scale),
                           Text(
                             'Book Now',
                             style: TextStyle(
                               color: Colors.white,
-                              fontWeight: FontWeight.w600,
-                              fontSize: isTablet ? 17 : 16,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 10 * scale,
                             ),
                           ),
                         ],
@@ -684,31 +742,124 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
+
+              SizedBox(width: 8 * scale),
+
+              // ================= SECONDARY : ADD ITEM =================
+              Expanded(
+                flex: 2,
+                child: Container(
+                  height: 54 * scale,
+                  decoration: BoxDecoration(
+                    color: Colors.orange.shade50,
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(
+                      color: Colors.orange.shade300,
+                      width: 1.4,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.orange.withOpacity(0.2),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    borderRadius: BorderRadius.circular(18),
+                    child: InkWell(
+                      key: _addButtonKey,
+                      borderRadius: BorderRadius.circular(18),
+                      onTap: () {
+                        if (!_validateBooking()) return;
+
+                        final fromDT = _combineDateAndTime(
+                          fromDate!,
+                          selectedFromTime!,
+                        );
+                        final toDT = _combineDateAndTime(
+                          toDate!,
+                          selectedToTime!,
+                        );
+
+                        if (!_validateAddToCart(fromDT, toDT)) return;
+
+                        RentalCart.add(
+                          RentalCartItem(
+                            item: widget.item,
+                            noOfDays: noOfDays,
+                            ratePerDay: widget.pricePerDay,
+                            totalAmount: totalAmount,
+                            fromDateTime: fromDT,
+                            toDateTime: toDT,
+                          ),
+                        );
+
+                        _cartCount.value = RentalCart.items.length;
+                        _animateAddToCart();
+
+                        // ✅ Sync status with cart
+                        _syncAvailabilityWithCart();
+
+                        AppSnackBar.showSuccess(
+                          context,
+                          message: "Item added to cart",
+                        );
+                      },
+
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.add_shopping_cart_rounded,
+                            color: Colors.orange.shade800,
+                            size: 14 * scale,
+                          ),
+                          SizedBox(width: 6 * scale),
+                          Text(
+                            'Add Item',
+                            style: TextStyle(
+                              color: Colors.orange.shade900,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 10 * scale,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+              SizedBox(width: 8 * scale),
+
+              // ================= UTILITY : RESET =================
               Container(
-                width: isTablet ? 58 : 55,
-                height: isTablet ? 58 : 55,
+                width: 54 * scale,
+                height: 54 * scale,
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(15),
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: Colors.grey.shade300, width: 1.2),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.grey.shade300,
+                      color: Colors.black.withOpacity(0.08),
                       blurRadius: 10,
-                      offset: const Offset(4, 4),
+                      offset: const Offset(0, 4),
                     ),
                   ],
                 ),
                 child: Material(
                   color: Colors.transparent,
-                  borderRadius: BorderRadius.circular(15),
+                  borderRadius: BorderRadius.circular(18),
                   child: InkWell(
+                    borderRadius: BorderRadius.circular(18),
                     onTap: clearSelection,
-                    borderRadius: BorderRadius.circular(15),
                     child: Icon(
-                      Icons.refresh,
-                      color: Colors.grey.shade600,
-                      size: 22,
+                      Icons.refresh_rounded,
+                      color: Colors.grey.shade700,
+                      size: 22 * scale,
                     ),
                   ),
                 ),
@@ -721,11 +872,8 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
   }
 
   Widget _buildPriceRow(String label, String value, {bool isTotal = false}) {
-    final width = MediaQuery.of(context).size.width;
-    final bool isTablet = width >= 600;
-
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+      padding: EdgeInsets.symmetric(vertical: 6 * scale),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -733,7 +881,7 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
             label,
             style: TextStyle(
               color: Colors.grey.shade600,
-              fontSize: isTablet ? 15 : 14,
+              fontSize: 12 * scale,
               fontWeight: isTotal ? FontWeight.w600 : FontWeight.w500,
             ),
           ),
@@ -741,7 +889,7 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
             value,
             style: TextStyle(
               color: isTotal ? Colors.blue.shade800 : Colors.grey.shade800,
-              fontSize: isTotal ? (isTablet ? 18 : 16) : (isTablet ? 15 : 14),
+              fontSize: 12 * scale,
               fontWeight: isTotal ? FontWeight.w700 : FontWeight.w600,
             ),
           ),
@@ -785,10 +933,7 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
               ),
             ),
             flexibleSpace: FlexibleSpaceBar(
-              titlePadding: EdgeInsets.only(
-                left: isWide ? size.width * 0.18 : 56,
-                bottom: 16,
-              ),
+              titlePadding: EdgeInsets.only(left: 50 * scale, bottom: 16),
               title: Text(
                 widget.name,
                 maxLines: 1,
@@ -844,38 +989,131 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
                   children: [
                     _buildNeumorphicCard(
                       margin: EdgeInsets.symmetric(
-                        horizontal:
-                            isWide
-                                ? size.width * 0.18
-                                : isTablet
-                                ? size.width * 0.12
-                                : 20,
-                        vertical: 12,
+                        horizontal: 14 * scale,
+                        vertical: 12 * scale,
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: Colors.orange.shade50,
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Icon(
-                                  Icons.calendar_today,
-                                  color: Colors.orange.shade600,
-                                  size: 20,
-                                ),
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: EdgeInsets.all(6 * scale),
+                                    decoration: BoxDecoration(
+                                      color: Colors.orange.shade50,
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Icon(
+                                      Icons.calendar_today,
+                                      color: Colors.orange.shade600,
+                                      size: 16 * scale,
+                                    ),
+                                  ),
+                                  SizedBox(width: 12 * scale),
+                                  Text(
+                                    "Select Rental Period",
+                                    style: TextStyle(
+                                      fontSize: 14 * scale,
+                                      fontWeight: FontWeight.w700,
+                                      color: Colors.grey.shade800,
+                                    ),
+                                  ),
+                                ],
                               ),
-                              const SizedBox(width: 12),
-                              Text(
-                                "Select Rental Period",
-                                style: TextStyle(
-                                  fontSize: isTablet ? 20 : 18,
-                                  fontWeight: FontWeight.w700,
-                                  color: Colors.grey.shade800,
+                              // ---------------- VIEW CART ----------------
+                              InkWell(
+                                key: _cartButtonKey,
+                                borderRadius: BorderRadius.circular(30 * scale),
+                                onTap: () async {
+                                  await Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder:
+                                          (_) => const RentalCartPreviewPage(),
+                                    ),
+                                  );
+
+                                  // ✅ UPDATE COUNT AFTER RETURN
+                                  _cartCount.value = RentalCart.items.length;
+                                  _syncAvailabilityWithCart();
+                                },
+                                child: Stack(
+                                  clipBehavior: Clip.none,
+                                  children: [
+                                    // ================= CART BUTTON =================
+                                    Container(
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: 10 * scale,
+                                        vertical: 6 * scale,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey.shade100,
+                                        borderRadius: BorderRadius.circular(30),
+                                        border: Border.all(
+                                          color: const Color(
+                                            0xFF0D47A1,
+                                          ), // 🔵 border color
+                                          width: 1.2, // optional thickness
+                                        ),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.white,
+                                            offset: const Offset(-4, -4),
+                                            blurRadius: 8,
+                                          ),
+                                          BoxShadow(
+                                            color: Colors.black.withOpacity(
+                                              0.30,
+                                            ),
+                                            offset: const Offset(1, 3),
+                                            blurRadius: 8,
+                                          ),
+                                        ],
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            UniconsLine.shopping_cart,
+                                            size: 16 * scale,
+                                            color: const Color(0xFF0D47A1),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+
+                                    // ================= CART COUNT BADGE =================
+                                    Positioned(
+                                      top: -6,
+                                      right: -6,
+                                      child: ValueListenableBuilder<int>(
+                                        valueListenable: _cartCount,
+                                        builder: (_, count, __) {
+                                          if (count == 0)
+                                            return const SizedBox.shrink();
+
+                                          return Container(
+                                            padding: const EdgeInsets.all(6),
+                                            decoration: const BoxDecoration(
+                                              color: Colors.red,
+                                              shape: BoxShape.circle,
+                                            ),
+                                            child: Text(
+                                              '$count',
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 11,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ],

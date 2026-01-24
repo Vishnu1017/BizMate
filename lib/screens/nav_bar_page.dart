@@ -46,6 +46,7 @@ class _NavBarPageState extends State<NavBarPage>
   bool _isRentalEnabled = false;
   String welcomeMessage = "";
   double scale = 1.0;
+  late ValueNotifier<String> _nameNotifier;
 
   // Modern color palette
   final Color _primaryColor = const Color(0xFF1A237E);
@@ -68,6 +69,7 @@ class _NavBarPageState extends State<NavBarPage>
   @override
   void initState() {
     super.initState();
+    _nameNotifier = ValueNotifier(widget.user.name);
     _loadRentalStatus();
     fetchWelcomeMessage();
   }
@@ -153,6 +155,16 @@ class _NavBarPageState extends State<NavBarPage>
         if (!mounted) return;
         setState(() {});
       },
+      onProfileUpdated: (updatedName) {
+        // 🔥 INSTANT UPDATE
+        _nameNotifier.value = updatedName;
+
+        // keep widget.user in sync too
+        widget.user.name = updatedName;
+
+        // optional: refresh welcome message
+        fetchWelcomeMessage();
+      },
     ),
   ];
 
@@ -173,12 +185,15 @@ class _NavBarPageState extends State<NavBarPage>
   }
 
   EdgeInsets _pagePadding(double width) {
-    if (width <= _kCompactMax)
+    if (width <= _kCompactMax) {
       return const EdgeInsets.symmetric(horizontal: 14, vertical: 12);
-    if (width <= _kLargePhoneMax)
+    }
+    if (width <= _kLargePhoneMax) {
       return const EdgeInsets.symmetric(horizontal: 20, vertical: 16);
-    if (width <= _kTabletMax)
+    }
+    if (width <= _kTabletMax) {
       return const EdgeInsets.symmetric(horizontal: 28, vertical: 20);
+    }
     return const EdgeInsets.symmetric(horizontal: 48, vertical: 24);
   }
 
@@ -237,15 +252,21 @@ class _NavBarPageState extends State<NavBarPage>
                           color: _primaryColor,
                         ),
                         child: Center(
-                          child: Text(
-                            widget.user.name.isNotEmpty
-                                ? widget.user.name[0].toUpperCase()
-                                : 'U',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600,
-                              fontSize: _scaleForWidth(screenWidth, 18 * scale),
-                            ),
+                          child: ValueListenableBuilder<String>(
+                            valueListenable: _nameNotifier,
+                            builder: (context, name, _) {
+                              return Text(
+                                name.isNotEmpty ? name[0].toUpperCase() : 'U',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: _scaleForWidth(
+                                    screenWidth,
+                                    18 * scale,
+                                  ),
+                                ),
+                              );
+                            },
                           ),
                         ),
                       ),
@@ -258,31 +279,37 @@ class _NavBarPageState extends State<NavBarPage>
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          // Welcome / Welcome back (STATIC)
                           Text(
-                            welcomeMessage
-                                .split('\n')
-                                .first, // Welcome OR Welcome back
+                            welcomeMessage.split('\n').first,
                             style: TextStyle(
                               fontSize: _scaleForWidth(screenWidth, 12),
                               color: _textSecondary,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
-                          Text(
-                            welcomeMessage.contains('\n')
-                                ? welcomeMessage
-                                    .split('\n')[1]
-                                    .replaceAll('!', '')
-                                : widget.user.name,
-                            style: TextStyle(
-                              fontSize: _scaleForWidth(screenWidth, 16 * scale),
-                              color: _textPrimary,
-                              fontWeight: FontWeight.w700,
-                            ),
+
+                          // Name (LIVE)
+                          ValueListenableBuilder<String>(
+                            valueListenable: _nameNotifier,
+                            builder: (context, name, _) {
+                              return Text(
+                                name, // ✅ ALWAYS LIVE
+                                style: TextStyle(
+                                  fontSize: _scaleForWidth(
+                                    screenWidth,
+                                    16 * scale,
+                                  ),
+                                  color: _textPrimary,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              );
+                            },
                           ),
                         ],
                       ),
                     ),
+
                     SizedBox(width: _scaleForWidth(screenWidth, 12 * scale)),
                     // Action buttons
                     Row(
@@ -670,26 +697,24 @@ class _NavBarPageState extends State<NavBarPage>
   // ------------------------
   Widget _buildCleanNavigation(double screenWidth) {
     final isSmallScreen = screenWidth < _kLargePhoneMax;
-
-    // horizontal padding grows on large screens
-    final horizontalMargin = isSmallScreen ? 16.0 : 28.0;
+    final horizontalMargin = isSmallScreen ? 14.0 : 30.0;
 
     return Container(
       margin: EdgeInsets.symmetric(
         horizontal: horizontalMargin,
-        vertical: _scaleForWidth(screenWidth, 12),
+        vertical: _scaleForWidth(screenWidth, 14),
       ),
       constraints: const BoxConstraints(maxWidth: 900),
-      height: _scaleForWidth(screenWidth, 72),
+      height: _scaleForWidth(screenWidth, 70),
       decoration: BoxDecoration(
         color: _surfaceColor,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(18),
         border: Border.all(color: _dividerColor),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 20,
-            offset: const Offset(0, 4),
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 22,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
@@ -725,6 +750,7 @@ class _NavBarPageState extends State<NavBarPage>
 
     return Expanded(
       child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
         onTap: () async {
           setState(() {
             _currentIndex = index;
@@ -738,37 +764,60 @@ class _NavBarPageState extends State<NavBarPage>
 
           await _loadRentalStatus();
         },
-        child: Container(
-          color: Colors.transparent,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 280),
+          curve: Curves.easeOutCubic,
+          transform: Matrix4.translationValues(
+            0,
+            isSelected ? -6 : 0, // 🔥 POP-UP EFFECT
+            0,
+          ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              // ICON WITH FOCUS GLOW
               Container(
-                width: _scaleForWidth(screenWidth, 36),
-                height: _scaleForWidth(screenWidth, 36),
+                width: _scaleForWidth(screenWidth, 42),
+                height: _scaleForWidth(screenWidth, 42),
                 decoration: BoxDecoration(
-                  shape: BoxShape.circle,
+                  borderRadius: BorderRadius.circular(12),
                   color:
                       isSelected
-                          ? _primaryColor.withOpacity(0.1)
+                          ? _primaryColor.withOpacity(0.12)
                           : Colors.transparent,
-                  border: Border.all(
-                    color:
-                        isSelected
-                            ? _primaryColor.withOpacity(0.3)
-                            : Colors.transparent,
-                  ),
+                  boxShadow:
+                      isSelected
+                          ? [
+                            BoxShadow(
+                              color: _primaryColor.withOpacity(0.125),
+                              blurRadius: 25,
+                              offset: const Offset(0, 6),
+                            ),
+                          ]
+                          : [],
                 ),
                 child: Icon(
                   isSelected ? filledIcon : outlineIcon,
                   color: isSelected ? _primaryColor : _textSecondary,
                   size:
                       isSelected
-                          ? _scaleForWidth(screenWidth, 27)
-                          : _scaleForWidth(screenWidth, 25),
+                          ? _scaleForWidth(screenWidth, 26)
+                          : _scaleForWidth(screenWidth, 24),
                 ),
               ),
-              SizedBox(height: _scaleForWidth(screenWidth, 6)),
+
+              const SizedBox(height: 4),
+
+              // MICRO INDICATOR DOT
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 250),
+                width: isSelected ? 6 : 0,
+                height: 6,
+                decoration: BoxDecoration(
+                  color: _primaryColor,
+                  shape: BoxShape.circle,
+                ),
+              ),
             ],
           ),
         ),

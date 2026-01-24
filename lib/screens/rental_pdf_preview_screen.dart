@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_pdfview/flutter_pdfview.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../../models/rental_sale_model.dart';
-import 'package:cross_file/cross_file.dart';
 import '../../widgets/app_snackbar.dart';
 
 class RentalPdfPreviewScreen extends StatelessWidget {
