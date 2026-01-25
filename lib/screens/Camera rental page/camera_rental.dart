@@ -190,11 +190,11 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
           children: [
             // BACK CARD
             Positioned(
-              left: 8,
-              top: 8,
+              left: 2 * scale,
+              top: 2 * scale,
               child: Container(
-                width: adjustedSize - 8,
-                height: adjustedSize - 8,
+                width: adjustedSize - 8 * scale,
+                height: adjustedSize - 8 * scale,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(18),
                   gradient: LinearGradient(
@@ -209,8 +209,8 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
 
             // FRONT CARD
             Container(
-              width: adjustedSize - 8,
-              height: adjustedSize - 8,
+              width: adjustedSize - 12 * scale,
+              height: adjustedSize - 12 * scale,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(18),
                 gradient: const LinearGradient(
@@ -226,21 +226,21 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
                   ),
                 ],
               ),
-              child: const Center(
+              child: Center(
                 child: Icon(
                   Icons.photo_camera_rounded,
                   color: Colors.white,
-                  size: 32,
+                  size: 30 * scale,
                 ),
               ),
             ),
 
             // COUNT BADGE
             Positioned(
-              right: -6,
-              top: -6,
+              right: -2 * scale,
+              top: -6 * scale,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                 decoration: BoxDecoration(
                   color: Colors.black87,
                   borderRadius: BorderRadius.circular(20),
@@ -378,7 +378,10 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
     final color = getSaleStatusColor(sale);
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: EdgeInsets.symmetric(
+        horizontal: 10 * scale,
+        vertical: 4 * scale,
+      ),
       decoration: BoxDecoration(
         color: color.withOpacity(0.08),
         borderRadius: BorderRadius.circular(20),
@@ -389,7 +392,7 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
         style: TextStyle(
           color: color,
           fontWeight: FontWeight.w700,
-          fontSize: 12,
+          fontSize: 12 * scale,
           letterSpacing: 0.5,
         ),
       ),
@@ -421,8 +424,11 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
         final totalRentals = allSales.length;
 
         return Container(
-          margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-          padding: const EdgeInsets.all(20),
+          margin: EdgeInsets.symmetric(
+            horizontal: 12 * scale,
+            vertical: 0 * scale,
+          ),
+          padding: EdgeInsets.all(16 * scale),
           decoration: BoxDecoration(
             gradient: const LinearGradient(
               colors: [Color(0xFF667eea), Color(0xFF764ba2)],
@@ -462,22 +468,22 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
   Widget _buildStatItem(IconData icon, String value, String label) {
     return Column(
       children: [
-        Icon(icon, color: Colors.white, size: 24),
-        const SizedBox(height: 4),
+        Icon(icon, color: Colors.white, size: 20 * scale * scale),
+        SizedBox(height: 4 * scale),
         Text(
           value,
-          style: const TextStyle(
+          style: TextStyle(
             color: Colors.white,
-            fontSize: 16,
+            fontSize: 14 * scale,
             fontWeight: FontWeight.w700,
           ),
         ),
-        const SizedBox(height: 2),
+        SizedBox(height: 2 * scale),
         Text(
           label,
           style: TextStyle(
             color: Colors.white.withOpacity(0.85),
-            fontSize: 12,
+            fontSize: 10 * scale,
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -486,13 +492,10 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
   }
 
   Widget _buildSaleCard(RentalSaleModel sale, int index, bool isWide) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isTabletOrDesktop = screenWidth > 700;
-
-    final horizontalMargin = isTabletOrDesktop ? 24.0 : 10.0;
-    final verticalMargin = isTabletOrDesktop ? 10.0 : 8.0;
-    final radius = isTabletOrDesktop ? 24.0 : 20.0;
-    final padding = EdgeInsets.all(isTabletOrDesktop ? 20 : 16);
+    final horizontalMargin = 10.0 * scale;
+    final verticalMargin = 8.0 * scale;
+    final radius = 20.0 * scale;
+    final padding = EdgeInsets.all(12 * scale);
 
     return Container(
       margin: EdgeInsets.symmetric(
@@ -604,13 +607,13 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildImage(sale, isSmallPhone ? 52 : 60),
-            const SizedBox(width: 12),
+            SizedBox(width: 10 * scale),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildHeaderRow(sale, index),
-                  const SizedBox(height: 6),
+                  SizedBox(height: 4 * scale),
 
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -745,7 +748,7 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
               ],
             ),
 
-            const SizedBox(height: 8),
+            SizedBox(height: 8 * scale),
             Wrap(
               spacing: 10,
               runSpacing: 10,
@@ -787,8 +790,8 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
           children: [
             Text(
               '₹${sale.amountPaid.toInt()} paid',
-              style: const TextStyle(
-                fontSize: 14,
+              style: TextStyle(
+                fontSize: 12 * scale,
                 fontWeight: FontWeight.w600,
                 color: Color(0xFF00C853),
               ),
@@ -796,7 +799,7 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
             Text(
               '₹${balanceDue.toInt()} due',
               style: TextStyle(
-                fontSize: 14,
+                fontSize: 12 * scale,
                 fontWeight: FontWeight.w600,
                 color:
                     balanceDue > 0
@@ -806,10 +809,8 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
             ),
           ],
         ),
-        const SizedBox(height: 6),
 
         Container(
-          height: 8,
           decoration: BoxDecoration(
             color: Colors.grey.shade200,
             borderRadius: BorderRadius.circular(10),
@@ -827,14 +828,14 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
           ),
         ),
 
-        const SizedBox(height: 4),
+        SizedBox(height: 10 * scale),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
               'Total: ₹${sale.totalCost.toInt()}',
               style: TextStyle(
-                fontSize: 12,
+                fontSize: 10 * scale,
                 color: Colors.grey.shade600,
                 fontWeight: FontWeight.w500,
               ),
@@ -842,7 +843,7 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
             Text(
               '${(progress * 100).toInt()}%',
               style: TextStyle(
-                fontSize: 12,
+                fontSize: 10 * scale,
                 color: Colors.grey.shade600,
                 fontWeight: FontWeight.w500,
               ),
@@ -854,14 +855,8 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
   }
 
   Widget _buildDetailChip({required IconData icon, required String value}) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isSmallPhone = screenWidth < 360;
-
     return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: isSmallPhone ? 8 : 10,
-        vertical: 6,
-      ),
+      padding: EdgeInsets.symmetric(horizontal: 8 * scale, vertical: 6 * scale),
       decoration: BoxDecoration(
         color: Colors.grey.shade50,
         borderRadius: BorderRadius.circular(12),
@@ -870,7 +865,7 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: Colors.grey.shade600, size: 14),
+          Icon(icon, color: Colors.grey.shade600, size: 8 * scale),
           const SizedBox(width: 6),
           Flexible(
             child: Text(
@@ -878,7 +873,7 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 color: Colors.grey.shade700,
-                fontSize: 12,
+                fontSize: 8 * scale,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -889,14 +884,8 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
   }
 
   Widget _buildDateChip(String label, String value) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isSmallPhone = screenWidth < 360;
-
     return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: isSmallPhone ? 8 : 10,
-        vertical: 6,
-      ),
+      padding: EdgeInsets.symmetric(horizontal: 8 * scale, vertical: 6 * scale),
       decoration: BoxDecoration(
         color: Colors.grey.shade50,
         borderRadius: BorderRadius.circular(12),
@@ -909,7 +898,7 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
             '$label: ',
             style: TextStyle(
               color: Colors.grey.shade600,
-              fontSize: 12,
+              fontSize: 8 * scale * scale,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -919,8 +908,8 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 color: Colors.grey.shade800,
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
+                fontSize: 8 * scale,
+                fontWeight: FontWeight.bold,
               ),
             ),
           ),
@@ -1132,14 +1121,14 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
                                   Icon(
                                     Icons.list_alt_rounded,
                                     color: Colors.grey.shade600,
-                                    size: 18,
+                                    size: 14 * scale,
                                   ),
                                   const SizedBox(width: 8),
                                   Text(
                                     '${filteredSales.length} ${filteredSales.length == 1 ? 'rental' : 'rentals'}',
                                     style: TextStyle(
                                       color: Colors.grey.shade600,
-                                      fontSize: 14,
+                                      fontSize: 12 * scale,
                                       fontWeight: FontWeight.w600,
                                     ),
                                   ),
@@ -1148,7 +1137,7 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
                                     'Latest first',
                                     style: TextStyle(
                                       color: Colors.grey.shade500,
-                                      fontSize: 12,
+                                      fontSize: 10 * scale,
                                     ),
                                   ),
                                 ],

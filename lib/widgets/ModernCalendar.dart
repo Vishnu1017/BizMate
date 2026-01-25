@@ -299,7 +299,7 @@ class _ModernCalendarState extends State<ModernCalendar> {
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
-                        borderRadius: BorderRadius.circular(14),
+                        borderRadius: BorderRadius.circular(12),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.blue.withOpacity(0.35),

@@ -26,7 +26,7 @@ class _RentalCartPreviewPageState extends State<RentalCartPreviewPage> {
   Widget build(BuildContext context) {
     final items = RentalCart.items;
     final size = MediaQuery.of(context).size;
-
+    double scale = 1.0;
     final bool isTablet = size.width >= 600;
     final bool isWide = size.width >= 900;
 
@@ -74,14 +74,14 @@ class _RentalCartPreviewPageState extends State<RentalCartPreviewPage> {
                     children: [
                       Icon(
                         Icons.shopping_cart_outlined,
-                        size: isTablet ? 72 : 60,
+                        size: 60 * scale,
                         color: Colors.grey.shade400,
                       ),
                       const SizedBox(height: 12),
                       Text(
                         "Your cart is empty",
                         style: TextStyle(
-                          fontSize: isTablet ? 20 : 18,
+                          fontSize: 18 * scale,
                           color: Colors.grey.shade600,
                           fontWeight: FontWeight.w600,
                         ),
@@ -96,16 +96,16 @@ class _RentalCartPreviewPageState extends State<RentalCartPreviewPage> {
                       child: ListView.builder(
                         padding: EdgeInsets.symmetric(
                           horizontal: horizontalPadding,
-                          vertical: 16,
+                          vertical: 14 * scale,
                         ),
                         itemCount: items.length,
                         itemBuilder: (context, i) {
                           final item = items[i];
 
-                          final imageSize = isTablet ? 88.0 : 72.0;
+                          final imageSize = 62 * scale;
 
                           return Container(
-                            margin: const EdgeInsets.only(bottom: 16),
+                            margin: EdgeInsets.only(bottom: 12 * scale),
                             decoration: BoxDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(20),
@@ -118,7 +118,7 @@ class _RentalCartPreviewPageState extends State<RentalCartPreviewPage> {
                               ],
                             ),
                             child: Padding(
-                              padding: EdgeInsets.all(isTablet ? 20 : 16),
+                              padding: EdgeInsets.all(14 * scale),
                               child: Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
@@ -150,11 +150,11 @@ class _RentalCartPreviewPageState extends State<RentalCartPreviewPage> {
                                             : Icon(
                                               Icons.photo_camera,
                                               color: Colors.grey.shade500,
-                                              size: isTablet ? 36 : 32,
+                                              size: 28 * scale,
                                             ),
                                   ),
 
-                                  const SizedBox(width: 16),
+                                  SizedBox(width: 14 * scale),
 
                                   // ================= DETAILS =================
                                   Expanded(
@@ -170,69 +170,70 @@ class _RentalCartPreviewPageState extends State<RentalCartPreviewPage> {
                                                 maxLines: 2,
                                                 overflow: TextOverflow.ellipsis,
                                                 style: TextStyle(
-                                                  fontSize: isTablet ? 18 : 16,
+                                                  fontSize: 14 * scale,
                                                   fontWeight: FontWeight.bold,
                                                 ),
                                               ),
                                             ),
                                             IconButton(
                                               onPressed: () => _removeItem(i),
-                                              icon: const Icon(
+                                              icon: Icon(
                                                 Icons.delete_outline,
                                                 color: Colors.redAccent,
+                                                size: 16 * scale,
                                               ),
                                             ),
                                           ],
                                         ),
-                                        const SizedBox(height: 4),
+                                        SizedBox(height: 4 * scale),
                                         Text(
                                           "₹${item.ratePerDay}/day • ${item.noOfDays} days",
                                           style: TextStyle(
                                             color: Colors.grey.shade700,
                                             fontWeight: FontWeight.w600,
-                                            fontSize: isTablet ? 14 : 13,
+                                            fontSize: 12 * scale,
                                           ),
                                         ),
                                         const SizedBox(height: 10),
                                         Row(
                                           children: [
-                                            const Icon(
+                                            Icon(
                                               Icons.schedule,
-                                              size: 14,
+                                              size: 10 * scale,
                                             ),
                                             const SizedBox(width: 6),
                                             Expanded(
                                               child: Text(
                                                 "From: ${_formatDate(item.fromDateTime)}",
                                                 style: TextStyle(
-                                                  fontSize: isTablet ? 13 : 12,
+                                                  fontSize: 10 * scale,
                                                 ),
                                               ),
                                             ),
                                           ],
                                         ),
-                                        const SizedBox(height: 4),
+                                        SizedBox(height: 4 * scale),
                                         Row(
                                           children: [
-                                            const Icon(Icons.event, size: 14),
+                                            Icon(Icons.event, size: 10 * scale),
                                             const SizedBox(width: 6),
                                             Expanded(
                                               child: Text(
                                                 "To: ${_formatDate(item.toDateTime)}",
                                                 style: TextStyle(
-                                                  fontSize: isTablet ? 13 : 12,
+                                                  fontSize: 10 * scale,
                                                 ),
                                               ),
                                             ),
                                           ],
                                         ),
-                                        const SizedBox(height: 12),
+                                        SizedBox(height: 10 * scale),
                                         Align(
                                           alignment: Alignment.centerRight,
                                           child: Container(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 14,
-                                              vertical: 6,
+                                            padding: EdgeInsets.symmetric(
+                                              horizontal: 10 * scale,
+                                              vertical: 4 * scale,
                                             ),
                                             decoration: BoxDecoration(
                                               color: Colors.blue.shade50,
@@ -244,7 +245,7 @@ class _RentalCartPreviewPageState extends State<RentalCartPreviewPage> {
                                               style: TextStyle(
                                                 fontWeight: FontWeight.bold,
                                                 color: Colors.blue.shade800,
-                                                fontSize: isTablet ? 18 : 16,
+                                                fontSize: 14 * scale,
                                               ),
                                             ),
                                           ),
@@ -264,14 +265,14 @@ class _RentalCartPreviewPageState extends State<RentalCartPreviewPage> {
                     Container(
                       padding: EdgeInsets.fromLTRB(
                         horizontalPadding,
-                        16,
+                        10 * scale,
                         horizontalPadding,
-                        20,
+                        16 * scale,
                       ),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: const BorderRadius.vertical(
-                          top: Radius.circular(24),
+                          top: Radius.circular(20),
                         ),
                         boxShadow: [
                           BoxShadow(
@@ -289,25 +290,25 @@ class _RentalCartPreviewPageState extends State<RentalCartPreviewPage> {
                               Text(
                                 "Total Amount",
                                 style: TextStyle(
-                                  fontSize: isTablet ? 20 : 18,
+                                  fontSize: 16 * scale,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
                               Text(
                                 "₹${RentalCart.totalAmount.toStringAsFixed(0)}",
                                 style: TextStyle(
-                                  fontSize: isTablet ? 22 : 20,
+                                  fontSize: 18 * scale,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.blue.shade800,
                                 ),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 16),
+                          SizedBox(height: 14 * scale),
 
                           // ================= BOOK NOW =================
                           SizedBox(
-                            height: isTablet ? 64 : 56,
+                            height: 55 * scale,
                             width: double.infinity,
                             child: DecoratedBox(
                               decoration: BoxDecoration(
@@ -362,7 +363,7 @@ class _RentalCartPreviewPageState extends State<RentalCartPreviewPage> {
                                       "Book Now",
                                       style: TextStyle(
                                         color: Colors.white,
-                                        fontSize: isTablet ? 19 : 17,
+                                        fontSize: 16 * scale,
                                         fontWeight: FontWeight.w700,
                                         letterSpacing: 0.4,
                                       ),

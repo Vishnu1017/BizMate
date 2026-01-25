@@ -220,6 +220,47 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
     return DateTime(date.year, date.month, date.day, t.hour, t.minute);
   }
 
+  bool _validateTimeSelection({required bool isFrom}) {
+    if (fromDate == null ||
+        toDate == null ||
+        selectedFromTime == null ||
+        selectedToTime == null) {
+      return true; // wait until all values are selected
+    }
+
+    final fromDT = _combineDateAndTime(fromDate!, selectedFromTime!);
+    final toDT = _combineDateAndTime(toDate!, selectedToTime!);
+
+    // SAME DAY → TIME MUST BE STRICTLY GREATER
+    final isSameDay =
+        fromDate!.year == toDate!.year &&
+        fromDate!.month == toDate!.month &&
+        fromDate!.day == toDate!.day;
+
+    if (isSameDay && !toDT.isAfter(fromDT)) {
+      AppSnackBar.showWarning(
+        context,
+        message: "End time must be after start time",
+        duration: const Duration(seconds: 2),
+      );
+
+      setState(() {
+        if (isFrom) {
+          selectedFromTime = null;
+        } else {
+          selectedToTime = null;
+        }
+        noOfDays = 0;
+        totalAmount = 0;
+        availabilityStatus = "Available";
+      });
+
+      return false;
+    }
+
+    return true;
+  }
+
   void clearSelection() {
     setState(() {
       fromDate = null;
@@ -538,8 +579,11 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
             } else {
               selectedToTime = val;
             }
-            calculateTotal();
           });
+
+          if (!_validateTimeSelection(isFrom: isFrom)) return;
+
+          calculateTotal();
         },
         decoration: InputDecoration(
           labelText: label,
@@ -818,7 +862,7 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
                           ),
                           SizedBox(width: 6 * scale),
                           Text(
-                            'Add Item',
+                            'Add Cart',
                             style: TextStyle(
                               color: Colors.orange.shade900,
                               fontWeight: FontWeight.w700,

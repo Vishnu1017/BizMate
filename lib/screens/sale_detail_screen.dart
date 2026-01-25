@@ -25,6 +25,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
   late TextEditingController totalAmountController;
   bool isFullyPaid = false;
   String _selectedMode = 'Cash';
+  double scale = 1.0;
 
   final List<String> _paymentModes = [
     'Cash',
@@ -246,8 +247,8 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
         }
 
         // adaptive text sizes
-        final titleSize = isWide ? 20.0 : 18.0;
-        final subtitleSize = isWide ? 14.0 : 13.0;
+        final titleSize = 13.0 * scale;
+        final subtitleSize = 9.0 * scale;
 
         return Scaffold(
           backgroundColor: const Color(0xFFF8FAFC),
@@ -260,7 +261,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
               style: TextStyle(
                 color: const Color(0xFF1A237E),
                 fontWeight: FontWeight.w600,
-                fontSize: titleSize,
+                fontSize: 18 * scale,
               ),
             ),
             centerTitle: true,
@@ -312,15 +313,15 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                               Row(
                                 children: [
                                   Container(
-                                    padding: const EdgeInsets.all(8),
+                                    padding: EdgeInsets.all(6 * scale),
                                     decoration: BoxDecoration(
                                       color: const Color(0xFFEFF6FF),
                                       borderRadius: BorderRadius.circular(12),
                                     ),
-                                    child: const Icon(
+                                    child: Icon(
                                       Icons.receipt_long_rounded,
                                       color: Color(0xFF1A237E),
-                                      size: 24,
+                                      size: 20 * scale,
                                     ),
                                   ),
                                   const SizedBox(width: 12),
@@ -362,14 +363,14 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                       children: [
                                         Icon(
                                           statusIcon,
-                                          size: 14,
+                                          size: 10 * scale,
                                           color: statusColor,
                                         ),
                                         const SizedBox(width: 4),
                                         Text(
                                           statusText,
                                           style: TextStyle(
-                                            fontSize: 12,
+                                            fontSize: 10 * scale,
                                             fontWeight: FontWeight.w600,
                                             color: statusColor,
                                           ),
@@ -379,9 +380,9 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 16),
+                              SizedBox(height: 12 * scale),
                               const Divider(height: 1),
-                              const SizedBox(height: 16),
+                              SizedBox(height: 12 * scale),
                               Row(
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
@@ -408,7 +409,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                           ),
                         ),
 
-                        const SizedBox(height: 20),
+                        SizedBox(height: 10 * scale),
 
                         // Customer Information Card
                         Container(
@@ -428,15 +429,15 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
+                              Text(
                                 "Customer Information",
                                 style: TextStyle(
-                                  fontSize: 16,
+                                  fontSize: 14 * scale,
                                   fontWeight: FontWeight.w600,
                                   color: Color(0xFF1A237E),
                                 ),
                               ),
-                              const SizedBox(height: 16),
+                              SizedBox(height: 12 * scale),
                               _buildModernTextField(
                                 controller: customerController,
                                 label: "Customer Name",
@@ -463,7 +464,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                           ),
                         ),
 
-                        const SizedBox(height: 20),
+                        SizedBox(height: 10 * scale),
 
                         // Payment Details Card
                         Container(
@@ -483,16 +484,15 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
+                              Text(
                                 "Payment Details",
                                 style: TextStyle(
-                                  fontSize: 16,
+                                  fontSize: 14 * scale,
                                   fontWeight: FontWeight.w600,
                                   color: Color(0xFF1A237E),
                                 ),
                               ),
-                              const SizedBox(height: 20),
-
+                              SizedBox(height: 12 * scale),
                               // Total Amount
                               _buildPaymentRow(
                                 "Total Amount",
@@ -500,13 +500,13 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                 Icons.currency_rupee_rounded,
                                 const Color(0xFF1A237E),
                               ),
-                              const SizedBox(height: 12),
+                              SizedBox(height: 12 * scale),
 
                               // Received Amount with Toggle
                               Container(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 12,
-                                  horizontal: 16,
+                                padding: EdgeInsets.symmetric(
+                                  vertical: 10 * scale,
+                                  horizontal: 14 * scale,
                                 ),
                                 decoration: BoxDecoration(
                                   color:
@@ -528,7 +528,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                 child: Row(
                                   children: [
                                     Container(
-                                      padding: const EdgeInsets.all(6),
+                                      padding: EdgeInsets.all(6 * scale),
                                       decoration: BoxDecoration(
                                         color:
                                             isFullyPaid
@@ -542,10 +542,10 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                             isFullyPaid
                                                 ? Colors.white
                                                 : Colors.grey.shade600,
-                                        size: 20,
+                                        size: 20 * scale,
                                       ),
                                     ),
-                                    const SizedBox(width: 12),
+                                    SizedBox(width: 10 * scale),
                                     Expanded(
                                       child: Column(
                                         crossAxisAlignment:
@@ -554,7 +554,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                           Text(
                                             "Received Amount",
                                             style: TextStyle(
-                                              fontSize: 13,
+                                              fontSize: 12 * scale,
                                               color: Colors.grey.shade700,
                                               fontWeight: FontWeight.w500,
                                             ),
@@ -562,14 +562,14 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                           isFullyPaid
                                               ? Text(
                                                 "₹${total.toStringAsFixed(2)}",
-                                                style: const TextStyle(
-                                                  fontSize: 18,
+                                                style: TextStyle(
+                                                  fontSize: 16 * scale,
                                                   fontWeight: FontWeight.w700,
                                                   color: Color(0xFF10B981),
                                                 ),
                                               )
                                               : SizedBox(
-                                                height: 40,
+                                                height: 40 * scale,
                                                 child: TextFormField(
                                                   controller: amountController,
                                                   keyboardType:
@@ -581,8 +581,8 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                                       RegExp(r'^\d*\.?\d{0,2}'),
                                                     ),
                                                   ],
-                                                  style: const TextStyle(
-                                                    fontSize: 18,
+                                                  style: TextStyle(
+                                                    fontSize: 16 * scale,
                                                     fontWeight: FontWeight.w700,
                                                     color: Color(0xFF10B981),
                                                   ),
@@ -597,15 +597,12 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                                     contentPadding:
                                                         EdgeInsets.zero,
                                                     prefixText: "₹",
-                                                    prefixStyle:
-                                                        const TextStyle(
-                                                          fontSize: 18,
-                                                          fontWeight:
-                                                              FontWeight.w700,
-                                                          color: Color(
-                                                            0xFF10B981,
-                                                          ),
-                                                        ),
+                                                    prefixStyle: TextStyle(
+                                                      fontSize: 16 * scale,
+                                                      fontWeight:
+                                                          FontWeight.w700,
+                                                      color: Color(0xFF10B981),
+                                                    ),
                                                   ),
                                                   onChanged:
                                                       (_) => setState(() {}),
@@ -633,25 +630,28 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                         ],
                                       ),
                                     ),
-                                    Switch.adaptive(
-                                      value: isFullyPaid,
-                                      onChanged: (value) {
-                                        setState(() {
-                                          isFullyPaid = value;
-                                          if (isFullyPaid) {
-                                            amountController.text = total
-                                                .toStringAsFixed(2);
-                                          } else {
-                                            amountController.clear();
-                                          }
-                                        });
-                                      },
-                                      activeColor: const Color(0xFF10B981),
+                                    Transform.scale(
+                                      scale: 0.75 * scale,
+                                      child: Switch.adaptive(
+                                        value: isFullyPaid,
+                                        onChanged: (value) {
+                                          setState(() {
+                                            isFullyPaid = value;
+                                            if (isFullyPaid) {
+                                              amountController.text = total
+                                                  .toStringAsFixed(2);
+                                            } else {
+                                              amountController.clear();
+                                            }
+                                          });
+                                        },
+                                        activeColor: const Color(0xFF10B981),
+                                      ),
                                     ),
                                   ],
                                 ),
                               ),
-                              const SizedBox(height: 16),
+                              SizedBox(height: 14 * scale),
 
                               // Payment Mode
                               Column(
@@ -660,15 +660,15 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                   Text(
                                     "Payment Mode",
                                     style: TextStyle(
-                                      fontSize: 13,
+                                      fontSize: 12 * scale,
                                       fontWeight: FontWeight.w500,
                                       color: Colors.grey.shade700,
                                     ),
                                   ),
-                                  const SizedBox(height: 8),
+                                  SizedBox(height: 8 * scale),
                                   Wrap(
-                                    spacing: 8,
-                                    runSpacing: 8,
+                                    spacing: 8 * scale,
+                                    runSpacing: 8 * scale,
                                     children:
                                         _paymentModes.map((mode) {
                                           final isSelected =
@@ -679,11 +679,10 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                                   () => _selectedMode = mode,
                                                 ),
                                             child: Container(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                    horizontal: 16,
-                                                    vertical: 10,
-                                                  ),
+                                              padding: EdgeInsets.symmetric(
+                                                horizontal: 14 * scale,
+                                                vertical: 8 * scale,
+                                              ),
                                               decoration: BoxDecoration(
                                                 color:
                                                     isSelected
@@ -709,7 +708,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                                 children: [
                                                   Icon(
                                                     _getIconForMode(mode),
-                                                    size: 18,
+                                                    size: 16 * scale,
                                                     color:
                                                         isSelected
                                                             ? Colors.white
@@ -717,11 +716,11 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                                               0xFF1A237E,
                                                             ),
                                                   ),
-                                                  const SizedBox(width: 6),
+                                                  SizedBox(width: 6 * scale),
                                                   Text(
                                                     mode,
                                                     style: TextStyle(
-                                                      fontSize: 13,
+                                                      fontSize: 12 * scale,
                                                       fontWeight:
                                                           FontWeight.w500,
                                                       color:
@@ -743,13 +742,12 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                             ],
                           ),
                         ),
-
-                        const SizedBox(height: 24),
+                        SizedBox(height: 20 * scale),
 
                         // Save Button
                         SizedBox(
                           width: double.infinity,
-                          height: 56,
+                          height: 50 * scale,
                           child: ElevatedButton(
                             onPressed: saveChanges,
                             style: ElevatedButton.styleFrom(
@@ -761,15 +759,18 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                               elevation: 0,
                               shadowColor: Colors.transparent,
                             ),
-                            child: const Row(
+                            child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Icon(Icons.save_rounded, size: 20),
-                                SizedBox(width: 8),
+                                Icon(
+                                  Icons.save_rounded,
+                                  size: 18 * scale * scale,
+                                ),
+                                SizedBox(width: 8 * scale),
                                 Text(
                                   "Save Changes",
                                   style: TextStyle(
-                                    fontSize: 16,
+                                    fontSize: 14 * scale,
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
@@ -800,11 +801,14 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
       children: [
         Row(
           children: [
-            Icon(icon, size: 16, color: color),
+            Icon(icon, size: 12 * scale, color: color),
             const SizedBox(width: 4),
             Text(
               title,
-              style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+              style: TextStyle(
+                fontSize: 10 * scale,
+                color: Colors.grey.shade600,
+              ),
             ),
           ],
         ),
@@ -812,7 +816,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
         Text(
           amount,
           style: TextStyle(
-            fontSize: 18,
+            fontSize: 14 * scale,
             fontWeight: FontWeight.w700,
             color: color,
           ),
@@ -830,19 +834,19 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
     return Row(
       children: [
         Container(
-          padding: const EdgeInsets.all(8),
+          padding: EdgeInsets.all(6 * scale),
           decoration: BoxDecoration(
             color: color.withOpacity(0.1),
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Icon(icon, size: 18, color: color),
+          child: Icon(icon, size: 16 * scale, color: color),
         ),
-        const SizedBox(width: 12),
+        SizedBox(width: 10 * scale),
         Expanded(
           child: Text(
             title,
             style: TextStyle(
-              fontSize: 14,
+              fontSize: 12 * scale,
               fontWeight: FontWeight.w500,
               color: Colors.grey.shade700,
             ),
@@ -851,7 +855,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
         Text(
           amount,
           style: TextStyle(
-            fontSize: 16,
+            fontSize: 14 * scale,
             fontWeight: FontWeight.w700,
             color: color,
           ),
@@ -873,12 +877,12 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
       children: [
         Row(
           children: [
-            Text(label),
+            Text(label, style: TextStyle(fontSize: 12 * scale)),
             if (isRequired)
               Text(" *", style: TextStyle(color: Colors.red.shade400)),
           ],
         ),
-        const SizedBox(height: 6),
+        SizedBox(height: 4 * scale),
         Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
@@ -890,30 +894,31 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
           child: Row(
             children: [
               Padding(
-                padding: const EdgeInsets.only(left: 16),
+                padding: EdgeInsets.only(left: 12 * scale),
                 child: Icon(
                   icon,
-                  size: 20,
+                  size: 16 * scale,
                   color:
                       enabled ? const Color(0xFF1A237E) : Colors.grey.shade400,
                 ),
               ),
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.only(right: 12.0),
+                  padding: EdgeInsets.only(right: 10 * scale),
                   child: TextFormField(
                     controller: controller,
                     enabled: enabled,
                     keyboardType: keyboardType,
                     style: TextStyle(
                       color: enabled ? Colors.black : Colors.grey.shade600,
+                      fontSize: 12 * scale,
                       fontWeight: FontWeight.w500,
                     ),
                     decoration: InputDecoration(
                       border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 16,
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 12 * scale,
+                        vertical: 12 * scale,
                       ),
                       hintText: enabled ? "Enter $label" : label,
                       hintStyle: TextStyle(color: Colors.grey.shade500),

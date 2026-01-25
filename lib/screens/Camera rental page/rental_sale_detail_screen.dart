@@ -33,6 +33,7 @@ class _RentalSaleDetailScreenState extends State<RentalSaleDetailScreen> {
   late TextEditingController daysController;
   late TextEditingController totalController;
   late TextEditingController amountController;
+  double scale = 1.0;
 
   bool isFullyPaid = false;
 
@@ -264,8 +265,8 @@ class _RentalSaleDetailScreenState extends State<RentalSaleDetailScreen> {
                           children: [
                             Text(
                               widget.sale.itemName,
-                              style: const TextStyle(
-                                fontSize: 18,
+                              style: TextStyle(
+                                fontSize: 13 * scale,
                                 color: Color(0xFF1A237E),
                                 fontWeight: FontWeight.w600,
                               ),
@@ -275,7 +276,7 @@ class _RentalSaleDetailScreenState extends State<RentalSaleDetailScreen> {
                               formatted,
                               style: TextStyle(
                                 color: Colors.grey.shade600,
-                                fontSize: 13,
+                                fontSize: 9 * scale,
                               ),
                             ),
                           ],
@@ -286,7 +287,7 @@ class _RentalSaleDetailScreenState extends State<RentalSaleDetailScreen> {
                   ),
                 ),
 
-                const SizedBox(height: 20),
+                SizedBox(height: 10 * scale),
 
                 // CUSTOMER INFO CARD -----------------------------------
                 Container(
@@ -296,7 +297,7 @@ class _RentalSaleDetailScreenState extends State<RentalSaleDetailScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _sectionTitle("Customer Information"),
-                      const SizedBox(height: 16),
+                      SizedBox(height: 12 * scale),
                       _modernField(
                         controller: customerController,
                         label: "Customer Name",
@@ -334,7 +335,7 @@ class _RentalSaleDetailScreenState extends State<RentalSaleDetailScreen> {
                   ),
                 ),
 
-                const SizedBox(height: 20),
+                SizedBox(height: 10 * scale),
 
                 // PAYMENT DETAILS CARD ----------------------------------
                 Container(
@@ -345,7 +346,7 @@ class _RentalSaleDetailScreenState extends State<RentalSaleDetailScreen> {
                     children: [
                       _sectionTitle("Payment Details"),
 
-                      const SizedBox(height: 20),
+                      SizedBox(height: 12 * scale),
 
                       _amountDisplay(
                         "Total Cost",
@@ -353,8 +354,7 @@ class _RentalSaleDetailScreenState extends State<RentalSaleDetailScreen> {
                         Icons.currency_rupee_rounded,
                         const Color(0xFF1A237E),
                       ),
-
-                      const SizedBox(height: 16),
+                      SizedBox(height: 12 * scale),
 
                       // RECEIVED AMOUNT BOX ----------------------------------
                       _receivedAmountBox(total),
@@ -367,16 +367,15 @@ class _RentalSaleDetailScreenState extends State<RentalSaleDetailScreen> {
                           Text(
                             "Payment Mode",
                             style: TextStyle(
-                              fontSize: 13,
+                              fontSize: 12 * scale,
                               fontWeight: FontWeight.w500,
                               color: Colors.grey.shade700,
                             ),
                           ),
-                          const SizedBox(height: 8),
-
+                          SizedBox(height: 8 * scale),
                           Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
+                            spacing: 8 * scale,
+                            runSpacing: 8 * scale,
                             children:
                                 _paymentModes.map((mode) {
                                   final isSelected = _selectedMode == mode;
@@ -386,9 +385,9 @@ class _RentalSaleDetailScreenState extends State<RentalSaleDetailScreen> {
                                           () => _selectedMode = mode,
                                         ),
                                     child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 16,
-                                        vertical: 10,
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: 14 * scale,
+                                        vertical: 8 * scale,
                                       ),
                                       decoration: BoxDecoration(
                                         color:
@@ -408,17 +407,17 @@ class _RentalSaleDetailScreenState extends State<RentalSaleDetailScreen> {
                                         children: [
                                           Icon(
                                             _getIconForMode(mode),
-                                            size: 18,
+                                            size: 16 * scale,
                                             color:
                                                 isSelected
                                                     ? Colors.white
                                                     : const Color(0xFF1A237E),
                                           ),
-                                          const SizedBox(width: 6),
+                                          SizedBox(width: 6 * scale),
                                           Text(
                                             mode,
                                             style: TextStyle(
-                                              fontSize: 13,
+                                              fontSize: 12 * scale,
                                               fontWeight: FontWeight.w500,
                                               color:
                                                   isSelected
@@ -437,13 +436,12 @@ class _RentalSaleDetailScreenState extends State<RentalSaleDetailScreen> {
                     ],
                   ),
                 ),
-
-                const SizedBox(height: 24),
+                SizedBox(height: 20 * scale),
 
                 // SAVE BUTTON ---------------------------------------------
                 SizedBox(
                   width: double.infinity,
-                  height: 56,
+                  height: 50 * scale,
                   child: ElevatedButton(
                     onPressed: saveChanges,
                     style: ElevatedButton.styleFrom(
@@ -452,16 +450,20 @@ class _RentalSaleDetailScreenState extends State<RentalSaleDetailScreen> {
                         borderRadius: BorderRadius.circular(14),
                       ),
                     ),
-                    child: const Row(
+                    child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.save_rounded, size: 20, color: Colors.white),
-                        SizedBox(width: 8),
+                        Icon(
+                          Icons.save_rounded,
+                          size: 18 * scale,
+                          color: Colors.white,
+                        ),
+                        SizedBox(width: 8 * scale),
                         Text(
                           "Save Changes",
                           style: TextStyle(
                             fontWeight: FontWeight.w600,
-                            fontSize: 16,
+                            fontSize: 14 * scale,
                             color: Colors.white,
                           ),
                         ),
@@ -494,18 +496,18 @@ class _RentalSaleDetailScreenState extends State<RentalSaleDetailScreen> {
   );
 
   Widget _iconBox(IconData icon) => Container(
-    padding: const EdgeInsets.all(8),
+    padding: EdgeInsets.all(6 * scale),
     decoration: BoxDecoration(
       color: const Color(0xFFEFF6FF),
       borderRadius: BorderRadius.circular(12),
     ),
-    child: Icon(icon, color: const Color(0xFF1A237E), size: 24),
+    child: Icon(icon, color: const Color(0xFF1A237E), size: 20 * scale),
   );
 
   Widget _sectionTitle(String title) => Text(
     title,
-    style: const TextStyle(
-      fontSize: 16,
+    style: TextStyle(
+      fontSize: 14 * scale,
       fontWeight: FontWeight.w600,
       color: Color(0xFF1A237E),
     ),
@@ -519,11 +521,15 @@ class _RentalSaleDetailScreenState extends State<RentalSaleDetailScreen> {
     ),
     child: Row(
       children: [
-        Icon(i, size: 14, color: c),
+        Icon(i, size: 10 * scale, color: c),
         const SizedBox(width: 4),
         Text(
           txt,
-          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: c),
+          style: TextStyle(
+            fontSize: 10 * scale,
+            fontWeight: FontWeight.w600,
+            color: c,
+          ),
         ),
       ],
     ),
@@ -539,8 +545,8 @@ class _RentalSaleDetailScreenState extends State<RentalSaleDetailScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label),
-        const SizedBox(height: 6),
+        Text(label, style: TextStyle(fontSize: 12 * scale)),
+        SizedBox(height: 4 * scale),
         Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
@@ -550,19 +556,28 @@ class _RentalSaleDetailScreenState extends State<RentalSaleDetailScreen> {
           child: Row(
             children: [
               Padding(
-                padding: const EdgeInsets.only(left: 16),
-                child: Icon(icon, color: const Color(0xFF1A237E)),
+                padding: EdgeInsets.only(left: 12 * scale),
+                child: Icon(
+                  icon,
+                  size: 16 * scale,
+                  color:
+                      enabled ? const Color(0xFF1A237E) : Colors.grey.shade400,
+                ),
               ),
               Expanded(
                 child: TextFormField(
                   controller: controller,
                   enabled: enabled,
                   keyboardType: keyboard,
-                  decoration: const InputDecoration(
+                  style: TextStyle(
+                    fontSize: 12 * scale,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  decoration: InputDecoration(
                     border: InputBorder.none,
                     contentPadding: EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 16,
+                      horizontal: 12 * scale,
+                      vertical: 12 * scale,
                     ),
                   ),
                 ),
@@ -583,18 +598,19 @@ class _RentalSaleDetailScreenState extends State<RentalSaleDetailScreen> {
     return Row(
       children: [
         Container(
-          padding: const EdgeInsets.all(8),
+          padding: EdgeInsets.all(6 * scale),
           decoration: BoxDecoration(
             color: color.withOpacity(0.1),
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Icon(icon, size: 18, color: color),
+          child: Icon(icon, size: 16 * scale, color: color),
         ),
-        const SizedBox(width: 12),
+        SizedBox(width: 10 * scale),
         Expanded(
           child: Text(
             title,
             style: TextStyle(
+              fontSize: 12 * scale,
               fontWeight: FontWeight.w500,
               color: Colors.grey.shade700,
             ),
@@ -604,7 +620,7 @@ class _RentalSaleDetailScreenState extends State<RentalSaleDetailScreen> {
           amount,
           style: TextStyle(
             fontWeight: FontWeight.w700,
-            fontSize: 16,
+            fontSize: 14 * scale,
             color: color,
           ),
         ),
@@ -614,7 +630,10 @@ class _RentalSaleDetailScreenState extends State<RentalSaleDetailScreen> {
 
   Widget _receivedAmountBox(double total) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+      padding: EdgeInsets.symmetric(
+        vertical: 10 * scale,
+        horizontal: 14 * scale,
+      ),
       decoration: BoxDecoration(
         color:
             isFullyPaid
@@ -651,7 +670,7 @@ class _RentalSaleDetailScreenState extends State<RentalSaleDetailScreen> {
                 Text(
                   "Received Amount",
                   style: TextStyle(
-                    fontSize: 13,
+                    fontSize: 12 * scale,
                     color: Colors.grey.shade700,
                     fontWeight: FontWeight.w500,
                   ),
@@ -659,8 +678,8 @@ class _RentalSaleDetailScreenState extends State<RentalSaleDetailScreen> {
                 isFullyPaid
                     ? Text(
                       "₹${total.toStringAsFixed(2)}",
-                      style: const TextStyle(
-                        fontSize: 18,
+                      style: TextStyle(
+                        fontSize: 16 * scale,
                         fontWeight: FontWeight.w700,
                         color: Color(0xFF10B981),
                       ),
@@ -677,8 +696,8 @@ class _RentalSaleDetailScreenState extends State<RentalSaleDetailScreen> {
                             RegExp(r'^\d*\.?\d{0,2}'),
                           ),
                         ],
-                        style: const TextStyle(
-                          fontSize: 18,
+                        style: TextStyle(
+                          fontSize: 16 * scale,
                           fontWeight: FontWeight.w700,
                           color: Color(0xFF10B981),
                         ),
@@ -690,8 +709,8 @@ class _RentalSaleDetailScreenState extends State<RentalSaleDetailScreen> {
                           border: InputBorder.none,
                           contentPadding: EdgeInsets.zero,
                           prefixText: "₹",
-                          prefixStyle: const TextStyle(
-                            fontSize: 18,
+                          prefixStyle: TextStyle(
+                            fontSize: 16 * scale,
                             fontWeight: FontWeight.w700,
                             color: Color(0xFF10B981),
                           ),
@@ -712,19 +731,22 @@ class _RentalSaleDetailScreenState extends State<RentalSaleDetailScreen> {
               ],
             ),
           ),
-          Switch.adaptive(
-            value: isFullyPaid,
-            onChanged: (value) {
-              setState(() {
-                isFullyPaid = value;
-                if (isFullyPaid) {
-                  amountController.text = total.toStringAsFixed(2);
-                } else {
-                  amountController.clear();
-                }
-              });
-            },
-            activeColor: const Color(0xFF10B981),
+          Transform.scale(
+            scale: 0.75 * scale,
+            child: Switch.adaptive(
+              value: isFullyPaid,
+              onChanged: (value) {
+                setState(() {
+                  isFullyPaid = value;
+                  if (isFullyPaid) {
+                    amountController.text = total.toStringAsFixed(2);
+                  } else {
+                    amountController.clear();
+                  }
+                });
+              },
+              activeColor: const Color(0xFF10B981),
+            ),
           ),
         ],
       ),
