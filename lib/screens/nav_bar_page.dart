@@ -90,52 +90,48 @@ class _NavBarPageState extends State<NavBarPage>
   }
 
   Future<void> fetchWelcomeMessage() async {
-    // Open session box
+    // Ensure session box
     if (!Hive.isBoxOpen('session')) {
       await Hive.openBox('session');
     }
     final sessionBox = Hive.box('session');
 
-    // Read email & normalize it (IMPORTANT FIX)
     final rawEmail = sessionBox.get('currentUserEmail');
 
     if (rawEmail == null || rawEmail.toString().isEmpty) {
-      setState(() => welcomeMessage = "Welcome!");
+      if (!mounted) return;
+      setState(() => welcomeMessage = "Welcome");
       return;
     }
 
     final email = rawEmail.toString().trim().toLowerCase();
 
-    // Load users box
-    final usersBox = Hive.box<User>('users');
+    // 🔐 USER-SCOPED BOX (PERSISTENT)
+    final safeEmail = email.replaceAll('.', '_').replaceAll('@', '_');
 
-    User? user;
-    try {
-      user = usersBox.values.firstWhere(
-        (u) => u.email.trim().toLowerCase() == email,
-      );
-    } catch (e) {
-      user = null;
+    final userBoxName = "userdata_$safeEmail";
+
+    if (!Hive.isBoxOpen(userBoxName)) {
+      await Hive.openBox(userBoxName);
     }
 
-    if (user == null) {
-      setState(() => welcomeMessage = "Welcome!");
-      return;
-    }
+    final userBox = Hive.box(userBoxName);
 
-    // FIRST LOGIN FLAG
-    final firstLoginKey = "firstLogin_$email";
+    // 🔥 FIRST LOGIN FLAG (PERSISTENT)
+    final hasLoggedInOnce =
+        userBox.get('hasLoggedInOnce', defaultValue: false) as bool;
 
-    bool isFirstLogin = sessionBox.get(firstLoginKey, defaultValue: true);
-
-    if (isFirstLogin) {
-      welcomeMessage = "Welcome, \n${user.name}!";
-      sessionBox.put(firstLoginKey, false); // mark as visited
+    if (!hasLoggedInOnce) {
+      // FIRST EVER LOGIN
+      welcomeMessage = "Welcome";
+      userBox.put('hasLoggedInOnce', true);
     } else {
-      welcomeMessage = "Welcome back, \n${user.name}!";
+      // RETURNING USER
+      welcomeMessage = "Welcome back";
     }
 
-    if (mounted) setState(() {});
+    if (!mounted) return;
+    setState(() {});
   }
 
   List<Widget> get _pages => [
@@ -294,7 +290,7 @@ class _NavBarPageState extends State<NavBarPage>
                             valueListenable: _nameNotifier,
                             builder: (context, name, _) {
                               return Text(
-                                name, // ✅ ALWAYS LIVE
+                                name,
                                 style: TextStyle(
                                   fontSize: _scaleForWidth(
                                     screenWidth,
