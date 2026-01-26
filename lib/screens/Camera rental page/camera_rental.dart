@@ -194,11 +194,11 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
           children: [
             // BACK CARD
             Positioned(
-              left: 0 * scale,
-              top: -2 * scale,
+              left: 1.5 * scale,
+              top: 1.5 * scale,
               child: Container(
-                width: adjustedSize - 12 * scale,
-                height: adjustedSize - 12 * scale,
+                width: adjustedSize - 14 * scale,
+                height: adjustedSize - 14 * scale,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
                   gradient: LinearGradient(

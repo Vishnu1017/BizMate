@@ -467,8 +467,8 @@ class _HomePageState extends State<HomePage>
                                         Row(
                                           children: [
                                             Container(
-                                              width: isSmallScreen ? 20 : 28,
-                                              height: isSmallScreen ? 20 : 28,
+                                              width: isSmallScreen ? 30 : 38,
+                                              height: isSmallScreen ? 30 : 38,
                                               decoration: const BoxDecoration(
                                                 shape: BoxShape.circle,
                                                 gradient: LinearGradient(
@@ -485,7 +485,7 @@ class _HomePageState extends State<HomePage>
                                               child: Icon(
                                                 Icons.person,
                                                 color: Colors.white,
-                                                size: isSmallScreen ? 20 : 24,
+                                                size: isSmallScreen ? 16 : 20,
                                               ),
                                             ),
                                             SizedBox(width: 8),
