@@ -24,7 +24,7 @@ class ModernCalendar extends StatefulWidget {
 class _ModernCalendarState extends State<ModernCalendar> {
   late DateTime _currentMonth;
   late DateTime _selectedDate;
-
+  double scale = 1.0;
   bool _hasUserSelectedDate = false;
 
   final List<String> _weekdays = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
@@ -287,7 +287,7 @@ class _ModernCalendarState extends State<ModernCalendar> {
                     : null,
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 220),
-              margin: const EdgeInsets.all(3),
+              margin: EdgeInsets.all(6 * scale),
               decoration:
                   _isSelected(date)
                       ? BoxDecoration(
@@ -299,7 +299,7 @@ class _ModernCalendarState extends State<ModernCalendar> {
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(8),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.blue.withOpacity(0.35),
@@ -319,9 +319,9 @@ class _ModernCalendarState extends State<ModernCalendar> {
                           color: Colors.orange.shade400,
                           width: 1.4,
                         ),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(8),
                       )
-                      : BoxDecoration(borderRadius: BorderRadius.circular(12)),
+                      : BoxDecoration(borderRadius: BorderRadius.circular(8)),
               child: Center(
                 child: Text(
                   date.day.toString(),

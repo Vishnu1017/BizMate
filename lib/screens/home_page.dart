@@ -405,9 +405,22 @@ class _HomePageState extends State<HomePage>
                                 if (!isVerySmallScreen) ...[
                                   Column(
                                     children: [
-                                      CircleAvatar(
-                                        radius: isSmallScreen ? 20 : 24,
-                                        backgroundColor: Color(0xFF1A237E),
+                                      Container(
+                                        width: isSmallScreen ? 40 : 48,
+                                        height: isSmallScreen ? 40 : 48,
+                                        decoration: const BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          gradient: LinearGradient(
+                                            colors: [
+                                              Color(0xFF2563EB),
+                                              Color(0xFF1E40AF),
+                                              Color(0xFF020617),
+                                            ],
+                                            stops: [0.0, 0.6, 1.0],
+                                            begin: Alignment.bottomRight,
+                                            end: Alignment.topLeft,
+                                          ),
+                                        ),
                                         child: Icon(
                                           Icons.person,
                                           color: Colors.white,

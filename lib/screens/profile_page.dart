@@ -2129,7 +2129,12 @@ class _ProfilePageState extends State<ProfilePage>
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(4),
                 gradient: const LinearGradient(
-                  colors: [Color(0xFF2563EB), Color(0xFF020617)],
+                  colors: [
+                    Color(0xFF2563EB),
+                    Color(0xFF1E40AF),
+                    Color(0xFF020617),
+                  ],
+                  stops: [0.0, 0.6, 1.0],
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                 ),
@@ -2186,7 +2191,16 @@ class _ProfilePageState extends State<ProfilePage>
                             height: 56 * scale,
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(16),
-                              color: const Color(0xFF020617),
+                              gradient: const LinearGradient(
+                                colors: [
+                                  Color(0xFF2563EB),
+                                  Color(0xFF1E40AF),
+                                  Color(0xFF020617),
+                                ],
+                                stops: [0.0, 0.6, 1.0],
+                                begin: Alignment.bottomRight,
+                                end: Alignment.topLeft,
+                              ),
                             ),
                             padding: EdgeInsets.all(2.5 * scale),
                             child: ClipRRect(

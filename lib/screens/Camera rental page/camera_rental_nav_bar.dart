@@ -382,21 +382,35 @@ class _CameraRentalNavBarState extends State<CameraRentalNavBar> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // ICON WITH SOFT GLOW
+              // ================= ICON WITH GRADIENT FOCUS =================
               Container(
                 width: _scaleForWidth(screenWidth, 42),
                 height: _scaleForWidth(screenWidth, 42),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
-                  color:
+
+                  // 🔥 GRADIENT WHEN SELECTED
+                  gradient:
                       isSelected
-                          ? _primaryColor.withOpacity(0.12)
-                          : Colors.transparent,
+                          ? const LinearGradient(
+                            colors: [
+                              Color(0xFF2563EB),
+                              Color(0xFF1E40AF),
+                              Color(0xFF020617),
+                            ],
+                            stops: [0.0, 0.6, 1.0],
+                            begin: Alignment.bottomRight,
+                            end: Alignment.topLeft,
+                          )
+                          : null,
+
+                  color: isSelected ? null : Colors.transparent,
+
                   boxShadow:
                       isSelected
                           ? [
                             BoxShadow(
-                              color: _primaryColor.withOpacity(0.18),
+                              color: const Color(0xFF2563EB).withOpacity(0.35),
                               blurRadius: 22,
                               offset: const Offset(0, 6),
                             ),
@@ -405,7 +419,7 @@ class _CameraRentalNavBarState extends State<CameraRentalNavBar> {
                 ),
                 child: Icon(
                   isSelected ? filledIcon : outlineIcon,
-                  color: isSelected ? _primaryColor : _textSecondary,
+                  color: isSelected ? Colors.white : _textSecondary,
                   size:
                       isSelected
                           ? _scaleForWidth(screenWidth, 26)
@@ -415,13 +429,13 @@ class _CameraRentalNavBarState extends State<CameraRentalNavBar> {
 
               const SizedBox(height: 4),
 
-              // MICRO INDICATOR DOT
+              // ================= MICRO INDICATOR DOT =================
               AnimatedContainer(
                 duration: const Duration(milliseconds: 250),
                 width: isSelected ? 6 : 0,
                 height: 6,
-                decoration: BoxDecoration(
-                  color: _primaryColor,
+                decoration: const BoxDecoration(
+                  color: Color(0xFF2563EB),
                   shape: BoxShape.circle,
                 ),
               ),

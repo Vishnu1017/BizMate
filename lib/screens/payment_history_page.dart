@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 class PaymentHistoryPage extends StatelessWidget {
   final Sale sale;
+  double get scale => 1.0;
   bool get isSale => sale.deliveryLink.isNotEmpty;
 
   const PaymentHistoryPage({super.key, required this.sale});
@@ -56,7 +57,7 @@ class PaymentHistoryPage extends StatelessWidget {
                 style: TextStyle(
                   color: Color(0xFF1A237E),
                   fontWeight: FontWeight.bold,
-                  fontSize: 18,
+                  fontSize: 16 * scale,
                 ),
               ),
               centerTitle: true,
@@ -186,18 +187,17 @@ class PaymentHistoryPage extends StatelessWidget {
             total,
             Colors.white.withOpacity(0.8),
           ),
-          SizedBox(height: 12),
+          SizedBox(height: 10 * scale),
           _buildSummaryRow("Received", received, Colors.white),
-          SizedBox(height: 12),
+          SizedBox(height: 10 * scale),
           _buildSummaryRow(
             "Balance Due",
             balance,
             balance > 0 ? Color(0xFFFF6B6B) : Colors.white.withOpacity(0.8),
           ),
-          SizedBox(height: 20),
+          SizedBox(height: 16 * scale),
           // Progress Bar
           Container(
-            height: 8,
             decoration: BoxDecoration(
               color: Colors.white.withOpacity(0.3),
               borderRadius: BorderRadius.circular(4),
@@ -220,13 +220,13 @@ class PaymentHistoryPage extends StatelessWidget {
               ],
             ),
           ),
-          SizedBox(height: 8),
+          SizedBox(height: 8 * scale),
           // Percentage
           Text(
             "${paidPercentage.toStringAsFixed(1)}% Paid",
             style: TextStyle(
               color: Colors.white.withOpacity(0.9),
-              fontSize: 14,
+              fontSize: 12 * scale,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -243,7 +243,7 @@ class PaymentHistoryPage extends StatelessWidget {
           title,
           style: TextStyle(
             color: Colors.white.withOpacity(0.9),
-            fontSize: 14,
+            fontSize: 12 * scale,
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -251,7 +251,7 @@ class PaymentHistoryPage extends StatelessWidget {
           "₹${value.toStringAsFixed(2)}",
           style: TextStyle(
             color: color,
-            fontSize: 16,
+            fontSize: 14 * scale,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -263,8 +263,8 @@ class PaymentHistoryPage extends StatelessWidget {
     return Row(
       children: [
         Container(
-          width: 4,
-          height: 20,
+          width: 4 * scale,
+          height: 20 * scale,
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
@@ -272,11 +272,11 @@ class PaymentHistoryPage extends StatelessWidget {
             borderRadius: BorderRadius.circular(2),
           ),
         ),
-        SizedBox(width: 12),
+        SizedBox(width: 10 * scale),
         Text(
           "Payment Timeline",
           style: TextStyle(
-            fontSize: 18,
+            fontSize: 16 * scale,
             fontWeight: FontWeight.bold,
             color: Color(0xFF1A237E),
           ),
@@ -303,7 +303,7 @@ class PaymentHistoryPage extends StatelessWidget {
     final icon = paymentIcons[mode.toLowerCase()] ?? Icons.payments_rounded;
 
     return Container(
-      margin: EdgeInsets.only(bottom: 16),
+      margin: EdgeInsets.only(bottom: 16 * scale),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -311,8 +311,8 @@ class PaymentHistoryPage extends StatelessWidget {
           Column(
             children: [
               Container(
-                width: 24,
-                height: 24,
+                width: 20 * scale,
+                height: 20 * scale,
                 decoration: BoxDecoration(
                   color: Color(0xFF667EEA),
                   shape: BoxShape.circle,
@@ -324,13 +324,17 @@ class PaymentHistoryPage extends StatelessWidget {
                     ),
                   ],
                 ),
-                child: Icon(Icons.check_rounded, color: Colors.white, size: 14),
+                child: Icon(
+                  Icons.check_rounded,
+                  color: Colors.white,
+                  size: 12 * scale,
+                ),
               ),
               if (!isLast)
                 Container(
-                  width: 2,
-                  height: 60,
-                  margin: EdgeInsets.symmetric(vertical: 4),
+                  width: 2 * scale,
+                  height: 60 * scale,
+                  margin: EdgeInsets.symmetric(vertical: 4 * scale),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
@@ -343,12 +347,12 @@ class PaymentHistoryPage extends StatelessWidget {
             ],
           ),
 
-          SizedBox(width: 16),
+          SizedBox(width: 14 * scale),
 
           // Payment Card
           Expanded(
             child: Container(
-              padding: EdgeInsets.all(16),
+              padding: EdgeInsets.all(12 * scale),
               decoration: BoxDecoration(
                 color: Colors.grey[50],
                 borderRadius: BorderRadius.circular(16),
@@ -358,7 +362,7 @@ class PaymentHistoryPage extends StatelessWidget {
                 children: [
                   // Icon
                   Container(
-                    padding: EdgeInsets.all(10),
+                    padding: EdgeInsets.all(8 * scale),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       shape: BoxShape.circle,
@@ -370,10 +374,14 @@ class PaymentHistoryPage extends StatelessWidget {
                         ),
                       ],
                     ),
-                    child: Icon(icon, color: Color(0xFF667EEA), size: 20),
+                    child: Icon(
+                      icon,
+                      color: Color(0xFF667EEA),
+                      size: 18 * scale,
+                    ),
                   ),
 
-                  SizedBox(width: 12),
+                  SizedBox(width: 10 * scale),
 
                   // Details
                   Expanded(
@@ -384,38 +392,42 @@ class PaymentHistoryPage extends StatelessWidget {
                           "₹${amount.toStringAsFixed(2)}",
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            fontSize: 16,
+                            fontSize: 14 * scale,
                             color: Color(0xFF1A237E),
                           ),
                         ),
-                        SizedBox(height: 4),
+                        SizedBox(height: 4 * scale),
                         Row(
                           children: [
-                            Icon(icon, size: 14, color: Colors.grey[800]),
-                            SizedBox(width: 6),
+                            Icon(
+                              icon,
+                              size: 12 * scale,
+                              color: Colors.grey[800],
+                            ),
+                            SizedBox(width: 6 * scale),
                             Text(
                               mode,
                               style: TextStyle(
                                 color: Colors.grey[700],
-                                fontSize: 13,
+                                fontSize: 11 * scale,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
                           ],
                         ),
-                        SizedBox(height: 2),
+                        SizedBox(height: 2 * scale),
                         Row(
                           children: [
                             Icon(
                               Icons.access_time_rounded,
-                              size: 14,
+                              size: 12 * scale,
                               color: Colors.grey[600],
                             ),
-                            SizedBox(width: 6),
+                            SizedBox(width: 6 * scale),
                             Text(
                               DateFormat('dd MMM yyyy, hh:mm a').format(date),
                               style: TextStyle(
-                                fontSize: 12,
+                                fontSize: 10 * scale,
                                 color: Colors.grey[600],
                               ),
                             ),
@@ -427,7 +439,10 @@ class PaymentHistoryPage extends StatelessWidget {
 
                   // Status Badge
                   Container(
-                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 6 * scale,
+                      vertical: 2 * scale,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.green[50],
                       borderRadius: BorderRadius.circular(8),
@@ -437,7 +452,7 @@ class PaymentHistoryPage extends StatelessWidget {
                       "Paid",
                       style: TextStyle(
                         color: Colors.green[700],
-                        fontSize: 12,
+                        fontSize: 10 * scale,
                         fontWeight: FontWeight.w600,
                       ),
                     ),

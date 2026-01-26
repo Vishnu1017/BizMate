@@ -24,6 +24,7 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
   Box? userBox;
   String _searchQuery = "";
   bool _isLoading = true;
+  double scale = 1.0;
 
   List<CustomerModel> customers = [];
   List<CustomerModel> allCustomers = []; // FULL backup list (important)
@@ -257,9 +258,8 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
     final avatarSize =
         isDesktop ? 84.0 : (isTablet ? 72.0 : (isSmallPhone ? 56.0 : 70.0));
     final horizontalPadding = isDesktop ? 28.0 : (isTablet ? 10.0 : 8.0);
-    final titleFont =
-        isDesktop ? 22.0 : (isTablet ? 20.0 : (isSmallPhone ? 16.0 : 20.0));
-    final subtitleFont = isDesktop ? 16.0 : (isTablet ? 15.0 : 14.0);
+    final titleFont = 14 * scale;
+    final subtitleFont = 12 * scale;
 
     final blueShades = [
       [Color(0xFF3B82F6), Color(0xFF2563EB)],
@@ -287,7 +287,7 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
         },
         background: Container(
           alignment: Alignment.centerRight,
-          padding: const EdgeInsets.symmetric(horizontal: 25),
+          padding: EdgeInsets.symmetric(horizontal: 25 * scale),
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [Colors.red.shade500, Colors.red.shade700],
@@ -300,15 +300,15 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
               Icon(
                 Icons.delete_forever_rounded,
                 color: Colors.white,
-                size: isDesktop ? 40 : 32,
+                size: 26 * scale,
               ),
-              SizedBox(height: isDesktop ? 6 : 4),
+              SizedBox(height: 4 * scale),
               Text(
                 'Delete',
                 style: TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.w700,
-                  fontSize: isDesktop ? 16 : 14,
+                  fontSize: 12 * scale,
                 ),
               ),
             ],
@@ -341,8 +341,8 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
                     right: -30,
                     top: -30,
                     child: Container(
-                      width: 140,
-                      height: 140,
+                      width: 140 * scale,
+                      height: 140 * scale,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: Colors.white.withOpacity(0.06),
@@ -354,8 +354,8 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
                     right: -20,
                     top: -20,
                     child: Container(
-                      width: 100,
-                      height: 100,
+                      width: 100 * scale,
+                      height: 100 * scale,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: Colors.white.withOpacity(0.08),
@@ -363,12 +363,12 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
                     ),
                   ),
                 Padding(
-                  padding: EdgeInsets.all(isDesktop ? 17.0 : 15.0),
+                  padding: EdgeInsets.all(12 * scale),
                   child: Row(
                     children: [
                       Container(
-                        width: avatarSize,
-                        height: avatarSize,
+                        width: 50 * scale,
+                        height: 50 * scale,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: Colors.white.withOpacity(0.20),
@@ -384,13 +384,13 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
                                 : 'U',
                             style: TextStyle(
                               color: Colors.white,
-                              fontSize: (avatarSize * 0.45).clamp(16.0, 36.0),
+                              fontSize: (avatarSize * 0.35).clamp(16.0, 36.0),
                               fontWeight: FontWeight.w900,
                             ),
                           ),
                         ),
                       ),
-                      SizedBox(width: isDesktop ? 24 : 16),
+                      SizedBox(width: 14 * scale),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -405,7 +405,7 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
                               overflow: TextOverflow.ellipsis,
                               maxLines: 1,
                             ),
-                            SizedBox(height: isDesktop ? 10 : 8),
+                            SizedBox(height: 6 * scale),
                             Row(
                               children: [
                                 Icon(
@@ -413,7 +413,7 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
                                   color: Colors.white70,
                                   size: subtitleFont,
                                 ),
-                                SizedBox(width: 8),
+                                SizedBox(width: 6 * scale),
                                 Expanded(
                                   child: Text(
                                     customer.phone,
@@ -452,10 +452,9 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
                           ],
                         ),
                       ),
-                      SizedBox(width: isDesktop ? 18 : 12),
                       Container(
-                        width: isDesktop ? 48 : 40,
-                        height: isDesktop ? 48 : 40,
+                        width: 25 * scale,
+                        height: 25 * scale,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: Colors.white.withOpacity(0.22),
@@ -463,7 +462,7 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
                         child: Icon(
                           Icons.drag_handle,
                           color: Colors.white,
-                          size: isDesktop ? 22 : 18,
+                          size: 14 * scale,
                         ),
                       ),
                     ],
@@ -596,9 +595,7 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
 
                   // ⭐ SUMMARY / COUNT
                   Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: isVeryWide ? 32 : 24,
-                    ),
+                    padding: EdgeInsets.symmetric(horizontal: 24 * scale),
                     child: LayoutBuilder(
                       builder: (context, constraints) {
                         double w = constraints.maxWidth;
@@ -619,12 +616,12 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
                                 vertical: 6 * scale,
                               ),
                               constraints: BoxConstraints(
-                                minWidth: 20 * scale,
-                                maxWidth: 60 * scale,
+                                minWidth: 12 * scale,
+                                maxWidth: 45 * scale,
                               ),
                               decoration: BoxDecoration(
                                 color: Colors.white,
-                                borderRadius: BorderRadius.circular(30 * scale),
+                                borderRadius: BorderRadius.circular(20 * scale),
                                 border: Border.all(
                                   color: Colors.grey,
                                   width: 1.2 * scale,
@@ -635,14 +632,14 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
                                 children: [
                                   Icon(
                                     Icons.people_alt_rounded,
-                                    size: 16 * scale,
+                                    size: 12 * scale,
                                     color: Colors.black87,
                                   ),
                                   SizedBox(width: 4 * scale),
                                   Text(
                                     '${customers.length}',
                                     style: TextStyle(
-                                      fontSize: 14 * scale,
+                                      fontSize: 10 * scale,
                                       fontWeight: FontWeight.w700,
                                     ),
                                   ),

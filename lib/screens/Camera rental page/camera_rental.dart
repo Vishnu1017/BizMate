@@ -169,8 +169,12 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
   }
 
   String _formatDateTime(DateTime dateTime) {
+    final int hour12 = dateTime.hour % 12 == 0 ? 12 : dateTime.hour % 12;
+    final String minute = dateTime.minute.toString().padLeft(2, '0');
+    final String period = dateTime.hour >= 12 ? 'PM' : 'AM';
+
     return "${dateTime.day}/${dateTime.month}/${dateTime.year} "
-        "${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}";
+        "$hour12:$minute $period";
   }
 
   Widget _buildImage(RentalSaleModel sale, double size) {
@@ -190,13 +194,13 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
           children: [
             // BACK CARD
             Positioned(
-              left: 2 * scale,
-              top: 2 * scale,
+              left: 0 * scale,
+              top: -2 * scale,
               child: Container(
-                width: adjustedSize - 8 * scale,
-                height: adjustedSize - 8 * scale,
+                width: adjustedSize - 12 * scale,
+                height: adjustedSize - 12 * scale,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(18),
+                  borderRadius: BorderRadius.circular(12),
                   gradient: LinearGradient(
                     colors: [
                       Colors.blueGrey.shade300,
@@ -209,10 +213,10 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
 
             // FRONT CARD
             Container(
-              width: adjustedSize - 12 * scale,
-              height: adjustedSize - 12 * scale,
+              width: adjustedSize - 16 * scale,
+              height: adjustedSize - 16 * scale,
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(18),
+                borderRadius: BorderRadius.circular(12),
                 gradient: const LinearGradient(
                   colors: [Color(0xFF667eea), Color(0xFF764ba2)],
                   begin: Alignment.topLeft,

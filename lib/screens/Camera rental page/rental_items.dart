@@ -18,7 +18,7 @@ class RentalItems extends StatefulWidget {
 
 class _RentalItemsState extends State<RentalItems> {
   late Box userBox;
-
+  double scale = 1.0;
   List<RentalItem> rentalItems = [];
   List<RentalItem> filteredItems = [];
 
@@ -245,14 +245,15 @@ class _RentalItemsState extends State<RentalItems> {
   Widget _buildGrid() {
     return LayoutBuilder(
       builder: (context, constraints) {
-        double width = constraints.maxWidth;
+        final double width = constraints.maxWidth;
 
         int columns;
         double ratio;
 
+        // 🔥 FIXED RESPONSIVE LOGIC
         if (width <= 380) {
-          columns = 1;
-          ratio = 0.85;
+          columns = 2;
+          ratio = 0.62; // MORE HEIGHT → button fits
         } else if (width <= 600) {
           columns = 2;
           ratio = 0.75;
@@ -268,11 +269,15 @@ class _RentalItemsState extends State<RentalItems> {
         }
 
         return GridView.builder(
-          padding: const EdgeInsets.all(14),
+          padding: EdgeInsets.symmetric(
+            horizontal: width <= 380 ? 10 : 14,
+            vertical: 14,
+          ),
+          physics: const BouncingScrollPhysics(),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: columns,
-            crossAxisSpacing: 12,
-            mainAxisSpacing: 12,
+            crossAxisSpacing: width <= 380 ? 10 : 12,
+            mainAxisSpacing: width <= 380 ? 10 : 12,
             childAspectRatio: ratio,
           ),
           itemCount: filteredItems.length,
@@ -308,11 +313,12 @@ class _RentalItemsState extends State<RentalItems> {
 
     return LayoutBuilder(
       builder: (context, c) {
-        double imageHeight = c.maxHeight * 0.40;
+        final bool isSmallPhone = c.maxWidth <= 180;
+        final double imageHeight = c.maxHeight * 0.38;
 
         return Container(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(22),
+            borderRadius: BorderRadius.circular(12),
             gradient: const LinearGradient(
               colors: [Color(0xFFE3F2FD), Color(0xFFB2EBF2)],
             ),
@@ -329,8 +335,8 @@ class _RentalItemsState extends State<RentalItems> {
               Column(
                 children: [
                   ClipRRect(
-                    borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(22),
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(18 * scale),
                     ),
                     child: Image.file(
                       File(item.imagePath),
@@ -342,9 +348,9 @@ class _RentalItemsState extends State<RentalItems> {
 
                   Expanded(
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 5,
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 8 * scale,
+                        vertical: 6 * scale,
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -353,43 +359,38 @@ class _RentalItemsState extends State<RentalItems> {
                             item.name,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontWeight: FontWeight.bold,
-                              color: Color(0xFF0D47A1),
-                              fontSize: 15,
+                              color: const Color(0xFF0D47A1),
+                              fontSize: isSmallPhone ? 10 : 12 * scale,
                             ),
                           ),
 
-                          const SizedBox(height: 3),
+                          SizedBox(height: 4 * scale),
 
-                          // BRAND + CONDITION IN ONE PRODUCTION ROW
                           Row(
                             children: [
-                              const Icon(Icons.camera, size: 14),
-                              const SizedBox(width: 5),
-
+                              Icon(Icons.camera, size: 10 * scale),
+                              SizedBox(width: 4 * scale),
                               Expanded(
                                 child: Text(
                                   item.brand,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(fontSize: 12),
+                                  style: TextStyle(fontSize: 9 * scale),
                                 ),
                               ),
-
-                              const SizedBox(width: 10),
-
+                              SizedBox(width: 6 * scale),
                               Icon(
                                 Icons.circle,
-                                size: 10,
+                                size: 6 * scale,
                                 color: _getConditionColor(conditionSafe),
                               ),
-                              const SizedBox(width: 4),
-
+                              SizedBox(width: 4 * scale),
                               Text(
                                 conditionSafe,
                                 style: TextStyle(
-                                  fontSize: 12,
+                                  fontSize: 8 * scale,
                                   fontWeight: FontWeight.w600,
                                   color: _getConditionColor(conditionSafe),
                                 ),
@@ -397,20 +398,21 @@ class _RentalItemsState extends State<RentalItems> {
                             ],
                           ),
 
-                          const Spacer(),
+                          SizedBox(height: isSmallPhone ? 20 : 24),
 
                           Container(
-                            padding: const EdgeInsets.all(8),
+                            padding: EdgeInsets.all(6 * scale),
                             decoration: BoxDecoration(
                               color: Colors.white,
-                              borderRadius: BorderRadius.circular(14),
+                              borderRadius: BorderRadius.circular(8 * scale),
                             ),
                             child: Row(
                               children: [
                                 Text(
                                   '₹${item.price.toStringAsFixed(0)}/day',
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontWeight: FontWeight.bold,
+                                    fontSize: 10 * scale,
                                     color: Colors.teal,
                                   ),
                                 ),
@@ -423,21 +425,21 @@ class _RentalItemsState extends State<RentalItems> {
                                       item.availability == 'Available'
                                           ? Colors.green
                                           : Colors.red,
-                                  size: 18,
+                                  size: 14 * scale,
                                 ),
                               ],
                             ),
                           ),
 
-                          const SizedBox(height: 6),
+                          SizedBox(height: 8 * scale),
+
                           SizedBox(
                             width: double.infinity,
+                            height: isSmallPhone ? 34 : 38,
                             child: ElevatedButton(
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color(0xFF0D47A1),
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 8,
-                                ),
+                                padding: EdgeInsets.zero,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(10),
                                 ),
@@ -457,11 +459,12 @@ class _RentalItemsState extends State<RentalItems> {
                                   ),
                                 );
                               },
-                              child: const Text(
+                              child: Text(
                                 'Place Order',
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,
+                                  fontSize: isSmallPhone ? 9 : 11 * scale,
                                 ),
                               ),
                             ),
@@ -492,9 +495,9 @@ class _RentalItemsState extends State<RentalItems> {
                       ),
                       child: Text(
                         item.availability,
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: Colors.white,
-                          fontSize: 12,
+                          fontSize: 8 * scale,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -508,10 +511,10 @@ class _RentalItemsState extends State<RentalItems> {
                           shape: BoxShape.circle,
                         ),
                         padding: const EdgeInsets.all(6),
-                        child: const Icon(
+                        child: Icon(
                           Icons.delete_outline,
                           color: Colors.white,
-                          size: 18,
+                          size: 12 * scale,
                         ),
                       ),
                     ),
