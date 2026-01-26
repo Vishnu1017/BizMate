@@ -2069,7 +2069,7 @@ class _ProfilePageState extends State<ProfilePage>
                         physics: const BouncingScrollPhysics(),
                         child: Padding(
                           padding: EdgeInsets.symmetric(
-                            horizontal: isSmallScreen ? 16 : 32,
+                            horizontal: 12 * scale,
                             vertical: 16, // ✅ reduced from 60
                           ),
                           child: Column(
@@ -2325,7 +2325,7 @@ class _ProfilePageState extends State<ProfilePage>
                           style: TextButton.styleFrom(
                             padding: EdgeInsets.symmetric(vertical: 12 * scale),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
+                              borderRadius: BorderRadius.circular(10),
                               side: const BorderSide(
                                 color: Colors.black,
                                 width: 1.2,
@@ -2351,7 +2351,7 @@ class _ProfilePageState extends State<ProfilePage>
                             backgroundColor: const Color(0xFF020617),
                             padding: EdgeInsets.symmetric(vertical: 12 * scale),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
+                              borderRadius: BorderRadius.circular(10),
                             ),
                           ),
                           child: Text(
@@ -2433,7 +2433,7 @@ class _ProfilePageState extends State<ProfilePage>
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
@@ -2445,7 +2445,7 @@ class _ProfilePageState extends State<ProfilePage>
         border: Border.all(color: Color(0xFFF1F5F9), width: 1),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: EdgeInsets.all(15 * scale),
         child: Column(
           children: [
             _buildInfoRow(
@@ -2557,7 +2557,7 @@ class _ProfilePageState extends State<ProfilePage>
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
@@ -2794,7 +2794,7 @@ class _ProfilePageState extends State<ProfilePage>
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
