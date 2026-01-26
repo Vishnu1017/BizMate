@@ -466,15 +466,26 @@ class _HomePageState extends State<HomePage>
                                       if (isVerySmallScreen) ...[
                                         Row(
                                           children: [
-                                            CircleAvatar(
-                                              radius: 16,
-                                              backgroundColor: Color(
-                                                0xFF1A237E,
+                                            Container(
+                                              width: isSmallScreen ? 40 : 48,
+                                              height: isSmallScreen ? 40 : 48,
+                                              decoration: const BoxDecoration(
+                                                shape: BoxShape.circle,
+                                                gradient: LinearGradient(
+                                                  colors: [
+                                                    Color(0xFF2563EB),
+                                                    Color(0xFF1E40AF),
+                                                    Color(0xFF020617),
+                                                  ],
+                                                  stops: [0.0, 0.6, 1.0],
+                                                  begin: Alignment.bottomRight,
+                                                  end: Alignment.topLeft,
+                                                ),
                                               ),
                                               child: Icon(
                                                 Icons.person,
                                                 color: Colors.white,
-                                                size: 16,
+                                                size: isSmallScreen ? 20 : 24,
                                               ),
                                             ),
                                             SizedBox(width: 8),

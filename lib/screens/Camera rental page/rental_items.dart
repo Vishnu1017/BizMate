@@ -134,7 +134,7 @@ class _RentalItemsState extends State<RentalItems> {
 
   @override
   Widget build(BuildContext context) {
-    double responsivePadding = MediaQuery.of(context).size.width * 0.02;
+    double responsivePadding = MediaQuery.of(context).size.width * 0.03;
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -150,12 +150,9 @@ class _RentalItemsState extends State<RentalItems> {
 
           // CATEGORY CHIPS
           Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: responsivePadding,
-              vertical: responsivePadding / 1,
-            ),
+            padding: EdgeInsets.symmetric(horizontal: responsivePadding),
             child: SizedBox(
-              height: 35,
+              height: 35 * scale,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 itemCount: _categories.length,

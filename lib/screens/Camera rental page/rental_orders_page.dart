@@ -30,6 +30,18 @@ class _RentalOrdersPageState extends State<RentalOrdersPage> {
     "Partially Paid",
     "Unpaid",
   ];
+  IconData _getFilterIcon(String filter) {
+    switch (filter) {
+      case 'Fully Paid':
+        return Icons.check_circle_outline;
+      case 'Partially Paid':
+        return Icons.timelapse_rounded;
+      case 'Unpaid':
+        return Icons.error_outline;
+      default:
+        return Icons.filter_list_rounded;
+    }
+  }
 
   late final VoidCallback _rentalSalesListener;
 
@@ -175,45 +187,83 @@ class _RentalOrdersPageState extends State<RentalOrdersPage> {
               showDateFilter: false,
             ),
 
-            SizedBox(height: 6 * scale),
-
             SizedBox(
-              height: 45 * scale,
+              height: 35 * scale,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 padding: EdgeInsets.symmetric(horizontal: 14 * scale),
                 itemCount: filters.length,
                 separatorBuilder: (_, __) => SizedBox(width: 8 * scale),
-                itemBuilder: (_, i) {
+                itemBuilder: (context, i) {
                   final filter = filters[i];
                   final selected = _statusFilter == filter;
 
-                  return FilterChip(
-                    label: Text(
-                      filter,
-                      style: TextStyle(
-                        color: selected ? Colors.white : Colors.grey[700],
-                        fontWeight: FontWeight.w600,
-                        fontSize: 12 * scale,
-                      ),
-                    ),
-                    selected: selected,
-                    onSelected: (bool value) {
+                  return GestureDetector(
+                    onTap: () {
                       _statusFilter = filter;
                       _applyFilters();
                       setState(() {});
                     },
-                    backgroundColor: Colors.white,
-                    selectedColor: const Color(0xFF3B82F6),
-                    checkmarkColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16 * scale),
-                      side: BorderSide(
-                        color:
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 260),
+                      curve: Curves.easeOutCubic,
+                      padding: EdgeInsets.symmetric(horizontal: 12 * scale),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(30 * scale),
+                        gradient:
                             selected
-                                ? const Color(0xFF3B82F6)
-                                : Colors.grey[300]!,
-                        width: selected ? 0 : 1,
+                                ? const LinearGradient(
+                                  colors: [
+                                    Color(0xFF2563EB),
+                                    Color(0xFF1E40AF),
+                                    Color(0xFF020617),
+                                  ],
+                                  stops: [0.0, 0.6, 1.0],
+                                  begin: Alignment.bottomRight,
+                                  end: Alignment.topLeft,
+                                )
+                                : LinearGradient(
+                                  colors: [
+                                    Colors.grey.shade200,
+                                    Colors.grey.shade300,
+                                  ],
+                                ),
+                        boxShadow:
+                            selected
+                                ? [
+                                  BoxShadow(
+                                    color: const Color(
+                                      0xFF2563EB,
+                                    ).withOpacity(0.35),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ]
+                                : [],
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          /// ICON — ALWAYS VISIBLE
+                          Icon(
+                            _getFilterIcon(filter),
+                            size: 14 * scale,
+                            color:
+                                selected ? Colors.white : Colors.grey.shade700,
+                          ),
+                          SizedBox(width: 6 * scale),
+
+                          /// TEXT
+                          Text(
+                            filter,
+                            style: TextStyle(
+                              color: selected ? Colors.white : Colors.grey[800],
+                              fontWeight:
+                                  selected ? FontWeight.w700 : FontWeight.w600,
+                              fontSize: 12 * scale,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   );
@@ -296,9 +346,10 @@ class _RentalOrdersPageState extends State<RentalOrdersPage> {
       padding: EdgeInsets.all(14 * scale),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+          colors: [Color(0xFF2563EB), Color(0xFF1E40AF), Color(0xFF020617)],
+          stops: [0.0, 0.6, 1.0],
+          begin: Alignment.bottomRight,
+          end: Alignment.topLeft,
         ),
         borderRadius: BorderRadius.circular(16 * scale),
         boxShadow: [
@@ -321,13 +372,13 @@ class _RentalOrdersPageState extends State<RentalOrdersPage> {
           _summaryItem(
             "Paid",
             "₹${paidAmount.toStringAsFixed(0)}",
-            const Color(0xFF10B981),
+            Colors.lightGreenAccent,
             scale,
           ),
           _summaryItem(
             "Pending",
             "₹${pendingAmount.toStringAsFixed(0)}",
-            const Color(0xFFF59E0B),
+            const Color.fromARGB(255, 248, 171, 56),
             scale,
           ),
         ],
@@ -345,7 +396,7 @@ class _RentalOrdersPageState extends State<RentalOrdersPage> {
       children: [
         Text(
           label,
-          style: TextStyle(color: Colors.white70, fontSize: 11 * scale),
+          style: TextStyle(color: Colors.white, fontSize: 11 * scale),
         ),
         SizedBox(height: 4 * scale),
         Text(
