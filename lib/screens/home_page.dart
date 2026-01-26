@@ -467,8 +467,8 @@ class _HomePageState extends State<HomePage>
                                         Row(
                                           children: [
                                             Container(
-                                              width: isSmallScreen ? 40 : 48,
-                                              height: isSmallScreen ? 40 : 48,
+                                              width: isSmallScreen ? 20 : 28,
+                                              height: isSmallScreen ? 20 : 28,
                                               decoration: const BoxDecoration(
                                                 shape: BoxShape.circle,
                                                 gradient: LinearGradient(
