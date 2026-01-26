@@ -763,7 +763,7 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
 
             SizedBox(height: 8 * scale),
             Wrap(
-              spacing: 10,
+              spacing: 8,
               runSpacing: 10,
               children: [
                 ConstrainedBox(
@@ -779,8 +779,7 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
                 ),
               ],
             ),
-
-            const SizedBox(height: 10),
+            SizedBox(height: 10 * scale),
             _buildStatusBadge(sale),
           ],
         );
@@ -898,7 +897,10 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
 
   Widget _buildDateChip(String label, String value) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 8 * scale, vertical: 6 * scale),
+      padding: EdgeInsets.symmetric(
+        horizontal: 14 * scale,
+        vertical: 6 * scale,
+      ),
       decoration: BoxDecoration(
         color: Colors.grey.shade50,
         borderRadius: BorderRadius.circular(12),

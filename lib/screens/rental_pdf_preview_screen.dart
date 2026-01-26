@@ -35,9 +35,14 @@ class RentalPdfPreviewScreen extends StatelessWidget {
           flexibleSpace: Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
-                colors: [Color(0xFF1A237E), Color(0xFF00BCD4)],
-                begin: Alignment.centerLeft,
-                end: Alignment.centerRight,
+                colors: [
+                  Color(0xFF2563EB),
+                  Color(0xFF1E40AF),
+                  Color(0xFF020617),
+                ],
+                stops: [0.0, 0.6, 1.0],
+                begin: Alignment.bottomRight,
+                end: Alignment.topLeft,
               ),
             ),
           ),
@@ -91,10 +96,11 @@ class RentalPdfPreviewScreen extends StatelessWidget {
       ),
       floatingActionButton: Container(
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFF1A237E), Color(0xFF00BCD4)],
-            begin: Alignment.centerLeft,
-            end: Alignment.centerRight,
+          gradient: LinearGradient(
+            colors: [Color(0xFF2563EB), Color(0xFF1E40AF), Color(0xFF020617)],
+            stops: [0.0, 0.6, 1.0],
+            begin: Alignment.bottomRight,
+            end: Alignment.topLeft,
           ),
           borderRadius: BorderRadius.circular(30),
         ),

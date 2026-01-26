@@ -515,7 +515,16 @@ class SaleOptionsMenu extends StatelessWidget {
                 Container(
                   width: double.infinity,
                   decoration: BoxDecoration(
-                    color: Colors.deepPurple,
+                    gradient: const LinearGradient(
+                      colors: [
+                        Color(0xFF2563EB),
+                        Color(0xFF1E40AF),
+                        Color(0xFF020617),
+                      ],
+                      stops: [0.0, 0.6, 1.0],
+                      begin: Alignment.bottomRight,
+                      end: Alignment.topLeft,
+                    ),
                     borderRadius: const BorderRadius.vertical(
                       top: Radius.circular(16),
                     ),
@@ -591,13 +600,11 @@ class SaleOptionsMenu extends StatelessWidget {
                           /// ✅ GENERATE QR
                           ElevatedButton(
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.deepPurple,
+                              backgroundColor: Colors.transparent, // IMPORTANT
+                              shadowColor: Colors.transparent,
+                              padding: EdgeInsets.zero,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10),
-                              ),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 24,
-                                vertical: 12,
                               ),
                             ),
                             onPressed: () {
@@ -620,12 +627,36 @@ class SaleOptionsMenu extends StatelessWidget {
                               // ✅ VALID AMOUNT
                               Navigator.of(context).pop(parsed);
                             },
-                            child: const Text(
-                              'Generate QR',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 15,
-                                fontWeight: FontWeight.bold,
+                            child: Ink(
+                              decoration: const BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    Color(0xFF2563EB),
+                                    Color(0xFF1E40AF),
+                                    Color(0xFF020617),
+                                  ],
+                                  stops: [0.0, 0.6, 1.0],
+                                  begin: Alignment.bottomRight,
+                                  end: Alignment.topLeft,
+                                ),
+                                borderRadius: BorderRadius.all(
+                                  Radius.circular(10),
+                                ),
+                              ),
+                              child: Container(
+                                alignment: Alignment.center,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 24,
+                                  vertical: 12,
+                                ),
+                                child: const Text(
+                                  'Generate QR',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                               ),
                             ),
                           ),
@@ -883,10 +914,7 @@ class SaleOptionsMenu extends StatelessWidget {
                     if (currentUser.upiId.isNotEmpty)
                       pw.Text(
                         'UPI ID: ${currentUser.upiId}',
-                        style: pw.TextStyle(
-                          fontSize: 10,
-                          color: PdfColors.grey600,
-                        ),
+                        style: pw.TextStyle(fontSize: 10),
                       ),
                   ],
                 ),
