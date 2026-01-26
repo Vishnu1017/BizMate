@@ -181,9 +181,13 @@ class _RentalItemsState extends State<RentalItems> {
                             selected
                                 ? LinearGradient(
                                   colors: [
-                                    Colors.blue.shade700,
-                                    Colors.blue.shade900,
+                                    Color(0xFF2563EB),
+                                    Color(0xFF1E40AF),
+                                    Color(0xFF020617),
                                   ],
+                                  stops: [0.0, 0.6, 1.0],
+                                  begin: Alignment.bottomRight,
+                                  end: Alignment.topLeft,
                                 )
                                 : LinearGradient(
                                   colors: [

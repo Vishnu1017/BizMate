@@ -2241,7 +2241,16 @@ class _ProfilePageState extends State<ProfilePage>
                               padding: const EdgeInsets.all(5),
                               decoration: const BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: Color(0xFF2563EB),
+                                gradient: LinearGradient(
+                                  colors: [
+                                    Color(0xFF2563EB),
+                                    Color(0xFF1E40AF),
+                                    Color(0xFF020617),
+                                  ],
+                                  stops: [0.0, 0.6, 1.0],
+                                  begin: Alignment.bottomRight,
+                                  end: Alignment.topLeft,
+                                ),
                               ),
                               child: HugeIcon(
                                 icon: HugeIcons.strokeRoundedCameraAdd01,

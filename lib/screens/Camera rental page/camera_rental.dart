@@ -218,9 +218,14 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(12),
                 gradient: const LinearGradient(
-                  colors: [Color(0xFF667eea), Color(0xFF764ba2)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+                  colors: [
+                    Color(0xFF2563EB),
+                    Color(0xFF1E40AF),
+                    Color(0xFF020617),
+                  ],
+                  stops: [0.0, 0.6, 1.0],
+                  begin: Alignment.bottomRight,
+                  end: Alignment.topLeft,
                 ),
                 boxShadow: [
                   BoxShadow(
@@ -244,16 +249,19 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
               right: -2 * scale,
               top: -6 * scale,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                padding: EdgeInsets.symmetric(
+                  horizontal: 5 * scale,
+                  vertical: 2 * scale,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.black87,
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
                   "+$count",
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: Colors.white,
-                    fontSize: 11,
+                    fontSize: 8 * scale,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -271,13 +279,14 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
         gradient: const LinearGradient(
-          colors: [Color(0xFF667eea), Color(0xFF764ba2)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+          colors: [Color(0xFF2563EB), Color(0xFF1E40AF), Color(0xFF020617)],
+          stops: [0.0, 0.6, 1.0],
+          begin: Alignment.bottomRight,
+          end: Alignment.topLeft,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.purple.shade300.withOpacity(0.25),
+            color: const Color(0xFF1E40AF).withOpacity(0.4),
             blurRadius: 18,
             offset: const Offset(0, 8),
           ),
@@ -307,10 +316,11 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
   Widget _buildPlaceholderImage() {
     return Container(
       decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFF667eea), Color(0xFF764ba2)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+        gradient: const LinearGradient(
+          colors: [Color(0xFF2563EB), Color(0xFF1E40AF), Color(0xFF020617)],
+          stops: [0.0, 0.6, 1.0],
+          begin: Alignment.bottomRight,
+          end: Alignment.topLeft,
         ),
       ),
       child: const Column(
@@ -382,10 +392,7 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
     final color = getSaleStatusColor(sale);
 
     return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: 10 * scale,
-        vertical: 4 * scale,
-      ),
+      padding: EdgeInsets.symmetric(horizontal: 6 * scale, vertical: 2 * scale),
       decoration: BoxDecoration(
         color: color.withOpacity(0.08),
         borderRadius: BorderRadius.circular(20),
@@ -396,7 +403,7 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
         style: TextStyle(
           color: color,
           fontWeight: FontWeight.w700,
-          fontSize: 12 * scale,
+          fontSize: 10 * scale,
           letterSpacing: 0.5,
         ),
       ),
@@ -435,14 +442,16 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
           padding: EdgeInsets.all(16 * scale),
           decoration: BoxDecoration(
             gradient: const LinearGradient(
-              colors: [Color(0xFF667eea), Color(0xFF764ba2)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+              colors: [Color(0xFF2563EB), Color(0xFF1E40AF), Color(0xFF020617)],
+              stops: [0.0, 0.6, 1.0],
+              begin: Alignment.bottomRight,
+              end: Alignment.topLeft,
             ),
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: Colors.purple.shade300.withOpacity(0.4),
+                color: const Color(0xFF1E40AF).withOpacity(0.4),
+
                 blurRadius: 20,
                 offset: const Offset(0, 10),
               ),

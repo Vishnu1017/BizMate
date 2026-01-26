@@ -287,7 +287,7 @@ class _ModernCalendarState extends State<ModernCalendar> {
                     : null,
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 220),
-              margin: EdgeInsets.all(6 * scale),
+              margin: EdgeInsets.all(4 * scale),
               decoration:
                   _isSelected(date)
                       ? BoxDecoration(
