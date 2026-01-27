@@ -977,7 +977,7 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
               ),
             ),
             flexibleSpace: FlexibleSpaceBar(
-              titlePadding: EdgeInsets.only(left: 50 * scale, bottom: 16),
+              titlePadding: EdgeInsets.only(left: 60 * scale, bottom: 16),
               title: Text(
                 widget.name,
                 maxLines: 1,
