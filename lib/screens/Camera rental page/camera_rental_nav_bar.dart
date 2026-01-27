@@ -6,6 +6,7 @@ import 'package:bizmate/screens/Camera%20rental%20page/rental_items.dart';
 import 'package:bizmate/services/rental_cart.dart';
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart' show HugeIcon, HugeIcons;
+import 'package:unicons/unicons.dart';
 import 'rental_orders_page.dart';
 import 'add_rental_item_page.dart';
 import 'rental_customers_page.dart';
@@ -196,7 +197,7 @@ class _CameraRentalNavBarState extends State<CameraRentalNavBar> {
                               color: Colors.grey.shade100,
                               borderRadius: BorderRadius.circular(30),
                               border: Border.all(
-                                color: const Color(0xFF2563EB),
+                                color: const Color(0xFF1E40AF),
                                 width: 1.2,
                               ),
                               boxShadow: [
@@ -213,9 +214,9 @@ class _CameraRentalNavBarState extends State<CameraRentalNavBar> {
                               ],
                             ),
                             child: Icon(
-                              Icons.shopping_cart_outlined,
-                              size: _scaleForWidth(screenWidth, 18),
-                              color: const Color(0xFF2563EB),
+                              UniconsLine.shopping_cart,
+                              size: 16 * scale,
+                              color: const Color(0xFF1E40AF),
                             ),
                           ),
 
@@ -260,7 +261,16 @@ class _CameraRentalNavBarState extends State<CameraRentalNavBar> {
                   height: _scaleForWidth(screenWidth, 3),
                   width: _scaleForWidth(screenWidth, 60),
                   decoration: BoxDecoration(
-                    color: _primaryColor,
+                    gradient: const LinearGradient(
+                      colors: [
+                        Color(0xFF2563EB),
+                        Color(0xFF1E40AF),
+                        Color(0xFF020617),
+                      ],
+                      stops: [0.0, 0.6, 1.0],
+                      begin: Alignment.bottomRight,
+                      end: Alignment.topLeft,
+                    ),
                     borderRadius: BorderRadius.circular(1.5),
                   ),
                 ),
@@ -506,7 +516,7 @@ class _CameraRentalNavBarState extends State<CameraRentalNavBar> {
                       isSelected
                           ? [
                             BoxShadow(
-                              color: const Color(0xFF2563EB).withOpacity(0.35),
+                              color: const Color(0xFF1E40AF).withOpacity(0.35),
                               blurRadius: 22,
                               offset: const Offset(0, 6),
                             ),
@@ -531,7 +541,7 @@ class _CameraRentalNavBarState extends State<CameraRentalNavBar> {
                 width: isSelected ? 6 : 0,
                 height: 6,
                 decoration: const BoxDecoration(
-                  color: Color(0xFF2563EB),
+                  color: Color(0xFF1E40AF),
                   shape: BoxShape.circle,
                 ),
               ),

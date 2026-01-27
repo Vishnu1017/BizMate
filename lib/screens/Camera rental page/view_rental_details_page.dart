@@ -1098,7 +1098,7 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
                                         borderRadius: BorderRadius.circular(30),
                                         border: Border.all(
                                           color: const Color(
-                                            0xFF0D47A1,
+                                            0xFF1E40AF,
                                           ), // 🔵 border color
                                           width: 1.2, // optional thickness
                                         ),
@@ -1123,7 +1123,7 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
                                           Icon(
                                             UniconsLine.shopping_cart,
                                             size: 16 * scale,
-                                            color: const Color(0xFF0D47A1),
+                                            color: const Color(0xFF1E40AF),
                                           ),
                                         ],
                                       ),
