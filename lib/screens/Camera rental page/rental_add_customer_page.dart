@@ -39,6 +39,7 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
   final discountPercentController = TextEditingController();
   final discountAmountController = TextEditingController();
   bool get _hasCustomers => customerList.isNotEmpty;
+  double scale = 1.0;
 
   DateTime? fromDateTime;
   DateTime? toDateTime;
@@ -902,6 +903,8 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
 
   Widget _buildRentalInfoCard() {
     final summary = calculateSummary();
+    final cartItems = RentalCart.items;
+    final bool hasMultipleItems = cartItems.length > 1;
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -920,6 +923,7 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // HEADER
           Row(
             children: [
               Container(
@@ -945,11 +949,66 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
               ),
             ],
           ),
+
           const SizedBox(height: 16),
-          _buildInfoRow("Item Name", widget.rentalItem.name),
-          _buildInfoRow("No. of Days", "${widget.noOfDays} days"),
-          _buildInfoRow("Rate/Day", "₹${widget.ratePerDay.toStringAsFixed(2)}"),
-          const Divider(color: Colors.white30, height: 20),
+
+          // ================= SINGLE ITEM =================
+          if (cartItems.isEmpty) ...[
+            _buildInfoRow("Item Name", widget.rentalItem.name),
+            _buildInfoRow("No. of Days", "${widget.noOfDays} days"),
+            _buildInfoRow(
+              "Rate / Day",
+              "₹${widget.ratePerDay.toStringAsFixed(2)}",
+            ),
+          ]
+          // ================= MULTIPLE ITEMS (SCROLLABLE) =================
+          else ...[
+            Text(
+              "Items (${cartItems.length})",
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.9),
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 8),
+
+            // 🔥 SCROLL AREA START
+            SizedBox(
+              height:
+                  hasMultipleItems ? 180 : null, // 👈 controls scroll height
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                child: Column(
+                  children:
+                      cartItems.map((item) {
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 6),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _buildInfoRow("Item", item.item.name),
+                              _buildInfoRow(
+                                "Rate / Day",
+                                "₹${item.ratePerDay.toStringAsFixed(2)}",
+                              ),
+                              _buildInfoRow("Days", "${item.noOfDays}"),
+                              _buildInfoRow(
+                                "Item Total",
+                                "₹${item.totalAmount.toStringAsFixed(2)}",
+                              ),
+                              const Divider(color: Colors.white30),
+                            ],
+                          ),
+                        );
+                      }).toList(),
+                ),
+              ),
+            ),
+            // 🔥 SCROLL AREA END
+          ],
+
+          // ================= TOTALS =================
           _buildInfoRow(
             "Subtotal",
             "₹${summary['subtotal']!.toStringAsFixed(2)}",
@@ -963,7 +1022,9 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
               "Tax",
               "+₹${summary['taxAmount']!.toStringAsFixed(2)}",
             ),
+
           const Divider(color: Colors.white30, height: 20),
+
           _buildInfoRow(
             "Total Cost",
             "₹${summary['total']!.toStringAsFixed(2)}",
@@ -1529,7 +1590,7 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
 
                       // Rental Summary
                       _buildRentalInfoCard(),
-                      const SizedBox(height: 30),
+                      SizedBox(height: 25 * scale),
 
                       // Save Button
                       AnimatedContainer(

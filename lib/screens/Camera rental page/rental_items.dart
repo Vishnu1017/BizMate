@@ -148,7 +148,7 @@ class _RentalItemsState extends State<RentalItems> {
 
           // CATEGORY CHIPS
           SizedBox(
-            height: 35 * scale,
+            height: 28 * scale,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               padding: EdgeInsets.symmetric(horizontal: 12 * scale),

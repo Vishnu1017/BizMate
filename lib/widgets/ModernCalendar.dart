@@ -49,20 +49,11 @@ class _ModernCalendarState extends State<ModernCalendar> {
   }
 
   List<DateTime> _getDaysInMonth() {
-    final first = DateTime(_currentMonth.year, _currentMonth.month, 1);
     final last = DateTime(_currentMonth.year, _currentMonth.month + 1, 0);
     final days = <DateTime>[];
 
-    for (int i = 1; i < first.weekday; i++) {
-      days.add(first.subtract(Duration(days: first.weekday - i)));
-    }
-
     for (int i = 0; i < last.day; i++) {
       days.add(DateTime(_currentMonth.year, _currentMonth.month, i + 1));
-    }
-
-    while (days.length < 42) {
-      days.add(days.last.add(const Duration(days: 1)));
     }
 
     return days;

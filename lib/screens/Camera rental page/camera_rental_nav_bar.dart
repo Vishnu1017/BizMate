@@ -1,6 +1,9 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first, unused_field
+import 'package:bizmate/models/rental_cart_item.dart';
 import 'package:bizmate/screens/Camera%20rental%20page/camera_rental.dart';
+import 'package:bizmate/screens/Camera%20rental%20page/rental_cart_preview_page.dart';
 import 'package:bizmate/screens/Camera%20rental%20page/rental_items.dart';
+import 'package:bizmate/services/rental_cart.dart';
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart' show HugeIcon, HugeIcons;
 import 'rental_orders_page.dart';
@@ -32,7 +35,7 @@ class CameraRentalNavBar extends StatefulWidget {
 
 class _CameraRentalNavBarState extends State<CameraRentalNavBar> {
   int _currentIndex = 0;
-
+  final ValueNotifier<int> _cartCount = ValueNotifier<int>(0);
   // Modern color palette (matching NavBarPage)
   final Color _primaryColor = const Color(0xFF1A237E);
   final Color _secondaryColor = const Color(0xFF3949AB);
@@ -55,6 +58,7 @@ class _CameraRentalNavBarState extends State<CameraRentalNavBar> {
   @override
   void initState() {
     super.initState();
+
     _pages = [
       CameraRentalPage(
         userName: widget.userName,
@@ -65,6 +69,15 @@ class _CameraRentalNavBarState extends State<CameraRentalNavBar> {
       RentalItems(userEmail: widget.userEmail),
       RentalCustomersPage(userEmail: widget.userEmail),
     ];
+
+    // ✅ INITIAL CART COUNT
+    _cartCount.value = RentalCart.items.length;
+  }
+
+  @override
+  void dispose() {
+    _cartCount.dispose();
+    super.dispose();
   }
 
   // ------------------------
@@ -132,19 +145,19 @@ class _CameraRentalNavBarState extends State<CameraRentalNavBar> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Top row with back button and user info
+                // 🔝 TOP ROW
                 Row(
-                  children: [
-                    // Back button
-                    _buildBackButton(screenWidth),
-                  ],
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [_buildBackButton(screenWidth)],
                 ),
 
                 SizedBox(height: _scaleForWidth(screenWidth, 18)),
 
-                // Page title and status
+                // TITLE
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
+                    // ===== TITLE =====
                     Text(
                       _titles[_currentIndex],
                       style: TextStyle(
@@ -154,12 +167,94 @@ class _CameraRentalNavBarState extends State<CameraRentalNavBar> {
                         letterSpacing: -0.4,
                       ),
                     ),
+
+                    // ===== CART BUTTON =====
+                    InkWell(
+                      borderRadius: BorderRadius.circular(30),
+                      onTap: () async {
+                        await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const RentalCartPreviewPage(),
+                          ),
+                        );
+
+                        // ✅ UPDATE AFTER RETURN
+                        _cartCount.value = RentalCart.items.length;
+                      },
+
+                      child: Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: _scaleForWidth(screenWidth, 10),
+                              vertical: _scaleForWidth(screenWidth, 6),
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade100,
+                              borderRadius: BorderRadius.circular(30),
+                              border: Border.all(
+                                color: const Color(0xFF2563EB),
+                                width: 1.2,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.white,
+                                  offset: const Offset(-4, -4),
+                                  blurRadius: 8,
+                                ),
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.25),
+                                  offset: const Offset(1, 3),
+                                  blurRadius: 8,
+                                ),
+                              ],
+                            ),
+                            child: Icon(
+                              Icons.shopping_cart_outlined,
+                              size: _scaleForWidth(screenWidth, 18),
+                              color: const Color(0xFF2563EB),
+                            ),
+                          ),
+
+                          // ===== CART BADGE =====
+                          Positioned(
+                            top: -6,
+                            right: -6,
+                            child: ValueListenableBuilder<List<RentalCartItem>>(
+                              valueListenable: RentalCart.notifier,
+                              builder: (_, items, __) {
+                                if (items.isEmpty)
+                                  return const SizedBox.shrink();
+
+                                return Container(
+                                  padding: const EdgeInsets.all(6),
+                                  decoration: const BoxDecoration(
+                                    color: Colors.red,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Text(
+                                    '${items.length}',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
 
                 SizedBox(height: _scaleForWidth(screenWidth, 8)),
 
-                // Progress indicator
+                // INDICATOR
                 Container(
                   height: _scaleForWidth(screenWidth, 3),
                   width: _scaleForWidth(screenWidth, 60),

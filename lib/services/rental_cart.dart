@@ -1,20 +1,24 @@
+import 'package:flutter/material.dart';
 import '../models/rental_cart_item.dart';
 
 class RentalCart {
-  static final List<RentalCartItem> _items = [];
+  // 🔥 Reactive notifier
+  static final ValueNotifier<List<RentalCartItem>> notifier =
+      ValueNotifier<List<RentalCartItem>>([]);
 
-  static List<RentalCartItem> get items => _items;
+  // Existing API — unchanged
+  static List<RentalCartItem> get items => notifier.value;
 
   static void add(RentalCartItem item) {
-    _items.add(item);
+    notifier.value = [...notifier.value, item];
   }
 
   static void clear() {
-    _items.clear();
+    notifier.value = [];
   }
 
-  static bool get isEmpty => _items.isEmpty;
+  static bool get isEmpty => notifier.value.isEmpty;
 
   static double get totalAmount =>
-      _items.fold(0.0, (sum, item) => sum + item.totalAmount);
+      notifier.value.fold(0.0, (sum, item) => sum + item.totalAmount);
 }

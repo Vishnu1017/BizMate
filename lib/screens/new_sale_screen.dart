@@ -1231,11 +1231,11 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                           height: 70 * scale,
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            gradient: const LinearGradient(
+                            gradient: LinearGradient(
                               colors: [
-                                Color(0xFF2563EB),
-                                Color(0xFF1E40AF),
-                                Color(0xFF020617),
+                                Color(0xFF2563EB).withOpacity(0.1),
+                                Color(0xFF1E40AF).withOpacity(0.1),
+                                Color(0xFF020617).withOpacity(0.1),
                               ],
                               stops: [0.0, 0.6, 1.0],
                               begin: Alignment.bottomRight,

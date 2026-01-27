@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:ui';
 import 'package:bizmate/screens/Camera%20rental%20page/rental_add_customer_page.dart';
 import 'package:bizmate/services/rental_cart.dart';
 import 'package:flutter/material.dart';
@@ -53,17 +54,133 @@ class _RentalCartPreviewPageState extends State<RentalCartPreviewPage> {
             color: Colors.white,
           ),
         ),
+
+        // 🔥 CLEAR CART BUTTON
+        actions: [
+          if (items.isNotEmpty)
+            IconButton(
+              tooltip: "Clear Cart",
+              icon: const Icon(Icons.delete_sweep_rounded),
+              onPressed: () async {
+                bool confirmed = false;
+
+                await showGeneralDialog(
+                  context: context,
+                  barrierDismissible: true,
+                  barrierLabel: '',
+                  barrierColor: Colors.black54,
+                  transitionDuration: const Duration(milliseconds: 300),
+                  pageBuilder: (ctx, anim1, anim2) {
+                    return Center(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(24),
+                        child: BackdropFilter(
+                          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                          child: Container(
+                            width: MediaQuery.of(ctx).size.width * 0.85,
+                            padding: const EdgeInsets.all(24),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(24),
+                              border: Border.all(
+                                color: Colors.white.withOpacity(0.3),
+                              ),
+                            ),
+                            child: Material(
+                              color: Colors.transparent,
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(
+                                    Icons.delete_forever_rounded,
+                                    color: Colors.redAccent,
+                                    size: 64,
+                                  ),
+                                  const SizedBox(height: 12),
+                                  const Text(
+                                    "Clear Cart?",
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  const Text(
+                                    "This will remove all items from your cart.",
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: 15,
+                                      color: Colors.white70,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 24),
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceEvenly,
+                                    children: [
+                                      ElevatedButton(
+                                        onPressed: () => Navigator.pop(ctx),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.white12,
+                                        ),
+                                        child: const Text(
+                                          'Cancel',
+                                          style: TextStyle(color: Colors.white),
+                                        ),
+                                      ),
+                                      ElevatedButton(
+                                        onPressed: () {
+                                          confirmed = true;
+                                          Navigator.pop(ctx);
+                                        },
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.redAccent,
+                                        ),
+                                        child: const Text(
+                                          'Clear',
+                                          style: TextStyle(color: Colors.white),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                  transitionBuilder: (ctx, anim1, anim2, child) {
+                    return Transform.scale(
+                      scale: anim1.value,
+                      child: Opacity(opacity: anim1.value, child: child),
+                    );
+                  },
+                );
+
+                if (confirmed) {
+                  setState(() {
+                    RentalCart.clear(); // ✅ instant UI update
+                  });
+                }
+              },
+            ),
+        ],
+
         flexibleSpace: Container(
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [Colors.blue.shade700, Colors.blue.shade900],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+              colors: [Color(0xFF2563EB), Color(0xFF1E40AF), Color(0xFF020617)],
+              stops: [0.0, 0.6, 1.0],
+              begin: Alignment.bottomRight,
+              end: Alignment.topLeft,
             ),
           ),
         ),
       ),
-
       // ================= BODY =================
       body: SafeArea(
         child:
@@ -299,7 +416,7 @@ class _RentalCartPreviewPageState extends State<RentalCartPreviewPage> {
                                 style: TextStyle(
                                   fontSize: 18 * scale,
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.blue.shade800,
+                                  color: Color(0xFF1E40AF),
                                 ),
                               ),
                             ],
@@ -312,13 +429,17 @@ class _RentalCartPreviewPageState extends State<RentalCartPreviewPage> {
                             width: double.infinity,
                             child: DecoratedBox(
                               decoration: BoxDecoration(
-                                gradient: LinearGradient(
+                                gradient: const LinearGradient(
                                   colors: [
-                                    Colors.blue.shade700,
-                                    Colors.blue.shade900,
+                                    Color(0xFF2563EB),
+                                    Color(0xFF1E40AF),
+                                    Color(0xFF020617),
                                   ],
+                                  stops: [0.0, 0.6, 1.0],
+                                  begin: Alignment.bottomRight,
+                                  end: Alignment.topLeft,
                                 ),
-                                borderRadius: BorderRadius.circular(20),
+                                borderRadius: BorderRadius.circular(16 * scale),
                                 boxShadow: [
                                   BoxShadow(
                                     color: Colors.blue.withOpacity(0.4),
