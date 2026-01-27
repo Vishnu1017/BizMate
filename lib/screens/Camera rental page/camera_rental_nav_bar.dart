@@ -45,6 +45,7 @@ class _CameraRentalNavBarState extends State<CameraRentalNavBar> {
   final Color _textPrimary = const Color(0xFF1A1A1A);
   final Color _textSecondary = const Color.fromARGB(255, 72, 72, 72);
   final Color _dividerColor = const Color(0xFFE0E0E0);
+  double scale = 1.0;
 
   final List<String> _titles = [
     "Camera Rental Sales",
@@ -161,7 +162,7 @@ class _CameraRentalNavBarState extends State<CameraRentalNavBar> {
                     Text(
                       _titles[_currentIndex],
                       style: TextStyle(
-                        fontSize: _scaleForWidth(screenWidth, 28),
+                        fontSize: _scaleForWidth(screenWidth, 24 * scale),
                         color: _textPrimary,
                         fontWeight: FontWeight.w800,
                         letterSpacing: -0.4,
