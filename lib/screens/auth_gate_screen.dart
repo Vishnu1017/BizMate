@@ -105,13 +105,18 @@ class AuthGateScreen extends StatelessWidget {
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         gradient: const LinearGradient(
-                          colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
+                          colors: [
+                            Color(0xFF2563EB),
+                            Color(0xFF1E40AF),
+                            Color(0xFF020617),
+                          ],
+                          stops: [0.0, 0.6, 1.0],
+                          begin: Alignment.bottomRight,
+                          end: Alignment.topLeft,
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF667EEA).withOpacity(0.3),
+                            color: const Color(0xFF1E40AF).withOpacity(0.3),
                             blurRadius: 25,
                             spreadRadius: 2,
                             offset: const Offset(0, 10),
@@ -151,7 +156,7 @@ class AuthGateScreen extends StatelessWidget {
                       child: LinearProgressIndicator(
                         backgroundColor: const Color(0xFFE2E8F0),
                         valueColor: const AlwaysStoppedAnimation<Color>(
-                          Color(0xFF667EEA),
+                          Color(0xFF1E40AF),
                         ),
                         borderRadius: BorderRadius.circular(2),
                       ),
@@ -308,7 +313,7 @@ class _PasscodeCreationScreenState extends State<PasscodeCreationScreen> {
                         BoxShadow(
                           color:
                               isFilled
-                                  ? const Color(0xFF667EEA).withOpacity(0.3)
+                                  ? const Color(0xFF1E40AF).withOpacity(0.3)
                                   : Colors.grey.withOpacity(0.2),
                           blurRadius: 10,
                           offset: const Offset(0, 5),
@@ -322,7 +327,11 @@ class _PasscodeCreationScreenState extends State<PasscodeCreationScreen> {
                       gradient:
                           isFilled
                               ? const LinearGradient(
-                                colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
+                                colors: [
+                                  Color(0xFF2563EB),
+                                  Color(0xFF1E40AF),
+                                  Color(0xFF020617),
+                                ],
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
                               )
@@ -513,18 +522,18 @@ class _PasscodeCreationScreenState extends State<PasscodeCreationScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF667EEA) : Colors.white,
+          color: isSelected ? const Color(0xFF1E40AF) : Colors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color:
-                isSelected ? const Color(0xFF667EEA) : const Color(0xFFE2E8F0),
+                isSelected ? const Color(0xFF1E40AF) : const Color(0xFFE2E8F0),
             width: 2,
           ),
           boxShadow:
               isSelected
                   ? [
                     BoxShadow(
-                      color: const Color(0xFF667EEA).withOpacity(0.2),
+                      color: const Color(0xFF1E40AF).withOpacity(0.2),
                       blurRadius: 10,
                       offset: const Offset(0, 5),
                     ),
@@ -588,8 +597,15 @@ class _PasscodeCreationScreenState extends State<PasscodeCreationScreen> {
                         height: min(80, screenWidth * 0.18),
                         decoration: const BoxDecoration(
                           shape: BoxShape.circle,
-                          gradient: LinearGradient(
-                            colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
+                          gradient: const LinearGradient(
+                            colors: [
+                              Color(0xFF2563EB),
+                              Color(0xFF1E40AF),
+                              Color(0xFF020617),
+                            ],
+                            stops: [0.0, 0.6, 1.0],
+                            begin: Alignment.bottomRight,
+                            end: Alignment.topLeft,
                           ),
                         ),
                         child: Icon(
@@ -648,7 +664,7 @@ class _PasscodeCreationScreenState extends State<PasscodeCreationScreen> {
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
                                 borderSide: const BorderSide(
-                                  color: Color(0xFF667EEA),
+                                  color: Color(0xFF1E40AF),
                                 ),
                               ),
                               suffixIcon: IconButton(
@@ -677,7 +693,7 @@ class _PasscodeCreationScreenState extends State<PasscodeCreationScreen> {
                         child: ElevatedButton(
                           onPressed: _savePasscode,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF667EEA),
+                            backgroundColor: const Color(0xFF1E40AF),
                             foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             shape: RoundedRectangleBorder(
@@ -685,7 +701,7 @@ class _PasscodeCreationScreenState extends State<PasscodeCreationScreen> {
                             ),
                             elevation: 0,
                             shadowColor: const Color(
-                              0xFF667EEA,
+                              0xFF1E40AF,
                             ).withOpacity(0.3),
                           ),
                           child: const Text(
@@ -854,7 +870,7 @@ class _EnterPasscodeScreenState extends State<EnterPasscodeScreen> {
                         BoxShadow(
                           color:
                               isFilled
-                                  ? const Color(0xFF667EEA).withOpacity(0.3)
+                                  ? const Color(0xFF1E40AF).withOpacity(0.3)
                                   : Colors.grey.withOpacity(0.2),
                           blurRadius: 10,
                           offset: const Offset(0, 5),
@@ -868,7 +884,11 @@ class _EnterPasscodeScreenState extends State<EnterPasscodeScreen> {
                       gradient:
                           isFilled
                               ? const LinearGradient(
-                                colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
+                                colors: [
+                                  Color(0xFF2563EB),
+                                  Color(0xFF1E40AF),
+                                  Color(0xFF020617),
+                                ],
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
                               )
@@ -1020,7 +1040,7 @@ class _EnterPasscodeScreenState extends State<EnterPasscodeScreen> {
                     );
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF667EEA),
+                    backgroundColor: const Color(0xFF1E40AF),
                     padding: const EdgeInsets.symmetric(
                       horizontal: 20,
                       vertical: 12,
@@ -1082,8 +1102,15 @@ class _EnterPasscodeScreenState extends State<EnterPasscodeScreen> {
                         height: min(80, screenWidth * 0.18),
                         decoration: const BoxDecoration(
                           shape: BoxShape.circle,
-                          gradient: LinearGradient(
-                            colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
+                          gradient: const LinearGradient(
+                            colors: [
+                              Color(0xFF2563EB),
+                              Color(0xFF1E40AF),
+                              Color(0xFF020617),
+                            ],
+                            stops: [0.0, 0.6, 1.0],
+                            begin: Alignment.bottomRight,
+                            end: Alignment.topLeft,
                           ),
                         ),
                         child: Icon(
@@ -1178,7 +1205,7 @@ class _EnterPasscodeScreenState extends State<EnterPasscodeScreen> {
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
                                 borderSide: const BorderSide(
-                                  color: Color(0xFF667EEA),
+                                  color: Color(0xFF1E40AF),
                                 ),
                               ),
                               suffixIcon: IconButton(
@@ -1213,15 +1240,20 @@ class _EnterPasscodeScreenState extends State<EnterPasscodeScreen> {
                             ),
                             decoration: BoxDecoration(
                               gradient: const LinearGradient(
-                                colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
+                                colors: [
+                                  Color(0xFF2563EB),
+                                  Color(0xFF1E40AF),
+                                  Color(0xFF020617),
+                                ],
+                                stops: [0.0, 0.6, 1.0],
+                                begin: Alignment.bottomRight,
+                                end: Alignment.topLeft,
                               ),
                               borderRadius: BorderRadius.circular(20),
                               boxShadow: [
                                 BoxShadow(
                                   color: const Color(
-                                    0xFF667EEA,
+                                    0xFF1E40AF,
                                   ).withOpacity(0.4),
                                   blurRadius: 30,
                                   offset: const Offset(0, 20),

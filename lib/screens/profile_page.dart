@@ -58,6 +58,8 @@ class _ProfilePageState extends State<ProfilePage>
   late Animation<double> _slideAnimation;
   double scale = 1.0;
 
+  
+
   final List<String> roles = [
     'None',
     'Photographer',
@@ -378,6 +380,25 @@ class _ProfilePageState extends State<ProfilePage>
   }
 
   Future<String?> _showPasscodeTypeDialog() async {
+    const LinearGradient pin4Gradient = LinearGradient(
+      colors: [Color(0xFF2563EB), Color(0xFF1E40AF), Color(0xFF020617)],
+      stops: [0.0, 0.6, 1.0],
+      begin: Alignment.bottomRight,
+      end: Alignment.topLeft,
+    );
+
+    const LinearGradient pin6Gradient = LinearGradient(
+      colors: [Color(0xFF10B981), Color(0xFF059669), Color(0xFF064E3B)],
+      begin: Alignment.bottomRight,
+      end: Alignment.topLeft,
+    );
+
+    const LinearGradient alphaGradient = LinearGradient(
+      colors: [Color(0xFF8B5CF6), Color(0xFF7C3AED), Color(0xFF4C1D95)],
+      begin: Alignment.bottomRight,
+      end: Alignment.topLeft,
+    );
+
     return showDialog<String>(
       context: context,
       barrierDismissible: true,
@@ -519,7 +540,8 @@ class _ProfilePageState extends State<ProfilePage>
                             title: "4-Digit PIN",
                             description: "Basic security • Quick access",
                             level: "Low",
-                            color: const Color(0xFF3B82F6),
+                            color:
+                                pin4Gradient.colors.first, // 🔵 gradient base
                             value: "pin4",
                             isRecommended: false,
                             fontSize: optionTitleFontSize,
@@ -536,7 +558,8 @@ class _ProfilePageState extends State<ProfilePage>
                             title: "6-Digit PIN",
                             description: "Enhanced security • Recommended",
                             level: "Medium",
-                            color: const Color(0xFF10B981),
+                            color:
+                                pin6Gradient.colors.first, // 🟢 gradient base
                             value: "pin6",
                             isRecommended: true,
                             fontSize: optionTitleFontSize,
@@ -553,7 +576,8 @@ class _ProfilePageState extends State<ProfilePage>
                             title: "Alphanumeric",
                             description: "Maximum security • Letters & numbers",
                             level: "High",
-                            color: const Color(0xFF8B5CF6),
+                            color:
+                                alphaGradient.colors.first, // 🟣 gradient base
                             value: "alphanumeric",
                             isRecommended: false,
                             fontSize: optionTitleFontSize,
@@ -986,10 +1010,10 @@ class _ProfilePageState extends State<ProfilePage>
                             children: [
                               // Progress indicator
                               Container(
-                                height: 2,
+                                height: 3,
                                 decoration: BoxDecoration(
                                   color: Colors.grey[200],
-                                  borderRadius: BorderRadius.circular(1),
+                                  borderRadius: BorderRadius.circular(2),
                                 ),
                                 child: FractionallySizedBox(
                                   alignment: Alignment.centerLeft,
@@ -998,18 +1022,63 @@ class _ProfilePageState extends State<ProfilePage>
                                       maxLength,
                                   child: Container(
                                     decoration: BoxDecoration(
-                                      gradient: LinearGradient(
-                                        colors: [
-                                          Theme.of(context).colorScheme.primary,
-                                          Theme.of(context).colorScheme.primary
-                                              .withOpacity(0.7),
-                                        ],
-                                      ),
-                                      borderRadius: BorderRadius.circular(1),
+                                      borderRadius: BorderRadius.circular(2),
+
+                                      // 🎯 PASSCODE TYPE BASED GRADIENT
+                                      gradient:
+                                          passcodeType == "pin4"
+                                              ? const LinearGradient(
+                                                colors: [
+                                                  Color(0xFF2563EB), // Blue 600
+                                                  Color(0xFF1E40AF), // Blue 800
+                                                ],
+                                                begin: Alignment.centerLeft,
+                                                end: Alignment.centerRight,
+                                              )
+                                              : passcodeType == "pin6"
+                                              ? const LinearGradient(
+                                                colors: [
+                                                  Color(
+                                                    0xFF10B981,
+                                                  ), // Emerald 500
+                                                  Color(
+                                                    0xFF059669,
+                                                  ), // Emerald 600
+                                                ],
+                                                begin: Alignment.centerLeft,
+                                                end: Alignment.centerRight,
+                                              )
+                                              : const LinearGradient(
+                                                colors: [
+                                                  Color(
+                                                    0xFF8B5CF6,
+                                                  ), // Violet 500
+                                                  Color(
+                                                    0xFF7C3AED,
+                                                  ), // Violet 600
+                                                ],
+                                                begin: Alignment.centerLeft,
+                                                end: Alignment.centerRight,
+                                              ),
+
+                                      // ✨ SOFT GLOW (NO BLACK)
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: (passcodeType == "pin4"
+                                                  ? const Color(0xFF2563EB)
+                                                  : passcodeType == "pin6"
+                                                  ? const Color(0xFF10B981)
+                                                  : const Color(0xFF8B5CF6))
+                                              .withOpacity(0.35),
+                                          blurRadius: 8,
+                                          spreadRadius: 1,
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ),
                               ),
+
                               const SizedBox(height: 20),
 
                               Row(
@@ -1125,22 +1194,52 @@ class _ProfilePageState extends State<ProfilePage>
                                       height: 54,
                                       decoration: BoxDecoration(
                                         borderRadius: BorderRadius.circular(12),
+
+                                        // 🎯 PASSCODE TYPE BASED GRADIENT (NO BLACK)
                                         gradient:
                                             passcodeController.text.length ==
                                                     maxLength
-                                                ? LinearGradient(
-                                                  begin: Alignment.topLeft,
-                                                  end: Alignment.bottomRight,
-                                                  colors: [
-                                                    Theme.of(
-                                                      context,
-                                                    ).colorScheme.primary,
-                                                    Theme.of(context)
-                                                        .colorScheme
-                                                        .primary
-                                                        .withGreen(50),
-                                                  ],
-                                                )
+                                                ? (passcodeType == "pin4"
+                                                    ? const LinearGradient(
+                                                      colors: [
+                                                        Color(
+                                                          0xFF2563EB,
+                                                        ), // Blue 600
+                                                        Color(
+                                                          0xFF1E40AF,
+                                                        ), // Blue 800
+                                                      ],
+                                                      begin:
+                                                          Alignment.bottomRight,
+                                                      end: Alignment.topLeft,
+                                                    )
+                                                    : passcodeType == "pin6"
+                                                    ? const LinearGradient(
+                                                      colors: [
+                                                        Color(
+                                                          0xFF10B981,
+                                                        ), // Emerald 500
+                                                        Color(
+                                                          0xFF059669,
+                                                        ), // Emerald 600
+                                                      ],
+                                                      begin:
+                                                          Alignment.bottomRight,
+                                                      end: Alignment.topLeft,
+                                                    )
+                                                    : const LinearGradient(
+                                                      colors: [
+                                                        Color(
+                                                          0xFF8B5CF6,
+                                                        ), // Violet 500
+                                                        Color(
+                                                          0xFF7C3AED,
+                                                        ), // Violet 600
+                                                      ],
+                                                      begin:
+                                                          Alignment.bottomRight,
+                                                      end: Alignment.topLeft,
+                                                    ))
                                                 : LinearGradient(
                                                   begin: Alignment.topLeft,
                                                   end: Alignment.bottomRight,
@@ -1149,18 +1248,29 @@ class _ProfilePageState extends State<ProfilePage>
                                                     Colors.grey[300]!,
                                                   ],
                                                 ),
+
+                                        // 🎯 MATCHING SOFT SHADOW (NO BLACK)
                                         boxShadow:
                                             passcodeController.text.length ==
                                                     maxLength
                                                 ? [
                                                   BoxShadow(
-                                                    color: Theme.of(context)
-                                                        .colorScheme
-                                                        .primary
-                                                        .withOpacity(0.4),
-                                                    blurRadius: 15,
-                                                    spreadRadius: 0,
-                                                    offset: const Offset(0, 4),
+                                                    color: (passcodeType ==
+                                                                "pin4"
+                                                            ? const Color(
+                                                              0xFF2563EB,
+                                                            )
+                                                            : passcodeType ==
+                                                                "pin6"
+                                                            ? const Color(
+                                                              0xFF10B981,
+                                                            )
+                                                            : const Color(
+                                                              0xFF8B5CF6,
+                                                            ))
+                                                        .withOpacity(0.35),
+                                                    blurRadius: 14,
+                                                    offset: const Offset(0, 5),
                                                   ),
                                                 ]
                                                 : [
@@ -1189,7 +1299,7 @@ class _ProfilePageState extends State<ProfilePage>
                                           ),
                                           child: Stack(
                                             children: [
-                                              // Inner highlight effect
+                                              // ✨ INNER SOFT GLOSS
                                               Positioned.fill(
                                                 child: ClipRRect(
                                                   borderRadius:
@@ -1211,7 +1321,7 @@ class _ProfilePageState extends State<ProfilePage>
                                                                 colors: [
                                                                   Colors.white
                                                                       .withOpacity(
-                                                                        0.2,
+                                                                        0.28,
                                                                       ),
                                                                   Colors
                                                                       .transparent,
@@ -1223,7 +1333,7 @@ class _ProfilePageState extends State<ProfilePage>
                                                 ),
                                               ),
 
-                                              // Content
+                                              // CONTENT
                                               Center(
                                                 child: Row(
                                                   mainAxisAlignment:
@@ -1244,28 +1354,6 @@ class _ProfilePageState extends State<ProfilePage>
                                                                 : Colors
                                                                     .grey[400]!,
                                                         letterSpacing: -0.2,
-                                                        shadows:
-                                                            passcodeController
-                                                                        .text
-                                                                        .length ==
-                                                                    maxLength
-                                                                ? [
-                                                                  Shadow(
-                                                                    color: Colors
-                                                                        .black
-                                                                        .withOpacity(
-                                                                          0.1,
-                                                                        ),
-                                                                    blurRadius:
-                                                                        2,
-                                                                    offset:
-                                                                        const Offset(
-                                                                          0,
-                                                                          1,
-                                                                        ),
-                                                                  ),
-                                                                ]
-                                                                : null,
                                                       ),
                                                     ),
                                                     const SizedBox(width: 8),

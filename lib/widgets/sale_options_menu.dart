@@ -930,7 +930,7 @@ class SaleOptionsMenu extends StatelessWidget {
               style: pw.TextStyle(
                 fontSize: 18,
                 fontWeight: pw.FontWeight.bold,
-                color: PdfColors.indigo,
+                color: PdfColor.fromInt(0xFF1E40AF),
               ),
             ),
           ),

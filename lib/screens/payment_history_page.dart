@@ -47,7 +47,7 @@ class PaymentHistoryPage extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: IconButton(
-                icon: Icon(Icons.arrow_back_rounded, color: Color(0xFF1A237E)),
+                icon: Icon(Icons.arrow_back_rounded, color: Color(0xFF1E40AF)),
                 onPressed: () => Navigator.pop(context),
               ),
             ),
@@ -55,7 +55,7 @@ class PaymentHistoryPage extends StatelessWidget {
               title: Text(
                 "Payment History",
                 style: TextStyle(
-                  color: Color(0xFF1A237E),
+                  color: Color(0xFF1E40AF),
                   fontWeight: FontWeight.bold,
                   fontSize: 16 * scale,
                 ),
@@ -166,9 +166,10 @@ class PaymentHistoryPage extends StatelessWidget {
       padding: EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
+          colors: [Color(0xFF2563EB), Color(0xFF1E40AF), Color(0xFF020617)],
+          stops: [0.0, 0.6, 1.0],
+          begin: Alignment.bottomRight,
+          end: Alignment.topLeft,
         ),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
@@ -267,7 +268,10 @@ class PaymentHistoryPage extends StatelessWidget {
           height: 20 * scale,
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
+              colors: [Color(0xFF2563EB), Color(0xFF1E40AF), Color(0xFF020617)],
+              stops: [0.0, 0.6, 1.0],
+              begin: Alignment.bottomRight,
+              end: Alignment.topLeft,
             ),
             borderRadius: BorderRadius.circular(2),
           ),
@@ -314,13 +318,22 @@ class PaymentHistoryPage extends StatelessWidget {
                 width: 20 * scale,
                 height: 20 * scale,
                 decoration: BoxDecoration(
-                  color: Color(0xFF667EEA),
-                  shape: BoxShape.circle,
+                  gradient: const LinearGradient(
+                    colors: [
+                      Color(0xFF2563EB),
+                      Color(0xFF1E40AF),
+                      Color(0xFF020617),
+                    ],
+                    stops: [0.0, 0.6, 1.0],
+                    begin: Alignment.bottomRight,
+                    end: Alignment.topLeft,
+                  ),
+                  borderRadius: BorderRadius.circular(12), // adjust if needed
                   boxShadow: [
                     BoxShadow(
-                      color: Color(0xFF667EEA).withOpacity(0.3),
+                      color: const Color(0xFF2563EB).withOpacity(0.3),
                       blurRadius: 8,
-                      offset: Offset(0, 4),
+                      offset: const Offset(0, 4),
                     ),
                   ],
                 ),
@@ -338,9 +351,13 @@ class PaymentHistoryPage extends StatelessWidget {
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
-                        Color(0xFF667EEA).withOpacity(0.6),
-                        Color(0xFF764BA2).withOpacity(0.3),
+                        Color(0xFF2563EB),
+                        Color(0xFF1E40AF),
+                        Color(0xFF020617),
                       ],
+                      stops: [0.0, 0.6, 1.0],
+                      begin: Alignment.bottomRight,
+                      end: Alignment.topLeft,
                     ),
                   ),
                 ),
@@ -364,7 +381,16 @@ class PaymentHistoryPage extends StatelessWidget {
                   Container(
                     padding: EdgeInsets.all(8 * scale),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      gradient: const LinearGradient(
+                        colors: [
+                          Color(0xFF2563EB),
+                          Color(0xFF1E40AF),
+                          Color(0xFF020617),
+                        ],
+                        stops: [0.0, 0.6, 1.0],
+                        begin: Alignment.bottomRight,
+                        end: Alignment.topLeft,
+                      ),
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
@@ -374,11 +400,7 @@ class PaymentHistoryPage extends StatelessWidget {
                         ),
                       ],
                     ),
-                    child: Icon(
-                      icon,
-                      color: Color(0xFF667EEA),
-                      size: 18 * scale,
-                    ),
+                    child: Icon(icon, color: Colors.white, size: 18 * scale),
                   ),
 
                   SizedBox(width: 10 * scale),

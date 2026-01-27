@@ -205,7 +205,7 @@ class _RentalOrdersPageState extends State<RentalOrdersPage> {
                       setState(() {});
                     },
                     child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 260),
+                      duration: const Duration(milliseconds: 250),
                       curve: Curves.easeOutCubic,
                       padding: EdgeInsets.symmetric(horizontal: 12 * scale),
                       decoration: BoxDecoration(
@@ -228,18 +228,6 @@ class _RentalOrdersPageState extends State<RentalOrdersPage> {
                                     Colors.grey.shade300,
                                   ],
                                 ),
-                        boxShadow:
-                            selected
-                                ? [
-                                  BoxShadow(
-                                    color: const Color(
-                                      0xFF2563EB,
-                                    ).withOpacity(0.35),
-                                    blurRadius: 10,
-                                    offset: const Offset(0, 4),
-                                  ),
-                                ]
-                                : [],
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -354,7 +342,7 @@ class _RentalOrdersPageState extends State<RentalOrdersPage> {
         borderRadius: BorderRadius.circular(16 * scale),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF667EEA).withOpacity(0.25),
+            color: const Color(0xFF1E40AF).withOpacity(0.25),
             blurRadius: 10 * scale,
             offset: Offset(0, 5 * scale),
           ),

@@ -251,9 +251,14 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                   height: 24 * scale,
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
-                      colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
+                      colors: [
+                        Color(0xFF2563EB),
+                        Color(0xFF1E40AF),
+                        Color(0xFF020617),
+                      ],
+                      stops: [0.0, 0.6, 1.0],
+                      begin: Alignment.bottomRight,
+                      end: Alignment.topLeft,
                     ),
                     borderRadius: BorderRadius.circular(10),
                   ),
@@ -313,13 +318,13 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                           vertical: 2,
                         ),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF667EEA).withOpacity(0.1),
+                          color: const Color(0xFF1E40AF).withOpacity(0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
                           "Save ₹${discountAmount.toStringAsFixed(2)}",
                           style: TextStyle(
-                            color: Color(0xFF667EEA),
+                            color: Color(0xFF1E40AF),
                             fontSize: 8 * scale,
                             fontWeight: FontWeight.w500,
                           ),
@@ -458,9 +463,14 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                   ),
                   decoration: const BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
+                      colors: [
+                        Color(0xFF2563EB),
+                        Color(0xFF1E40AF),
+                        Color(0xFF020617),
+                      ],
+                      stops: [0.0, 0.6, 1.0],
+                      begin: Alignment.bottomRight,
+                      end: Alignment.topLeft,
                     ),
                     borderRadius: BorderRadius.vertical(
                       top: Radius.circular(28),
@@ -563,9 +573,13 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                               decoration: BoxDecoration(
                                 gradient: const LinearGradient(
                                   colors: [
-                                    Color(0xFF667EEA),
-                                    Color(0xFF764BA2),
+                                    Color(0xFF2563EB),
+                                    Color(0xFF1E40AF),
+                                    Color(0xFF020617),
                                   ],
+                                  stops: [0.0, 0.6, 1.0],
+                                  begin: Alignment.bottomRight,
+                                  end: Alignment.topLeft,
                                 ),
                                 borderRadius: BorderRadius.circular(rs(16)),
                                 boxShadow: [
@@ -739,7 +753,7 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
     return InputDecoration(
       labelText: label,
       labelStyle: const TextStyle(
-        color: Color(0xFF667EEA),
+        color: Color(0xFF1E40AF),
         fontWeight: FontWeight.w500,
         fontSize: 15,
       ),
@@ -747,7 +761,7 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
       hintStyle: TextStyle(color: Colors.grey.shade400),
       prefixIcon: SizedBox(
         width: 56,
-        child: Icon(icon, color: const Color(0xFF667EEA), size: 22),
+        child: Icon(icon, color: const Color(0xFF1E40AF), size: 22),
       ),
       filled: true,
       fillColor: Colors.white,
@@ -763,7 +777,7 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
         borderSide: BorderSide(
-          color: const Color(0xFF667EEA).withOpacity(0.5),
+          color: const Color(0xFF1E40AF).withOpacity(0.5),
           width: 2,
         ),
       ),
@@ -837,7 +851,7 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                         suffixIcon: IconButton(
                           icon: const Icon(
                             Icons.arrow_drop_down,
-                            color: Color(0xFF667EEA),
+                            color: Color(0xFF1E40AF),
                           ),
                           onPressed: showCustomerPicker,
                         ),
@@ -938,15 +952,17 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: [
-                              const Color(0xFF667EEA).withOpacity(0.1),
-                              const Color(0xFF764BA2).withOpacity(0.1),
+                              Color(0xFF2563EB).withOpacity(0.1),
+                              Color(0xFF1E40AF).withOpacity(0.1),
+                              Color(0xFF020617).withOpacity(0.1),
                             ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
+                            stops: [0.0, 0.6, 1.0],
+                            begin: Alignment.bottomRight,
+                            end: Alignment.topLeft,
                           ),
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
-                            color: const Color(0xFF667EEA).withOpacity(0.3),
+                            color: const Color(0xFF1E40AF).withOpacity(0.3),
                             width: 1.5,
                           ),
                         ),
@@ -961,11 +977,13 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                                   decoration: BoxDecoration(
                                     gradient: const LinearGradient(
                                       colors: [
-                                        Color(0xFF667EEA),
-                                        Color(0xFF764BA2),
+                                        Color(0xFF2563EB),
+                                        Color(0xFF1E40AF),
+                                        Color(0xFF020617),
                                       ],
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
+                                      stops: [0.0, 0.6, 1.0],
+                                      begin: Alignment.bottomRight,
+                                      end: Alignment.topLeft,
                                     ),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
@@ -1002,7 +1020,7 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                             const Icon(
                               Icons.arrow_forward_ios,
                               size: 16,
-                              color: Color(0xFF667EEA),
+                              color: Color(0xFF1E40AF),
                             ),
                           ],
                         ),
@@ -1043,15 +1061,20 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                         Container(
                           decoration: BoxDecoration(
                             gradient: const LinearGradient(
-                              colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
+                              colors: [
+                                Color(0xFF2563EB),
+                                Color(0xFF1E40AF),
+                                Color(0xFF020617),
+                              ],
+                              stops: [0.0, 0.6, 1.0],
+                              begin: Alignment.bottomRight,
+                              end: Alignment.topLeft,
                             ),
                             borderRadius: BorderRadius.circular(14 * scale),
                             boxShadow: [
                               BoxShadow(
                                 color: const Color(
-                                  0xFF667EEA,
+                                  0xFF1E40AF,
                                 ).withOpacity(0.28),
                                 blurRadius: 10 * scale,
                                 offset: Offset(0, 4 * scale),
@@ -1208,13 +1231,15 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                           height: 70 * scale,
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            gradient: LinearGradient(
+                            gradient: const LinearGradient(
                               colors: [
-                                const Color(0xFF667EEA).withOpacity(0.1),
-                                const Color(0xFF764BA2).withOpacity(0.1),
+                                Color(0xFF2563EB),
+                                Color(0xFF1E40AF),
+                                Color(0xFF020617),
                               ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
+                              stops: [0.0, 0.6, 1.0],
+                              begin: Alignment.bottomRight,
+                              end: Alignment.topLeft,
                             ),
                             borderRadius: BorderRadius.circular(16),
                           ),
@@ -1234,7 +1259,7 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                                 style: TextStyle(
                                   fontSize: 18 * scale,
                                   fontWeight: FontWeight.bold,
-                                  color: const Color(0xFF667EEA),
+                                  color: const Color(0xFF1E40AF),
                                 ),
                               ),
                             ],
@@ -1250,7 +1275,7 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
             if (isLoading)
               Center(
                 child: CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation(const Color(0xFF667EEA)),
+                  valueColor: AlwaysStoppedAnimation(const Color(0xFF1E40AF)),
                 ),
               )
             else
@@ -1260,14 +1285,19 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                   height: 50 * scale,
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
-                      colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
+                      colors: [
+                        Color(0xFF2563EB),
+                        Color(0xFF1E40AF),
+                        Color(0xFF020617),
+                      ],
+                      stops: [0.0, 0.6, 1.0],
+                      begin: Alignment.bottomRight,
+                      end: Alignment.topLeft,
                     ),
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFF667EEA).withOpacity(0.4),
+                        color: const Color(0xFF1E40AF).withOpacity(0.4),
                         blurRadius: 20,
                         offset: const Offset(0, 10),
                       ),
@@ -1326,7 +1356,6 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                   ),
                 ),
               ),
-            const SizedBox(height: 20),
           ],
         ),
       ),
@@ -1378,10 +1407,15 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
             elevation: 0,
             flexibleSpace: Container(
               decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+                gradient: const LinearGradient(
+                  colors: [
+                    Color(0xFF2563EB),
+                    Color(0xFF1E40AF),
+                    Color(0xFF020617),
+                  ],
+                  stops: [0.0, 0.6, 1.0],
+                  begin: Alignment.bottomRight,
+                  end: Alignment.topLeft,
                 ),
               ),
             ),

@@ -255,11 +255,11 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
           appBar: AppBar(
             elevation: 0,
             backgroundColor: Colors.white,
-            foregroundColor: const Color(0xFF1A237E),
+            foregroundColor: const Color(0xFF1E40AF),
             title: Text(
               "Edit Sale Details",
               style: TextStyle(
-                color: const Color(0xFF1A237E),
+                color: const Color(0xFF1E40AF),
                 fontWeight: FontWeight.w600,
                 fontSize: 18 * scale,
               ),
@@ -320,7 +320,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                     ),
                                     child: Icon(
                                       Icons.receipt_long_rounded,
-                                      color: Color(0xFF1A237E),
+                                      color: Color(0xFF1E40AF),
                                       size: 20 * scale,
                                     ),
                                   ),
@@ -335,7 +335,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                           style: TextStyle(
                                             fontSize: titleSize,
                                             fontWeight: FontWeight.w600,
-                                            color: const Color(0xFF1A237E),
+                                            color: const Color(0xFF1E40AF),
                                           ),
                                         ),
                                         const SizedBox(height: 4),
@@ -391,7 +391,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                     "Total Amount",
                                     "₹${total.toStringAsFixed(2)}",
                                     Icons.currency_rupee_rounded,
-                                    const Color(0xFF1A237E),
+                                    const Color(0xFF1E40AF),
                                   ),
                                   _buildAmountItem(
                                     "Balance",
@@ -434,7 +434,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                 style: TextStyle(
                                   fontSize: 14 * scale,
                                   fontWeight: FontWeight.w600,
-                                  color: Color(0xFF1A237E),
+                                  color: Color(0xFF1E40AF),
                                 ),
                               ),
                               SizedBox(height: 12 * scale),
@@ -489,7 +489,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                 style: TextStyle(
                                   fontSize: 14 * scale,
                                   fontWeight: FontWeight.w600,
-                                  color: Color(0xFF1A237E),
+                                  color: Color(0xFF1E40AF),
                                 ),
                               ),
                               SizedBox(height: 12 * scale),
@@ -498,7 +498,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                 "Total Amount",
                                 "₹${total.toStringAsFixed(2)}",
                                 Icons.currency_rupee_rounded,
-                                const Color(0xFF1A237E),
+                                const Color(0xFF1E40AF),
                               ),
                               SizedBox(height: 12 * scale),
 
@@ -687,7 +687,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                                 color:
                                                     isSelected
                                                         ? const Color(
-                                                          0xFF1A237E,
+                                                          0xFF1E40AF,
                                                         )
                                                         : Colors.grey.shade50,
                                                 borderRadius:
@@ -696,7 +696,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                                   color:
                                                       isSelected
                                                           ? const Color(
-                                                            0xFF1A237E,
+                                                            0xFF1E40AF,
                                                           )
                                                           : Colors
                                                               .grey
@@ -713,7 +713,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                                         isSelected
                                                             ? Colors.white
                                                             : const Color(
-                                                              0xFF1A237E,
+                                                              0xFF1E40AF,
                                                             ),
                                                   ),
                                                   SizedBox(width: 6 * scale),
@@ -727,7 +727,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                                           isSelected
                                                               ? Colors.white
                                                               : const Color(
-                                                                0xFF1A237E,
+                                                                0xFF1E40AF,
                                                               ),
                                                     ),
                                                   ),
@@ -751,7 +751,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                           child: ElevatedButton(
                             onPressed: saveChanges,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF1A237E),
+                              backgroundColor: const Color(0xFF1E40AF),
                               foregroundColor: Colors.white,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(14),
@@ -899,7 +899,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                   icon,
                   size: 16 * scale,
                   color:
-                      enabled ? const Color(0xFF1A237E) : Colors.grey.shade400,
+                      enabled ? const Color(0xFF1E40AF) : Colors.grey.shade400,
                 ),
               ),
               Expanded(

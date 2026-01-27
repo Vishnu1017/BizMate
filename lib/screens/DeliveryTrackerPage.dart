@@ -70,7 +70,7 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
   ];
 
   final Map<String, Color> _statusColors = {
-    'All Non Editing Images': const Color(0xFF667EEA),
+    'All Non Editing Images': const Color(0xFF1E40AF),
     'Editing': const Color(0xFFF6AD55),
     'Printed': const Color(0xFF9F7AEA),
     'Delivered': const Color(0xFF48BB78),
@@ -526,7 +526,14 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
                     height: 46,
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
-                        colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
+                        colors: [
+                          Color(0xFF2563EB),
+                          Color(0xFF1E40AF),
+                          Color(0xFF020617),
+                        ],
+                        stops: [0.0, 0.6, 1.0],
+                        begin: Alignment.bottomRight,
+                        end: Alignment.topLeft,
                       ),
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -607,7 +614,10 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
                   ),
                   child: const Text(
                     'Close Timeline',
-                    style: TextStyle(fontWeight: FontWeight.w600),
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF1E40AF),
+                    ),
                   ),
                 ),
               ),
@@ -660,7 +670,11 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
                   gradient: LinearGradient(
                     colors:
                         isCurrent
-                            ? [const Color(0xFF667EEA), const Color(0xFF764BA2)]
+                            ? [
+                              Color(0xFF2563EB),
+                              Color(0xFF1E40AF),
+                              Color(0xFF020617),
+                            ]
                             : [Colors.grey[300]!, Colors.grey[400]!],
                   ),
                   borderRadius: BorderRadius.circular(10),
@@ -871,14 +885,19 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
             height: r.sp(56),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
-                colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFF2563EB),
+                  Color(0xFF1E40AF),
+                  Color(0xFF020617),
+                ],
+                stops: [0.0, 0.6, 1.0],
+                begin: Alignment.bottomRight,
+                end: Alignment.topLeft,
               ),
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFF667EEA).withOpacity(0.22),
+                  color: const Color(0xFF1E40AF).withOpacity(0.22),
                   blurRadius: r.sp(12),
                   spreadRadius: 1,
                 ),
@@ -984,7 +1003,7 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
     final progress = ((currentIndex + 1) / statuses.length).clamp(0.0, 1.0);
     final currentColor =
         _statusColors[_selectedStatus ?? statuses.first] ??
-        const Color(0xFF667EEA);
+        const Color(0xFF1E40AF);
 
     return Container(
       decoration: BoxDecoration(
@@ -1051,12 +1070,19 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
                     height: double.infinity,
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
-                        colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
+                        colors: [
+                          Color(0xFF2563EB),
+                          Color(0xFF1E40AF),
+                          Color(0xFF020617),
+                        ],
+                        stops: [0.0, 0.6, 1.0],
+                        begin: Alignment.bottomRight,
+                        end: Alignment.topLeft,
                       ),
                       borderRadius: BorderRadius.circular(r.sp(8)),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFF667EEA).withOpacity(0.18),
+                          color: const Color(0xFF1E40AF).withOpacity(0.18),
                           blurRadius: r.sp(10),
                           spreadRadius: 1,
                         ),
@@ -1137,7 +1163,7 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
             itemBuilder: (context, index) {
               final status = statuses[index];
               final isSelected = _selectedStatus == status;
-              final color = _statusColors[status] ?? const Color(0xFF667EEA);
+              final color = _statusColors[status] ?? const Color(0xFF1E40AF);
 
               return GestureDetector(
                 onTap: () {
@@ -1259,7 +1285,7 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
                     child: Icon(
                       Icons.auto_awesome_rounded,
                       size: r.ip(18),
-                      color: const Color(0xFF667EEA),
+                      color: const Color(0xFF1E40AF),
                     ),
                   ),
                 ),
@@ -1364,7 +1390,14 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
               child: Ink(
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
+                    colors: [
+                      Color(0xFF2563EB),
+                      Color(0xFF1E40AF),
+                      Color(0xFF020617),
+                    ],
+                    stops: [0.0, 0.6, 1.0],
+                    begin: Alignment.bottomRight,
+                    end: Alignment.topLeft,
                   ),
                   borderRadius: BorderRadius.circular(r.sp(14)),
                 ),
@@ -1473,10 +1506,11 @@ class _LargeTitleDelegate extends SliverPersistentHeaderDelegate {
 
     return Container(
       decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+        gradient: const LinearGradient(
+          colors: [Color(0xFF2563EB), Color(0xFF1E40AF), Color(0xFF020617)],
+          stops: [0.0, 0.6, 1.0],
+          begin: Alignment.bottomRight,
+          end: Alignment.topLeft,
         ),
       ),
       child: Stack(

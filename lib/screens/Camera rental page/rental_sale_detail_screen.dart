@@ -226,13 +226,13 @@ class _RentalSaleDetailScreenState extends State<RentalSaleDetailScreen> {
           appBar: AppBar(
             elevation: 0,
             backgroundColor: Colors.white,
-            foregroundColor: const Color(0xFF1A237E),
+            foregroundColor: const Color(0xFF1E40AF),
             title: Text(
               "Rental Sale Details",
               style: TextStyle(
                 fontSize: titleSize,
                 fontWeight: FontWeight.w600,
-                color: const Color(0xFF1A237E),
+                color: const Color(0xFF1E40AF),
               ),
             ),
             centerTitle: true,
@@ -267,7 +267,7 @@ class _RentalSaleDetailScreenState extends State<RentalSaleDetailScreen> {
                               widget.sale.itemName,
                               style: TextStyle(
                                 fontSize: 13 * scale,
-                                color: Color(0xFF1A237E),
+                                color: Color(0xFF1E40AF),
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -352,7 +352,7 @@ class _RentalSaleDetailScreenState extends State<RentalSaleDetailScreen> {
                         "Total Cost",
                         "₹${total.toStringAsFixed(2)}",
                         Icons.currency_rupee_rounded,
-                        const Color(0xFF1A237E),
+                        const Color(0xFF1E40AF),
                       ),
                       SizedBox(height: 12 * scale),
 
@@ -392,13 +392,13 @@ class _RentalSaleDetailScreenState extends State<RentalSaleDetailScreen> {
                                       decoration: BoxDecoration(
                                         color:
                                             isSelected
-                                                ? const Color(0xFF1A237E)
+                                                ? const Color(0xFF1E40AF)
                                                 : Colors.grey.shade50,
                                         borderRadius: BorderRadius.circular(12),
                                         border: Border.all(
                                           color:
                                               isSelected
-                                                  ? const Color(0xFF1A237E)
+                                                  ? const Color(0xFF1E40AF)
                                                   : Colors.grey.shade200,
                                         ),
                                       ),
@@ -411,7 +411,7 @@ class _RentalSaleDetailScreenState extends State<RentalSaleDetailScreen> {
                                             color:
                                                 isSelected
                                                     ? Colors.white
-                                                    : const Color(0xFF1A237E),
+                                                    : const Color(0xFF1E40AF),
                                           ),
                                           SizedBox(width: 6 * scale),
                                           Text(
@@ -422,7 +422,7 @@ class _RentalSaleDetailScreenState extends State<RentalSaleDetailScreen> {
                                               color:
                                                   isSelected
                                                       ? Colors.white
-                                                      : const Color(0xFF1A237E),
+                                                      : const Color(0xFF1E40AF),
                                             ),
                                           ),
                                         ],
@@ -445,7 +445,7 @@ class _RentalSaleDetailScreenState extends State<RentalSaleDetailScreen> {
                   child: ElevatedButton(
                     onPressed: saveChanges,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF1A237E),
+                      backgroundColor: const Color(0xFF1E40AF),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14),
                       ),
@@ -471,6 +471,7 @@ class _RentalSaleDetailScreenState extends State<RentalSaleDetailScreen> {
                     ),
                   ),
                 ),
+                SizedBox(height: 10 * scale),
               ],
             ),
           ),
@@ -501,7 +502,7 @@ class _RentalSaleDetailScreenState extends State<RentalSaleDetailScreen> {
       color: const Color(0xFFEFF6FF),
       borderRadius: BorderRadius.circular(12),
     ),
-    child: Icon(icon, color: const Color(0xFF1A237E), size: 20 * scale),
+    child: Icon(icon, color: const Color(0xFF1E40AF), size: 20 * scale),
   );
 
   Widget _sectionTitle(String title) => Text(
@@ -509,7 +510,7 @@ class _RentalSaleDetailScreenState extends State<RentalSaleDetailScreen> {
     style: TextStyle(
       fontSize: 14 * scale,
       fontWeight: FontWeight.w600,
-      color: Color(0xFF1A237E),
+      color: Color(0xFF1E40AF),
     ),
   );
 
@@ -561,7 +562,7 @@ class _RentalSaleDetailScreenState extends State<RentalSaleDetailScreen> {
                   icon,
                   size: 16 * scale,
                   color:
-                      enabled ? const Color(0xFF1A237E) : Colors.grey.shade400,
+                      enabled ? const Color(0xFF1E40AF) : Colors.grey.shade400,
                 ),
               ),
               Expanded(

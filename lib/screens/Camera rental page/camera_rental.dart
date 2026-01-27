@@ -763,7 +763,7 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
 
             SizedBox(height: 8 * scale),
             Wrap(
-              spacing: 8,
+              spacing: 12,
               runSpacing: 10,
               children: [
                 ConstrainedBox(
@@ -898,7 +898,7 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
   Widget _buildDateChip(String label, String value) {
     return Container(
       padding: EdgeInsets.symmetric(
-        horizontal: 14 * scale,
+        horizontal: 10 * scale,
         vertical: 6 * scale,
       ),
       decoration: BoxDecoration(
@@ -1216,7 +1216,7 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
             child: CircularProgressIndicator(
               strokeWidth: 3,
               valueColor: const AlwaysStoppedAnimation<Color>(
-                Color(0xFF667eea),
+                Color(0xFF1E40AF),
               ),
             ),
           ),
