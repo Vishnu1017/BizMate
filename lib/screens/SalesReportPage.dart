@@ -976,10 +976,10 @@ class _SalesReportPageState extends State<SalesReportPage> {
                     Stack(
                       children: [
                         _modernActionButton(
-                          customChild: const Text(
+                          customChild: Text(
                             "XLS",
                             style: TextStyle(
-                              fontSize: 12,
+                              fontSize: 12 * scale,
                               fontWeight: FontWeight.bold,
                               color: Colors.white,
                             ),
@@ -991,9 +991,9 @@ class _SalesReportPageState extends State<SalesReportPage> {
                                   : () => _exportToCSV(context),
                           background: Colors.green,
                         ),
-                        const Positioned(
-                          right: 3,
-                          top: 3,
+                        Positioned(
+                          right: 0 * scale,
+                          top: 0 * scale,
                           child: CircleAvatar(
                             radius: 4,
                             backgroundColor: Colors.red,
@@ -1399,7 +1399,7 @@ class _SalesReportPageState extends State<SalesReportPage> {
             const SizedBox(height: 4),
             Text(
               label,
-              style: TextStyle(color: Colors.grey[600], fontSize: 6 * scale),
+              style: TextStyle(color: Colors.grey[800], fontSize: 6 * scale),
             ),
           ],
         ),
