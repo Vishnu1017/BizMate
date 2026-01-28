@@ -32,6 +32,7 @@ class DiscountTaxWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    double scale = 1.0;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -53,7 +54,7 @@ class DiscountTaxWidget extends StatelessWidget {
                 onTap: () => onModeChange(true),
               ),
             ),
-            const SizedBox(width: 12),
+            SizedBox(width: 12 * scale),
             Expanded(
               child: _glassTextField(
                 label: "Discount ₹",
@@ -152,7 +153,6 @@ class DiscountTaxWidget extends StatelessWidget {
   }) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        // 🔒 Safe responsive scale (does NOT visually change UI)
         final double scale = (constraints.maxWidth / 360).clamp(0.95, 1.05);
 
         return Container(
@@ -165,17 +165,25 @@ class DiscountTaxWidget extends StatelessWidget {
             controller: controller,
             onTap: onTap,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            onChanged: (_) {},
             style: TextStyle(fontSize: 12 * scale, color: Colors.black87),
             decoration: InputDecoration(
+              isDense: true, // ✅ IMPORTANT
               border: InputBorder.none,
+
               labelText: label,
               labelStyle: TextStyle(fontSize: 11 * scale),
+              prefixIcon: Icon(icon, color: Colors.black87, size: 16 * scale),
+              prefixIconConstraints: BoxConstraints(
+                minWidth: 24 * scale,
+                minHeight: 26 * scale,
+              ),
+
               prefixText: prefixText,
               suffixText: suffixText,
-              prefixIcon: Icon(icon, color: Colors.black87, size: 16 * scale),
+
+              // ✅ Slightly tighter padding
               contentPadding: EdgeInsets.symmetric(
-                horizontal: 14 * scale,
+                horizontal: 12 * scale,
                 vertical: 12 * scale,
               ),
             ),

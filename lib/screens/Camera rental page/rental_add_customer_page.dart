@@ -687,9 +687,12 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
   }) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        // 🔒 SAFE responsive scale (no visual change)
         final double localScale =
             (constraints.maxWidth / 390).clamp(0.9, 1.2) * scale;
+
+        // 🔑 ONLY for Discount fields
+        final bool isCompact =
+            icon == Icons.percent || icon == Icons.currency_rupee;
 
         return Container(
           margin: EdgeInsets.symmetric(vertical: 8 * localScale),
@@ -736,13 +739,25 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
                 fontSize: 13 * localScale,
               ),
 
+              // ICON
               prefixIcon: Icon(
                 icon,
                 size: 18 * localScale,
-                color:
-                    _hasCustomers
-                        ? Colors.white.withOpacity(0.85)
-                        : Colors.white.withOpacity(0.45),
+                color: Colors.white.withOpacity(0.85),
+              ),
+
+              // 🔥 SHRINK icon box ONLY for these 2 fields
+              prefixIconConstraints: BoxConstraints(
+                minWidth: isCompact ? 30 * localScale : 42 * localScale,
+                minHeight: 28 * localScale,
+              ),
+
+              // 🔥 Reduce space between icon & text ONLY here
+              contentPadding: EdgeInsets.fromLTRB(
+                isCompact ? 6 * localScale : 16 * localScale,
+                14 * localScale,
+                16 * localScale,
+                14 * localScale,
               ),
 
               suffixText: suffixText,
@@ -759,10 +774,6 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
                 fontWeight: FontWeight.w600,
               ),
 
-              contentPadding: EdgeInsets.symmetric(
-                horizontal: 16 * localScale,
-                vertical: 14 * localScale,
-              ),
               border: InputBorder.none,
             ),
             onChanged: (value) {
@@ -1156,7 +1167,7 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
                   keyboardType: TextInputType.numberWithOptions(decimal: true),
                 ),
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: 12 * scale),
               Expanded(
                 child: _buildGlassTextField(
                   label: "Discount ₹",

@@ -702,213 +702,235 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
             isTotal: true,
           ),
           SizedBox(height: 16 * scale),
-          Row(
-            children: [
-              // ================= PRIMARY : BOOK NOW =================
-              Expanded(
-                flex: 2,
-                child: Container(
-                  height: 54 * scale,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [Colors.blue.shade700, Colors.blue.shade900],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(18),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.blue.withOpacity(0.35),
-                        blurRadius: 14,
-                        offset: const Offset(0, 6),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              // 🔒 Slightly reduced scale (safe)
+              final double buttonScale =
+                  (constraints.maxWidth / 360).clamp(0.85, 1.0) * scale;
+
+              final double buttonHeight = 46 * buttonScale;
+              final double radius = 14 * buttonScale;
+              final double iconSize = 14 * buttonScale;
+              final double textSize = 11 * buttonScale;
+
+              return Row(
+                children: [
+                  // ================= PRIMARY : BOOK NOW =================
+                  Expanded(
+                    flex: 3,
+                    child: SizedBox(
+                      height: buttonHeight,
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              Colors.blue.shade700,
+                              Colors.blue.shade900,
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(radius),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.blue.withOpacity(0.3),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          borderRadius: BorderRadius.circular(radius),
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(radius),
+                            onTap: () async {
+                              if (!_validateBooking()) return;
+
+                              final fromDT = _combineDateAndTime(
+                                fromDate!,
+                                selectedFromTime!,
+                              );
+                              final toDT = _combineDateAndTime(
+                                toDate!,
+                                selectedToTime!,
+                              );
+
+                              final result = await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder:
+                                      (_) => RentalAddCustomerPage(
+                                        rentalItem: widget.item,
+                                        noOfDays: noOfDays,
+                                        ratePerDay: widget.pricePerDay,
+                                        totalAmount: totalAmount,
+                                        fromDateTime: fromDT,
+                                        toDateTime: toDT,
+                                      ),
+                                ),
+                              );
+
+                              if (result == true) {
+                                setState(() {
+                                  _loadUserData();
+                                  calculateTotal();
+                                });
+                              }
+                            },
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.shopping_cart_checkout_rounded,
+                                  color: Colors.white,
+                                  size: iconSize,
+                                ),
+                                SizedBox(width: 6 * buttonScale),
+                                Text(
+                                  'Book Now',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: textSize,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
                       ),
-                    ],
+                    ),
                   ),
-                  child: Material(
-                    color: Colors.transparent,
-                    borderRadius: BorderRadius.circular(18),
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(18),
-                      onTap: () async {
-                        if (!_validateBooking()) return;
 
-                        final fromDT = _combineDateAndTime(
-                          fromDate!,
-                          selectedFromTime!,
-                        );
-                        final toDT = _combineDateAndTime(
-                          toDate!,
-                          selectedToTime!,
-                        );
+                  SizedBox(width: 8 * buttonScale),
 
-                        final result = await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder:
-                                (_) => RentalAddCustomerPage(
-                                  rentalItem: widget.item,
+                  // ================= SECONDARY : ADD CART =================
+                  Expanded(
+                    flex: 3,
+                    child: SizedBox(
+                      height: buttonHeight,
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: Colors.orange.shade50,
+                          borderRadius: BorderRadius.circular(radius),
+                          border: Border.all(
+                            color: Colors.orange.shade300,
+                            width: 1.2,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.orange.withOpacity(0.18),
+                              blurRadius: 8,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          borderRadius: BorderRadius.circular(radius),
+                          child: InkWell(
+                            key: _addButtonKey,
+                            borderRadius: BorderRadius.circular(radius),
+                            onTap: () {
+                              if (!_validateBooking()) return;
+
+                              final fromDT = _combineDateAndTime(
+                                fromDate!,
+                                selectedFromTime!,
+                              );
+                              final toDT = _combineDateAndTime(
+                                toDate!,
+                                selectedToTime!,
+                              );
+
+                              if (!_validateAddToCart(fromDT, toDT)) return;
+
+                              RentalCart.add(
+                                RentalCartItem(
+                                  item: widget.item,
                                   noOfDays: noOfDays,
                                   ratePerDay: widget.pricePerDay,
                                   totalAmount: totalAmount,
                                   fromDateTime: fromDT,
                                   toDateTime: toDT,
                                 ),
-                          ),
-                        );
+                              );
 
-                        if (result == true) {
-                          setState(() {
-                            _loadUserData();
-                            calculateTotal();
-                          });
-                        }
-                      },
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.shopping_cart_checkout_rounded,
-                            color: Colors.white,
-                            size: 14 * scale,
-                          ),
-                          SizedBox(width: 6 * scale),
-                          Text(
-                            'Book Now',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w700,
-                              fontSize: 10 * scale,
+                              _cartCount.value = RentalCart.items.length;
+                              _animateAddToCart();
+                              _syncAvailabilityWithCart();
+
+                              AppSnackBar.showSuccess(
+                                context,
+                                message: "Item added to cart",
+                              );
+                            },
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.add_shopping_cart_rounded,
+                                  color: Colors.orange.shade800,
+                                  size: iconSize,
+                                ),
+                                SizedBox(width: 6 * buttonScale),
+                                Text(
+                                  'Add Cart',
+                                  style: TextStyle(
+                                    color: Colors.orange.shade900,
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: textSize,
+                                  ),
+                                ),
+                              ],
                             ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  SizedBox(width: 8 * buttonScale),
+
+                  // ================= RESET =================
+                  SizedBox(
+                    width: buttonHeight,
+                    height: buttonHeight,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(radius),
+                        border: Border.all(
+                          color: Colors.grey.shade300,
+                          width: 1.1,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.08),
+                            blurRadius: 8,
+                            offset: const Offset(0, 3),
                           ),
                         ],
                       ),
-                    ),
-                  ),
-                ),
-              ),
-
-              SizedBox(width: 8 * scale),
-
-              // ================= SECONDARY : ADD ITEM =================
-              Expanded(
-                flex: 2,
-                child: Container(
-                  height: 54 * scale,
-                  decoration: BoxDecoration(
-                    color: Colors.orange.shade50,
-                    borderRadius: BorderRadius.circular(18),
-                    border: Border.all(
-                      color: Colors.orange.shade300,
-                      width: 1.4,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.orange.withOpacity(0.2),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Material(
-                    color: Colors.transparent,
-                    borderRadius: BorderRadius.circular(18),
-                    child: InkWell(
-                      key: _addButtonKey,
-                      borderRadius: BorderRadius.circular(18),
-                      onTap: () {
-                        if (!_validateBooking()) return;
-
-                        final fromDT = _combineDateAndTime(
-                          fromDate!,
-                          selectedFromTime!,
-                        );
-                        final toDT = _combineDateAndTime(
-                          toDate!,
-                          selectedToTime!,
-                        );
-
-                        if (!_validateAddToCart(fromDT, toDT)) return;
-
-                        RentalCart.add(
-                          RentalCartItem(
-                            item: widget.item,
-                            noOfDays: noOfDays,
-                            ratePerDay: widget.pricePerDay,
-                            totalAmount: totalAmount,
-                            fromDateTime: fromDT,
-                            toDateTime: toDT,
+                      child: Material(
+                        color: Colors.transparent,
+                        borderRadius: BorderRadius.circular(radius),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(radius),
+                          onTap: clearSelection,
+                          child: Icon(
+                            Icons.refresh_rounded,
+                            color: Colors.grey.shade700,
+                            size: 20 * buttonScale,
                           ),
-                        );
-
-                        _cartCount.value = RentalCart.items.length;
-                        _animateAddToCart();
-
-                        // ✅ Sync status with cart
-                        _syncAvailabilityWithCart();
-
-                        AppSnackBar.showSuccess(
-                          context,
-                          message: "Item added to cart",
-                        );
-                      },
-
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.add_shopping_cart_rounded,
-                            color: Colors.orange.shade800,
-                            size: 14 * scale,
-                          ),
-                          SizedBox(width: 6 * scale),
-                          Text(
-                            'Add Cart',
-                            style: TextStyle(
-                              color: Colors.orange.shade900,
-                              fontWeight: FontWeight.w700,
-                              fontSize: 10 * scale,
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ),
-
-              SizedBox(width: 8 * scale),
-
-              // ================= UTILITY : RESET =================
-              Container(
-                width: 54 * scale,
-                height: 54 * scale,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(18),
-                  border: Border.all(color: Colors.grey.shade300, width: 1.2),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.08),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Material(
-                  color: Colors.transparent,
-                  borderRadius: BorderRadius.circular(18),
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(18),
-                    onTap: clearSelection,
-                    child: Icon(
-                      Icons.refresh_rounded,
-                      color: Colors.grey.shade700,
-                      size: 22 * scale,
-                    ),
-                  ),
-                ),
-              ),
-            ],
+                ],
+              );
+            },
           ),
         ],
       ),
