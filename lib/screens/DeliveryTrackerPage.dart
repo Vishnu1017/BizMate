@@ -60,6 +60,7 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
   final TextEditingController _statusNotesController = TextEditingController();
   String _ownerName = '';
   String _ownerPhone = '';
+  double scale = 1.0;
 
   String? _selectedStatus;
   final List<String> statuses = [
@@ -522,8 +523,7 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
               child: Row(
                 children: [
                   Container(
-                    width: 46,
-                    height: 46,
+                    padding: EdgeInsets.all(10 * scale),
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
                         colors: [
@@ -537,17 +537,18 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
                       ),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.timeline_rounded,
                       color: Colors.white,
+                      size: 16 * scale,
                     ),
                   ),
                   const SizedBox(width: 12),
-                  const Expanded(
+                  Expanded(
                     child: Text(
                       'Delivery Timeline',
                       style: TextStyle(
-                        fontSize: 20,
+                        fontSize: 16 * scale,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -560,7 +561,7 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
                 ],
               ),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8 * scale),
             Expanded(
               child:
                   deliveryStatusHistory.isEmpty
@@ -610,7 +611,7 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),
                     ),
-                    side: BorderSide(color: Colors.grey[200]!),
+                    side: BorderSide(color: Colors.black.withOpacity(0.5)),
                   ),
                   child: const Text(
                     'Close Timeline',
@@ -664,8 +665,7 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
           Column(
             children: [
               Container(
-                width: 42,
-                height: 42,
+                padding: EdgeInsets.all(6 * scale),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors:
@@ -683,14 +683,14 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
                   child: Icon(
                     isCurrent ? Icons.check_rounded : Icons.circle_rounded,
                     color: Colors.white,
-                    size: isCurrent ? 20 : 12,
+                    size: 16 * scale,
                   ),
                 ),
               ),
               if (index < deliveryStatusHistory.length - 1)
                 Container(
-                  width: 2,
-                  height: 48,
+                  width: 2 * scale,
+                  height: 48 * scale,
                   color: Colors.grey[200],
                   margin: const EdgeInsets.only(top: 8),
                 ),
@@ -706,27 +706,27 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
                     Expanded(
                       child: Text(
                         status['status'] ?? 'Status',
-                        style: const TextStyle(
-                          fontSize: 15,
+                        style: TextStyle(
+                          fontSize: 13 * scale,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
                     ),
                     if (isCurrent)
                       Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 8 * scale,
+                          vertical: 2 * scale,
                         ),
                         decoration: BoxDecoration(
                           color: const Color(0xFF48BB78),
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: const Text(
+                        child: Text(
                           'Current',
                           style: TextStyle(
                             color: Colors.white,
-                            fontSize: 12,
+                            fontSize: 10 * scale,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -738,13 +738,16 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
                   children: [
                     Icon(
                       Icons.calendar_today_rounded,
-                      size: 14,
+                      size: 12 * scale,
                       color: Colors.grey[500],
                     ),
                     const SizedBox(width: 6),
                     Text(
                       '$formattedDate • $formattedTime',
-                      style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+                      style: TextStyle(
+                        fontSize: 11 * scale,
+                        color: Colors.grey[600],
+                      ),
                     ),
                   ],
                 ),
@@ -753,16 +756,16 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
                   const SizedBox(height: 12),
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.all(12),
+                    padding: EdgeInsets.all(8 * scale),
                     decoration: BoxDecoration(
-                      color: Colors.grey[50],
+                      color: Colors.grey[40],
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(color: Colors.grey[100]!),
                     ),
                     child: Text(
                       status['notes'],
-                      style: const TextStyle(
-                        fontSize: 14,
+                      style: TextStyle(
+                        fontSize: 12 * scale,
                         color: Colors.black87,
                       ),
                     ),
@@ -1552,8 +1555,12 @@ class _LargeTitleDelegate extends SliverPersistentHeaderDelegate {
             left: 12,
             top: 12,
             child: _circleButton(
-              icon: Icon(Icons.arrow_back, color: Colors.black87, size: 22),
-              onTap: onBack,
+              icon: Icon(
+                Icons.arrow_back,
+                color: Colors.black,
+                size: 20 * scale,
+              ),
+              onTap: () => Navigator.pop(context),
             ),
           ),
 
@@ -1565,7 +1572,7 @@ class _LargeTitleDelegate extends SliverPersistentHeaderDelegate {
               icon: HugeIcon(
                 icon: HugeIcons.strokeRoundedTransactionHistory,
                 color: Colors.black87,
-                size: 22,
+                size: 20 * scale,
               ),
               onTap: onHistory,
             ),
@@ -1576,23 +1583,35 @@ class _LargeTitleDelegate extends SliverPersistentHeaderDelegate {
   }
 
   Widget _circleButton({required Widget icon, required VoidCallback onTap}) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 44,
-        height: 44,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.08),
-              blurRadius: 10,
-              spreadRadius: 1,
-            ),
-          ],
+    return Material(
+      color: Colors.transparent,
+      shape: const CircleBorder(),
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: onTap,
+        splashColor: Colors.black.withOpacity(0.08),
+        highlightColor: Colors.black.withOpacity(0.05),
+        child: Container(
+          width: 35 * scale,
+          height: 35 * scale,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: Colors.white,
+
+            // ✅ SUBTLE BORDER (clean & visible)
+            border: Border.all(color: Colors.black.withOpacity(0.08), width: 1),
+
+            // ✅ SOFT ELEVATION
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.12),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Center(child: icon),
         ),
-        child: Center(child: icon),
       ),
     );
   }
@@ -1602,6 +1621,7 @@ class _LargeTitleDelegate extends SliverPersistentHeaderDelegate {
 
   @override
   double get minExtent => kToolbarHeight + 12;
+  double scale = 1.0;
 
   @override
   bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) {

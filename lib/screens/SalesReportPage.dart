@@ -37,6 +37,7 @@ class _SalesReportPageState extends State<SalesReportPage> {
   DateRangePreset? selectedPreset;
   bool _isLoadingPdf = false;
   bool _isLoadingCsv = false;
+  double scale = 1.0;
 
   // Overlay & target
   final GlobalKey _filterKey = GlobalKey();
@@ -47,29 +48,15 @@ class _SalesReportPageState extends State<SalesReportPage> {
   final ScrollController _scrollController = ScrollController();
   LinearGradient getProgressGradient(double percentage) {
     if (percentage <= 20) {
-      return const LinearGradient(
-        begin: Alignment.centerLeft,
-        end: Alignment.centerRight,
-        colors: [Color(0xFFE53935), Color(0xFFD32F2F)],
-      );
+      return LinearGradient(colors: [Color(0xFFE53935), Color(0xFFD32F2F)]);
     } else if (percentage <= 50) {
-      return const LinearGradient(
-        begin: Alignment.centerLeft,
-        end: Alignment.centerRight,
-        colors: [Color(0xFFE53935), Color(0xFFFFA726)],
-      );
+      return LinearGradient(colors: [Color(0xFFE53935), Color(0xFFFFA726)]);
     } else if (percentage <= 75) {
-      return const LinearGradient(
-        begin: Alignment.centerLeft,
-        end: Alignment.centerRight,
+      return LinearGradient(
         colors: [Color(0xFFFFA726), Color(0xFFFFEB3B), Color(0xFF66BB6A)],
       );
     } else {
-      return const LinearGradient(
-        begin: Alignment.centerLeft,
-        end: Alignment.centerRight,
-        colors: [Color(0xFF66BB6A), Color(0xFF2E7D32)],
-      );
+      return LinearGradient(colors: [Color(0xFF66BB6A), Color(0xFF2E7D32)]);
     }
   }
 
@@ -961,11 +948,7 @@ class _SalesReportPageState extends State<SalesReportPage> {
                 top: MediaQuery.of(context).padding.top + 8,
                 left: 12,
                 child: _modernCircleButton(
-                  customIcon: Icon(
-                    Icons.arrow_back,
-                    color: Colors.white,
-                    size: 30,
-                  ),
+                  customIcon: Icon(Icons.arrow_back),
                   onTap: () => Navigator.pop(context),
                 ),
               ),
@@ -1038,12 +1021,12 @@ class _SalesReportPageState extends State<SalesReportPage> {
 
     return SliverToBoxAdapter(
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(12 * scale),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: const BorderRadius.only(
-            bottomLeft: Radius.circular(24),
-            bottomRight: Radius.circular(24),
+          borderRadius: BorderRadius.only(
+            bottomLeft: Radius.circular(18 * scale),
+            bottomRight: Radius.circular(18 * scale),
           ),
           boxShadow: [
             BoxShadow(
@@ -1060,9 +1043,9 @@ class _SalesReportPageState extends State<SalesReportPage> {
                 GestureDetector(
                   onTap: () => _showCustomDateRange(context),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 8,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 8 * scale,
+                      vertical: 6 * scale,
                     ),
                     decoration: BoxDecoration(
                       color: Colors.blue[50],
@@ -1072,15 +1055,15 @@ class _SalesReportPageState extends State<SalesReportPage> {
                       children: [
                         Icon(
                           Icons.calendar_today,
-                          size: 16,
+                          size: 12 * scale,
                           color: Colors.blue[800],
                         ),
-                        const SizedBox(width: 4),
+                        SizedBox(width: 4 * scale),
                         Text(
                           getFormattedRange(),
                           style: TextStyle(
                             color: Colors.blue[800],
-                            fontSize: 12,
+                            fontSize: 8 * scale,
                           ),
                         ),
                       ],
@@ -1093,9 +1076,9 @@ class _SalesReportPageState extends State<SalesReportPage> {
                   key: _filterKey,
                   onTap: _isDropdownOpen ? _removeOverlay : _showOverlay,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 6,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 8 * scale,
+                      vertical: 6 * scale,
                     ),
                     decoration: BoxDecoration(
                       color: Colors.blue[50],
@@ -1106,13 +1089,14 @@ class _SalesReportPageState extends State<SalesReportPage> {
                         Icon(
                           Icons.tune_rounded,
                           color: Colors.blue[800],
-                          size: 18,
+                          size: 12 * scale,
                         ),
                         Icon(
                           _isDropdownOpen
                               ? Icons.arrow_drop_up
                               : Icons.arrow_drop_down,
                           color: Colors.blue[800],
+                          size: 12 * scale,
                         ),
                       ],
                     ),
@@ -1172,7 +1156,7 @@ class _SalesReportPageState extends State<SalesReportPage> {
               'CUSTOMER TRANSACTIONS',
               style: TextStyle(
                 color: Colors.grey[600],
-                fontSize: 12,
+                fontSize: 10 * scale,
                 fontWeight: FontWeight.bold,
                 letterSpacing: 0.5,
               ),
@@ -1180,7 +1164,7 @@ class _SalesReportPageState extends State<SalesReportPage> {
             const Spacer(),
             Text(
               '${customerMap.length} records',
-              style: TextStyle(color: Colors.grey[500], fontSize: 12),
+              style: TextStyle(color: Colors.grey[500], fontSize: 10 * scale),
             ),
           ],
         ),
@@ -1205,7 +1189,10 @@ class _SalesReportPageState extends State<SalesReportPage> {
     final phoneNumber = _getPhoneNumber(customerKey);
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: EdgeInsets.symmetric(
+        horizontal: 12 * scale,
+        vertical: 6 * scale,
+      ),
       child: Material(
         borderRadius: BorderRadius.circular(16),
         elevation: 2,
@@ -1218,14 +1205,19 @@ class _SalesReportPageState extends State<SalesReportPage> {
             children: [
               ListTile(
                 leading: CircleAvatar(
+                  radius: 16 * scale, // 👈 controls background size
                   backgroundColor: Colors.blue[50],
-                  child: Icon(Icons.person, color: Colors.blue[800]),
+                  child: Icon(
+                    Icons.person,
+                    color: Colors.blue[800],
+                    size: 14 * scale,
+                  ),
                 ),
                 title: Text(
                   customerName,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    fontSize: 16,
+                    fontSize: 14 * scale,
                   ),
                 ),
                 subtitle: Column(
@@ -1233,19 +1225,25 @@ class _SalesReportPageState extends State<SalesReportPage> {
                   children: [
                     Text(
                       '${transactions.length} transactions',
-                      style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 10 * scale,
+                      ),
                     ),
                     if (phoneNumber.isNotEmpty)
                       Text(
                         phoneNumber,
-                        style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontSize: 10 * scale,
+                        ),
                       ),
                   ],
                 ),
                 trailing: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 6 * scale,
+                    vertical: 2 * scale,
                   ),
                   decoration: BoxDecoration(
                     color: balance > 0 ? Colors.red[50] : Colors.green[50],
@@ -1258,12 +1256,13 @@ class _SalesReportPageState extends State<SalesReportPage> {
                     style: TextStyle(
                       color: balance > 0 ? Colors.red[800] : Colors.green[800],
                       fontWeight: FontWeight.bold,
+                      fontSize: 10 * scale,
                     ),
                   ),
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: EdgeInsets.symmetric(horizontal: 14 * scale),
                 child: _gradientProgressBar(paid: paid, total: total),
               ),
 
@@ -1275,18 +1274,24 @@ class _SalesReportPageState extends State<SalesReportPage> {
                   children: [
                     Text(
                       '$paidPercentage% Paid',
-                      style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 10 * scale,
+                      ),
                     ),
                     Text(
                       DateFormat('dd MMM, yy').format(sale.dateTime),
-                      style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 10 * scale,
+                      ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: 10 * scale),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: EdgeInsets.symmetric(horizontal: 14 * scale),
                 child: Row(
                   children: [
                     Expanded(
@@ -1297,15 +1302,15 @@ class _SalesReportPageState extends State<SalesReportPage> {
                             'TOTAL AMOUNT',
                             style: TextStyle(
                               color: Colors.grey[500],
-                              fontSize: 10,
+                              fontSize: 8 * scale,
                             ),
                           ),
-                          const SizedBox(height: 4),
+                          SizedBox(height: 4 * scale),
                           Text(
                             currencyFormat.format(total),
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontWeight: FontWeight.bold,
-                              fontSize: 16,
+                              fontSize: 14 * scale,
                             ),
                           ),
                         ],
@@ -1319,7 +1324,7 @@ class _SalesReportPageState extends State<SalesReportPage> {
                             'LAST PAYMENT',
                             style: TextStyle(
                               color: Colors.grey[500],
-                              fontSize: 10,
+                              fontSize: 8 * scale,
                             ),
                           ),
                           const SizedBox(height: 4),
@@ -1327,7 +1332,7 @@ class _SalesReportPageState extends State<SalesReportPage> {
                             currencyFormat.format(paid),
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
-                              fontSize: 16,
+                              fontSize: 14 * scale,
                               color: Colors.green[800],
                             ),
                           ),
@@ -1353,7 +1358,7 @@ class _SalesReportPageState extends State<SalesReportPage> {
   }) {
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.all(12),
+        padding: EdgeInsets.all(8 * scale),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
@@ -1367,25 +1372,26 @@ class _SalesReportPageState extends State<SalesReportPage> {
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween, // ✅ key
           children: [
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(4),
+                  padding: EdgeInsets.all(4 * scale),
                   decoration: BoxDecoration(
                     color: color.withOpacity(0.2),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(icon, size: 16, color: color),
+                  child: Icon(icon, size: 12 * scale, color: color),
                 ),
                 const Spacer(),
               ],
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 6 * scale),
             Text(
               value,
               style: TextStyle(
-                fontSize: 16,
+                fontSize: 10 * scale,
                 fontWeight: FontWeight.bold,
                 color: color,
               ),
@@ -1393,7 +1399,7 @@ class _SalesReportPageState extends State<SalesReportPage> {
             const SizedBox(height: 4),
             Text(
               label,
-              style: TextStyle(color: Colors.grey[600], fontSize: 10),
+              style: TextStyle(color: Colors.grey[600], fontSize: 6 * scale),
             ),
           ],
         ),
@@ -1444,23 +1450,38 @@ class _SalesReportPageState extends State<SalesReportPage> {
     Widget? customIcon,
     required VoidCallback onTap,
   }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(40),
-      child: Container(
-        padding: const EdgeInsets.all(4),
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.18),
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.12),
-              blurRadius: 8,
-              offset: const Offset(0, 3),
-            ),
-          ],
+    return Material(
+      color: Colors.transparent,
+      shape: const CircleBorder(),
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: onTap,
+        splashColor: Colors.black.withOpacity(0.08),
+        highlightColor: Colors.black.withOpacity(0.05),
+        child: Container(
+          width: 35 * scale,
+          height: 35 * scale,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: Colors.white,
+
+            // ✅ subtle border (same as your reference)
+            border: Border.all(color: Colors.black.withOpacity(0.08), width: 1),
+
+            // ✅ soft elevation
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.12),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Center(
+            child:
+                customIcon ?? Icon(icon, color: Colors.black, size: 20 * scale),
+          ),
         ),
-        child: customIcon ?? Icon(icon, color: Colors.white, size: 30),
       ),
     );
   }
@@ -1476,11 +1497,11 @@ class _SalesReportPageState extends State<SalesReportPage> {
       onTap: onTap,
       borderRadius: BorderRadius.circular(14),
       child: Container(
-        height: 34,
-        padding: const EdgeInsets.symmetric(horizontal: 14),
+        height: 35 * scale,
+        padding: EdgeInsets.symmetric(horizontal: 8 * scale),
         decoration: BoxDecoration(
           color: background.withOpacity(0.26),
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(8),
           border: Border.all(color: Colors.white54, width: 1),
           boxShadow: [
             BoxShadow(
@@ -1493,15 +1514,16 @@ class _SalesReportPageState extends State<SalesReportPage> {
         child: Center(
           child:
               loading
-                  ? const SizedBox(
-                    height: 14,
-                    width: 14,
+                  ? SizedBox(
+                    height: 10 * scale,
+                    width: 10 * scale,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
                       color: Colors.white,
                     ),
                   )
-                  : (customChild ?? Icon(icon, color: Colors.white, size: 18)),
+                  : (customChild ??
+                      Icon(icon, color: Colors.white, size: 20 * scale)),
         ),
       ),
     );

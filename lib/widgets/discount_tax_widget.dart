@@ -150,29 +150,38 @@ class DiscountTaxWidget extends StatelessWidget {
     String? suffixText,
     VoidCallback? onTap,
   }) {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        color: Colors.grey.shade200.withOpacity(0.3),
-        border: Border.all(color: Colors.grey.shade400, width: 1),
-      ),
-      child: TextFormField(
-        controller: controller,
-        onTap: onTap,
-        keyboardType: const TextInputType.numberWithOptions(decimal: true),
-        onChanged: (_) {},
-        decoration: InputDecoration(
-          border: InputBorder.none,
-          labelText: label,
-          prefixText: prefixText,
-          suffixText: suffixText,
-          prefixIcon: Icon(icon, color: Colors.black87),
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 14,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // 🔒 Safe responsive scale (does NOT visually change UI)
+        final double scale = (constraints.maxWidth / 360).clamp(0.95, 1.05);
+
+        return Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12 * scale),
+            color: Colors.grey.shade200.withOpacity(0.3),
+            border: Border.all(color: Colors.grey.shade400, width: 1),
           ),
-        ),
-      ),
+          child: TextFormField(
+            controller: controller,
+            onTap: onTap,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            onChanged: (_) {},
+            style: TextStyle(fontSize: 12 * scale, color: Colors.black87),
+            decoration: InputDecoration(
+              border: InputBorder.none,
+              labelText: label,
+              labelStyle: TextStyle(fontSize: 11 * scale),
+              prefixText: prefixText,
+              suffixText: suffixText,
+              prefixIcon: Icon(icon, color: Colors.black87, size: 16 * scale),
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 14 * scale,
+                vertical: 12 * scale,
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 

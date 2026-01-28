@@ -46,6 +46,29 @@ class _RentalCartPreviewPageState extends State<RentalCartPreviewPage> {
         centerTitle: true,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
+        leading: IconButton(
+          onPressed: () => Navigator.pop(context),
+          icon: Container(
+            width: 35 * scale,
+            height: 35 * scale,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.white.withOpacity(0.2),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Icon(
+              Icons.arrow_back,
+              color: Colors.white,
+              size: 20 * scale,
+            ),
+          ),
+        ),
         title: const Text(
           "Rental Cart",
           style: TextStyle(
@@ -297,7 +320,7 @@ class _RentalCartPreviewPageState extends State<RentalCartPreviewPage> {
                                               icon: Icon(
                                                 Icons.delete_outline,
                                                 color: Colors.redAccent,
-                                                size: 16 * scale,
+                                                size: 18 * scale,
                                               ),
                                             ),
                                           ],

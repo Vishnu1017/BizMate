@@ -35,6 +35,7 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
+  double scale = 1.0;
 
   final List<String> _categories = [
     'Camera',
@@ -559,8 +560,8 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
                 leading: IconButton(
                   onPressed: () => Navigator.pop(context),
                   icon: Container(
-                    width: isDesktop ? 45 : (isTablet ? 40 : 35),
-                    height: isDesktop ? 45 : (isTablet ? 40 : 35),
+                    width: 35 * scale,
+                    height: 35 * scale,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: Colors.white.withOpacity(0.2),
@@ -575,7 +576,7 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
                     child: Icon(
                       Icons.arrow_back,
                       color: Colors.white,
-                      size: isDesktop ? 28 : (isTablet ? 26 : 24),
+                      size: 20 * scale,
                     ),
                   ),
                 ),

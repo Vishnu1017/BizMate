@@ -283,25 +283,41 @@ class _CameraRentalNavBarState extends State<CameraRentalNavBar> {
   }
 
   Widget _buildBackButton(double screenWidth) {
+    final double size = _scaleForWidth(screenWidth, 44);
+
     return Tooltip(
       message: 'Back',
       child: Material(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(12),
+        shape: const CircleBorder(),
         child: InkWell(
-          borderRadius: BorderRadius.circular(12),
+          customBorder: const CircleBorder(),
           onTap: () => Navigator.pop(context),
           child: Container(
-            width: _scaleForWidth(screenWidth, 44),
-            height: _scaleForWidth(screenWidth, 44),
+            width: size,
+            height: size,
             decoration: BoxDecoration(
-              color: _backgroundColor,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: _dividerColor),
+              shape: BoxShape.circle,
+              color: Colors.white.withOpacity(0.8),
+
+              // ✅ BORDER (clearly visible)
+              border: Border.all(
+                color: Colors.black.withOpacity(0.5),
+                width: 1.2,
+              ),
+
+              // ✅ SOFT SHADOW
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.3),
+                  blurRadius: 10,
+                  offset: const Offset(0, 0),
+                ),
+              ],
             ),
             child: Icon(
               Icons.arrow_back,
-              color: _textSecondary,
+              color: Colors.black,
               size: _scaleForWidth(screenWidth, 20),
             ),
           ),

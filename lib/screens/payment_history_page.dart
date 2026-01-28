@@ -40,15 +40,27 @@ class PaymentHistoryPage extends StatelessWidget {
             pinned: true,
             backgroundColor: Colors.white,
             elevation: 0,
-            leading: Container(
-              margin: EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.grey[50],
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: IconButton(
-                icon: Icon(Icons.arrow_back_rounded, color: Color(0xFF1E40AF)),
-                onPressed: () => Navigator.pop(context),
+            leading: IconButton(
+              onPressed: () => Navigator.pop(context),
+              icon: Container(
+                width: 35 * scale,
+                height: 35 * scale,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.grey.withOpacity(0.1),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.1),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Icon(
+                  Icons.arrow_back,
+                  color: Color(0xFF1E40AF),
+                  size: 20 * scale,
+                ),
               ),
             ),
             flexibleSpace: FlexibleSpaceBar(
@@ -199,28 +211,27 @@ class PaymentHistoryPage extends StatelessWidget {
           SizedBox(height: 16 * scale),
           // Progress Bar
           Container(
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.3),
-              borderRadius: BorderRadius.circular(4),
-            ),
-            child: Stack(
-              children: [
-                LayoutBuilder(
-                  builder: (context, constraints) {
-                    return AnimatedContainer(
-                      duration: Duration(milliseconds: 800),
-                      curve: Curves.easeOut,
-                      width: constraints.maxWidth * (paidPercentage / 100),
-                      decoration: BoxDecoration(
-                        gradient: getProgressGradient(paidPercentage),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                    );
-                  },
-                ),
-              ],
+            height: 8 * scale,
+            decoration: BoxDecoration(borderRadius: BorderRadius.circular(4)),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return Align(
+                  alignment: Alignment.centerLeft, // ✅ force start from left
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 800),
+                    curve: Curves.easeOut,
+                    width: constraints.maxWidth * (paidPercentage / 100),
+                    height: 8 * scale,
+                    decoration: BoxDecoration(
+                      gradient: getProgressGradient(paidPercentage),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                );
+              },
             ),
           ),
+
           SizedBox(height: 8 * scale),
           // Percentage
           Text(

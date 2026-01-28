@@ -821,8 +821,9 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
             ),
           ],
         ),
-
+        SizedBox(height: 8 * scale),
         Container(
+          height: 8 * scale,
           decoration: BoxDecoration(
             color: Colors.grey.shade200,
             borderRadius: BorderRadius.circular(10),
@@ -840,7 +841,7 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
           ),
         ),
 
-        SizedBox(height: 10 * scale),
+        SizedBox(height: 8 * scale),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [

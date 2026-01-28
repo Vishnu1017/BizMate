@@ -958,22 +958,27 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
             pinned: true,
             backgroundColor: Colors.white,
             elevation: 0,
-            leading: Container(
-              margin: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: IconButton(
-                icon: const Icon(Icons.arrow_back, size: 22),
-                onPressed: () => Navigator.pop(context),
+            leading: IconButton(
+              onPressed: () => Navigator.pop(context),
+              icon: Container(
+                width: 35 * scale,
+                height: 35 * scale,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Icon(
+                  Icons.arrow_back,
+                  color: Colors.black,
+                  size: 20 * scale,
+                ),
               ),
             ),
             flexibleSpace: FlexibleSpaceBar(
