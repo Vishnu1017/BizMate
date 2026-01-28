@@ -278,7 +278,7 @@ class _ModernCalendarState extends State<ModernCalendar> {
                     : null,
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 220),
-              margin: EdgeInsets.all(4 * scale),
+              margin: EdgeInsets.all(2 * scale),
               decoration:
                   _isSelected(date)
                       ? BoxDecoration(
@@ -290,7 +290,7 @@ class _ModernCalendarState extends State<ModernCalendar> {
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(10),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.blue.withOpacity(0.35),
@@ -302,7 +302,7 @@ class _ModernCalendarState extends State<ModernCalendar> {
                       : _isInRange(date)
                       ? BoxDecoration(
                         color: Colors.blue.shade100.withOpacity(0.55),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(10),
                       )
                       : _isToday(date)
                       ? BoxDecoration(
@@ -310,14 +310,14 @@ class _ModernCalendarState extends State<ModernCalendar> {
                           color: Colors.orange.shade400,
                           width: 1.4,
                         ),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(10),
                       )
-                      : BoxDecoration(borderRadius: BorderRadius.circular(8)),
+                      : BoxDecoration(borderRadius: BorderRadius.circular(10)),
               child: Center(
                 child: Text(
                   date.day.toString(),
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: 14 * scale,
                     fontWeight:
                         _isSelected(date) ? FontWeight.bold : FontWeight.w500,
                     color: _isSelected(date) ? Colors.white : Colors.black87,
