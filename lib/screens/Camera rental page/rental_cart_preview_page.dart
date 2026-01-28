@@ -101,7 +101,7 @@ class _RentalCartPreviewPageState extends State<RentalCartPreviewPage> {
                           filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                           child: Container(
                             width: MediaQuery.of(ctx).size.width * 0.85,
-                            padding: const EdgeInsets.all(24),
+                            padding: EdgeInsets.all(20 * scale),
                             decoration: BoxDecoration(
                               color: Colors.white.withOpacity(0.15),
                               borderRadius: BorderRadius.circular(24),
@@ -258,7 +258,7 @@ class _RentalCartPreviewPageState extends State<RentalCartPreviewPage> {
                               ],
                             ),
                             child: Padding(
-                              padding: EdgeInsets.all(14 * scale),
+                              padding: EdgeInsets.all(10 * scale),
                               child: Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
