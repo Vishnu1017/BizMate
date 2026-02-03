@@ -6,6 +6,7 @@ import 'package:bizmate/widgets/app_snackbar.dart' show AppSnackBar;
 import 'package:bizmate/widgets/modern_calendar_range.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:intl/intl.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:path_provider/path_provider.dart';
@@ -23,6 +24,9 @@ enum DateRangePreset {
   custom,
 }
 
+// ✅ ADD THIS JUST BELOW (OR ABOVE) IT
+enum DownloadType { pdf, xls }
+
 class SalesReportPage extends StatefulWidget {
   final List<Sale> sales;
 
@@ -38,6 +42,7 @@ class _SalesReportPageState extends State<SalesReportPage> {
   bool _isLoadingPdf = false;
   bool _isLoadingCsv = false;
   double scale = 1.0;
+  double _downloadButtonWidth = 0;
 
   // Overlay & target
   final GlobalKey _filterKey = GlobalKey();
@@ -58,6 +63,70 @@ class _SalesReportPageState extends State<SalesReportPage> {
     } else {
       return LinearGradient(colors: [Color(0xFF66BB6A), Color(0xFF2E7D32)]);
     }
+  }
+
+  void _showDownloadMenu(BuildContext context) {
+    final RenderBox button = context.findRenderObject() as RenderBox;
+    final Offset buttonPosition = button.localToGlobal(Offset.zero);
+    final Size buttonSize = button.size;
+
+    final RelativeRect position = RelativeRect.fromLTRB(
+      buttonPosition.dx,
+      buttonPosition.dy + buttonSize.height, // 👈 BELOW the button
+      buttonPosition.dx + buttonSize.width,
+      0,
+    );
+
+    showMenu<DownloadType>(
+      context: context,
+      position: position,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      items: [
+        _compactDownloadItem(value: DownloadType.pdf, label: "PDF"),
+        _compactDownloadItem(value: DownloadType.xls, label: "XLS"),
+      ],
+    ).then((value) async {
+      if (value == null) return;
+
+      final sales = getFilteredSales();
+
+      if (value == DownloadType.pdf) {
+        await _generateAndSavePdf(context, sales);
+      } else if (value == DownloadType.xls) {
+        await _exportToCSV(context);
+      }
+    });
+  }
+
+  PopupMenuItem<DownloadType> _compactDownloadItem({
+    required DownloadType value,
+    required String label,
+  }) {
+    return PopupMenuItem<DownloadType>(
+      value: value,
+      height: 32 * scale,
+      child: SizedBox(
+        width: _downloadButtonWidth, // 🔥 SAME AS BUTTON
+        child: Row(
+          mainAxisSize: MainAxisSize.max,
+          children: [
+            HugeIcon(
+              icon: HugeIcons.strokeRoundedDownload01,
+              color: Colors.black87,
+              size: 12 * scale,
+            ),
+            SizedBox(width: 6 * scale),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11 * scale,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -958,50 +1027,31 @@ class _SalesReportPageState extends State<SalesReportPage> {
               // ------------------------------
               Positioned(
                 top: MediaQuery.of(context).padding.top + 8,
-                right: 12,
-                child: Row(
-                  children: [
-                    _modernActionButton(
-                      icon: Icons.picture_as_pdf,
-                      loading: _isLoadingPdf,
-                      onTap:
-                          _isLoadingPdf
-                              ? null
-                              : () async {
-                                final sales = getFilteredSales();
-                                await _generateAndSavePdf(context, sales);
-                              },
-                    ),
-                    const SizedBox(width: 10),
-                    Stack(
-                      children: [
-                        _modernActionButton(
-                          customChild: Text(
-                            "XLS",
-                            style: TextStyle(
-                              fontSize: 12 * scale,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                          loading: _isLoadingCsv,
+                right: 14,
+                child: Builder(
+                  builder: (btnContext) {
+                    final isLoading = _isLoadingPdf || _isLoadingCsv;
+
+                    return LayoutBuilder(
+                      builder: (context, constraints) {
+                        _downloadButtonWidth =
+                            constraints.maxWidth; // 👈 capture width
+
+                        return _modernActionButton(
+                          loading: isLoading,
                           onTap:
-                              _isLoadingCsv
+                              isLoading
                                   ? null
-                                  : () => _exportToCSV(context),
-                          background: Colors.green,
-                        ),
-                        Positioned(
-                          right: 0 * scale,
-                          top: 0 * scale,
-                          child: CircleAvatar(
-                            radius: 4,
-                            backgroundColor: Colors.red,
+                                  : () => _showDownloadMenu(btnContext),
+                          customChild: HugeIcon(
+                            icon: HugeIcons.strokeRoundedDownload01,
+                            color: Colors.white,
+                            size: 20 * scale,
                           ),
-                        ),
-                      ],
-                    ),
-                  ],
+                        );
+                      },
+                    );
+                  },
                 ),
               ),
             ],
@@ -1487,14 +1537,13 @@ class _SalesReportPageState extends State<SalesReportPage> {
   }
 
   Widget _modernActionButton({
-    IconData? icon,
     Widget? customChild,
     required bool loading,
     required VoidCallback? onTap,
     Color background = const Color(0xFF1A237E),
   }) {
     return InkWell(
-      onTap: onTap,
+      onTap: loading ? null : onTap,
       borderRadius: BorderRadius.circular(14),
       child: Container(
         height: 35 * scale,
@@ -1515,15 +1564,19 @@ class _SalesReportPageState extends State<SalesReportPage> {
           child:
               loading
                   ? SizedBox(
-                    height: 10 * scale,
-                    width: 10 * scale,
-                    child: CircularProgressIndicator(
+                    height: 20 * scale,
+                    width: 20 * scale,
+                    child: const CircularProgressIndicator(
                       strokeWidth: 2,
                       color: Colors.white,
                     ),
                   )
                   : (customChild ??
-                      Icon(icon, color: Colors.white, size: 20 * scale)),
+                      HugeIcon(
+                        icon: HugeIcons.strokeRoundedPdf01,
+                        color: Colors.white,
+                        size: 20 * scale,
+                      )),
         ),
       ),
     );
