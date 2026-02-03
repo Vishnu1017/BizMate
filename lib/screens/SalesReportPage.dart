@@ -1154,7 +1154,7 @@ class _SalesReportPageState extends State<SalesReportPage> {
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             Row(
               children: [
                 _statTile(
@@ -1163,7 +1163,7 @@ class _SalesReportPageState extends State<SalesReportPage> {
                   icon: Icons.receipt_long,
                   color: Colors.blue,
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: 6 * scale),
                 _statTile(
                   value: currencyFormat.format(
                     customerMap.values
@@ -1174,7 +1174,7 @@ class _SalesReportPageState extends State<SalesReportPage> {
                   icon: Icons.currency_rupee,
                   color: Colors.indigo,
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: 6 * scale),
                 _statTile(
                   value: currencyFormat.format(
                     customerMap.values
