@@ -279,7 +279,7 @@ class _DashboardPageState extends State<DashboardPage> {
     // ignore: unused_local_variable
     final double labelFont = 12.0 * scale;
     final double iconSize = 18.0 * scale;
-    final double fabHorizontal = 40.0 * scale;
+    final double fabHorizontal = 45.0 * scale;
     final double fabVerticalSpacing = 20.0 * scale;
 
     return MediaQuery.removePadding(
@@ -519,11 +519,19 @@ class _DashboardPageState extends State<DashboardPage> {
                                     maxY: maxYValue == 0 ? 100 : maxYValue,
                                     lineTouchData: LineTouchData(
                                       enabled: true,
+                                      handleBuiltInTouches: true,
                                       touchTooltipData: LineTouchTooltipData(
-                                        tooltipPadding: EdgeInsets.all(
-                                          8.0 * scale,
+                                        fitInsideHorizontally:
+                                            true, // 🔥 prevents left/right cutoff
+                                        fitInsideVertically:
+                                            true, // 🔥 prevents top cutoff
+                                        tooltipPadding: EdgeInsets.symmetric(
+                                          horizontal: 8.0 * scale,
+                                          vertical: 6.0 * scale,
                                         ),
-                                        tooltipMargin: 12.0 * scale,
+                                        tooltipMargin:
+                                            6.0 *
+                                            scale, // 🔥 smaller margin = better fit
                                         getTooltipItems: (touchedSpots) {
                                           return touchedSpots.map((spot) {
                                             return LineTooltipItem(
@@ -537,17 +545,21 @@ class _DashboardPageState extends State<DashboardPage> {
                                           }).toList();
                                         },
                                       ),
-                                      handleBuiltInTouches: true,
                                     ),
+
                                     lineBarsData: [
                                       LineChartBarData(
                                         spots: salesData,
                                         isCurved: true,
                                         gradient: LinearGradient(
                                           colors: [
-                                            Colors.blueAccent,
-                                            Color(0xFF1A237E),
+                                            Color(0xFF2563EB),
+                                            Color(0xFF1E40AF),
+                                            Color(0xFF020617),
                                           ],
+                                          stops: [0.0, 0.6, 1.0],
+                                          begin: Alignment.bottomRight,
+                                          end: Alignment.topLeft,
                                         ),
                                         barWidth: 3.0 * scale,
                                         dotData: FlDotData(show: true),
@@ -627,33 +639,55 @@ class _DashboardPageState extends State<DashboardPage> {
                   vertical: fabVerticalSpacing,
                 ),
                 child: SizedBox(
-                  height: 52.0 * scale,
-                  child: ElevatedButton.icon(
-                    onPressed: _navigateToSalesReport,
-                    icon: Icon(
-                      Icons.data_usage,
-                      color: Colors.white,
-                      size: 22.0 * scale,
+                  height: 50.0 * scale,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [
+                          Color(0xFF2563EB),
+                          Color(0xFF1E40AF),
+                          Color(0xFF020617),
+                        ],
+                        stops: [0.0, 0.6, 1.0],
+                        begin: Alignment.bottomRight,
+                        end: Alignment.topLeft,
+                      ),
+                      borderRadius: BorderRadius.circular(30.0 * scale),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.25),
+                          blurRadius: 8.0 * scale,
+                          offset: Offset(0, 4.0 * scale),
+                        ),
+                      ],
                     ),
-                    label: Text(
-                      'View Sales Insights',
-                      style: TextStyle(
-                        fontSize: 14.0 * scale,
-                        fontWeight: FontWeight.bold,
+                    child: ElevatedButton.icon(
+                      onPressed: _navigateToSalesReport,
+                      icon: Icon(
+                        Icons.bar_chart_rounded,
                         color: Colors.white,
+                        size: 22.0 * scale,
                       ),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blueAccent,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30.0 * scale),
+                      label: Text(
+                        'View Sales Insights',
+                        style: TextStyle(
+                          fontSize: 14.0 * scale,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
                       ),
-                      elevation: 8.0 * scale,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.transparent, // 🔥 important
+                        shadowColor: Colors.transparent, // 🔥 important
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30.0 * scale),
+                        ),
+                        elevation: 0, // shadow handled by DecoratedBox
+                      ),
                     ),
                   ),
                 ),
               ),
-              SizedBox(height: 2.0 * scale),
             ],
           ),
         ),
