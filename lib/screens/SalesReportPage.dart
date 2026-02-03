@@ -1017,7 +1017,7 @@ class _SalesReportPageState extends State<SalesReportPage> {
                 top: MediaQuery.of(context).padding.top + 8,
                 left: 12,
                 child: _modernCircleButton(
-                  customIcon: Icon(Icons.arrow_back),
+                  customIcon: Icon(Icons.arrow_back, size: 18 * scale),
                   onTap: () => Navigator.pop(context),
                 ),
               ),
@@ -1509,8 +1509,8 @@ class _SalesReportPageState extends State<SalesReportPage> {
         splashColor: Colors.black.withOpacity(0.08),
         highlightColor: Colors.black.withOpacity(0.05),
         child: Container(
-          width: 35 * scale,
-          height: 35 * scale,
+          width: 30 * scale,
+          height: 30 * scale,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: Colors.white,
@@ -1546,8 +1546,8 @@ class _SalesReportPageState extends State<SalesReportPage> {
       onTap: loading ? null : onTap,
       borderRadius: BorderRadius.circular(14),
       child: Container(
-        height: 35 * scale,
-        padding: EdgeInsets.symmetric(horizontal: 8 * scale),
+        height: 30 * scale,
+        padding: EdgeInsets.symmetric(horizontal: 6 * scale),
         decoration: BoxDecoration(
           color: background.withOpacity(0.26),
           borderRadius: BorderRadius.circular(8),
