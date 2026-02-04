@@ -1,0 +1,66 @@
+name: Flutter Release
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "pubspec.yaml" # ⛔ Prevent CI loop
+
+jobs:
+  release:
+    # ⛔ Prevent CI from running on its own commit
+    if: "!contains(github.event.head_commit.message, 'ci: bump build number')"
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      # 🔢 Increment build number
+      - name: Increment build number
+        run: |
+          FILE=pubspec.yaml
+          VERSION_LINE=$(grep "^version:" $FILE)
+          VERSION_NAME=$(echo $VERSION_LINE | cut -d'+' -f1 | cut -d' ' -f2)
+          BUILD_NUMBER=$(echo $VERSION_LINE | cut -d'+' -f2)
+          NEW_BUILD=$((BUILD_NUMBER + 1))
+          sed -i '' "s/^version:.*/version: $VERSION_NAME+$NEW_BUILD/" $FILE
+
+      # 💾 Commit increment
+      - name: Commit build bump
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add pubspec.yaml
+          git commit -m "ci: bump build number"
+          git push
+
+      # 🏷️ Extract version (without build number)
+      - name: Extract version
+        id: version
+        run: |
+          VERSION=$(grep "^version:" pubspec.yaml | cut -d'+' -f1 | cut -d' ' -f2)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      # 🏷️ Create tag safely
+      - name: Create release tag
+        run: |
+          TAG="v${{ steps.version.outputs.version }}"
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "Tag $TAG already exists"
+          else
+            git tag "$TAG"
+            git push origin "$TAG"
+            echo "Created tag $TAG"
+          fi
+
+      - name: Flutter pub get
+        run: flutter pub get
+
+      - name: Build Android AppBundle
+        run: flutter build appbundle
