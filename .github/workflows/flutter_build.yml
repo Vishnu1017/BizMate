@@ -1,0 +1,43 @@
+name: Flutter Build
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.19.0"
+
+      - name: Auto increment build number
+        run: |
+          FILE=pubspec.yaml
+          VERSION_LINE=$(grep "^version:" $FILE)
+          VERSION_NAME=$(echo $VERSION_LINE | cut -d'+' -f1 | cut -d' ' -f2)
+          BUILD_NUMBER=$(echo $VERSION_LINE | cut -d'+' -f2)
+          NEW_BUILD=$((BUILD_NUMBER + 1))
+          sed -i '' "s/^version:.*/version: $VERSION_NAME+$NEW_BUILD/" $FILE
+          echo "Updated build number to $NEW_BUILD"
+
+      - name: Commit version bump
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add pubspec.yaml
+          git commit -m "ci: bump build number"
+          git push
+
+      - name: Flutter pub get
+        run: flutter pub get
+
+      - name: Build Android AppBundle
+        run: flutter build appbundle
