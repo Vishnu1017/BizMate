@@ -490,11 +490,11 @@ class _AdvancedSearchBarState extends State<AdvancedSearchBar>
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
             color:
-                isSelected ? const Color(0xFF7C3AED).withOpacity(0.08) : null,
+                isSelected ? const Color(0xFF1E40AF).withOpacity(0.08) : null,
             border: Border.all(
               color:
                   isSelected
-                      ? const Color(0xFF7C3AED).withOpacity(0.28)
+                      ? const Color(0xFF1E40AF).withOpacity(0.28)
                       : const Color(0xFFF3F4F6),
             ),
           ),
@@ -504,12 +504,23 @@ class _AdvancedSearchBarState extends State<AdvancedSearchBar>
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color:
+                  gradient:
                       isSelected
-                          ? const Color(0xFF7C3AED)
-                          : const Color(0xFFF3F4F6),
+                          ? const LinearGradient(
+                            colors: [
+                              Color(0xFF2563EB),
+                              Color(0xFF1E40AF),
+                              Color(0xFF020617),
+                            ],
+                            stops: [0.0, 0.6, 1.0],
+                            begin: Alignment.bottomRight,
+                            end: Alignment.topLeft,
+                          )
+                          : null,
+                  color: isSelected ? null : const Color(0xFFF3F4F6),
                   borderRadius: BorderRadius.circular(10),
                 ),
+
                 child: Icon(
                   icon,
                   color: isSelected ? Colors.white : const Color(0xFF6B7280),
@@ -526,7 +537,7 @@ class _AdvancedSearchBarState extends State<AdvancedSearchBar>
                       style: TextStyle(
                         fontWeight: FontWeight.w600,
                         color:
-                            isSelected ? const Color(0xFF7C3AED) : Colors.black,
+                            isSelected ? const Color(0xFF1E40AF) : Colors.black,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -536,7 +547,7 @@ class _AdvancedSearchBarState extends State<AdvancedSearchBar>
                         fontSize: 12,
                         color:
                             isSelected
-                                ? const Color(0xFF7C3AED).withOpacity(0.6)
+                                ? const Color(0xFF1E40AF).withOpacity(0.6)
                                 : Colors.grey.shade600,
                       ),
                     ),
@@ -547,7 +558,7 @@ class _AdvancedSearchBarState extends State<AdvancedSearchBar>
                 const Icon(
                   Icons.check_circle,
                   size: 18,
-                  color: Color(0xFF7C3AED),
+                  color: Color(0xFF1E40AF),
                 ),
             ],
           ),
@@ -661,7 +672,7 @@ class _AdvancedSearchBarState extends State<AdvancedSearchBar>
         border: Border.all(
           color:
               _isSearchFocused
-                  ? const Color(0xFF7C3AED).withOpacity(0.35)
+                  ? const Color(0xFF1E40AF).withOpacity(0.35)
                   : const Color(0xFFE5E7EB),
         ),
         boxShadow: [
@@ -704,7 +715,7 @@ class _AdvancedSearchBarState extends State<AdvancedSearchBar>
       decoration: BoxDecoration(
         color:
             _isSearchFocused
-                ? const Color(0xFF7C3AED).withOpacity(0.1)
+                ? const Color(0xFF1E40AF).withOpacity(0.1)
                 : const Color(0xFFF9FAFB),
         borderRadius: BorderRadius.circular(10 * scale),
       ),
@@ -712,7 +723,7 @@ class _AdvancedSearchBarState extends State<AdvancedSearchBar>
         Icons.search_rounded,
         color:
             _isSearchFocused
-                ? const Color(0xFF7C3AED)
+                ? const Color(0xFF1E40AF)
                 : const Color(0xFF9CA3AF),
         size: iconSize,
       ),
@@ -772,13 +783,36 @@ class _AdvancedSearchBarState extends State<AdvancedSearchBar>
         height: 44 * scale,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12 * scale),
-          color: filtered ? const Color(0xFF7C3AED) : const Color(0xFFF9FAFB),
+          gradient:
+              filtered
+                  ? const LinearGradient(
+                    colors: [
+                      Color(0xFF2563EB),
+                      Color(0xFF1E40AF),
+                      Color(0xFF020617),
+                    ],
+                    stops: [0.0, 0.6, 1.0],
+                    begin: Alignment.bottomRight,
+                    end: Alignment.topLeft,
+                  )
+                  : null,
+          color: filtered ? null : const Color(0xFFF9FAFB),
           border: Border.all(
             color:
                 filtered
-                    ? const Color(0xFF7C3AED).withOpacity(0.3)
+                    ? const Color(0xFF1E40AF).withOpacity(0.35)
                     : const Color(0xFFE5E7EB),
           ),
+          boxShadow:
+              filtered
+                  ? [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.18),
+                      blurRadius: 6 * scale,
+                      offset: Offset(0, 3 * scale),
+                    ),
+                  ]
+                  : [],
         ),
         child: Center(
           child: Row(
@@ -822,7 +856,7 @@ class _AdvancedSearchBarState extends State<AdvancedSearchBar>
             shape: BoxShape.circle,
             color: Colors.transparent,
             border: Border.all(
-              color: const Color(0xFFEF4444).withOpacity(0.14),
+              color: const Color(0xFFEF4444).withOpacity(0.25),
               width: 1.4,
             ),
           ),
@@ -863,12 +897,12 @@ class _AdvancedSearchBarState extends State<AdvancedSearchBar>
                   height: 34 * scale,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: const Color(0xFF7C3AED).withOpacity(0.12),
+                    color: const Color(0xFF1E40AF).withOpacity(0.10),
                   ),
                   child: Icon(
-                    Icons.calendar_today_rounded,
+                    _getPresetIcon(selectedPreset!),
                     size: 16 * scale,
-                    color: const Color(0xFF7C3AED),
+                    color: const Color(0xFF1E40AF),
                   ),
                 ),
                 SizedBox(width: 12 * scale),
@@ -881,7 +915,7 @@ class _AdvancedSearchBarState extends State<AdvancedSearchBar>
                         style: TextStyle(
                           fontSize: 12 * scale,
                           fontWeight: FontWeight.w600,
-                          color: const Color(0xFF7C3AED),
+                          color: const Color(0xFF1E40AF),
                         ),
                       ),
                       SizedBox(height: 4 * scale),
