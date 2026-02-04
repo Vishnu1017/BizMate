@@ -4,6 +4,7 @@ import 'package:bizmate/screens/Camera%20rental%20page/rental_add_customer_page.
 import 'package:bizmate/services/rental_cart.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:unicons/unicons.dart';
 
 class RentalCartPreviewPage extends StatefulWidget {
   const RentalCartPreviewPage({super.key});
@@ -213,7 +214,7 @@ class _RentalCartPreviewPageState extends State<RentalCartPreviewPage> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(
-                        Icons.shopping_cart_outlined,
+                        UniconsLine.shopping_cart,
                         size: 60 * scale,
                         color: Colors.grey.shade400,
                       ),

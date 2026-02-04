@@ -147,9 +147,9 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
                   ),
                 ],
               ),
-              child: const Icon(
-                Icons.shopping_cart,
-                size: 16,
+              child: Icon(
+                UniconsLine.shopping_cart,
+                size: 16 * scale,
                 color: Colors.white,
               ),
             ),
@@ -782,9 +782,9 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Icon(
-                                  Icons.shopping_cart_checkout_rounded,
-                                  color: Colors.white,
+                                  UniconsLine.shopping_cart,
                                   size: iconSize,
+                                  color: Colors.white,
                                 ),
                                 SizedBox(width: 6 * buttonScale),
                                 Text(
@@ -876,7 +876,7 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
                                 ),
                                 SizedBox(width: 6 * buttonScale),
                                 Text(
-                                  'Add Cart',
+                                  'Add to Cart',
                                   style: TextStyle(
                                     color: Colors.orange.shade900,
                                     fontWeight: FontWeight.w700,

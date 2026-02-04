@@ -5,6 +5,7 @@ import 'package:bizmate/models/sale.dart';
 import 'package:bizmate/models/rental_sale_model.dart';
 import 'package:hive/hive.dart';
 import 'package:intl/intl.dart';
+import 'package:unicons/unicons.dart';
 
 class CalendarPage extends StatefulWidget {
   const CalendarPage({super.key});
@@ -341,7 +342,7 @@ class _CalendarPageState extends State<CalendarPage> {
                               return Padding(
                                 padding: EdgeInsets.only(bottom: 10 * scale),
                                 child: _eventCard(
-                                  icon: Icons.shopping_cart_rounded,
+                                  icon: UniconsLine.shopping_cart,
                                   title: event.customerName,
                                   subtitle:
                                       "₹ ${event.totalAmount.toStringAsFixed(2)} • ${event.deliveryStatus}",
