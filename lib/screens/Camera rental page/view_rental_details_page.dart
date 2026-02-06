@@ -503,11 +503,11 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
             onTap: () => pickDate(isFrom),
             borderRadius: BorderRadius.circular(15 * scale),
             child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16 * scale),
+              padding: EdgeInsets.symmetric(horizontal: 12 * scale),
               child: Row(
                 children: [
                   Icon(icon, color: Colors.blue.shade600, size: 16 * scale),
-                  const SizedBox(width: 12),
+                  SizedBox(width: 10 * scale),
                   Expanded(
                     child: Text(
                       dateTime == null
@@ -518,7 +518,7 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
                             dateTime == null
                                 ? Colors.grey.shade500
                                 : Colors.grey.shade800,
-                        fontSize: 12 * scale,
+                        fontSize: 10 * scale,
                         fontWeight: FontWeight.w500,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -983,8 +983,8 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
             leading: IconButton(
               onPressed: () => Navigator.pop(context),
               icon: Container(
-                width: 35 * scale,
-                height: 35 * scale,
+                width: 30 * scale,
+                height: 30 * scale,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: Colors.white,

@@ -1254,8 +1254,8 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
         leading: IconButton(
           onPressed: () => Navigator.pop(context),
           icon: Container(
-            width: 35 * scale,
-            height: 35 * scale,
+            width: 30 * scale,
+            height: 30 * scale,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: Colors.white.withOpacity(0.2),

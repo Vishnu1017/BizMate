@@ -237,7 +237,7 @@ class _RentalSaleDetailScreenState extends State<RentalSaleDetailScreen> {
             ),
             centerTitle: true,
             leading: IconButton(
-              icon: const Icon(Icons.arrow_back),
+              icon: Icon(Icons.arrow_back, size: 20 * scale),
               onPressed: () => Navigator.pop(context),
             ),
             actions: [

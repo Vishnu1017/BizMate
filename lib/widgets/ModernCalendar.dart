@@ -27,6 +27,8 @@ class _ModernCalendarState extends State<ModernCalendar> {
   double scale = 1.0;
   bool _hasUserSelectedDate = false;
 
+  int _monthDirection = 0; // -1 previous, 1 next
+
   final List<String> _weekdays = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
 
   @override
@@ -55,7 +57,6 @@ class _ModernCalendarState extends State<ModernCalendar> {
     for (int i = 0; i < last.day; i++) {
       days.add(DateTime(_currentMonth.year, _currentMonth.month, i + 1));
     }
-
     return days;
   }
 
@@ -84,104 +85,144 @@ class _ModernCalendarState extends State<ModernCalendar> {
     final days = _getDaysInMonth();
     final width = MediaQuery.of(context).size.width;
 
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(22),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Container(
-          width: width * 0.9,
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.85),
-            borderRadius: BorderRadius.circular(22),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.07),
-                blurRadius: 20,
-                offset: const Offset(0, 6),
-              ),
-            ],
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // HEADER
-              _buildHeader(width),
+    return GestureDetector(
+      onHorizontalDragEnd: (details) {
+        if (details.primaryVelocity == null) return;
 
-              // WEEKDAYS
-              _buildWeekdays(width),
-
-              // GRID
-              _buildGrid(days),
-
-              // FOOTER + SAVE BUTTON
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 14,
+        if (details.primaryVelocity! < 0) {
+          _monthDirection = 1;
+          _nextMonth();
+        } else if (details.primaryVelocity! > 0) {
+          _monthDirection = -1;
+          _previousMonth();
+        }
+      },
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(22),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Container(
+            width: width * 0.9,
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.85),
+              borderRadius: BorderRadius.circular(22),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.07),
+                  blurRadius: 20,
+                  offset: const Offset(0, 6),
                 ),
-                child: Column(
-                  children: [
-                    Text(
-                      "Selected: ${DateFormat('MMM dd, yyyy').format(_selectedDate)}",
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        color: Colors.grey.shade700,
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildHeader(width),
+                _buildWeekdays(width),
+
+                /// 🔥 SMOOTH MONTH ANIMATION
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 400),
+                  transitionBuilder: (child, animation) {
+                    final curved = CurvedAnimation(
+                      parent: animation,
+                      curve: Curves.easeInOutCubic,
+                    );
+
+                    final slide = Tween<Offset>(
+                      begin: Offset(_monthDirection * 0.3, 0),
+                      end: Offset.zero,
+                    ).animate(curved);
+
+                    final fade = Tween<double>(
+                      begin: 0.0,
+                      end: 1.0,
+                    ).animate(curved);
+
+                    final scale = Tween<double>(
+                      begin: 0.95,
+                      end: 1.0,
+                    ).animate(curved);
+
+                    return FadeTransition(
+                      opacity: fade,
+                      child: SlideTransition(
+                        position: slide,
+                        child: ScaleTransition(scale: scale, child: child),
                       ),
-                    ),
-
-                    const SizedBox(height: 14),
-
-                    AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 250),
-                      child:
-                          _hasUserSelectedDate
-                              ? SizedBox(
-                                key: const ValueKey("save_btn"),
-                                width: double.infinity,
-                                height: 48,
-                                child: ElevatedButton(
-                                  onPressed: () {
-                                    widget.onDateSelected(_selectedDate);
-                                  },
-                                  style: ElevatedButton.styleFrom(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 20,
-                                      vertical: 12,
-                                    ),
-                                    backgroundColor: Colors.blue.shade600,
-                                    foregroundColor: Colors.white,
-                                    elevation: 0,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                  ),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: const [
-                                      HugeIcon(
-                                        icon:
-                                            HugeIcons.strokeRoundedTickDouble03,
-                                        size: 18,
-                                        color: Colors.white,
-                                      ),
-                                      SizedBox(width: 6),
-                                      Text(
-                                        "Save Date",
-                                        style: TextStyle(
-                                          fontSize: 15,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              )
-                              : const SizedBox.shrink(),
-                    ),
-                  ],
+                    );
+                  },
+                  child: Container(
+                    key: ValueKey(_currentMonth),
+                    child: _buildGrid(days),
+                  ),
                 ),
-              ),
-            ],
+
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
+                  child: Column(
+                    children: [
+                      Text(
+                        "Selected: ${DateFormat('MMM dd, yyyy').format(_selectedDate)}",
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey.shade700,
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 250),
+                        child:
+                            _hasUserSelectedDate
+                                ? SizedBox(
+                                  key: const ValueKey("save_btn"),
+                                  width: double.infinity,
+                                  height: 48,
+                                  child: ElevatedButton(
+                                    onPressed: () {
+                                      widget.onDateSelected(_selectedDate);
+                                    },
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.blue.shade600,
+                                      foregroundColor: Colors.white,
+                                      elevation: 0,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    ),
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: const [
+                                        HugeIcon(
+                                          icon:
+                                              HugeIcons
+                                                  .strokeRoundedTickDouble03,
+                                          size: 18,
+                                          color: Colors.white,
+                                        ),
+                                        SizedBox(width: 6),
+                                        Text(
+                                          "Save Date",
+                                          style: TextStyle(
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                )
+                                : const SizedBox.shrink(),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -287,28 +328,6 @@ class _ModernCalendarState extends State<ModernCalendar> {
                             Colors.blue.shade600,
                             Colors.purple.shade600,
                           ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(10),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.blue.withOpacity(0.35),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      )
-                      : _isInRange(date)
-                      ? BoxDecoration(
-                        color: Colors.blue.shade100.withOpacity(0.55),
-                        borderRadius: BorderRadius.circular(10),
-                      )
-                      : _isToday(date)
-                      ? BoxDecoration(
-                        border: Border.all(
-                          color: Colors.orange.shade400,
-                          width: 1.4,
                         ),
                         borderRadius: BorderRadius.circular(10),
                       )

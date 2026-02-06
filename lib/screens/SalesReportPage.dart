@@ -1017,7 +1017,7 @@ class _SalesReportPageState extends State<SalesReportPage> {
                 top: MediaQuery.of(context).padding.top + 8,
                 left: 12,
                 child: _modernCircleButton(
-                  customIcon: Icon(Icons.arrow_back, size: 18 * scale),
+                  customIcon: Icon(Icons.arrow_back, size: 20 * scale),
                   onTap: () => Navigator.pop(context),
                 ),
               ),

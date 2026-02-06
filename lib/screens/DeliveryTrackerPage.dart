@@ -105,6 +105,7 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
   bool _isSaving = false;
 
   // Store the Hive key separately
+  // ignore: unused_field
   int? _hiveKey;
 
   // A key used if we later need to measure the header/search bar etc.
@@ -220,10 +221,21 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
 
   Future<void> _loadHiveData() async {
     try {
-      final salesBox = await Hive.openBox<Sale>('sales');
+      final sessionBox = await Hive.openBox('session');
+      final email = sessionBox.get('currentUserEmail');
 
-      // Try to find the sale in Hive and get its key
-      final index = salesBox.values.toList().indexWhere((sale) {
+      if (email == null) return;
+
+      final safeEmail = email
+          .toString()
+          .replaceAll('.', '_')
+          .replaceAll('@', '_');
+
+      final userBox = await Hive.openBox("userdata_$safeEmail");
+
+      final sales = List<Sale>.from(userBox.get("sales", defaultValue: []));
+
+      final index = sales.indexWhere((sale) {
         return sale.customerName == widget.sale.customerName &&
             sale.phoneNumber == widget.sale.phoneNumber &&
             sale.dateTime == widget.sale.dateTime &&
@@ -231,49 +243,28 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
       });
 
       if (mounted && index != -1) {
-        final keys = salesBox.keys.toList();
-        _hiveKey = keys[index] as int?;
+        final hiveSale = sales[index];
 
-        // Also load invoice number
         setState(() {
           _invoiceNumber = index + 1;
-        });
-
-        // If found, update our sale with the Hive version's delivery info
-        final hiveSale = salesBox.get(_hiveKey);
-        if (hiveSale != null) {
-          // Update controllers with Hive data
-          _linkController.text = hiveSale.deliveryLink;
           _selectedStatus =
               hiveSale.deliveryStatus.isNotEmpty
                   ? hiveSale.deliveryStatus
                   : statuses.first;
-
-          // Update delivery history from Hive
-          if (hiveSale.deliveryStatusHistory != null &&
-              hiveSale.deliveryStatusHistory!.isNotEmpty) {
-            try {
-              deliveryStatusHistory =
-                  hiveSale.deliveryStatusHistory!
-                      .map((e) => jsonDecode(e) as Map<String, dynamic>)
-                      .toList();
-            } catch (e) {
-              // Keep existing history if parsing fails
-            }
-          }
-
-          _updateStatusNoteSuggestion();
-        }
-      } else {
-        // Sale not found in Hive, use default invoice numbering
-        final allSales = salesBox.values.toList();
-        setState(() {
-          _invoiceNumber = allSales.length + 1;
+          _linkController.text = hiveSale.deliveryLink;
         });
+
+        if (hiveSale.deliveryStatusHistory != null &&
+            hiveSale.deliveryStatusHistory!.isNotEmpty) {
+          deliveryStatusHistory =
+              hiveSale.deliveryStatusHistory!
+                  .map((e) => jsonDecode(e) as Map<String, dynamic>)
+                  .toList();
+        }
+
+        _updateStatusNoteSuggestion();
       }
-    } catch (_) {
-      // silent in production
-    }
+    } catch (_) {}
   }
 
   void _updateStatusNoteSuggestion() {
@@ -299,12 +290,11 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
     setState(() => _isSaving = true);
 
     try {
-      // Update local sale object
       widget.sale.deliveryLink = _linkController.text.trim();
       widget.sale.deliveryStatus = _selectedStatus!;
 
-      // Update delivery status history
       bool shouldAddToHistory = true;
+
       if (deliveryStatusHistory.isNotEmpty) {
         final lastStatus = deliveryStatusHistory.first['status'];
         if (lastStatus == _selectedStatus) {
@@ -328,26 +318,32 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
       widget.sale.deliveryStatusHistory =
           deliveryStatusHistory.map((e) => jsonEncode(e)).toList();
 
-      // Get the Hive box
-      final salesBox = await Hive.openBox<Sale>('sales');
+      // ✅ USE SAME BOX AS CALENDAR PAGE
+      final sessionBox = await Hive.openBox('session');
+      final email = sessionBox.get('currentUserEmail');
 
-      if (_hiveKey != null) {
-        // We have a Hive key, update the existing sale
-        final existingSale = salesBox.get(_hiveKey);
-        if (existingSale != null) {
-          existingSale.deliveryStatus = widget.sale.deliveryStatus;
-          existingSale.deliveryLink = widget.sale.deliveryLink;
-          existingSale.deliveryStatusHistory =
-              widget.sale.deliveryStatusHistory;
+      if (email == null) return;
 
-          await existingSale.save();
-        } else {
-          // Key exists but sale doesn't? This shouldn't happen, but handle it
-          await _saveAsNewSale(salesBox);
-        }
-      } else {
-        // No Hive key, try to find by properties
-        await _saveByFindingSale(salesBox);
+      final safeEmail = email
+          .toString()
+          .replaceAll('.', '_')
+          .replaceAll('@', '_');
+
+      final userBox = await Hive.openBox("userdata_$safeEmail");
+
+      final sales = List<Sale>.from(userBox.get("sales", defaultValue: []));
+
+      final index = sales.indexWhere(
+        (s) =>
+            s.customerName == widget.sale.customerName &&
+            s.phoneNumber == widget.sale.phoneNumber &&
+            s.dateTime == widget.sale.dateTime &&
+            s.totalAmount == widget.sale.totalAmount,
+      );
+
+      if (index != -1) {
+        sales[index] = widget.sale;
+        await userBox.put("sales", sales);
       }
 
       if (!mounted) return;
@@ -358,14 +354,12 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
         duration: const Duration(seconds: 2),
       );
 
-      // ✅ Go back after save
       Future.delayed(const Duration(milliseconds: 600), () {
         if (mounted) {
-          Navigator.pop(context, true); // return success
+          Navigator.pop(context, true);
         }
       });
     } catch (e) {
-      debugPrint('Save error: $e');
       if (mounted) {
         AppSnackBar.showError(
           context,
@@ -1592,8 +1586,8 @@ class _LargeTitleDelegate extends SliverPersistentHeaderDelegate {
         splashColor: Colors.black.withOpacity(0.08),
         highlightColor: Colors.black.withOpacity(0.05),
         child: Container(
-          width: 35 * scale,
-          height: 35 * scale,
+          width: 30 * scale,
+          height: 30 * scale,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: Colors.white,

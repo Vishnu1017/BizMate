@@ -5,12 +5,14 @@ class DiscountTaxWidget extends StatelessWidget {
   final TextEditingController discountAmountController;
   final bool isEditingPercent;
   final Function(bool) onModeChange;
-
   final double subtotal;
   final String? selectedTaxRate;
   final String selectedTaxType;
+
   final List<String> taxRateOptions;
+
   final Function(String?) onTaxRateChanged;
+  final Function(String?) onTaxTypeChanged; // ✅ ADD THIS
 
   final double taxAmount;
   final double parsedTaxRate;
@@ -26,23 +28,25 @@ class DiscountTaxWidget extends StatelessWidget {
     required this.selectedTaxType,
     required this.taxRateOptions,
     required this.onTaxRateChanged,
+    required this.onTaxTypeChanged, // ✅ REQUIRED
     required this.taxAmount,
     required this.parsedTaxRate,
   });
 
+  num get scale => 1.0;
+
   @override
   Widget build(BuildContext context) {
     double scale = 1.0;
+    final bool isTaxRateEnabled = selectedTaxType == "With Tax";
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _summaryRow("Subtotal", subtotal),
-
         const SizedBox(height: 20),
 
-        // --------------------------
-        // 🔥 EXACT SAME ROW YOU WANT
-        // --------------------------
+        // ---------------- DISCOUNT ----------------
         Row(
           children: [
             Expanded(
@@ -54,7 +58,7 @@ class DiscountTaxWidget extends StatelessWidget {
                 onTap: () => onModeChange(true),
               ),
             ),
-            SizedBox(width: 12 * scale),
+            const SizedBox(width: 12),
             Expanded(
               child: _glassTextField(
                 label: "Discount ₹",
@@ -69,35 +73,39 @@ class DiscountTaxWidget extends StatelessWidget {
 
         const SizedBox(height: 20),
 
-        // TAX TYPE
-        _glassDropdown(
-          label: "Tax Type",
-          value: selectedTaxType,
-          options: ["With Tax", "Without Tax"],
-          onChanged: (_) {},
-          enabled: false, // keep same as rental page
-        ),
-
-        const SizedBox(height: 14),
-
-        // TAX RATE (enabled only if With Tax is selected)
-        IgnorePointer(
-          ignoring: selectedTaxType != "With Tax",
-          child: Opacity(
-            opacity: selectedTaxType == "With Tax" ? 1 : 0.3,
-            child: _glassDropdown(
-              label: "Select Tax Rate",
-              value: selectedTaxRate,
-              options: taxRateOptions,
-              onChanged: onTaxRateChanged,
-              enabled: selectedTaxType == "With Tax",
+        // ---------------- TAX TYPE + TAX RATE ----------------
+        Row(
+          children: [
+            Expanded(
+              child: _glassDropdown(
+                label: "Tax Type",
+                value: selectedTaxType,
+                options: const ["With Tax", "Without Tax"],
+                onChanged: onTaxTypeChanged, // ✅ FIXED
+              ),
             ),
-          ),
+            SizedBox(width: 12 * scale),
+            Expanded(
+              child: IgnorePointer(
+                ignoring: !isTaxRateEnabled,
+                child: AnimatedOpacity(
+                  duration: const Duration(milliseconds: 250),
+                  opacity: isTaxRateEnabled ? 1.0 : 0.4,
+                  child: _glassDropdown(
+                    label: "Tax Rate",
+                    value: selectedTaxRate,
+                    options: taxRateOptions,
+                    onChanged: onTaxRateChanged,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
 
-        // TAX DETAILS CARDS
-        if (selectedTaxType == "With Tax" && parsedTaxRate > 0) ...[
-          const SizedBox(height: 14),
+        // ---------------- TAX INFO ----------------
+        if (isTaxRateEnabled && parsedTaxRate > 0) ...[
+          const SizedBox(height: 16),
           Row(
             children: [
               Expanded(
@@ -120,7 +128,7 @@ class DiscountTaxWidget extends StatelessWidget {
     );
   }
 
-  // ---------------------- UI ELEMENTS ----------------------
+  // ---------------- UI HELPERS ----------------
 
   Widget _summaryRow(String label, double value) {
     return Row(
@@ -132,17 +140,12 @@ class DiscountTaxWidget extends StatelessWidget {
         ),
         Text(
           "₹ ${value.toStringAsFixed(2)}",
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: Colors.black,
-          ),
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
         ),
       ],
     );
   }
 
-  // 🔥 SAME GLASS TEXT FIELD DESIGN FROM RentalAddCustomerPage
   Widget _glassTextField({
     required String label,
     required IconData icon,
@@ -151,45 +154,28 @@ class DiscountTaxWidget extends StatelessWidget {
     String? suffixText,
     VoidCallback? onTap,
   }) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final double scale = (constraints.maxWidth / 360).clamp(0.95, 1.05);
-
-        return Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12 * scale),
-            color: Colors.grey.shade200.withOpacity(0.3),
-            border: Border.all(color: Colors.grey.shade400, width: 1),
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        color: Colors.grey.shade200.withOpacity(0.3),
+        border: Border.all(color: Colors.grey.shade400),
+      ),
+      child: TextFormField(
+        controller: controller,
+        onTap: onTap,
+        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+        decoration: InputDecoration(
+          border: InputBorder.none,
+          labelText: label,
+          prefixIcon: Icon(icon, size: 18),
+          prefixText: prefixText,
+          suffixText: suffixText,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 12,
           ),
-          child: TextFormField(
-            controller: controller,
-            onTap: onTap,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            style: TextStyle(fontSize: 12 * scale, color: Colors.black87),
-            decoration: InputDecoration(
-              isDense: true, // ✅ IMPORTANT
-              border: InputBorder.none,
-
-              labelText: label,
-              labelStyle: TextStyle(fontSize: 11 * scale),
-              prefixIcon: Icon(icon, color: Colors.black87, size: 16 * scale),
-              prefixIconConstraints: BoxConstraints(
-                minWidth: 24 * scale,
-                minHeight: 26 * scale,
-              ),
-
-              prefixText: prefixText,
-              suffixText: suffixText,
-
-              // ✅ Slightly tighter padding
-              contentPadding: EdgeInsets.symmetric(
-                horizontal: 12 * scale,
-                vertical: 12 * scale,
-              ),
-            ),
-          ),
-        );
-      },
+        ),
+      ),
     );
   }
 
@@ -198,7 +184,7 @@ class DiscountTaxWidget extends StatelessWidget {
     required String? value,
     required List<String> options,
     required Function(String?) onChanged,
-    bool enabled = true,
+    double fontSize = 12, // ✅ Add this
   }) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -208,13 +194,34 @@ class DiscountTaxWidget extends StatelessWidget {
         border: Border.all(color: Colors.grey.shade400),
       ),
       child: DropdownButtonFormField<String>(
-        initialValue: value,
-        decoration: InputDecoration(labelText: label, border: InputBorder.none),
+        value: value,
+        decoration: InputDecoration(
+          labelText: label,
+          border: InputBorder.none,
+          labelStyle: TextStyle(
+            // ✅ LABEL FONT SIZE
+            fontSize: fontSize * scale,
+          ),
+        ),
+        style: TextStyle(
+          // ✅ SELECTED VALUE FONT SIZE
+          fontSize: fontSize * scale,
+          color: Colors.black,
+        ),
+        dropdownColor: Colors.white,
         items:
             options
-                .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                .map(
+                  (e) => DropdownMenuItem<String>(
+                    value: e,
+                    child: Text(
+                      e,
+                      style: TextStyle(fontSize: fontSize * scale),
+                    ),
+                  ),
+                )
                 .toList(),
-        onChanged: enabled ? onChanged : null,
+        onChanged: onChanged,
       ),
     );
   }

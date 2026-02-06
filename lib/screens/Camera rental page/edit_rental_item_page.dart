@@ -24,6 +24,7 @@ class _EditRentalItemPageState extends State<EditRentalItemPage> {
   late TextEditingController nameController;
   late TextEditingController brandController;
   late TextEditingController priceController;
+  double scale = 1.0;
 
   String availability = 'Available';
   String condition = 'Excellent'; // Add condition field
@@ -152,7 +153,7 @@ class _EditRentalItemPageState extends State<EditRentalItemPage> {
             ],
           ),
           child: IconButton(
-            icon: const Icon(Icons.arrow_back, size: 22),
+            icon: Icon(Icons.arrow_back, size: 20 * scale),
             onPressed: () => Navigator.pop(context),
           ),
         ),

@@ -125,10 +125,10 @@ class _CalendarPageState extends State<CalendarPage> {
           // ✅ SHOW BACK ARROW
           automaticallyImplyLeading: false,
           leading: IconButton(
-            icon: const Icon(
+            icon: Icon(
               Icons.arrow_back,
               color: Color(0xFF0F172A),
-              size: 20,
+              size: 20 * scale,
             ),
             onPressed: () {
               Navigator.pop(context);
@@ -259,7 +259,7 @@ class _CalendarPageState extends State<CalendarPage> {
                 Text(
                   "Day Summary",
                   style: TextStyle(
-                    fontSize: 13,
+                    fontSize: 12 * scale,
                     fontWeight: FontWeight.w600,
                     color: Colors.grey.shade700,
                   ),
@@ -274,7 +274,7 @@ class _CalendarPageState extends State<CalendarPage> {
                     label: "Sales",
                     color: Colors.blue,
                   ),
-                const SizedBox(width: 6),
+                SizedBox(width: 6 * scale),
                 if (_selectedDay != null)
                   _buildSummaryChip(
                     count:
@@ -287,8 +287,6 @@ class _CalendarPageState extends State<CalendarPage> {
               ],
             ),
           ),
-
-          // EVENTS LIST
           Expanded(
             child:
                 _selectedDay == null
@@ -314,7 +312,7 @@ class _CalendarPageState extends State<CalendarPage> {
                                 children: [
                                   Icon(
                                     Icons.event_busy_rounded,
-                                    size: 40,
+                                    size: 40 * scale,
                                     color: Colors.grey.shade400,
                                   ),
                                   SizedBox(height: 12 * scale),
@@ -406,7 +404,7 @@ class _CalendarPageState extends State<CalendarPage> {
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
         child: Container(
-          padding: EdgeInsets.all(12 * scale),
+          padding: EdgeInsets.all(10 * scale),
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
@@ -438,33 +436,45 @@ class _CalendarPageState extends State<CalendarPage> {
           children: [
             CircleAvatar(
               backgroundColor: color.withOpacity(0.12),
-              child: Icon(icon, color: color),
+              child: Icon(icon, color: color, size: 20 * scale),
             ),
-            const SizedBox(width: 12),
+            SizedBox(width: 12 * scale),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(fontWeight: FontWeight.w700),
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 12 * scale,
+                    ),
                   ),
-                  Text(subtitle, style: TextStyle(color: Colors.grey.shade600)),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      color: Colors.grey.shade800,
+                      fontSize: 10 * scale,
+                    ),
+                  ),
                   if (extra != null) extra,
                 ],
               ),
             ),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              padding: EdgeInsets.symmetric(
+                horizontal: 8 * scale,
+                vertical: 4 * scale,
+              ),
               decoration: BoxDecoration(
                 color: color,
                 borderRadius: BorderRadius.circular(999),
               ),
               child: Text(
                 tag,
-                style: const TextStyle(
+                style: TextStyle(
                   color: Colors.white,
-                  fontSize: 10,
+                  fontSize: 10 * scale,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -481,7 +491,7 @@ class _CalendarPageState extends State<CalendarPage> {
     required Color color,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: EdgeInsets.symmetric(horizontal: 8 * scale, vertical: 4 * scale),
       decoration: BoxDecoration(
         color: color.withOpacity(0.12),
         borderRadius: BorderRadius.circular(999),
@@ -489,7 +499,7 @@ class _CalendarPageState extends State<CalendarPage> {
       child: Text(
         "$count $label",
         style: TextStyle(
-          fontSize: 11,
+          fontSize: 11 * scale,
           fontWeight: FontWeight.w600,
           color: color,
         ),

@@ -266,7 +266,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
             ),
             centerTitle: true,
             leading: IconButton(
-              icon: const Icon(Icons.arrow_back_rounded),
+              icon: Icon(Icons.arrow_back, size: 20 * scale),
               onPressed: () => Navigator.pop(context),
             ),
             actions: [

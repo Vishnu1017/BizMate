@@ -608,7 +608,7 @@ class _SelectItemsScreenState extends State<SelectItemsScreen> {
 
   Widget _buildGuideStep(int number, String title, String subtitle) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.grey.shade50,
         borderRadius: BorderRadius.circular(16),
@@ -617,11 +617,10 @@ class _SelectItemsScreenState extends State<SelectItemsScreen> {
       child: Row(
         children: [
           Container(
-            width: 32 * scale,
-            height: 32 * scale,
+            width: 28 * scale,
+            height: 28 * scale,
             decoration: BoxDecoration(
               color: Color(0xFF1E40AF),
-
               shape: BoxShape.circle,
             ),
             child: Center(
@@ -630,12 +629,12 @@ class _SelectItemsScreenState extends State<SelectItemsScreen> {
                 style: TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
-                  fontSize: 14 * scale,
+                  fontSize: 12 * scale,
                 ),
               ),
             ),
           ),
-          const SizedBox(width: 16),
+          SizedBox(width: 12 * scale),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -644,7 +643,7 @@ class _SelectItemsScreenState extends State<SelectItemsScreen> {
                   title,
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
-                    fontSize: 14 * scale,
+                    fontSize: 12 * scale,
                     color: Color(0xFF333333),
                   ),
                 ),
@@ -653,7 +652,7 @@ class _SelectItemsScreenState extends State<SelectItemsScreen> {
                   subtitle,
                   style: TextStyle(
                     color: Colors.grey.shade600,
-                    fontSize: 12 * scale,
+                    fontSize: 10 * scale,
                   ),
                 ),
               ],
@@ -736,7 +735,8 @@ class _SelectItemsScreenState extends State<SelectItemsScreen> {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(24),
             ),
-            insetPadding: const EdgeInsets.all(20),
+            clipBehavior: Clip.antiAlias,
+            insetPadding: const EdgeInsets.all(24),
             child: SingleChildScrollView(
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 500),
@@ -745,7 +745,7 @@ class _SelectItemsScreenState extends State<SelectItemsScreen> {
                   children: [
                     // Header
                     Container(
-                      padding: const EdgeInsets.all(24),
+                      padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
                           colors: [
@@ -767,7 +767,7 @@ class _SelectItemsScreenState extends State<SelectItemsScreen> {
                           Icon(
                             Icons.help,
                             color: Colors.white,
-                            size: 26 * scale,
+                            size: 22 * scale,
                           ),
                           const SizedBox(width: 12),
                           Expanded(
@@ -778,12 +778,13 @@ class _SelectItemsScreenState extends State<SelectItemsScreen> {
                               ).textTheme.titleLarge?.copyWith(
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold,
-                                fontSize: 20 * scale,
+                                fontSize: 18 * scale,
                               ),
                             ),
                           ),
                           IconButton(
                             icon: const Icon(Icons.close, color: Colors.white),
+                            iconSize: 20 * scale,
                             onPressed: () => Navigator.pop(context),
                             splashRadius: 20,
                           ),
@@ -793,7 +794,7 @@ class _SelectItemsScreenState extends State<SelectItemsScreen> {
 
                     // Content
                     Padding(
-                      padding: const EdgeInsets.all(24),
+                      padding: const EdgeInsets.all(14),
                       child: Column(
                         children: [
                           _buildGuideStep(
@@ -819,7 +820,7 @@ class _SelectItemsScreenState extends State<SelectItemsScreen> {
 
                     // Footer
                     Container(
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
                         border: Border(
                           top: BorderSide(color: Colors.grey.shade200),
@@ -833,7 +834,7 @@ class _SelectItemsScreenState extends State<SelectItemsScreen> {
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Color(0xFF1E40AF),
                               padding: EdgeInsets.symmetric(
-                                horizontal: 28 * scale,
+                                horizontal: 20 * scale,
                                 vertical: 10 * scale,
                               ),
                               shape: RoundedRectangleBorder(
@@ -868,7 +869,6 @@ class _SelectItemsScreenState extends State<SelectItemsScreen> {
     double scale = 1.0;
     final isTablet = screenWidth >= 600 && screenWidth < 1000;
     bool isItemSelectedFromList = false;
-    final bool isTaxRateEnabled = selectedTaxType == 'With Tax';
 
     // Important: put page content inside a scrollable with extra bottom padding so keyboard won't cause overflow
     return GestureDetector(
@@ -1204,129 +1204,6 @@ class _SelectItemsScreenState extends State<SelectItemsScreen> {
                                   },
                                   textInputAction: TextInputAction.done,
                                 ),
-                                const SizedBox(height: 16),
-
-                                // Tax Type and Rate Row
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: Container(
-                                        decoration: BoxDecoration(
-                                          color: Colors.white,
-                                          borderRadius: BorderRadius.circular(
-                                            12,
-                                          ),
-                                          border: Border.all(
-                                            color: Colors.grey.shade300,
-                                          ),
-                                        ),
-                                        child: Padding(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 12,
-                                          ),
-                                          child: DropdownButtonHideUnderline(
-                                            child: DropdownButton<String>(
-                                              value: selectedTaxType,
-                                              style: TextStyle(
-                                                fontSize: 12 * scale,
-                                                color: Colors.black,
-                                              ),
-                                              isExpanded: true,
-                                              icon: const Icon(
-                                                Icons.arrow_drop_down,
-                                              ),
-                                              items:
-                                                  taxChoiceOptions.map((
-                                                    String value,
-                                                  ) {
-                                                    return DropdownMenuItem<
-                                                      String
-                                                    >(
-                                                      value: value,
-                                                      child: Text(value),
-                                                    );
-                                                  }).toList(),
-                                              onChanged: (value) {
-                                                setState(() {
-                                                  selectedTaxType = value!;
-                                                });
-                                              },
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: Opacity(
-                                        opacity: isTaxRateEnabled ? 1.0 : 0.5,
-                                        child: IgnorePointer(
-                                          ignoring: !isTaxRateEnabled,
-                                          child: Container(
-                                            decoration: BoxDecoration(
-                                              color: Colors.white,
-                                              borderRadius:
-                                                  BorderRadius.circular(12),
-                                              border: Border.all(
-                                                color:
-                                                    isTaxRateEnabled
-                                                        ? Colors.grey.shade300
-                                                        : Colors.grey.shade200,
-                                              ),
-                                            ),
-                                            child: Padding(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                    horizontal: 12,
-                                                  ),
-                                              child: DropdownButtonHideUnderline(
-                                                child: DropdownButton<String>(
-                                                  value: selectedTaxRate,
-                                                  isExpanded: true,
-                                                  icon: const Icon(
-                                                    Icons.arrow_drop_down,
-                                                  ),
-                                                  hint: const Text("Tax Rate"),
-                                                  style: TextStyle(
-                                                    fontSize: 12 * scale,
-                                                    color:
-                                                        isTaxRateEnabled
-                                                            ? Colors.black
-                                                            : Colors
-                                                                .grey
-                                                                .shade600,
-                                                  ),
-                                                  items:
-                                                      taxRateOptions.map((
-                                                        String value,
-                                                      ) {
-                                                        return DropdownMenuItem<
-                                                          String
-                                                        >(
-                                                          value: value,
-                                                          child: Text(value),
-                                                        );
-                                                      }).toList(),
-
-                                                  /// 🔥 ENABLE / DISABLE HERE
-                                                  onChanged:
-                                                      isTaxRateEnabled
-                                                          ? (value) {
-                                                            setState(() {
-                                                              selectedTaxRate =
-                                                                  value;
-                                                            });
-                                                          }
-                                                          : null,
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
                               ],
                             ),
                           ),
@@ -1404,6 +1281,10 @@ class _SelectItemsScreenState extends State<SelectItemsScreen> {
                                     onTaxRateChanged:
                                         (val) => setState(() {
                                           selectedTaxRate = val;
+                                        }),
+                                    onTaxTypeChanged:
+                                        (val) => setState(() {
+                                          selectedTaxType = val!;
                                         }),
                                     parsedTaxRate: parseTaxRate(),
                                     taxAmount: summary['taxAmount']!,

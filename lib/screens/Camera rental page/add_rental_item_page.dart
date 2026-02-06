@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:bizmate/models/rental_item.dart';
 import 'package:bizmate/services/image_compression_service.dart';
@@ -36,6 +37,8 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
   double scale = 1.0;
+  bool _showConfetti = false;
+  Timer? _confettiTimer;
 
   final List<String> _categories = [
     'Camera',
@@ -88,6 +91,24 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
     );
 
     _animationController.forward();
+  }
+
+  void _showConfettiWithFade() {
+    setState(() {
+      _showConfetti = true;
+    });
+
+    _confettiController.play();
+
+    // Disappear when confetti reaches mid screen (~900ms–1200ms)
+    _confettiTimer?.cancel();
+    _confettiTimer = Timer(const Duration(milliseconds: 1500), () {
+      if (mounted) {
+        setState(() {
+          _showConfetti = false;
+        });
+      }
+    });
   }
 
   @override
@@ -357,7 +378,7 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
       rentalList.add(item);
       await userBox.put("rental_items", rentalList);
 
-      _confettiController.play();
+      _showConfettiWithFade();
       HapticFeedback.vibrate();
 
       setState(() => _showSuccess = true);
@@ -560,8 +581,8 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
                 leading: IconButton(
                   onPressed: () => Navigator.pop(context),
                   icon: Container(
-                    width: 35 * scale,
-                    height: 35 * scale,
+                    width: 30 * scale,
+                    height: 30 * scale,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: Colors.white.withOpacity(0.2),
@@ -625,18 +646,43 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
             ),
 
           // Confetti
-          ConfettiWidget(
-            confettiController: _confettiController,
-            blastDirectionality: BlastDirectionality.explosive,
-            shouldLoop: false,
-            colors: const [
-              Color(0xFF6366F1),
-              Color(0xFF8B5CF6),
-              Color(0xFF10B981),
-              Color(0xFFF59E0B),
-              Color(0xFFEF4444),
-            ],
-            numberOfParticles: 50,
+          // Modern Top Rain Confetti
+          Align(
+            alignment: Alignment.topCenter,
+            child: AnimatedOpacity(
+              duration: const Duration(milliseconds: 1500),
+              opacity: _showConfetti ? 1.0 : 0.0,
+              child: ConfettiWidget(
+                confettiController: _confettiController,
+                blastDirection: 1.57, // Downwards
+                emissionFrequency: 0.20,
+                numberOfParticles: 75,
+                maxBlastForce: 22, // ⬅️ Stronger spread
+                minBlastForce: 10, // ⬅️ Wider range
+                gravity: 0.36, // Controls fall speed
+                shouldLoop: false,
+                blastDirectionality: BlastDirectionality.explosive,
+                colors: const [
+                  Color(0xFF6366F1),
+                  Color(0xFF8B5CF6),
+                  Color(0xFFEC4899),
+                  Color(0xFF0EA5E9),
+                  Color(0xFF10B981),
+                  Color(0xFFF59E0B),
+                ],
+
+                minimumSize: const Size(14, 14),
+                maximumSize: const Size(22, 22),
+
+                createParticlePath: (size) {
+                  return Path()
+                    ..moveTo(0, -size.height / 2)
+                    ..lineTo(size.width / 2, size.height / 2)
+                    ..lineTo(-size.width / 2, size.height / 2)
+                    ..close();
+                },
+              ),
+            ),
           ),
         ],
       ),
