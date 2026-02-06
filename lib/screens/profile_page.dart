@@ -58,8 +58,6 @@ class _ProfilePageState extends State<ProfilePage>
   late Animation<double> _slideAnimation;
   double scale = 1.0;
 
-  
-
   final List<String> roles = [
     'None',
     'Photographer',
@@ -2157,8 +2155,8 @@ class _ProfilePageState extends State<ProfilePage>
                         physics: const BouncingScrollPhysics(),
                         child: Padding(
                           padding: EdgeInsets.symmetric(
-                            horizontal: 12 * scale,
-                            vertical: 16, // ✅ reduced from 60
+                            horizontal: 10 * scale,
+                            vertical: 14, // ✅ reduced from 60
                           ),
                           child: Column(
                             children: [
@@ -2533,7 +2531,7 @@ class _ProfilePageState extends State<ProfilePage>
         border: Border.all(color: Color(0xFFF1F5F9), width: 1),
       ),
       child: Padding(
-        padding: EdgeInsets.all(15 * scale),
+        padding: EdgeInsets.all(12 * scale),
         child: Column(
           children: [
             _buildInfoRow(
@@ -2582,7 +2580,7 @@ class _ProfilePageState extends State<ProfilePage>
   ) {
     return _isEditing
         ? Container(
-          padding: EdgeInsets.symmetric(horizontal: 12),
+          padding: EdgeInsets.symmetric(horizontal: 10 * scale),
           decoration: BoxDecoration(
             color: Color(0xFFF8FAFC),
             borderRadius: BorderRadius.circular(12),
@@ -2590,7 +2588,7 @@ class _ProfilePageState extends State<ProfilePage>
           ),
           child: TextField(
             controller: controller,
-            style: TextStyle(fontSize: 16, color: Color(0xFF1E293B)),
+            style: TextStyle(fontSize: 16 * scale, color: Color(0xFF1E293B)),
             decoration: InputDecoration(
               prefixIcon: Icon(icon, color: Color(0xFF64748B)),
               hintText: value.isEmpty ? 'Enter $label' : value,
@@ -2600,7 +2598,10 @@ class _ProfilePageState extends State<ProfilePage>
           ),
         )
         : Container(
-          padding: EdgeInsets.all(12 * scale),
+          padding: EdgeInsets.symmetric(
+            horizontal: 8 * scale,
+            vertical: 10 * scale,
+          ),
           decoration: BoxDecoration(
             color: Color(0xFFF8FAFC),
             borderRadius: BorderRadius.circular(12),
@@ -2609,7 +2610,7 @@ class _ProfilePageState extends State<ProfilePage>
           child: Row(
             children: [
               Icon(icon, color: Color(0xFF64748B), size: 16 * scale),
-              SizedBox(width: 12),
+              SizedBox(width: 10 * scale),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,

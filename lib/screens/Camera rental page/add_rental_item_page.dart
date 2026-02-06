@@ -292,7 +292,7 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
         height: 140,
         decoration: BoxDecoration(
           color: color.withOpacity(0.05),
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(color: color.withOpacity(0.2), width: 1.5),
         ),
         child: Column(
@@ -488,22 +488,32 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
             slivers: [
               // Modern App Bar
               SliverAppBar(
-                backgroundColor: Colors.transparent,
+                backgroundColor: const Color(0xFF6366F1),
                 elevation: 0,
                 pinned: true,
                 floating: true,
                 expandedHeight: isDesktop ? 200 : (isTablet ? 180 : 160),
+                forceElevated: true,
+                surfaceTintColor: Colors.transparent,
+                shadowColor: Colors.transparent,
+
                 flexibleSpace: FlexibleSpaceBar(
                   collapseMode: CollapseMode.pin,
+                  title: Text(
+                    'Add Rental Gear',
+                    style: TextStyle(
+                      fontSize: 20 * scale,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
                   background: Container(
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       gradient: LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
-                        colors: [
-                          const Color(0xFF6366F1),
-                          const Color(0xFF8B5CF6),
-                        ],
+                        colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
                       ),
                     ),
                     child: Stack(
@@ -520,6 +530,7 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
                             ),
                           ),
                         ),
+
                         Padding(
                           padding: EdgeInsets.symmetric(
                             horizontal: isDesktop ? 80 : (isTablet ? 70 : 54),
@@ -531,46 +542,6 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
                               SizedBox(
                                 height: isDesktop ? 80 : (isTablet ? 60 : 60),
                               ),
-                              FadeTransition(
-                                opacity: _fadeAnimation,
-                                child: SlideTransition(
-                                  position: _slideAnimation,
-                                  child: Text(
-                                    'Add Rental Gear',
-                                    style: TextStyle(
-                                      fontSize:
-                                          isDesktop ? 40 : (isTablet ? 20 : 24),
-                                      fontWeight: FontWeight.w800,
-                                      color: Colors.white,
-                                      letterSpacing: -0.5,
-                                      shadows: [
-                                        Shadow(
-                                          color: Colors.black.withOpacity(0.1),
-                                          blurRadius: 10,
-                                          offset: const Offset(0, 2),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              FadeTransition(
-                                opacity: _fadeAnimation,
-                                child: SlideTransition(
-                                  position: _slideAnimation,
-                                  child: Text(
-                                    'Add your photography equipment to inventory',
-                                    style: TextStyle(
-                                      fontSize: isDesktop ? 14 : 10,
-                                      fontWeight: FontWeight.w500,
-                                      color: Colors.white.withOpacity(0.9),
-                                      letterSpacing: 0.3,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              SizedBox(height: isDesktop ? 30 : 20),
                             ],
                           ),
                         ),
@@ -578,6 +549,7 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
                     ),
                   ),
                 ),
+
                 leading: IconButton(
                   onPressed: () => Navigator.pop(context),
                   icon: Container(
@@ -656,7 +628,7 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
                 confettiController: _confettiController,
                 blastDirection: 1.57, // Downwards
                 emissionFrequency: 0.20,
-                numberOfParticles: 75,
+                numberOfParticles: 25,
                 maxBlastForce: 22, // ⬅️ Stronger spread
                 minBlastForce: 10, // ⬅️ Wider range
                 gravity: 0.36, // Controls fall speed
@@ -819,7 +791,7 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
             width: double.infinity,
             decoration: BoxDecoration(
               color: const Color(0xFFF8FAFC),
-              borderRadius: BorderRadius.circular(isDesktop ? 28 : 24),
+              borderRadius: BorderRadius.circular(14),
               border: Border.all(
                 color:
                     _selectedImage != null
@@ -876,7 +848,7 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
                       ],
                     )
                     : ClipRRect(
-                      borderRadius: BorderRadius.circular(isDesktop ? 26 : 22),
+                      borderRadius: BorderRadius.circular(12),
                       child: Stack(
                         fit: StackFit.expand,
                         children: [
@@ -1103,7 +1075,7 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
         ),
         SizedBox(height: isDesktop ? 12 : (isTablet ? 10 : 8)),
         SizedBox(
-          height: isDesktop ? 60 : (isTablet ? 55 : 50),
+          height: isDesktop ? 50 : (isTablet ? 45 : 40),
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             itemCount: _categories.length,
@@ -1119,11 +1091,11 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 300),
                   margin: EdgeInsets.only(
-                    right: index == _categories.length - 1 ? 0 : 12,
+                    right: index == _categories.length - 1 ? 0 : 10,
                   ),
                   padding: EdgeInsets.symmetric(
-                    horizontal: isDesktop ? 24 : (isTablet ? 22 : 20),
-                    vertical: isDesktop ? 16 : (isTablet ? 14 : 12),
+                    horizontal: isDesktop ? 18 : (isTablet ? 16 : 14),
+                    vertical: isDesktop ? 12 : (isTablet ? 10 : 8),
                   ),
                   decoration: BoxDecoration(
                     color:
@@ -1154,13 +1126,13 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
                       Icon(
                         _getCategoryIcon(category),
                         color: isSelected ? Colors.white : Colors.grey[600],
-                        size: isDesktop ? 20 : (isTablet ? 18 : 16),
+                        size: isDesktop ? 18 : (isTablet ? 16 : 14),
                       ),
-                      SizedBox(width: isDesktop ? 12 : 8),
+                      SizedBox(width: isDesktop ? 10 : 6),
                       Text(
                         category,
                         style: TextStyle(
-                          fontSize: isDesktop ? 16 : (isTablet ? 15 : 14),
+                          fontSize: isDesktop ? 14 : (isTablet ? 13 : 12),
                           fontWeight: FontWeight.w600,
                           color: isSelected ? Colors.white : Colors.grey[700],
                         ),

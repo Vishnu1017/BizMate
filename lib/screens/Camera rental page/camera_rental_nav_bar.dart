@@ -283,7 +283,7 @@ class _CameraRentalNavBarState extends State<CameraRentalNavBar> {
   }
 
   Widget _buildBackButton(double screenWidth) {
-    final double size = _scaleForWidth(screenWidth, 44);
+    final double size = _scaleForWidth(screenWidth, 40);
 
     return Tooltip(
       message: 'Back',
@@ -299,14 +299,10 @@ class _CameraRentalNavBarState extends State<CameraRentalNavBar> {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: Colors.white.withOpacity(0.8),
-
-              // ✅ BORDER (clearly visible)
               border: Border.all(
                 color: Colors.black.withOpacity(0.5),
                 width: 1.2,
               ),
-
-              // ✅ SOFT SHADOW
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withOpacity(0.3),
