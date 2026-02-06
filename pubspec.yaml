@@ -76,6 +76,7 @@ dependencies:
   confetti: ^0.8.0
   iconsax: ^0.0.8
   lottie: ^3.3.2
+  flutter_native_splash: ^2.4.7
 
 flutter_launcher_icons:
   android: true
