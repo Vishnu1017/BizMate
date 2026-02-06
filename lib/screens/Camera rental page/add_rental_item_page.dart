@@ -630,10 +630,10 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
                   confettiController: _confettiController,
                   blastDirection: 1.57,
                   emissionFrequency: 0.04,
-                  numberOfParticles: 35,
-                  maxBlastForce: 18,
+                  numberOfParticles: 25,
+                  maxBlastForce: 12,
                   minBlastForce: 6,
-                  gravity: 0.28,
+                  gravity: 0.25,
                   shouldLoop: false,
                   blastDirectionality: BlastDirectionality.explosive,
                   colors: const [

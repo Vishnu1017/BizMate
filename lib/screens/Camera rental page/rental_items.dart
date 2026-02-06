@@ -48,24 +48,66 @@ class _RentalItemsState extends State<RentalItems> {
     _loadUserSpecificBox();
   }
 
+  @override
+  void dispose() {
+    try {
+      userBox
+          .listenable(keys: ['rental_items'])
+          .removeListener(_onRentalItemsChanged);
+    } catch (_) {}
+
+    _scrollController.dispose();
+    _newBadgeTimer?.cancel();
+    super.dispose();
+  }
+
   Future<void> _loadUserSpecificBox() async {
-    final sessionBox = Hive.box('session');
-    final email = sessionBox.get("currentUserEmail");
+    try {
+      // 🔥 Ensure session box is open
+      if (!Hive.isBoxOpen('session')) {
+        await Hive.openBox('session');
+      }
 
-    final safeEmail = email
-        .toString()
-        .replaceAll('.', '_')
-        .replaceAll('@', '_');
-    final boxName = "userdata_$safeEmail";
+      final sessionBox = Hive.box('session');
+      final email = sessionBox.get("currentUserEmail");
 
-    if (!Hive.isBoxOpen(boxName)) {
-      await Hive.openBox(boxName);
+      if (email == null) {
+        rentalItems = [];
+        filteredItems = [];
+        setState(() {});
+        return;
+      }
+
+      final safeEmail = email
+          .toString()
+          .replaceAll('.', '_')
+          .replaceAll('@', '_');
+
+      final boxName = "userdata_$safeEmail";
+
+      if (!Hive.isBoxOpen(boxName)) {
+        await Hive.openBox(boxName);
+      }
+
+      userBox = Hive.box(boxName);
+
+      // 🔥 Load once
+      _loadItems();
+
+      // 🔥 Safe listener
+      userBox
+          .listenable(keys: ['rental_items'])
+          .addListener(_onRentalItemsChanged);
+    } catch (e) {
+      rentalItems = [];
+      filteredItems = [];
+      setState(() {});
     }
+  }
 
-    userBox = Hive.box(boxName);
-
+  void _onRentalItemsChanged() {
+    if (!mounted) return;
     _loadItems();
-    userBox.listenable(keys: ['rental_items']).addListener(() => _loadItems());
   }
 
   void _startNewItemEffect() {
@@ -92,10 +134,10 @@ class _RentalItemsState extends State<RentalItems> {
   void _loadItems() {
     try {
       final raw = userBox.get('rental_items', defaultValue: []);
-      rentalItems = List<RentalItem>.from(raw);
+      List<RentalItem> originalList = List<RentalItem>.from(raw);
 
-      // 🔥 LATEST FIRST
-      rentalItems = rentalItems.reversed.toList();
+      // 🔥 Reverse ONLY for display
+      rentalItems = originalList.reversed.toList();
 
       if (rentalItems.isNotEmpty) {
         _latestItemIndex = 0;
@@ -156,8 +198,15 @@ class _RentalItemsState extends State<RentalItems> {
       icon: Icons.delete_forever_rounded,
       iconColor: Colors.redAccent,
       onConfirm: () {
-        rentalItems.removeAt(index);
-        _saveItems();
+        final raw = userBox.get('rental_items', defaultValue: []);
+        List<RentalItem> originalList = List<RentalItem>.from(raw);
+
+        // 🔥 Because UI is reversed
+        final reversedIndex = originalList.length - 1 - index;
+
+        originalList.removeAt(reversedIndex);
+
+        userBox.put('rental_items', originalList);
       },
     );
   }
@@ -245,7 +294,7 @@ class _RentalItemsState extends State<RentalItems> {
           SizedBox(height: 6 * scale),
           Expanded(
             child:
-                rentalItems.isEmpty
+                filteredItems.isEmpty && rentalItems.isEmpty
                     ? const Center(
                       child: Text(
                         'No items added yet!',
