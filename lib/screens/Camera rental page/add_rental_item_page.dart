@@ -622,37 +622,38 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
           Align(
             alignment: Alignment.topCenter,
             child: AnimatedOpacity(
-              duration: const Duration(milliseconds: 1500),
+              duration: const Duration(milliseconds: 1400),
               opacity: _showConfetti ? 1.0 : 0.0,
-              child: ConfettiWidget(
-                confettiController: _confettiController,
-                blastDirection: 1.57, // Downwards
-                emissionFrequency: 0.20,
-                numberOfParticles: 25,
-                maxBlastForce: 22, // ⬅️ Stronger spread
-                minBlastForce: 10, // ⬅️ Wider range
-                gravity: 0.36, // Controls fall speed
-                shouldLoop: false,
-                blastDirectionality: BlastDirectionality.explosive,
-                colors: const [
-                  Color(0xFF6366F1),
-                  Color(0xFF8B5CF6),
-                  Color(0xFFEC4899),
-                  Color(0xFF0EA5E9),
-                  Color(0xFF10B981),
-                  Color(0xFFF59E0B),
-                ],
-
-                minimumSize: const Size(14, 14),
-                maximumSize: const Size(22, 22),
-
-                createParticlePath: (size) {
-                  return Path()
-                    ..moveTo(0, -size.height / 2)
-                    ..lineTo(size.width / 2, size.height / 2)
-                    ..lineTo(-size.width / 2, size.height / 2)
-                    ..close();
-                },
+              child: IgnorePointer(
+                ignoring: !_showConfetti,
+                child: ConfettiWidget(
+                  confettiController: _confettiController,
+                  blastDirection: 1.57,
+                  emissionFrequency: 0.04,
+                  numberOfParticles: 35,
+                  maxBlastForce: 18,
+                  minBlastForce: 6,
+                  gravity: 0.28,
+                  shouldLoop: false,
+                  blastDirectionality: BlastDirectionality.explosive,
+                  colors: const [
+                    Color(0xFF6366F1),
+                    Color(0xFF8B5CF6),
+                    Color(0xFFEC4899),
+                    Color(0xFF0EA5E9),
+                    Color(0xFF10B981),
+                    Color(0xFFF59E0B),
+                  ],
+                  minimumSize: const Size(15, 15),
+                  maximumSize: const Size(25, 25),
+                  createParticlePath: (size) {
+                    return Path()
+                      ..moveTo(0, -size.height / 2)
+                      ..lineTo(size.width / 2, size.height / 2)
+                      ..lineTo(-size.width / 2, size.height / 2)
+                      ..close();
+                  },
+                ),
               ),
             ),
           ),
@@ -1109,16 +1110,6 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
                               ? const Color(0xFF6366F1)
                               : const Color(0xFFE2E8F0),
                     ),
-                    boxShadow:
-                        isSelected
-                            ? [
-                              BoxShadow(
-                                color: const Color(0xFF6366F1).withOpacity(0.3),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
-                              ),
-                            ]
-                            : null,
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,

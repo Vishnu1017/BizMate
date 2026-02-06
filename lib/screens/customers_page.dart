@@ -28,6 +28,8 @@ class _CustomersPageState extends State<CustomersPage> {
   List<Map<String, String>> filteredCustomers = [];
   String _searchQuery = "";
   String profileName = '';
+  final ScrollController _scrollController = ScrollController();
+  int _previousCustomerCount = 0;
 
   @override
   void initState() {
@@ -102,6 +104,20 @@ class _CustomersPageState extends State<CustomersPage> {
 
     customers = uniqueList;
     filteredCustomers = List.from(uniqueList);
+    // 🔥 AUTO SCROLL TO TOP WHEN NEW CUSTOMER ADDED
+    if (filteredCustomers.length > _previousCustomerCount) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_scrollController.hasClients) {
+          _scrollController.animateTo(
+            0,
+            duration: const Duration(milliseconds: 600),
+            curve: Curves.easeOutCubic,
+          );
+        }
+      });
+    }
+
+    _previousCustomerCount = filteredCustomers.length;
     setState(() {});
   }
 
@@ -461,6 +477,7 @@ class _CustomersPageState extends State<CustomersPage> {
                         ),
                       )
                       : ListView.builder(
+                        controller: _scrollController,
                         padding: EdgeInsets.symmetric(
                           horizontal: 14 * scale,
                           vertical: 6 * scale,

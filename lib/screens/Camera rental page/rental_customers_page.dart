@@ -25,6 +25,8 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
   String _searchQuery = "";
   bool _isLoading = true;
   double scale = 1.0;
+  final ScrollController _scrollController = ScrollController();
+  int _previousCustomerCount = 0;
 
   List<CustomerModel> customers = [];
   List<CustomerModel> allCustomers = []; // FULL backup list (important)
@@ -93,6 +95,21 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
       }
 
       if (!mounted) return;
+
+      // 🔥 AUTO SCROLL WHEN NEW CUSTOMER ADDED
+      if (dedupedList.length > _previousCustomerCount) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (_scrollController.hasClients) {
+            _scrollController.animateTo(
+              0,
+              duration: const Duration(milliseconds: 600),
+              curve: Curves.easeOutCubic,
+            );
+          }
+        });
+      }
+
+      _previousCustomerCount = dedupedList.length;
 
       setState(() {
         allCustomers = dedupedList;
@@ -670,6 +687,7 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
                                   ? _buildNoMatchState(_searchQuery)
                                   : _buildEmptyState())
                               : ListView.builder(
+                                controller: _scrollController,
                                 padding: const EdgeInsets.only(bottom: 20),
                                 itemCount: customers.length,
                                 itemBuilder: (context, index) {

@@ -20,7 +20,8 @@ class ProductsPage extends StatefulWidget {
 class _ProductsPageState extends State<ProductsPage> {
   String _searchQuery = "";
   List<Product> _allProducts = [];
-
+  final ScrollController _scrollController = ScrollController();
+  int _previousProductCount = 0;
   Box<dynamic>? userBox;
 
   @override
@@ -139,7 +140,20 @@ class _ProductsPageState extends State<ProductsPage> {
                   final List<Product> newList = List<Product>.from(
                     userBox!.get("products", defaultValue: <Product>[]),
                   );
+                  // 🔥 AUTO SCROLL TO TOP WHEN NEW PRODUCT ADDED
+                  if (newList.length > _previousProductCount) {
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      if (_scrollController.hasClients) {
+                        _scrollController.animateTo(
+                          0,
+                          duration: const Duration(milliseconds: 600),
+                          curve: Curves.easeOutCubic,
+                        );
+                      }
+                    });
+                  }
 
+                  _previousProductCount = newList.length;
                   // Local assignments (NO setState)
                   _allProducts = newList;
 
@@ -184,6 +198,7 @@ class _ProductsPageState extends State<ProductsPage> {
                   }
 
                   return ListView.builder(
+                    controller: _scrollController,
                     padding: EdgeInsets.symmetric(
                       horizontal: 14 * scale,
                       vertical: 6 * scale,

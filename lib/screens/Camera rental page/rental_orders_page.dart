@@ -17,6 +17,8 @@ class RentalOrdersPage extends StatefulWidget {
 
 class _RentalOrdersPageState extends State<RentalOrdersPage> {
   late Box userBox;
+  final ScrollController _scrollController = ScrollController();
+  int _previousOrderCount = 0;
 
   List<RentalSaleModel> allOrders = [];
   List<RentalSaleModel> filteredOrders = [];
@@ -89,6 +91,22 @@ class _RentalOrdersPageState extends State<RentalOrdersPage> {
   void _loadOrders() {
     final raw = userBox.get('rental_sales', defaultValue: []);
     allOrders = List<RentalSaleModel>.from(raw);
+
+    // 🔥 AUTO SCROLL WHEN NEW ORDER ADDED
+    if (allOrders.length > _previousOrderCount) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_scrollController.hasClients) {
+          _scrollController.animateTo(
+            0,
+            duration: const Duration(milliseconds: 600),
+            curve: Curves.easeOutCubic,
+          );
+        }
+      });
+    }
+
+    _previousOrderCount = allOrders.length;
+
     _applyFilters();
     setState(() {});
   }
@@ -268,6 +286,7 @@ class _RentalOrdersPageState extends State<RentalOrdersPage> {
                   filteredOrders.isEmpty
                       ? _buildEmptyState(scale)
                       : ListView.builder(
+                        controller: _scrollController,
                         itemCount: filteredOrders.length,
                         padding: EdgeInsets.symmetric(
                           horizontal: 10 * scale,

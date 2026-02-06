@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:bizmate/screens/Camera rental page/view_rental_details_page.dart';
 import 'package:bizmate/widgets/confirm_delete_dialog.dart';
@@ -21,6 +22,9 @@ class _RentalItemsState extends State<RentalItems> {
   double scale = 1.0;
   List<RentalItem> rentalItems = [];
   List<RentalItem> filteredItems = [];
+  final ScrollController _scrollController = ScrollController();
+  int? _latestItemIndex;
+  Timer? _newBadgeTimer;
 
   String _searchQuery = "";
   String _selectedCategory = "All";
@@ -64,14 +68,41 @@ class _RentalItemsState extends State<RentalItems> {
     userBox.listenable(keys: ['rental_items']).addListener(() => _loadItems());
   }
 
+  void _startNewItemEffect() {
+    // Auto scroll to top
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeOutCubic,
+      );
+    }
+
+    // Remove badge after 3 seconds
+    _newBadgeTimer?.cancel();
+    _newBadgeTimer = Timer(const Duration(seconds: 3), () {
+      setState(() {
+        _latestItemIndex = null;
+      });
+    });
+
+    setState(() {});
+  }
+
   void _loadItems() {
     try {
       final raw = userBox.get('rental_items', defaultValue: []);
       rentalItems = List<RentalItem>.from(raw);
-      filteredItems = rentalItems;
+
+      // 🔥 LATEST FIRST
+      rentalItems = rentalItems.reversed.toList();
+
+      if (rentalItems.isNotEmpty) {
+        _latestItemIndex = 0;
+        _startNewItemEffect();
+      }
 
       _filterItems();
-      setState(() {});
     } catch (e) {
       rentalItems = [];
       filteredItems = [];
@@ -113,7 +144,6 @@ class _RentalItemsState extends State<RentalItems> {
               )
               .toList();
     }
-
     filteredItems = temp;
     setState(() {});
   }
@@ -263,6 +293,7 @@ class _RentalItemsState extends State<RentalItems> {
         }
 
         return GridView.builder(
+          controller: _scrollController, // 🔥 ADD THIS
           padding: EdgeInsets.symmetric(
             horizontal: width <= 380 ? 10 : 14,
             vertical: 14,
@@ -277,7 +308,7 @@ class _RentalItemsState extends State<RentalItems> {
           itemCount: filteredItems.length,
           itemBuilder: (context, index) {
             final item = filteredItems[index];
-            final originalIndex = rentalItems.indexOf(item);
+            final originalIndex = index;
 
             return GestureDetector(
               onLongPress: () => _deleteItem(originalIndex),
@@ -304,20 +335,38 @@ class _RentalItemsState extends State<RentalItems> {
 
   Widget _buildCard(RentalItem item, int index) {
     final conditionSafe = item.condition;
+    final bool isNewItem =
+        _latestItemIndex != null && index == _latestItemIndex;
 
     return LayoutBuilder(
       builder: (context, c) {
         final bool isSmallPhone = c.maxWidth <= 180;
         final double imageHeight = c.maxHeight * 0.38;
 
-        return Container(
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 400),
+          curve: Curves.easeOutCubic,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
+
+            // 🔥 Sticky Highlight Border
+            border:
+                isNewItem
+                    ? Border.all(color: Colors.redAccent, width: 2)
+                    : null,
+
             gradient: const LinearGradient(
               colors: [Color(0xFFE3F2FD), Color(0xFFB2EBF2)],
             ),
-            boxShadow: const [
-              BoxShadow(
+
+            boxShadow: [
+              if (isNewItem)
+                BoxShadow(
+                  color: Colors.redAccent.withOpacity(0.4),
+                  blurRadius: 20,
+                  spreadRadius: 2,
+                ),
+              const BoxShadow(
                 color: Colors.black26,
                 blurRadius: 10,
                 offset: Offset(0, 4),
@@ -470,47 +519,89 @@ class _RentalItemsState extends State<RentalItems> {
                 ],
               ),
 
+              // 🔥 TOP RIGHT SECTION (NEW + Availability + Delete)
               Positioned(
                 top: 8,
                 right: 8,
-                child: Row(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color:
-                            item.availability == 'Available'
-                                ? Colors.green.withOpacity(0.9)
-                                : Colors.redAccent.withOpacity(0.9),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        item.availability,
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 8 * scale,
-                          fontWeight: FontWeight.bold,
+                    // 🏷 NEW Badge
+                    if (isNewItem)
+                      AnimatedScale(
+                        duration: const Duration(milliseconds: 600),
+                        scale: 1,
+                        child: Container(
+                          margin: const EdgeInsets.only(bottom: 6),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 6 * scale,
+                            vertical: 2 * scale,
+                          ),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFFFF6B6B), Color(0xFFFF3B3B)],
+                            ),
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.redAccent.withOpacity(0.4),
+                                blurRadius: 8,
+                                offset: const Offset(0, 3),
+                              ),
+                            ],
+                          ),
+                          child: Text(
+                            "NEW",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 8 * scale,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 1,
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 6),
-                    InkWell(
-                      onTap: () => _deleteItem(index),
-                      child: Container(
-                        decoration: const BoxDecoration(
-                          color: Colors.black54,
-                          shape: BoxShape.circle,
+
+                    Row(
+                      children: [
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 8 * scale,
+                            vertical: 4 * scale,
+                          ),
+                          decoration: BoxDecoration(
+                            color:
+                                item.availability == 'Available'
+                                    ? Colors.green.withOpacity(0.9)
+                                    : Colors.redAccent.withOpacity(0.9),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            item.availability,
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 8 * scale,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ),
-                        padding: const EdgeInsets.all(6),
-                        child: Icon(
-                          Icons.delete_outline,
-                          color: Colors.white,
-                          size: 12 * scale,
+                        const SizedBox(width: 6),
+                        InkWell(
+                          onTap: () => _deleteItem(index),
+                          child: Container(
+                            decoration: const BoxDecoration(
+                              color: Colors.black54,
+                              shape: BoxShape.circle,
+                            ),
+                            padding: const EdgeInsets.all(6),
+                            child: Icon(
+                              Icons.delete_outline,
+                              color: Colors.white,
+                              size: 12 * scale,
+                            ),
+                          ),
                         ),
-                      ),
+                      ],
                     ),
                   ],
                 ),

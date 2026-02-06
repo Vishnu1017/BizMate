@@ -29,6 +29,8 @@ class CameraRentalPage extends StatefulWidget {
 }
 
 class _CameraRentalPageState extends State<CameraRentalPage> {
+  final ScrollController _scrollController = ScrollController();
+  int _previousSaleCount = 0;
   LinearGradient getProgressGradient(double percentage) {
     if (percentage <= 20) {
       return const LinearGradient(
@@ -419,6 +421,20 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
           allSales = List<RentalSaleModel>.from(
             box.get("rental_sales", defaultValue: []),
           );
+          // 🔥 AUTO SCROLL WHEN NEW SALE ADDED
+          if (allSales.length > _previousSaleCount) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (_scrollController.hasClients) {
+                _scrollController.animateTo(
+                  0,
+                  duration: const Duration(milliseconds: 600),
+                  curve: Curves.easeOutCubic,
+                );
+              }
+            });
+          }
+
+          _previousSaleCount = allSales.length;
         } catch (_) {
           allSales = [];
         }
@@ -1167,6 +1183,7 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
                                     maxWidth: maxWidth,
                                   ),
                                   child: ListView.builder(
+                                    controller: _scrollController,
                                     padding: const EdgeInsets.only(bottom: 20),
                                     itemCount: filteredSales.length,
                                     itemBuilder: (context, index) {

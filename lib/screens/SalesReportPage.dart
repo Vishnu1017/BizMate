@@ -43,14 +43,12 @@ class _SalesReportPageState extends State<SalesReportPage> {
   bool _isLoadingCsv = false;
   double scale = 1.0;
   double _downloadButtonWidth = 0;
-
-  // Overlay & target
   final GlobalKey _filterKey = GlobalKey();
   OverlayEntry? _overlayEntry;
   bool _isDropdownOpen = false;
-
-  // Scroll controller to close overlay on scroll
   final ScrollController _scrollController = ScrollController();
+  int _previousSalesCount = 0;
+
   LinearGradient getProgressGradient(double percentage) {
     if (percentage <= 20) {
       return LinearGradient(colors: [Color(0xFFE53935), Color(0xFFD32F2F)]);
@@ -1460,8 +1458,21 @@ class _SalesReportPageState extends State<SalesReportPage> {
   @override
   Widget build(BuildContext context) {
     // prepare data
-    final filteredSales = getFilteredSales();
-    // MODIFIED: Use the new grouping function that considers name + phone
+    final filteredSales =
+        getFilteredSales()..sort((a, b) => b.dateTime.compareTo(a.dateTime));
+    // 🔥 AUTO SCROLL WHEN NEW SALE ADDED
+    if (filteredSales.length > _previousSalesCount) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_scrollController.hasClients) {
+          _scrollController.animateTo(
+            0,
+            duration: const Duration(milliseconds: 600),
+            curve: Curves.easeOutCubic,
+          );
+        }
+      });
+    }
+    _previousSalesCount = filteredSales.length;
     final customerMap = _groupSalesByCustomer(filteredSales);
 
     final currencyFormat = NumberFormat.simpleCurrency(

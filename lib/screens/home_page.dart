@@ -37,7 +37,9 @@ class _HomePageState extends State<HomePage>
   String _currentUserEmail = '';
   String _currentUserPhone = '';
   bool _isUserDataLoaded = false;
-  Box? userBox; // User-specific box reference
+  Box? userBox;
+  final ScrollController _scrollController = ScrollController();
+  int _previousSalesCount = 0;
 
   Future<void> _loadCurrentUserData() async {
     final user = await _getCurrentUserName();
@@ -205,6 +207,20 @@ class _HomePageState extends State<HomePage>
         List<Sale> sales = [];
         try {
           sales = List<Sale>.from(box.get("sales", defaultValue: []));
+          // 🔥 AUTO SCROLL TO TOP WHEN NEW SALE IS ADDED
+          if (sales.length > _previousSalesCount) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (_scrollController.hasClients) {
+                _scrollController.animateTo(
+                  0,
+                  duration: const Duration(milliseconds: 600),
+                  curve: Curves.easeOutCubic,
+                );
+              }
+            });
+          }
+
+          _previousSalesCount = sales.length;
         } catch (_) {
           sales = [];
         }
@@ -329,6 +345,7 @@ class _HomePageState extends State<HomePage>
                   SizedBox(height: 10),
                 Expanded(
                   child: ListView.builder(
+                    controller: _scrollController,
                     padding: EdgeInsets.only(
                       bottom: 90,
                       left:
