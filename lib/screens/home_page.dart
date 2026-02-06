@@ -342,495 +342,508 @@ class _HomePageState extends State<HomePage>
                 if (sales.isNotEmpty &&
                     _searchQuery.isEmpty &&
                     selectedRange == null)
-                  SizedBox(height: 10),
-                Expanded(
-                  child: ListView.builder(
-                    controller: _scrollController,
-                    padding: EdgeInsets.only(
-                      bottom: 90,
-                      left:
-                          isVerySmallScreen
-                              ? 4
-                              : isSmallScreen
-                              ? 8
-                              : 0,
-                      right:
-                          isVerySmallScreen
-                              ? 4
-                              : isSmallScreen
-                              ? 8
-                              : 0,
-                    ),
-                    itemCount: sales.length,
-                    itemBuilder: (context, index) {
-                      final sale = sales[index];
-                      if (sale == null) return SizedBox.shrink();
+                  Expanded(
+                    child: ListView.builder(
+                      controller: _scrollController,
+                      padding: EdgeInsets.only(
+                        bottom: 90,
+                        left:
+                            isVerySmallScreen
+                                ? 4
+                                : isSmallScreen
+                                ? 8
+                                : 0,
+                        right:
+                            isVerySmallScreen
+                                ? 4
+                                : isSmallScreen
+                                ? 8
+                                : 0,
+                      ),
+                      itemCount: sales.length,
+                      itemBuilder: (context, index) {
+                        final sale = sales[index];
+                        if (sale == null) return SizedBox.shrink();
 
-                      // Get the original index from the box to maintain invoice numbering
-                      final originalIndex = sales.indexOf(sale);
-                      final invoiceNumber = sales.length - originalIndex;
-                      final formattedDate = DateFormat(
-                        'dd MMM yyyy',
-                      ).format(sale.dateTime);
-                      final formattedTime = DateFormat(
-                        'hh:mm a',
-                      ).format(sale.dateTime);
+                        // Get the original index from the box to maintain invoice numbering
+                        final originalIndex = sales.indexOf(sale);
+                        final invoiceNumber = sales.length - originalIndex;
+                        final formattedDate = DateFormat(
+                          'dd MMM yyyy',
+                        ).format(sale.dateTime);
+                        final formattedTime = DateFormat(
+                          'hh:mm a',
+                        ).format(sale.dateTime);
 
-                      double balanceAmount = (sale.totalAmount - sale.amount)
-                          .clamp(0, double.infinity);
+                        double balanceAmount = (sale.totalAmount - sale.amount)
+                            .clamp(0, double.infinity);
 
-                      return Card(
-                        margin: EdgeInsets.symmetric(
-                          horizontal:
-                              isVerySmallScreen
-                                  ? 13
-                                  : isSmallScreen
-                                  ? 8
-                                  : 27,
-                          vertical: isVerySmallScreen ? 6 : 8,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        elevation: 4,
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(16),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder:
-                                    (_) => SaleDetailScreen(
-                                      sale: sale,
-                                      index: originalIndex,
-                                    ),
+                        return Card(
+                          margin: EdgeInsets.symmetric(
+                            horizontal:
+                                isVerySmallScreen
+                                    ? 13
+                                    : isSmallScreen
+                                    ? 8
+                                    : 27,
+                            vertical: isVerySmallScreen ? 6 : 8,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          elevation: 4,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(16),
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder:
+                                      (_) => SaleDetailScreen(
+                                        sale: sale,
+                                        index: originalIndex,
+                                      ),
+                                ),
+                              );
+                            },
+                            child: Padding(
+                              padding: EdgeInsets.all(
+                                isVerySmallScreen
+                                    ? 10
+                                    : isSmallScreen
+                                    ? 12
+                                    : 16,
                               ),
-                            );
-                          },
-                          child: Padding(
-                            padding: EdgeInsets.all(
-                              isVerySmallScreen
-                                  ? 10
-                                  : isSmallScreen
-                                  ? 12
-                                  : 16,
-                            ),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                SizedBox(width: 15),
-                                if (!isVerySmallScreen) ...[
-                                  Column(
-                                    children: [
-                                      Container(
-                                        width: isSmallScreen ? 40 : 48,
-                                        height: isSmallScreen ? 40 : 48,
-                                        decoration: const BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          gradient: LinearGradient(
-                                            colors: [
-                                              Color(0xFF2563EB),
-                                              Color(0xFF1E40AF),
-                                              Color(0xFF020617),
-                                            ],
-                                            stops: [0.0, 0.6, 1.0],
-                                            begin: Alignment.bottomRight,
-                                            end: Alignment.topLeft,
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  SizedBox(width: 15),
+                                  if (!isVerySmallScreen) ...[
+                                    Column(
+                                      children: [
+                                        Container(
+                                          width: isSmallScreen ? 40 : 48,
+                                          height: isSmallScreen ? 40 : 48,
+                                          decoration: const BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            gradient: LinearGradient(
+                                              colors: [
+                                                Color(0xFF2563EB),
+                                                Color(0xFF1E40AF),
+                                                Color(0xFF020617),
+                                              ],
+                                              stops: [0.0, 0.6, 1.0],
+                                              begin: Alignment.bottomRight,
+                                              end: Alignment.topLeft,
+                                            ),
+                                          ),
+                                          child: Icon(
+                                            Icons.person,
+                                            color: Colors.white,
+                                            size: isSmallScreen ? 20 : 24,
                                           ),
                                         ),
-                                        child: Icon(
-                                          Icons.person,
-                                          color: Colors.white,
-                                          size: isSmallScreen ? 20 : 24,
+                                        SizedBox(height: 8),
+                                        Text(
+                                          "Invoice #$invoiceNumber",
+                                          style: TextStyle(
+                                            fontSize: isSmallScreen ? 10 : 12,
+                                            color: Colors.indigo,
+                                          ),
                                         ),
-                                      ),
-                                      SizedBox(height: 8),
-                                      Text(
-                                        "Invoice #$invoiceNumber",
-                                        style: TextStyle(
-                                          fontSize: isSmallScreen ? 10 : 12,
-                                          color: Colors.indigo,
+                                        SizedBox(height: 4),
+                                        Text(
+                                          DateFormat(
+                                            'dd MMM',
+                                          ).format(sale.dateTime),
+                                          style: TextStyle(
+                                            fontSize: isSmallScreen ? 10 : 12,
+                                            color: Colors.grey[600],
+                                          ),
                                         ),
-                                      ),
-                                      SizedBox(height: 4),
-                                      Text(
-                                        DateFormat(
-                                          'dd MMM',
-                                        ).format(sale.dateTime),
-                                        style: TextStyle(
-                                          fontSize: isSmallScreen ? 10 : 12,
-                                          color: Colors.grey[600],
+                                        Text(
+                                          DateFormat(
+                                            'hh:mm a',
+                                          ).format(sale.dateTime),
+                                          style: TextStyle(
+                                            fontSize: isSmallScreen ? 10 : 12,
+                                            color: Colors.grey[600],
+                                          ),
                                         ),
-                                      ),
-                                      Text(
-                                        DateFormat(
-                                          'hh:mm a',
-                                        ).format(sale.dateTime),
-                                        style: TextStyle(
-                                          fontSize: isSmallScreen ? 10 : 12,
-                                          color: Colors.grey[600],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  SizedBox(width: isSmallScreen ? 12 : 16),
-                                ],
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      if (isVerySmallScreen) ...[
-                                        Row(
-                                          children: [
-                                            Container(
-                                              width: isSmallScreen ? 30 : 38,
-                                              height: isSmallScreen ? 30 : 38,
-                                              decoration: const BoxDecoration(
-                                                shape: BoxShape.circle,
-                                                gradient: LinearGradient(
-                                                  colors: [
-                                                    Color(0xFF2563EB),
-                                                    Color(0xFF1E40AF),
-                                                    Color(0xFF020617),
-                                                  ],
-                                                  stops: [0.0, 0.6, 1.0],
-                                                  begin: Alignment.bottomRight,
-                                                  end: Alignment.topLeft,
+                                      ],
+                                    ),
+                                    SizedBox(width: isSmallScreen ? 12 : 16),
+                                  ],
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        if (isVerySmallScreen) ...[
+                                          Row(
+                                            children: [
+                                              Container(
+                                                width: isSmallScreen ? 30 : 38,
+                                                height: isSmallScreen ? 30 : 38,
+                                                decoration: const BoxDecoration(
+                                                  shape: BoxShape.circle,
+                                                  gradient: LinearGradient(
+                                                    colors: [
+                                                      Color(0xFF2563EB),
+                                                      Color(0xFF1E40AF),
+                                                      Color(0xFF020617),
+                                                    ],
+                                                    stops: [0.0, 0.6, 1.0],
+                                                    begin:
+                                                        Alignment.bottomRight,
+                                                    end: Alignment.topLeft,
+                                                  ),
+                                                ),
+                                                child: Icon(
+                                                  Icons.person,
+                                                  color: Colors.white,
+                                                  size: isSmallScreen ? 16 : 20,
                                                 ),
                                               ),
-                                              child: Icon(
-                                                Icons.person,
-                                                color: Colors.white,
-                                                size: isSmallScreen ? 16 : 20,
+                                              SizedBox(width: 8),
+                                              Expanded(
+                                                child: Text(
+                                                  sale.customerName,
+                                                  style: TextStyle(
+                                                    fontSize: 16,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          SizedBox(height: 8),
+                                          Text(
+                                            "Invoice #$invoiceNumber • ${DateFormat('dd MMM, hh:mm a').format(sale.dateTime)}",
+                                            style: TextStyle(
+                                              fontSize: 10,
+                                              color: Colors.grey[600],
+                                            ),
+                                          ),
+                                        ] else ...[
+                                          Text(
+                                            sale.customerName,
+                                            style: TextStyle(
+                                              fontSize: isSmallScreen ? 15 : 16,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ],
+                                        SizedBox(
+                                          height: isVerySmallScreen ? 4 : 6,
+                                        ),
+                                        Text(
+                                          sale.productName,
+                                          style: TextStyle(
+                                            fontSize:
+                                                isVerySmallScreen
+                                                    ? 12
+                                                    : isSmallScreen
+                                                    ? 13
+                                                    : 14,
+                                            color: Colors.black87,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        Text(
+                                          '+91 ${sale.phoneNumber}',
+                                          style: TextStyle(
+                                            fontSize:
+                                                isVerySmallScreen
+                                                    ? 12
+                                                    : isSmallScreen
+                                                    ? 13
+                                                    : 14,
+                                            color: Colors.black87,
+                                          ),
+                                        ),
+
+                                        Divider(height: 16, thickness: 1),
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Text(
+                                              "Total:",
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.w500,
+                                                fontSize:
+                                                    isVerySmallScreen
+                                                        ? 12
+                                                        : isSmallScreen
+                                                        ? 13
+                                                        : null,
                                               ),
                                             ),
-                                            SizedBox(width: 8),
-                                            Expanded(
-                                              child: Text(
-                                                sale.customerName,
-                                                style: TextStyle(
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
+                                            Text(
+                                              "₹${sale.totalAmount.toStringAsFixed(2)}",
+                                              style: TextStyle(
+                                                fontSize:
+                                                    isVerySmallScreen
+                                                        ? 12
+                                                        : isSmallScreen
+                                                        ? 13
+                                                        : null,
                                               ),
                                             ),
                                           ],
                                         ),
-                                        SizedBox(height: 8),
-                                        Text(
-                                          "Invoice #$invoiceNumber • ${DateFormat('dd MMM, hh:mm a').format(sale.dateTime)}",
-                                          style: TextStyle(
-                                            fontSize: 10,
-                                            color: Colors.grey[600],
-                                          ),
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Text(
+                                              "Paid:",
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.w500,
+                                                fontSize:
+                                                    isVerySmallScreen
+                                                        ? 12
+                                                        : isSmallScreen
+                                                        ? 13
+                                                        : null,
+                                              ),
+                                            ),
+                                            Text(
+                                              "₹${sale.amount.toStringAsFixed(2)}",
+                                              style: TextStyle(
+                                                fontSize:
+                                                    isVerySmallScreen
+                                                        ? 12
+                                                        : isSmallScreen
+                                                        ? 13
+                                                        : null,
+                                              ),
+                                            ),
+                                          ],
                                         ),
-                                      ] else ...[
-                                        Text(
-                                          sale.customerName,
-                                          style: TextStyle(
-                                            fontSize: isSmallScreen ? 15 : 16,
-                                            fontWeight: FontWeight.bold,
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Text(
+                                              "Balance:",
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.w500,
+                                                fontSize:
+                                                    isVerySmallScreen
+                                                        ? 12
+                                                        : isSmallScreen
+                                                        ? 13
+                                                        : null,
+                                              ),
+                                            ),
+                                            Text(
+                                              "₹${(sale.totalAmount - sale.amount).clamp(0, double.infinity).toStringAsFixed(2)}",
+                                              style: TextStyle(
+                                                color: Colors.red[700],
+                                                fontSize:
+                                                    isVerySmallScreen
+                                                        ? 12
+                                                        : isSmallScreen
+                                                        ? 13
+                                                        : null,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        Align(
+                                          alignment: Alignment.centerRight,
+                                          child: Builder(
+                                            builder: (context) {
+                                              final bool isFullyPaid =
+                                                  sale.amount >=
+                                                  sale.totalAmount;
+                                              final bool isPartiallyPaid =
+                                                  sale.amount > 0 &&
+                                                  sale.amount <
+                                                      sale.totalAmount;
+                                              final bool isUnpaid =
+                                                  sale.amount == 0;
+
+                                              final bool isDueOver7Days =
+                                                  isUnpaid &&
+                                                  sale.dateTime != null &&
+                                                  DateTime.now()
+                                                          .difference(
+                                                            sale.dateTime,
+                                                          )
+                                                          .inDays >
+                                                      7;
+
+                                              String label = '';
+                                              Color badgeColor =
+                                                  Colors.orange[700]!;
+
+                                              if (isFullyPaid) {
+                                                label = "SALE : PAID";
+                                                badgeColor = Colors.green[600]!;
+                                              } else if (isPartiallyPaid) {
+                                                label = "SALE : PARTIAL";
+                                                badgeColor = Colors.lightBlue;
+                                              } else if (isDueOver7Days) {
+                                                label = "SALE : DUE";
+                                                badgeColor =
+                                                    Colors.orange[700]!;
+
+                                                final due =
+                                                    sale.totalAmount -
+                                                    sale.amount;
+                                                final phone =
+                                                    sale.phoneNumber
+                                                        .replaceAll('+91', '')
+                                                        .trim();
+                                                final signature =
+                                                    _currentUserName.isNotEmpty
+                                                        ? ' - $_currentUserName'
+                                                        : '';
+                                                final msg =
+                                                    "Hello ${sale.customerName}, your payment of ₹${due.toStringAsFixed(2)} is overdue for more than 7 days. Please make the payment at the earliest. - $signature";
+                                                if (phone != null &&
+                                                    phone.isNotEmpty) {
+                                                  WidgetsBinding.instance
+                                                      .addPostFrameCallback((
+                                                        _,
+                                                      ) {
+                                                        WhatsAppHelper.sendWhatsAppMessage(
+                                                          phone: phone,
+                                                          message: msg,
+                                                        );
+                                                      });
+                                                }
+                                              } else {
+                                                label = "SALE : PARTIAL";
+                                                badgeColor = Colors.lightBlue;
+                                              }
+
+                                              return Align(
+                                                alignment:
+                                                    Alignment.centerRight,
+                                                child: Container(
+                                                  margin: EdgeInsets.only(
+                                                    top: 6,
+                                                  ),
+                                                  padding: EdgeInsets.symmetric(
+                                                    horizontal:
+                                                        isVerySmallScreen
+                                                            ? 6
+                                                            : isSmallScreen
+                                                            ? 8
+                                                            : 12,
+                                                    vertical:
+                                                        isVerySmallScreen
+                                                            ? 3
+                                                            : isSmallScreen
+                                                            ? 4
+                                                            : 5,
+                                                  ),
+                                                  decoration: BoxDecoration(
+                                                    color: badgeColor,
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          12,
+                                                        ),
+                                                    boxShadow: [
+                                                      BoxShadow(
+                                                        color: badgeColor
+                                                            .withOpacity(0.3),
+                                                        blurRadius: 4,
+                                                        offset: Offset(0, 2),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  child: Text(
+                                                    label,
+                                                    style: TextStyle(
+                                                      color: Colors.white,
+                                                      fontSize:
+                                                          isVerySmallScreen
+                                                              ? 9
+                                                              : isSmallScreen
+                                                              ? 10
+                                                              : 12,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      letterSpacing: 0.5,
+                                                    ),
+                                                  ),
+                                                ),
+                                              );
+                                            },
                                           ),
                                         ),
                                       ],
-                                      SizedBox(
-                                        height: isVerySmallScreen ? 4 : 6,
-                                      ),
-                                      Text(
-                                        sale.productName,
-                                        style: TextStyle(
-                                          fontSize:
-                                              isVerySmallScreen
-                                                  ? 12
-                                                  : isSmallScreen
-                                                  ? 13
-                                                  : 14,
-                                          color: Colors.black87,
-                                        ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                      Text(
-                                        '+91 ${sale.phoneNumber}',
-                                        style: TextStyle(
-                                          fontSize:
-                                              isVerySmallScreen
-                                                  ? 12
-                                                  : isSmallScreen
-                                                  ? 13
-                                                  : 14,
-                                          color: Colors.black87,
-                                        ),
-                                      ),
-
-                                      Divider(height: 16, thickness: 1),
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Text(
-                                            "Total:",
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.w500,
-                                              fontSize:
-                                                  isVerySmallScreen
-                                                      ? 12
-                                                      : isSmallScreen
-                                                      ? 13
-                                                      : null,
-                                            ),
-                                          ),
-                                          Text(
-                                            "₹${sale.totalAmount.toStringAsFixed(2)}",
-                                            style: TextStyle(
-                                              fontSize:
-                                                  isVerySmallScreen
-                                                      ? 12
-                                                      : isSmallScreen
-                                                      ? 13
-                                                      : null,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Text(
-                                            "Paid:",
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.w500,
-                                              fontSize:
-                                                  isVerySmallScreen
-                                                      ? 12
-                                                      : isSmallScreen
-                                                      ? 13
-                                                      : null,
-                                            ),
-                                          ),
-                                          Text(
-                                            "₹${sale.amount.toStringAsFixed(2)}",
-                                            style: TextStyle(
-                                              fontSize:
-                                                  isVerySmallScreen
-                                                      ? 12
-                                                      : isSmallScreen
-                                                      ? 13
-                                                      : null,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Text(
-                                            "Balance:",
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.w500,
-                                              fontSize:
-                                                  isVerySmallScreen
-                                                      ? 12
-                                                      : isSmallScreen
-                                                      ? 13
-                                                      : null,
-                                            ),
-                                          ),
-                                          Text(
-                                            "₹${(sale.totalAmount - sale.amount).clamp(0, double.infinity).toStringAsFixed(2)}",
-                                            style: TextStyle(
-                                              color: Colors.red[700],
-                                              fontSize:
-                                                  isVerySmallScreen
-                                                      ? 12
-                                                      : isSmallScreen
-                                                      ? 13
-                                                      : null,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      Align(
-                                        alignment: Alignment.centerRight,
-                                        child: Builder(
-                                          builder: (context) {
-                                            final bool isFullyPaid =
-                                                sale.amount >= sale.totalAmount;
-                                            final bool isPartiallyPaid =
-                                                sale.amount > 0 &&
-                                                sale.amount < sale.totalAmount;
-                                            final bool isUnpaid =
-                                                sale.amount == 0;
-
-                                            final bool isDueOver7Days =
-                                                isUnpaid &&
-                                                sale.dateTime != null &&
-                                                DateTime.now()
-                                                        .difference(
-                                                          sale.dateTime,
-                                                        )
-                                                        .inDays >
-                                                    7;
-
-                                            String label = '';
-                                            Color badgeColor =
-                                                Colors.orange[700]!;
-
-                                            if (isFullyPaid) {
-                                              label = "SALE : PAID";
-                                              badgeColor = Colors.green[600]!;
-                                            } else if (isPartiallyPaid) {
-                                              label = "SALE : PARTIAL";
-                                              badgeColor = Colors.lightBlue;
-                                            } else if (isDueOver7Days) {
-                                              label = "SALE : DUE";
-                                              badgeColor = Colors.orange[700]!;
-
-                                              final due =
-                                                  sale.totalAmount -
-                                                  sale.amount;
-                                              final phone =
-                                                  sale.phoneNumber
-                                                      .replaceAll('+91', '')
-                                                      .trim();
-                                              final signature =
-                                                  _currentUserName.isNotEmpty
-                                                      ? ' - $_currentUserName'
-                                                      : '';
-                                              final msg =
-                                                  "Hello ${sale.customerName}, your payment of ₹${due.toStringAsFixed(2)} is overdue for more than 7 days. Please make the payment at the earliest. - $signature";
-                                              if (phone != null &&
-                                                  phone.isNotEmpty) {
-                                                WidgetsBinding.instance
-                                                    .addPostFrameCallback((_) {
-                                                      WhatsAppHelper.sendWhatsAppMessage(
-                                                        phone: phone,
-                                                        message: msg,
-                                                      );
-                                                    });
-                                              }
-                                            } else {
-                                              label = "SALE : PARTIAL";
-                                              badgeColor = Colors.lightBlue;
-                                            }
-
-                                            return Align(
-                                              alignment: Alignment.centerRight,
-                                              child: Container(
-                                                margin: EdgeInsets.only(top: 6),
-                                                padding: EdgeInsets.symmetric(
-                                                  horizontal:
-                                                      isVerySmallScreen
-                                                          ? 6
-                                                          : isSmallScreen
-                                                          ? 8
-                                                          : 12,
-                                                  vertical:
-                                                      isVerySmallScreen
-                                                          ? 3
-                                                          : isSmallScreen
-                                                          ? 4
-                                                          : 5,
-                                                ),
-                                                decoration: BoxDecoration(
-                                                  color: badgeColor,
-                                                  borderRadius:
-                                                      BorderRadius.circular(12),
-                                                  boxShadow: [
-                                                    BoxShadow(
-                                                      color: badgeColor
-                                                          .withOpacity(0.3),
-                                                      blurRadius: 4,
-                                                      offset: Offset(0, 2),
-                                                    ),
-                                                  ],
-                                                ),
-                                                child: Text(
-                                                  label,
-                                                  style: TextStyle(
-                                                    color: Colors.white,
-                                                    fontSize:
-                                                        isVerySmallScreen
-                                                            ? 9
-                                                            : isSmallScreen
-                                                            ? 10
-                                                            : 12,
-                                                    fontWeight: FontWeight.bold,
-                                                    letterSpacing: 0.5,
-                                                  ),
-                                                ),
-                                              ),
-                                            );
-                                          },
-                                        ),
-                                      ),
-                                    ],
+                                    ),
                                   ),
-                                ),
-                                if (!isVerySmallScreen) ...[
-                                  // SaleOptionsMenu with proper user data
-                                  _isUserDataLoaded
-                                      ? SaleOptionsMenu(
-                                        sale: sale,
-                                        originalIndex: originalIndex,
-                                        box: box,
-                                        isSmallScreen: isSmallScreen,
-                                        invoiceNumber: invoiceNumber.toString(),
-                                        currentUserName: _currentUserName,
-                                        currentUserPhone: _currentUserPhone,
-                                        currentUserEmail: _currentUserEmail,
-                                        parentContext: context,
-                                      )
-                                      : SizedBox(
-                                        width: isSmallScreen ? 20 : 24,
-                                        child: Center(
-                                          child: SizedBox(
-                                            width: 16,
-                                            height: 16,
-                                            child: CircularProgressIndicator(
-                                              strokeWidth: 2,
+                                  if (!isVerySmallScreen) ...[
+                                    // SaleOptionsMenu with proper user data
+                                    _isUserDataLoaded
+                                        ? SaleOptionsMenu(
+                                          sale: sale,
+                                          originalIndex: originalIndex,
+                                          box: box,
+                                          isSmallScreen: isSmallScreen,
+                                          invoiceNumber:
+                                              invoiceNumber.toString(),
+                                          currentUserName: _currentUserName,
+                                          currentUserPhone: _currentUserPhone,
+                                          currentUserEmail: _currentUserEmail,
+                                          parentContext: context,
+                                        )
+                                        : SizedBox(
+                                          width: isSmallScreen ? 20 : 24,
+                                          child: Center(
+                                            child: SizedBox(
+                                              width: 16,
+                                              height: 16,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                              ),
                                             ),
                                           ),
                                         ),
-                                      ),
-                                ] else ...[
-                                  // For very small screens
-                                  _isUserDataLoaded
-                                      ? SaleOptionsMenu(
-                                        sale: sale,
-                                        originalIndex: originalIndex,
-                                        box: box,
-                                        isSmallScreen: true,
-                                        invoiceNumber: invoiceNumber.toString(),
-                                        currentUserName: _currentUserName,
-                                        currentUserPhone: _currentUserPhone,
-                                        currentUserEmail: _currentUserEmail,
-                                        parentContext: context,
-                                      )
-                                      : SizedBox(
-                                        width: 16,
-                                        child: Center(
-                                          child: SizedBox(
-                                            width: 12,
-                                            height: 12,
-                                            child: CircularProgressIndicator(
-                                              strokeWidth: 1.5,
+                                  ] else ...[
+                                    // For very small screens
+                                    _isUserDataLoaded
+                                        ? SaleOptionsMenu(
+                                          sale: sale,
+                                          originalIndex: originalIndex,
+                                          box: box,
+                                          isSmallScreen: true,
+                                          invoiceNumber:
+                                              invoiceNumber.toString(),
+                                          currentUserName: _currentUserName,
+                                          currentUserPhone: _currentUserPhone,
+                                          currentUserEmail: _currentUserEmail,
+                                          parentContext: context,
+                                        )
+                                        : SizedBox(
+                                          width: 16,
+                                          child: Center(
+                                            child: SizedBox(
+                                              width: 12,
+                                              height: 12,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 1.5,
+                                              ),
                                             ),
                                           ),
                                         ),
-                                      ),
+                                  ],
                                 ],
-                              ],
+                              ),
                             ),
                           ),
-                        ),
-                      );
-                    },
+                        );
+                      },
+                    ),
                   ),
-                ),
               ],
             );
           },
