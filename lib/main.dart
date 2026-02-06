@@ -26,7 +26,6 @@ import 'utils/responsive.dart';
 Future<void> main() async {
   try {
     WidgetsFlutterBinding.ensureInitialized();
-
     // ✅ GLOBAL EDGE-TO-EDGE (BEST PRACTICE)
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
 
