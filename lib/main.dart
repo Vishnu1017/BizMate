@@ -24,39 +24,26 @@ import 'utils/responsive.dart';
 /// ENTRY POINT
 /// ----------------------------------------------------------------
 Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      systemNavigationBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.light,
+    ),
+  );
+
+  runApp(const MyApp());
+}
+
+Future<void> _initializeApp() async {
   try {
-    WidgetsFlutterBinding.ensureInitialized();
-    // ✅ GLOBAL EDGE-TO-EDGE (BEST PRACTICE)
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-
-    // Optional polish
-    SystemChrome.setSystemUIOverlayStyle(
-      const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        systemNavigationBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-      ),
-    );
-
-    await _initializeHive();
-    await _initializeDefaultProfileImage();
-
-    runApp(const MyApp());
-  } catch (error, stackTrace) {
-    debugPrint('App initialization failed: $error');
-    debugPrint('Stack trace: $stackTrace');
-
-    runApp(
-      MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: Text(
-              'Failed to initialize app. Please restart or contact support.',
-            ),
-          ),
-        ),
-      ),
-    );
+    await Future.wait([_initializeHive(), _initializeDefaultProfileImage()]);
+  } catch (e) {
+    debugPrint("Startup init error: $e");
   }
 }
 
@@ -220,10 +207,9 @@ class _CustomSplashScreenState extends State<CustomSplashScreen>
   void initState() {
     super.initState();
 
-    // ✅ Modern animation controller
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1800),
+      duration: const Duration(milliseconds: 3600),
     );
 
     _animation = CurvedAnimation(
@@ -238,16 +224,21 @@ class _CustomSplashScreenState extends State<CustomSplashScreen>
       ),
     );
 
-    _controller.repeat(reverse: true);
+    _initializeApp();
+  }
 
-    // ✅ Navigation after splash
+  Future<void> _initializeApp() async {
+    await _initializeHive();
+    await _initializeDefaultProfileImage();
+
+    _controller.forward(); // 🔥 runs once only
     _navTimer = Timer(const Duration(seconds: 3), _checkAndNavigate);
   }
 
   Future<void> _checkAndNavigate() async {
     if (_navigated) return;
     _navigated = true;
-
+    await Future.delayed(const Duration(milliseconds: 120));
     try {
       // ✅ 1. SESSION
       if (!Hive.isBoxOpen('session')) {
@@ -499,7 +490,7 @@ class _CustomSplashScreenState extends State<CustomSplashScreen>
                       child: AnimatedBuilder(
                         animation: _controller,
                         builder: (context, child) {
-                          final progress = _controller.value;
+                          final progress = (_controller.value * 2) % 1;
 
                           return Stack(
                             children: [

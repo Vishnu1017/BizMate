@@ -1,8 +1,8 @@
 <resources>
 
     <!-- Launch Theme (No default splash) -->
-    <style name="LaunchTheme" parent="Theme.AppCompat.Light.NoActionBar">
-        <item name="android:windowBackground">@android:color/transparent</item>
+    <style name="LaunchTheme" parent="@android:style/Theme.Light.NoTitleBar">
+        <item name="android:windowBackground">@drawable/launch_background</item>
     </style>
 
     <!-- Normal App Theme -->
