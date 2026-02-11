@@ -3090,7 +3090,7 @@ class _ProfilePageState extends State<ProfilePage>
           child: Container(
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withOpacity(0.05),
@@ -3136,7 +3136,7 @@ class _ProfilePageState extends State<ProfilePage>
         Expanded(
           child: Container(
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(12),
               gradient: LinearGradient(
                 colors: [Color(0xFFEF4444), Color(0xFFDC2626)],
               ),
