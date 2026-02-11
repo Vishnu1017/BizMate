@@ -6,8 +6,9 @@ import 'package:bizmate/widgets/app_snackbar.dart' show AppSnackBar;
 import 'package:bizmate/widgets/confirm_delete_dialog.dart'
     show showConfirmDialog;
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:hive/hive.dart';
-import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../models/customer_model.dart';
 
 class RentalCustomersPage extends StatefulWidget {
@@ -120,6 +121,91 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
       if (mounted) {
         AppSnackBar.showError(context, message: 'Error loading customers: $e');
         setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  void _makePhoneCall(String phone) async {
+    String cleaned = phone.replaceAll(RegExp(r'[^0-9+]'), '');
+
+    if (!cleaned.startsWith('+') && cleaned.length == 10) {
+      cleaned = '+91$cleaned';
+    }
+
+    final uri = Uri.parse('tel:$cleaned');
+
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    } else {
+      if (mounted) {
+        AppSnackBar.showError(context, message: "Couldn't open dialer");
+      }
+    }
+  }
+
+  void _openWhatsApp(String phone, String name, {String? purpose}) async {
+    try {
+      String raw = phone.replaceAll(RegExp(r'[^\d+]'), '');
+      String waPhone;
+
+      if (raw.startsWith('+')) {
+        waPhone = raw.substring(1);
+      } else if (raw.length == 10) {
+        waPhone = '91$raw';
+      } else {
+        waPhone = raw;
+      }
+
+      if (waPhone.length < 10) {
+        AppSnackBar.showWarning(context, message: "Invalid phone number");
+        return;
+      }
+
+      late String message;
+
+      switch (purpose) {
+        case 'payment_received':
+          message =
+              "Hello $name,\n\n"
+              "We have successfully received your rental payment.\n\n"
+              "Thank you for choosing us.\n\n"
+              "Warm regards.";
+          break;
+
+        case 'rental_due':
+          message =
+              "Hello $name,\n\n"
+              "This is a friendly reminder that your rental payment is due.\n\n"
+              "Please let us know if you need any assistance.\n\n"
+              "Thank you.";
+          break;
+
+        case 'booking_confirmation':
+          message =
+              "Hello $name,\n\n"
+              "Your rental booking has been successfully confirmed.\n\n"
+              "We look forward to serving you.\n\n"
+              "Thank you.";
+          break;
+
+        default:
+          message =
+              "Hello $name,\n\n"
+              "How can we assist you today?\n\n"
+              "Thank you.";
+      }
+
+      final encoded = Uri.encodeComponent(message);
+      final uri = Uri.parse("https://wa.me/$waPhone?text=$encoded");
+
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        throw Exception("WhatsApp not available");
+      }
+    } catch (_) {
+      if (mounted) {
+        AppSnackBar.showError(context, message: "Couldn't open WhatsApp");
       }
     }
   }
@@ -274,7 +360,7 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
 
     final avatarSize =
         isDesktop ? 84.0 : (isTablet ? 72.0 : (isSmallPhone ? 56.0 : 70.0));
-    final horizontalPadding = isDesktop ? 28.0 : (isTablet ? 10.0 : 8.0);
+    final horizontalPadding = isDesktop ? 32.0 : (isTablet ? 14.0 : 12.0);
     final titleFont = 14 * scale;
     final subtitleFont = 12 * scale;
 
@@ -342,7 +428,7 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
-              borderRadius: BorderRadius.circular(isDesktop ? 20 : 16),
+              borderRadius: BorderRadius.circular(12 * scale),
               boxShadow: [
                 BoxShadow(
                   color: colorPair[0].withOpacity(0.35),
@@ -380,12 +466,15 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
                     ),
                   ),
                 Padding(
-                  padding: EdgeInsets.all(12 * scale),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 14 * scale,
+                    vertical: 20 * scale,
+                  ),
                   child: Row(
                     children: [
                       Container(
-                        width: 50 * scale,
-                        height: 50 * scale,
+                        width: 45 * scale,
+                        height: 45 * scale,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: Colors.white.withOpacity(0.20),
@@ -401,7 +490,7 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
                                 : 'U',
                             style: TextStyle(
                               color: Colors.white,
-                              fontSize: (avatarSize * 0.35).clamp(16.0, 36.0),
+                              fontSize: (avatarSize * 0.25).clamp(16.0, 36.0),
                               fontWeight: FontWeight.w900,
                             ),
                           ),
@@ -443,44 +532,87 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
                                 ),
                               ],
                             ),
-                            SizedBox(height: isDesktop ? 8 : 6),
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.calendar_month,
-                                  color: Colors.white70,
-                                  size: subtitleFont - 1,
-                                ),
-                                SizedBox(width: 8),
-                                Text(
-                                  DateFormat(
-                                    'MMM dd, yyyy',
-                                  ).format(customer.createdAt),
-                                  style: TextStyle(
-                                    color: Colors.white70,
-                                    fontSize: (subtitleFont - 1).clamp(
-                                      12.0,
-                                      16.0,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
                           ],
                         ),
                       ),
-                      Container(
-                        width: 25 * scale,
-                        height: 25 * scale,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white.withOpacity(0.22),
-                        ),
-                        child: Icon(
-                          Icons.drag_handle,
-                          color: Colors.white,
-                          size: 14 * scale,
-                        ),
+                      Row(
+                        children: [
+                          IconButton(
+                            icon: Icon(
+                              Icons.phone,
+                              color: Colors.white,
+                              size: 18 * scale,
+                            ),
+                            onPressed: () => _makePhoneCall(customer.phone),
+                          ),
+
+                          PopupMenuButton<String>(
+                            icon: FaIcon(
+                              FontAwesomeIcons.whatsapp,
+                              color: Colors.white,
+                              size: 18 * scale,
+                            ),
+                            onSelected: (value) {
+                              _openWhatsApp(
+                                customer.phone,
+                                customer.name,
+                                purpose: value,
+                              );
+                            },
+                            itemBuilder:
+                                (context) => [
+                                  PopupMenuItem(
+                                    value: 'default',
+                                    child: Row(
+                                      children: const [
+                                        Icon(Icons.chat, color: Colors.blue),
+                                        SizedBox(width: 8),
+                                        Text("General Inquiry"),
+                                      ],
+                                    ),
+                                  ),
+                                  PopupMenuItem(
+                                    value: 'booking_confirmation',
+                                    child: Row(
+                                      children: const [
+                                        Icon(
+                                          Icons.event_available,
+                                          color: Colors.indigo,
+                                        ),
+                                        SizedBox(width: 8),
+                                        Text("Booking Confirmation"),
+                                      ],
+                                    ),
+                                  ),
+                                  PopupMenuItem(
+                                    value: 'payment_received',
+                                    child: Row(
+                                      children: const [
+                                        Icon(
+                                          Icons.check_circle,
+                                          color: Colors.green,
+                                        ),
+                                        SizedBox(width: 8),
+                                        Text("Payment Received"),
+                                      ],
+                                    ),
+                                  ),
+                                  PopupMenuItem(
+                                    value: 'rental_due',
+                                    child: Row(
+                                      children: const [
+                                        Icon(
+                                          Icons.warning_amber_rounded,
+                                          color: Colors.orange,
+                                        ),
+                                        SizedBox(width: 8),
+                                        Text("Rental Due Reminder"),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                          ),
+                        ],
                       ),
                     ],
                   ),

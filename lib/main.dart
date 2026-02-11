@@ -209,12 +209,12 @@ class _CustomSplashScreenState extends State<CustomSplashScreen>
 
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 3600),
+      duration: const Duration(milliseconds: 3400), // slightly premium timing
     );
 
     _animation = CurvedAnimation(
       parent: _controller,
-      curve: Curves.easeInOutCubic,
+      curve: const Cubic(0.22, 1.0, 0.36, 1.0), // 🍎 Apple premium easing
     );
 
     _floatAnimation = Tween<double>(begin: 0, end: 1).animate(
@@ -231,7 +231,7 @@ class _CustomSplashScreenState extends State<CustomSplashScreen>
     await _initializeHive();
     await _initializeDefaultProfileImage();
 
-    _controller.forward(); // 🔥 runs once only
+    _controller.forward();
     _navTimer = Timer(const Duration(seconds: 3), _checkAndNavigate);
   }
 

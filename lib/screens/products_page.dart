@@ -234,7 +234,7 @@ class _ProductsPageState extends State<ProductsPage> {
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                             ),
-                            borderRadius: BorderRadius.circular(14 * scale),
+                            borderRadius: BorderRadius.circular(12 * scale),
                             boxShadow: [
                               BoxShadow(
                                 color: Colors.black.withOpacity(0.10),
@@ -246,7 +246,7 @@ class _ProductsPageState extends State<ProductsPage> {
                           child: ListTile(
                             contentPadding: EdgeInsets.symmetric(
                               horizontal: 20 * scale,
-                              vertical: 12 * scale,
+                              vertical: 8 * scale,
                             ),
                             leading: CircleAvatar(
                               radius: 20 * scale,

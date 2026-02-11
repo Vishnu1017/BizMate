@@ -539,7 +539,7 @@ class _CustomersPageState extends State<CustomersPage> {
                               child: ListTile(
                                 contentPadding: EdgeInsets.symmetric(
                                   horizontal: 16 * scale,
-                                  vertical: 12 * scale,
+                                  vertical: 8 * scale,
                                 ),
                                 leading: CircleAvatar(
                                   radius: 22 * scale,

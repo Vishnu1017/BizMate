@@ -1117,7 +1117,7 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
                                     // ================= CART BUTTON =================
                                     Container(
                                       padding: EdgeInsets.symmetric(
-                                        horizontal: 10 * scale,
+                                        horizontal: 8 * scale,
                                         vertical: 6 * scale,
                                       ),
                                       decoration: BoxDecoration(

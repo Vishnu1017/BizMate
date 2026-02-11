@@ -190,7 +190,7 @@ class _CameraRentalNavBarState extends State<CameraRentalNavBar> {
                         children: [
                           Container(
                             padding: EdgeInsets.symmetric(
-                              horizontal: _scaleForWidth(screenWidth, 10),
+                              horizontal: _scaleForWidth(screenWidth, 8),
                               vertical: _scaleForWidth(screenWidth, 6),
                             ),
                             decoration: BoxDecoration(
