@@ -396,13 +396,13 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
         background: Container(
           alignment: Alignment.centerRight,
           padding: EdgeInsets.symmetric(horizontal: 20 * scale),
-          margin: EdgeInsets.only(bottom: 14 * scale),
           decoration: BoxDecoration(
             color: Colors.red,
             borderRadius: BorderRadius.circular(12 * scale),
           ),
           child: Icon(Icons.delete, color: Colors.white, size: 30 * scale),
         ),
+
         child: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
