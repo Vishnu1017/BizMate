@@ -352,17 +352,18 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
   // UI BUILDERS (NO CHANGE)
   // ---------------------------------------------------------------------------
   Widget _buildCustomerCard(CustomerModel customer, int index) {
-    // Responsive calculations inside the widget (no function changes)
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isTablet = screenWidth >= 600 && screenWidth < 1000;
-    final isDesktop = screenWidth >= 1000;
-    final isSmallPhone = screenWidth < 360;
+    final w = MediaQuery.of(context).size.width;
 
-    final avatarSize =
-        isDesktop ? 84.0 : (isTablet ? 72.0 : (isSmallPhone ? 56.0 : 70.0));
-    final horizontalPadding = isDesktop ? 32.0 : (isTablet ? 14.0 : 12.0);
-    final titleFont = 14 * scale;
-    final subtitleFont = 12 * scale;
+    double scale =
+        w < 360
+            ? 0.80
+            : w < 480
+            ? 0.90
+            : w < 700
+            ? 1.00
+            : w < 1100
+            ? 1.15
+            : 1.30;
 
     final blueShades = [
       [Color(0xFF3B82F6), Color(0xFF2563EB)],
@@ -375,250 +376,175 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
 
     final colorPair = blueShades[index % blueShades.length];
 
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: 8),
+    final initials =
+        customer.name.isNotEmpty
+            ? customer.name.split(' ').map((e) => e[0]).join().toUpperCase()
+            : "?";
+
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: 14 * scale,
+        vertical: 10 * scale,
+      ),
       child: Dismissible(
         key: Key(
           '${customer.name}_${customer.phone}_${customer.createdAt.millisecondsSinceEpoch}',
         ),
         direction: DismissDirection.endToStart,
         confirmDismiss: (_) async => await _confirmDelete(customer),
-        onDismissed: (_) {
-          // onDismissed fires after the dismiss animation completes.
-          // We call _deleteCustomer which mutates data and state (it has its own mounted checks).
-          _deleteCustomer(index);
-        },
+        onDismissed: (_) => _deleteCustomer(index),
         background: Container(
           alignment: Alignment.centerRight,
-          padding: EdgeInsets.symmetric(horizontal: 25 * scale),
+          padding: EdgeInsets.symmetric(horizontal: 20 * scale),
+          margin: EdgeInsets.only(bottom: 14 * scale),
+          decoration: BoxDecoration(
+            color: Colors.red,
+            borderRadius: BorderRadius.circular(12 * scale),
+          ),
+          child: Icon(Icons.delete, color: Colors.white, size: 30 * scale),
+        ),
+        child: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [Colors.red.shade500, Colors.red.shade700],
+              colors: colorPair,
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.delete_forever_rounded,
-                color: Colors.white,
-                size: 26 * scale,
-              ),
-              SizedBox(height: 4 * scale),
-              Text(
-                'Delete',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 12 * scale,
-                ),
+            borderRadius: BorderRadius.circular(12 * scale),
+            boxShadow: [
+              BoxShadow(
+                color: colorPair[0].withOpacity(0.35),
+                blurRadius: 10 * scale,
+                offset: Offset(0, 4 * scale),
               ),
             ],
           ),
-        ),
-        child: ConstrainedBox(
-          constraints: BoxConstraints(
-            maxWidth: isDesktop ? 1100 : double.infinity,
-          ),
-          child: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: colorPair,
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(12 * scale),
-              boxShadow: [
-                BoxShadow(
-                  color: colorPair[0].withOpacity(0.35),
-                  blurRadius: isDesktop ? 22 : 15,
-                  offset: const Offset(0, 8),
+          child: Stack(
+            children: [
+              Positioned(
+                right: -20,
+                top: -20,
+                child: Container(
+                  width: 100 * scale,
+                  height: 100 * scale,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white.withOpacity(0.08),
+                  ),
                 ),
-              ],
-            ),
-            child: Stack(
-              children: [
-                if (isDesktop)
-                  Positioned(
-                    right: -30,
-                    top: -30,
-                    child: Container(
-                      width: 140 * scale,
-                      height: 140 * scale,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white.withOpacity(0.06),
-                      ),
-                    ),
-                  )
-                else
-                  Positioned(
-                    right: -20,
-                    top: -20,
-                    child: Container(
-                      width: 100 * scale,
-                      height: 100 * scale,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white.withOpacity(0.08),
-                      ),
+              ),
+              ListTile(
+                contentPadding: EdgeInsets.fromLTRB(
+                  16 * scale,
+                  8 * scale,
+                  1 * scale,
+                  8 * scale,
+                ),
+                leading: CircleAvatar(
+                  radius: 22 * scale,
+                  backgroundColor: Colors.white,
+                  child: Text(
+                    initials,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16 * scale,
+                      color: const Color(0xFF1A237E),
                     ),
                   ),
-                Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 14 * scale,
-                    vertical: 20 * scale,
+                ),
+                title: Text(
+                  customer.name,
+                  style: TextStyle(
+                    fontSize: 15 * scale,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
                   ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 45 * scale,
-                        height: 45 * scale,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white.withOpacity(0.20),
-                          border: Border.all(
-                            color: Colors.white.withOpacity(0.4),
-                            width: 2,
-                          ),
-                        ),
-                        child: Center(
-                          child: Text(
-                            customer.name.isNotEmpty
-                                ? customer.name[0].toUpperCase()
-                                : 'U',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: (avatarSize * 0.25).clamp(16.0, 36.0),
-                              fontWeight: FontWeight.w900,
-                            ),
-                          ),
-                        ),
+                ),
+                subtitle: Text(
+                  customer.phone,
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 12.5 * scale,
+                  ),
+                ),
+                trailing: Wrap(
+                  runSpacing: 2 * scale,
+                  children: [
+                    IconButton(
+                      icon: Icon(
+                        Icons.phone,
+                        size: 20 * scale,
+                        color: Colors.white,
                       ),
-                      SizedBox(width: 14 * scale),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              customer.name,
-                              style: TextStyle(
-                                fontSize: titleFont,
-                                fontWeight: FontWeight.w900,
-                                color: Colors.white,
+                      onPressed: () => _makePhoneCall(customer.phone),
+                    ),
+                    PopupMenuButton<String>(
+                      icon: FaIcon(
+                        FontAwesomeIcons.whatsapp,
+                        size: 20 * scale,
+                        color: Colors.white,
+                      ),
+                      onSelected: (value) {
+                        _openWhatsApp(
+                          customer.phone,
+                          customer.name,
+                          purpose: value,
+                        );
+                      },
+                      itemBuilder:
+                          (context) => [
+                            PopupMenuItem(
+                              value: 'default',
+                              child: Row(
+                                children: const [
+                                  Icon(Icons.chat, color: Colors.blue),
+                                  SizedBox(width: 8),
+                                  Text("General Inquiry"),
+                                ],
                               ),
-                              overflow: TextOverflow.ellipsis,
-                              maxLines: 1,
                             ),
-                            SizedBox(height: 6 * scale),
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.phone,
-                                  color: Colors.white70,
-                                  size: subtitleFont,
-                                ),
-                                SizedBox(width: 6 * scale),
-                                Expanded(
-                                  child: Text(
-                                    customer.phone,
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: subtitleFont,
-                                    ),
-                                    overflow: TextOverflow.ellipsis,
+                            PopupMenuItem(
+                              value: 'booking_confirmation',
+                              child: Row(
+                                children: const [
+                                  Icon(
+                                    Icons.event_available,
+                                    color: Colors.indigo,
                                   ),
-                                ),
-                              ],
+                                  SizedBox(width: 8),
+                                  Text("Booking Confirmation"),
+                                ],
+                              ),
+                            ),
+                            PopupMenuItem(
+                              value: 'payment_received',
+                              child: Row(
+                                children: const [
+                                  Icon(Icons.check_circle, color: Colors.green),
+                                  SizedBox(width: 8),
+                                  Text("Payment Received"),
+                                ],
+                              ),
+                            ),
+                            PopupMenuItem(
+                              value: 'rental_due',
+                              child: Row(
+                                children: const [
+                                  Icon(
+                                    Icons.warning_amber_rounded,
+                                    color: Colors.orange,
+                                  ),
+                                  SizedBox(width: 8),
+                                  Text("Rental Due Reminder"),
+                                ],
+                              ),
                             ),
                           ],
-                        ),
-                      ),
-                      Row(
-                        children: [
-                          IconButton(
-                            icon: Icon(
-                              Icons.phone,
-                              color: Colors.white,
-                              size: 18 * scale,
-                            ),
-                            onPressed: () => _makePhoneCall(customer.phone),
-                          ),
-
-                          PopupMenuButton<String>(
-                            icon: FaIcon(
-                              FontAwesomeIcons.whatsapp,
-                              color: Colors.white,
-                              size: 18 * scale,
-                            ),
-                            onSelected: (value) {
-                              _openWhatsApp(
-                                customer.phone,
-                                customer.name,
-                                purpose: value,
-                              );
-                            },
-                            itemBuilder:
-                                (context) => [
-                                  PopupMenuItem(
-                                    value: 'default',
-                                    child: Row(
-                                      children: const [
-                                        Icon(Icons.chat, color: Colors.blue),
-                                        SizedBox(width: 8),
-                                        Text("General Inquiry"),
-                                      ],
-                                    ),
-                                  ),
-                                  PopupMenuItem(
-                                    value: 'booking_confirmation',
-                                    child: Row(
-                                      children: const [
-                                        Icon(
-                                          Icons.event_available,
-                                          color: Colors.indigo,
-                                        ),
-                                        SizedBox(width: 8),
-                                        Text("Booking Confirmation"),
-                                      ],
-                                    ),
-                                  ),
-                                  PopupMenuItem(
-                                    value: 'payment_received',
-                                    child: Row(
-                                      children: const [
-                                        Icon(
-                                          Icons.check_circle,
-                                          color: Colors.green,
-                                        ),
-                                        SizedBox(width: 8),
-                                        Text("Payment Received"),
-                                      ],
-                                    ),
-                                  ),
-                                  PopupMenuItem(
-                                    value: 'rental_due',
-                                    child: Row(
-                                      children: const [
-                                        Icon(
-                                          Icons.warning_amber_rounded,
-                                          color: Colors.orange,
-                                        ),
-                                        SizedBox(width: 8),
-                                        Text("Rental Due Reminder"),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
@@ -630,7 +556,11 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.search_off_rounded, size: 60, color: Colors.grey.shade500),
+          Icon(
+            Icons.search_off_rounded,
+            size: 60 * scale,
+            color: Colors.grey.shade500,
+          ),
           const SizedBox(height: 16),
           Text(
             "No matching results",
