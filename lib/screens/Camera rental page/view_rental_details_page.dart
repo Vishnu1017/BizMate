@@ -90,8 +90,11 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
   @override
   void initState() {
     super.initState();
-    _loadUserData();
     _cartCount.value = RentalCart.items.length;
+
+    _loadUserData().then((_) {
+      _syncAvailabilityWithCart();
+    });
   }
 
   @override
@@ -165,7 +168,7 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
     });
   }
 
-  void _loadUserData() {
+  Future<void> _loadUserData() async {
     final sessionBox = Hive.box('session');
     final email = sessionBox.get("currentUserEmail", defaultValue: "");
 
@@ -177,7 +180,7 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
     final userBoxName = "userdata_$safeEmail";
 
     if (!Hive.isBoxOpen(userBoxName)) {
-      Hive.openBox(userBoxName);
+      await Hive.openBox(userBoxName); // ✅ awaited
     }
 
     userBox = Hive.box(userBoxName);
@@ -189,6 +192,10 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
     userRentalSales = List<RentalSaleModel>.from(
       userBox.get('rental_sales', defaultValue: []),
     );
+
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   void calculateTotal() {
@@ -406,12 +413,11 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
   void checkAvailability(DateTime from, DateTime to) {
     bool isAvailable = true;
 
+    // Check customer rentals
     for (var customer in userCustomers) {
       for (var rental in customer.rentals) {
         if (rental.itemName == widget.item.name) {
-          if ((from.isBefore(rental.to) && to.isAfter(rental.from)) ||
-              from.isAtSameMomentAs(rental.from) ||
-              to.isAtSameMomentAs(rental.to)) {
+          if (from.isBefore(rental.to) && to.isAfter(rental.from)) {
             isAvailable = false;
             break;
           }
@@ -420,13 +426,11 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
       if (!isAvailable) break;
     }
 
+    // Check rental sales
     if (isAvailable) {
       for (var sale in userRentalSales) {
         if (sale.itemName == widget.item.name) {
-          if ((from.isBefore(sale.toDateTime) &&
-                  to.isAfter(sale.fromDateTime)) ||
-              from.isAtSameMomentAs(sale.fromDateTime) ||
-              to.isAtSameMomentAs(sale.toDateTime)) {
+          if (from.isBefore(sale.toDateTime) && to.isAfter(sale.fromDateTime)) {
             isAvailable = false;
             break;
           }
@@ -434,9 +438,11 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
       }
     }
 
-    setState(() {
-      availabilityStatus = isAvailable ? "Available" : "Unavailable";
-    });
+    if (mounted) {
+      setState(() {
+        availabilityStatus = isAvailable ? "Available" : "Unavailable";
+      });
+    }
   }
 
   Widget _buildNeumorphicCard({

@@ -29,7 +29,7 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
   final String _selectedMode = 'Cash';
   bool isCustomerSelectedFromList = false;
   double scale = 1.0;
-  late final screenWidth = MediaQuery.of(context).size.width;
+  bool _isSaving = false;
 
   List<Map<String, String>> customerList = [];
   Map<String, dynamic>? selectedItemDetails;
@@ -155,12 +155,22 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
   Future<bool> isPhoneNumberDuplicate() async {
     if (isCustomerSelectedFromList) return false;
 
-    final saleBox = Hive.box<Sale>('sales');
-    final phoneNumber = phoneController.text.trim();
+    final sessionBox = await Hive.openBox('session');
+    final email = sessionBox.get("currentUserEmail");
 
+    if (email == null) return false;
+
+    final safeEmail = email.replaceAll('.', '_').replaceAll('@', '_');
+    final userBox = await Hive.openBox('userdata_$safeEmail');
+
+    final List<Sale> sales = List<Sale>.from(
+      userBox.get("sales", defaultValue: <Sale>[]),
+    );
+
+    final phoneNumber = phoneController.text.trim();
     if (phoneNumber.isEmpty) return false;
 
-    return saleBox.values.any((sale) => sale.phoneNumber.trim() == phoneNumber);
+    return sales.any((sale) => sale.phoneNumber.trim() == phoneNumber);
   }
 
   void addItem() async {
@@ -1329,7 +1339,15 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                         return;
                       }
 
+                      if (_isSaving) return;
+
+                      setState(() => _isSaving = true);
+
                       saveSale();
+
+                      if (mounted) {
+                        setState(() => _isSaving = false);
+                      }
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.transparent,
@@ -1395,48 +1413,51 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
     // Mobile-first: single column scrollable layout to avoid overflow on keyboard
     return LayoutBuilder(
       builder: (context, constraints) {
-        return Scaffold(
-          backgroundColor: const Color(0xFFF8FAFF),
-          appBar: AppBar(
-            iconTheme: const IconThemeData(color: Colors.white),
-            title: const Text(
-              "New Sale",
-              style: TextStyle(color: Colors.white),
-            ),
-            centerTitle: true,
-            elevation: 0,
-            flexibleSpace: Container(
-              decoration: const BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [
-                    Color(0xFF2563EB),
-                    Color(0xFF1E40AF),
-                    Color(0xFF020617),
-                  ],
-                  stops: [0.0, 0.6, 1.0],
-                  begin: Alignment.bottomRight,
-                  end: Alignment.topLeft,
+        return WillPopScope(
+          onWillPop: () async => !_isSaving,
+          child: Scaffold(
+            backgroundColor: const Color(0xFFF8FAFF),
+            appBar: AppBar(
+              iconTheme: const IconThemeData(color: Colors.white),
+              title: const Text(
+                "New Sale",
+                style: TextStyle(color: Colors.white),
+              ),
+              centerTitle: true,
+              elevation: 0,
+              flexibleSpace: Container(
+                decoration: const BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [
+                      Color(0xFF2563EB),
+                      Color(0xFF1E40AF),
+                      Color(0xFF020617),
+                    ],
+                    stops: [0.0, 0.6, 1.0],
+                    begin: Alignment.bottomRight,
+                    end: Alignment.topLeft,
+                  ),
                 ),
               ),
             ),
-          ),
-          body: SafeArea(
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  minHeight:
-                      MediaQuery.of(context).size.height - kToolbarHeight,
-                ),
-                child: IntrinsicHeight(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      // Left column (form + items) - always shown first (mobile-first)
-                      _leftColumn(context, constraints),
-                      // give bottom space so floating keyboard/button won't overlap
-                      const SizedBox(height: 20),
-                    ],
+            body: SafeArea(
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    minHeight:
+                        MediaQuery.of(context).size.height - kToolbarHeight,
+                  ),
+                  child: IntrinsicHeight(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // Left column (form + items) - always shown first (mobile-first)
+                        _leftColumn(context, constraints),
+                        // give bottom space so floating keyboard/button won't overlap
+                        const SizedBox(height: 20),
+                      ],
+                    ),
                   ),
                 ),
               ),

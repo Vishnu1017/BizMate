@@ -30,6 +30,7 @@ class _CustomersPageState extends State<CustomersPage> {
   String profileName = '';
   final ScrollController _scrollController = ScrollController();
   int _previousCustomerCount = 0;
+  bool _isGeneratingPdf = false;
 
   @override
   void initState() {
@@ -150,29 +151,35 @@ class _CustomersPageState extends State<CustomersPage> {
   // -------------------------------------------------------------
 
   Future<void> generateAndShareAgreementPDF(String customerName) async {
-    final pdf = pw.Document();
-    final currentDate = DateFormat('MMMM dd, yyyy').format(DateTime.now());
-    final sender = profileName;
+    if (_isGeneratingPdf) return;
 
-    checkbox(String label) => pw.Row(
-      children: [
-        pw.Container(
-          width: 12,
-          height: 12,
-          decoration: pw.BoxDecoration(border: pw.Border.all()),
-        ),
-        pw.SizedBox(width: 8),
-        pw.Text(label),
-      ],
-    );
+    setState(() => _isGeneratingPdf = true);
 
-    pdf.addPage(
-      pw.Page(
-        margin: const pw.EdgeInsets.all(32),
-        build:
-            (_) => pw.Column(
+    try {
+      final pdf = pw.Document();
+      final currentDate = DateFormat('MMMM dd, yyyy').format(DateTime.now());
+      final sender = profileName.isNotEmpty ? profileName : "Your Business";
+
+      pw.Widget checkbox(String label) => pw.Row(
+        children: [
+          pw.Container(
+            width: 12,
+            height: 12,
+            decoration: pw.BoxDecoration(border: pw.Border.all(width: 1)),
+          ),
+          pw.SizedBox(width: 8),
+          pw.Expanded(child: pw.Text(label)),
+        ],
+      );
+
+      pdf.addPage(
+        pw.Page(
+          margin: const pw.EdgeInsets.all(32),
+          build: (context) {
+            return pw.Column(
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [
+                // ===== TITLE =====
                 pw.Center(
                   child: pw.Text(
                     'PHOTOGRAPHY USAGE RELEASE AGREEMENT',
@@ -183,15 +190,26 @@ class _CustomersPageState extends State<CustomersPage> {
                     ),
                   ),
                 ),
-                pw.SizedBox(height: 20),
-                pw.Text('This agreement is made on $currentDate between:'),
-                pw.SizedBox(height: 12),
-                pw.Text('PHOTOGRAPHER: Vishnu Chandan'),
-                pw.Text('BUSINESS: $sender'),
-                pw.Text('CLIENT: $customerName'),
-                pw.Divider(thickness: 1.2),
-                pw.SizedBox(height: 20),
 
+                pw.SizedBox(height: 24),
+
+                // ===== INTRO =====
+                pw.Text(
+                  'This agreement is made on $currentDate between:',
+                  style: pw.TextStyle(fontSize: 12),
+                ),
+
+                pw.SizedBox(height: 16),
+
+                pw.Text('PHOTOGRAPHER: Vishnu Chandan'),
+                pw.Text('BUSINESS NAME: $sender'),
+                pw.Text('CLIENT NAME: $customerName'),
+
+                pw.SizedBox(height: 20),
+                pw.Divider(thickness: 1.2),
+
+                // ===== SECTION 1 =====
+                pw.SizedBox(height: 20),
                 pw.Text(
                   '1. USAGE RIGHTS',
                   style: pw.TextStyle(
@@ -200,23 +218,24 @@ class _CustomersPageState extends State<CustomersPage> {
                     decoration: pw.TextDecoration.underline,
                   ),
                 ),
-                pw.SizedBox(height: 8),
+                pw.SizedBox(height: 10),
                 pw.Text(
                   'The client grants permission to the photographer to use photographs in the following formats:',
                 ),
-                pw.SizedBox(height: 10),
+                pw.SizedBox(height: 12),
+
                 checkbox('Instagram'),
-                pw.SizedBox(height: 5),
+                pw.SizedBox(height: 6),
                 checkbox('Facebook'),
-                pw.SizedBox(height: 5),
+                pw.SizedBox(height: 6),
                 checkbox('Website / Portfolio'),
-                pw.SizedBox(height: 5),
+                pw.SizedBox(height: 6),
                 checkbox('Marketing Materials'),
-                pw.SizedBox(height: 5),
-                checkbox('Other (specify): _______________'),
+                pw.SizedBox(height: 6),
+                checkbox('Other (specify): __________________'),
 
-                pw.SizedBox(height: 20),
-
+                // ===== SECTION 2 =====
+                pw.SizedBox(height: 24),
                 pw.Text(
                   '2. RESTRICTIONS',
                   style: pw.TextStyle(
@@ -225,12 +244,15 @@ class _CustomersPageState extends State<CustomersPage> {
                     decoration: pw.TextDecoration.underline,
                   ),
                 ),
-                pw.SizedBox(height: 8),
-                pw.Bullet(text: 'Defamatory or explicit content'),
-                pw.Bullet(text: 'Political/religious endorsements'),
+                pw.SizedBox(height: 10),
+                pw.Bullet(
+                  text: 'Photographs shall not be used in defamatory content',
+                ),
+                pw.Bullet(text: 'No political or religious endorsements'),
+                pw.Bullet(text: 'No explicit or unlawful usage'),
 
-                pw.SizedBox(height: 20),
-
+                // ===== SECTION 3 =====
+                pw.SizedBox(height: 24),
                 pw.Text(
                   '3. CLIENT ACKNOWLEDGEMENT',
                   style: pw.TextStyle(
@@ -240,16 +262,22 @@ class _CustomersPageState extends State<CustomersPage> {
                   ),
                 ),
                 pw.SizedBox(height: 10),
-                pw.Text('I confirm I have read and understood this agreement.'),
-                pw.SizedBox(height: 20),
-                pw.Text('Name: __________________'),
-                pw.SizedBox(height: 10),
-                pw.Text('Signature: ______________'),
-                pw.SizedBox(height: 10),
-                pw.Text('Date: __________________'),
+                pw.Text(
+                  'I confirm that I have read and understood this agreement and grant permission as stated above.',
+                ),
+
+                pw.SizedBox(height: 30),
+
+                pw.Text('Client Name: __________________________'),
+                pw.SizedBox(height: 16),
+                pw.Text('Signature: _____________________________'),
+                pw.SizedBox(height: 16),
+                pw.Text('Date: _________________________________'),
 
                 pw.Spacer(),
+
                 pw.Divider(),
+
                 pw.Center(
                   child: pw.Text(
                     'Thank you for choosing $sender!',
@@ -257,17 +285,49 @@ class _CustomersPageState extends State<CustomersPage> {
                   ),
                 ),
               ],
-            ),
-      ),
-    );
+            );
+          },
+        ),
+      );
 
-    final dir = await getTemporaryDirectory();
-    final file = File(
-      '${dir.path}/${customerName.replaceAll(" ", "_")}_release.pdf',
-    );
-    await file.writeAsBytes(await pdf.save());
+      // ===== SAVE FILE =====
+      final dir = await getTemporaryDirectory();
 
-    await Share.shareXFiles([XFile(file.path)]);
+      final safeName = customerName
+          .replaceAll(RegExp(r'[^\w\s]+'), '')
+          .replaceAll(' ', '_');
+
+      final file = File(
+        '${dir.path}/${safeName}_Photography_Release_Agreement.pdf',
+      );
+
+      await file.writeAsBytes(await pdf.save());
+
+      // ===== SHARE =====
+      await Share.shareXFiles([
+        XFile(file.path),
+      ], text: 'Photography Release Agreement - $customerName');
+
+      if (mounted) {
+        AppSnackBar.showSuccess(
+          context,
+          message: "Agreement generated successfully",
+          duration: const Duration(seconds: 2),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        AppSnackBar.showError(
+          context,
+          message: "Failed to generate agreement",
+          duration: const Duration(seconds: 2),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isGeneratingPdf = false);
+      }
+    }
   }
 
   Future<bool> _confirmDelete(int index) async {

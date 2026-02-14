@@ -432,232 +432,235 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      body: Stack(
-        children: [
-          // Background Gradient
-          Positioned.fill(
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Colors.white, const Color(0xFFF1F5F9)],
-                ),
-              ),
-            ),
-          ),
-
-          // Animated Blobs
-          Positioned(
-            top: -100,
-            right: -100,
-            child: Container(
-              width: isDesktop ? 400 : 300,
-              height: isDesktop ? 400 : 300,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  colors: [
-                    const Color(0xFF6366F1).withOpacity(0.1),
-                    const Color(0xFF8B5CF6).withOpacity(0.05),
-                  ],
-                ),
-              ),
-            ),
-          ),
-
-          Positioned(
-            bottom: -150,
-            left: -100,
-            child: Container(
-              width: isDesktop ? 400 : 300,
-              height: isDesktop ? 400 : 300,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  colors: [
-                    const Color(0xFF10B981).withOpacity(0.1),
-                    const Color(0xFF059669).withOpacity(0.05),
-                  ],
-                ),
-              ),
-            ),
-          ),
-
-          CustomScrollView(
-            slivers: [
-              // Modern App Bar
-              SliverAppBar(
-                backgroundColor: const Color(0xFF6366F1),
-                elevation: 0,
-                pinned: true,
-                floating: true,
-                expandedHeight: isDesktop ? 200 : (isTablet ? 180 : 160),
-                forceElevated: true,
-                surfaceTintColor: Colors.transparent,
-                shadowColor: Colors.transparent,
-
-                flexibleSpace: FlexibleSpaceBar(
-                  collapseMode: CollapseMode.pin,
-                  title: Text(
-                    'Add Rental Gear',
-                    style: TextStyle(
-                      fontSize: 20 * scale,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.white,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-                  background: Container(
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
-                      ),
-                    ),
-                    child: Stack(
-                      children: [
-                        Positioned(
-                          top: 20,
-                          right: 20,
-                          child: Container(
-                            width: isDesktop ? 150 : (isTablet ? 120 : 100),
-                            height: isDesktop ? 150 : (isTablet ? 120 : 100),
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Colors.white.withOpacity(0.1),
-                            ),
-                          ),
-                        ),
-
-                        Padding(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: isDesktop ? 80 : (isTablet ? 70 : 54),
-                          ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              SizedBox(
-                                height: isDesktop ? 80 : (isTablet ? 60 : 60),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                leading: IconButton(
-                  onPressed: () => Navigator.pop(context),
-                  icon: Container(
-                    width: 30 * scale,
-                    height: 30 * scale,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.white.withOpacity(0.2),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: Icon(
-                      Icons.arrow_back,
-                      color: Colors.white,
-                      size: 20 * scale,
-                    ),
-                  ),
-                ),
-              ),
-
-              // Main Form
-              SliverToBoxAdapter(
-                child: FadeTransition(
-                  opacity: _fadeAnimation,
-                  child: SlideTransition(
-                    position: _slideAnimation,
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: isDesktop ? 40 : (isTablet ? 30 : 20),
-                        vertical: isDesktop ? 30 : 20,
-                      ),
-                      child: Center(
-                        child: ConstrainedBox(
-                          constraints: BoxConstraints(
-                            maxWidth:
-                                isDesktop ? 700 : (isTablet ? 600 : width),
-                          ),
-                          child: _buildFormCard(isTablet, isDesktop),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-
-          // Success Animation Overlay
-          if (_showSuccess)
+      body: AbsorbPointer(
+        absorbing: _isSaving, // 👈 THIS IS THE KEY
+        child: Stack(
+          children: [
+            // Background Gradient
             Positioned.fill(
               child: Container(
-                color: Colors.black.withOpacity(0.4),
-                child: Center(
-                  child: Lottie.asset(
-                    'assets/animations/success.json',
-                    width: isDesktop ? 250 : (isTablet ? 220 : 200),
-                    height: isDesktop ? 250 : (isTablet ? 220 : 200),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Colors.white, const Color(0xFFF1F5F9)],
                   ),
                 ),
               ),
             ),
 
-          // Confetti
-          // Modern Top Rain Confetti
-          Align(
-            alignment: Alignment.topCenter,
-            child: AnimatedOpacity(
-              duration: const Duration(milliseconds: 1400),
-              opacity: _showConfetti ? 1.0 : 0.0,
-              child: IgnorePointer(
-                ignoring: !_showConfetti,
-                child: ConfettiWidget(
-                  confettiController: _confettiController,
-                  blastDirection: 1.57,
-                  emissionFrequency: 0.04,
-                  numberOfParticles: 25,
-                  maxBlastForce: 12,
-                  minBlastForce: 6,
-                  gravity: 0.25,
-                  shouldLoop: false,
-                  blastDirectionality: BlastDirectionality.explosive,
-                  colors: const [
-                    Color(0xFF6366F1),
-                    Color(0xFF8B5CF6),
-                    Color(0xFFEC4899),
-                    Color(0xFF0EA5E9),
-                    Color(0xFF10B981),
-                    Color(0xFFF59E0B),
-                  ],
-                  minimumSize: const Size(15, 15),
-                  maximumSize: const Size(25, 25),
-                  createParticlePath: (size) {
-                    return Path()
-                      ..moveTo(0, -size.height / 2)
-                      ..lineTo(size.width / 2, size.height / 2)
-                      ..lineTo(-size.width / 2, size.height / 2)
-                      ..close();
-                  },
+            // Animated Blobs
+            Positioned(
+              top: -100,
+              right: -100,
+              child: Container(
+                width: isDesktop ? 400 : 300,
+                height: isDesktop ? 400 : 300,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    colors: [
+                      const Color(0xFF6366F1).withOpacity(0.1),
+                      const Color(0xFF8B5CF6).withOpacity(0.05),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+
+            Positioned(
+              bottom: -150,
+              left: -100,
+              child: Container(
+                width: isDesktop ? 400 : 300,
+                height: isDesktop ? 400 : 300,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    colors: [
+                      const Color(0xFF10B981).withOpacity(0.1),
+                      const Color(0xFF059669).withOpacity(0.05),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+            CustomScrollView(
+              slivers: [
+                // Modern App Bar
+                SliverAppBar(
+                  backgroundColor: const Color(0xFF6366F1),
+                  elevation: 0,
+                  pinned: true,
+                  floating: true,
+                  expandedHeight: isDesktop ? 200 : (isTablet ? 180 : 160),
+                  forceElevated: true,
+                  surfaceTintColor: Colors.transparent,
+                  shadowColor: Colors.transparent,
+
+                  flexibleSpace: FlexibleSpaceBar(
+                    collapseMode: CollapseMode.pin,
+                    title: Text(
+                      'Add Rental Gear',
+                      style: TextStyle(
+                        fontSize: 20 * scale,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                        letterSpacing: -0.5,
+                      ),
+                    ),
+                    background: Container(
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+                        ),
+                      ),
+                      child: Stack(
+                        children: [
+                          Positioned(
+                            top: 20,
+                            right: 20,
+                            child: Container(
+                              width: isDesktop ? 150 : (isTablet ? 120 : 100),
+                              height: isDesktop ? 150 : (isTablet ? 120 : 100),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Colors.white.withOpacity(0.1),
+                              ),
+                            ),
+                          ),
+
+                          Padding(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: isDesktop ? 80 : (isTablet ? 70 : 54),
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                SizedBox(
+                                  height: isDesktop ? 80 : (isTablet ? 60 : 60),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  leading: IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: Container(
+                      width: 30 * scale,
+                      height: 30 * scale,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white.withOpacity(0.2),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Icon(
+                        Icons.arrow_back,
+                        color: Colors.white,
+                        size: 20 * scale,
+                      ),
+                    ),
+                  ),
+                ),
+
+                // Main Form
+                SliverToBoxAdapter(
+                  child: FadeTransition(
+                    opacity: _fadeAnimation,
+                    child: SlideTransition(
+                      position: _slideAnimation,
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: isDesktop ? 40 : (isTablet ? 30 : 20),
+                          vertical: isDesktop ? 30 : 20,
+                        ),
+                        child: Center(
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(
+                              maxWidth:
+                                  isDesktop ? 700 : (isTablet ? 600 : width),
+                            ),
+                            child: _buildFormCard(isTablet, isDesktop),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+
+            // Success Animation Overlay
+            if (_showSuccess)
+              Positioned.fill(
+                child: Container(
+                  color: Colors.black.withOpacity(0.4),
+                  child: Center(
+                    child: Lottie.asset(
+                      'assets/animations/success.json',
+                      width: isDesktop ? 250 : (isTablet ? 220 : 200),
+                      height: isDesktop ? 250 : (isTablet ? 220 : 200),
+                    ),
+                  ),
+                ),
+              ),
+
+            // Confetti
+            // Modern Top Rain Confetti
+            Align(
+              alignment: Alignment.topCenter,
+              child: AnimatedOpacity(
+                duration: const Duration(milliseconds: 1400),
+                opacity: _showConfetti ? 1.0 : 0.0,
+                child: IgnorePointer(
+                  ignoring: !_showConfetti,
+                  child: ConfettiWidget(
+                    confettiController: _confettiController,
+                    blastDirection: 1.57,
+                    emissionFrequency: 0.04,
+                    numberOfParticles: 25,
+                    maxBlastForce: 12,
+                    minBlastForce: 6,
+                    gravity: 0.25,
+                    shouldLoop: false,
+                    blastDirectionality: BlastDirectionality.explosive,
+                    colors: const [
+                      Color(0xFF6366F1),
+                      Color(0xFF8B5CF6),
+                      Color(0xFFEC4899),
+                      Color(0xFF0EA5E9),
+                      Color(0xFF10B981),
+                      Color(0xFFF59E0B),
+                    ],
+                    minimumSize: const Size(15, 15),
+                    maximumSize: const Size(25, 25),
+                    createParticlePath: (size) {
+                      return Path()
+                        ..moveTo(0, -size.height / 2)
+                        ..lineTo(size.width / 2, size.height / 2)
+                        ..lineTo(-size.width / 2, size.height / 2)
+                        ..close();
+                    },
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

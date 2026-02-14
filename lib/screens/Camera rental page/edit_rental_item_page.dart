@@ -25,6 +25,7 @@ class _EditRentalItemPageState extends State<EditRentalItemPage> {
   late TextEditingController brandController;
   late TextEditingController priceController;
   double scale = 1.0;
+  bool _isSaving = false;
 
   String availability = 'Available';
   String condition = 'Excellent'; // Add condition field
@@ -69,55 +70,66 @@ class _EditRentalItemPageState extends State<EditRentalItemPage> {
   }
 
   void _saveChanges() async {
-    final updatedItem = RentalItem(
-      name: nameController.text.trim(),
-      brand: brandController.text.trim(),
-      price: double.tryParse(priceController.text) ?? 0,
-      imagePath: widget.item.imagePath,
-      availability: availability,
-      category: widget.item.category,
-      condition: condition,
-    );
+    if (_isSaving) return; // prevent double tap
 
-    // ✅ SAFELY UPDATE GLOBAL BOX
-    if (widget.index >= 0 && widget.index < rentalBox.length) {
-      // normal update
-      await rentalBox.putAt(widget.index, updatedItem);
-    } else {
-      // fallback: find and replace
-      final existingIndex = rentalBox.values.toList().indexWhere(
-        (i) =>
-            i.name == widget.item.name &&
-            i.brand == widget.item.brand &&
-            i.imagePath == widget.item.imagePath,
+    setState(() => _isSaving = true);
+
+    try {
+      final updatedItem = RentalItem(
+        name: nameController.text.trim(),
+        brand: brandController.text.trim(),
+        price: double.tryParse(priceController.text) ?? 0,
+        imagePath: widget.item.imagePath,
+        availability: availability,
+        category: widget.item.category,
+        condition: condition,
       );
 
-      if (existingIndex != -1) {
-        await rentalBox.putAt(existingIndex, updatedItem);
+      if (widget.index >= 0 && widget.index < rentalBox.length) {
+        await rentalBox.putAt(widget.index, updatedItem);
       } else {
-        // last safety: add
-        await rentalBox.add(updatedItem);
+        final existingIndex = rentalBox.values.toList().indexWhere(
+          (i) =>
+              i.name == widget.item.name &&
+              i.brand == widget.item.brand &&
+              i.imagePath == widget.item.imagePath,
+        );
+
+        if (existingIndex != -1) {
+          await rentalBox.putAt(existingIndex, updatedItem);
+        } else {
+          await rentalBox.add(updatedItem);
+        }
+      }
+
+      if (userItems.isNotEmpty && widget.index < userItems.length) {
+        userItems[widget.index] = updatedItem;
+      } else {
+        userItems.add(updatedItem);
+      }
+
+      await userBox!.put("rental_items", userItems);
+
+      AppSnackBar.showSuccess(
+        context,
+        message: 'Changes saved successfully!',
+        duration: const Duration(seconds: 2),
+      );
+
+      await Future.delayed(const Duration(milliseconds: 400));
+
+      if (mounted) Navigator.pop(context, updatedItem);
+    } catch (e) {
+      AppSnackBar.showError(
+        context,
+        message: "Something went wrong!",
+        duration: const Duration(seconds: 2),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isSaving = false);
       }
     }
-
-    // ✅ USER-SPECIFIC BOX (ALREADY SAFE)
-    if (userItems.isNotEmpty && widget.index < userItems.length) {
-      userItems[widget.index] = updatedItem;
-    } else {
-      userItems.add(updatedItem);
-    }
-
-    await userBox!.put("rental_items", userItems);
-
-    AppSnackBar.showSuccess(
-      context,
-      message: 'Changes saved successfully!',
-      duration: const Duration(seconds: 2),
-    );
-
-    Future.delayed(const Duration(milliseconds: 400), () {
-      Navigator.pop(context, updatedItem);
-    });
   }
 
   @override
@@ -158,205 +170,208 @@ class _EditRentalItemPageState extends State<EditRentalItemPage> {
           ),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Image section with modern design
-            Container(
-              height: size.height * 0.25,
-              margin: const EdgeInsets.only(bottom: 32),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.15),
-                    blurRadius: 20,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(20),
-                child: Stack(
-                  children: [
-                    Image.file(
-                      File(widget.item.imagePath),
-                      height: size.height * 0.25,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
-                    ),
-                    // Gradient overlay
-                    Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            Colors.transparent,
-                            Colors.black.withOpacity(0.3),
-                          ],
-                        ),
-                      ),
+      body: AbsorbPointer(
+        absorbing: _isSaving,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Image section with modern design
+              Container(
+                height: size.height * 0.25,
+                margin: const EdgeInsets.only(bottom: 32),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.15),
+                      blurRadius: 20,
+                      offset: const Offset(0, 8),
                     ),
                   ],
                 ),
-              ),
-            ),
-
-            // Form section
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.08),
-                    blurRadius: 16,
-                    offset: const Offset(0, 6),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: Stack(
+                    children: [
+                      Image.file(
+                        File(widget.item.imagePath),
+                        height: size.height * 0.25,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                      ),
+                      // Gradient overlay
+                      Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.transparent,
+                              Colors.black.withOpacity(0.3),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Item Details',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.black87,
+
+              // Form section
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.08),
+                      blurRadius: 16,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Item Details',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Update your rental item information',
+                      style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                    ),
+                    const SizedBox(height: 24),
+
+                    _buildTextField(
+                      nameController,
+                      'Item Name',
+                      Icons.photo_camera_outlined,
+                    ),
+                    const SizedBox(height: 16),
+                    _buildTextField(
+                      brandController,
+                      'Brand',
+                      Icons.business_center_outlined,
+                    ),
+                    const SizedBox(height: 16),
+                    _buildTextField(
+                      priceController,
+                      'Price per day',
+                      Icons.currency_rupee,
+                      isNumber: true,
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Condition dropdown - ADDED
+                    _buildConditionDropdown(),
+                    const SizedBox(height: 16),
+
+                    // Availability dropdown
+                    _buildAvailabilityDropdown(),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 32),
+
+              // Save Button
+              Container(
+                height: 56,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF2563EB), Color(0xFF3B82F6)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.blue.withOpacity(0.4),
+                      blurRadius: 15,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: _saveChanges,
+                    borderRadius: BorderRadius.circular(16),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.save_rounded, color: Colors.white, size: 22),
+                        SizedBox(width: 12),
+                        Text(
+                          'Save Changes',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 16,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Update your rental item information',
-                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                  ),
-                  const SizedBox(height: 24),
-
-                  _buildTextField(
-                    nameController,
-                    'Item Name',
-                    Icons.photo_camera_outlined,
-                  ),
-                  const SizedBox(height: 16),
-                  _buildTextField(
-                    brandController,
-                    'Brand',
-                    Icons.business_center_outlined,
-                  ),
-                  const SizedBox(height: 16),
-                  _buildTextField(
-                    priceController,
-                    'Price per day',
-                    Icons.currency_rupee,
-                    isNumber: true,
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Condition dropdown - ADDED
-                  _buildConditionDropdown(),
-                  const SizedBox(height: 16),
-
-                  // Availability dropdown
-                  _buildAvailabilityDropdown(),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 32),
-
-            // Save Button
-            Container(
-              height: 56,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF2563EB), Color(0xFF3B82F6)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.blue.withOpacity(0.4),
-                    blurRadius: 15,
-                    offset: const Offset(0, 6),
-                  ),
-                ],
-              ),
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: _saveChanges,
-                  borderRadius: BorderRadius.circular(16),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.save_rounded, color: Colors.white, size: 22),
-                      SizedBox(width: 12),
-                      Text(
-                        'Save Changes',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 16,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                    ],
-                  ),
                 ),
               ),
-            ),
 
-            const SizedBox(height: 16),
+              const SizedBox(height: 16),
 
-            // Cancel Button
-            Container(
-              height: 56,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
-                color: Colors.white,
-                border: Border.all(color: Color(0xFFE5E7EB)),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: () => Navigator.pop(context),
+              // Cancel Button
+              Container(
+                height: 56,
+                decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(16),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.close_rounded,
-                        color: Colors.grey[600],
-                        size: 22,
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                        'Cancel',
-                        style: TextStyle(
+                  color: Colors.white,
+                  border: Border.all(color: Color(0xFFE5E7EB)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () => Navigator.pop(context),
+                    borderRadius: BorderRadius.circular(16),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.close_rounded,
                           color: Colors.grey[600],
-                          fontWeight: FontWeight.w600,
-                          fontSize: 16,
+                          size: 22,
                         ),
-                      ),
-                    ],
+                        const SizedBox(width: 12),
+                        Text(
+                          'Cancel',
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontWeight: FontWeight.w600,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

@@ -47,6 +47,7 @@ class _NavBarPageState extends State<NavBarPage>
   String welcomeMessage = "";
   double scale = 1.0;
   late ValueNotifier<String> _nameNotifier;
+  bool _isNavigating = false;
 
   // Modern color palette
   final Color _primaryColor = const Color(0xFF1A237E);
@@ -511,11 +512,18 @@ class _NavBarPageState extends State<NavBarPage>
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () {
-            Navigator.push(
+          onTap: () async {
+            if (_isNavigating) return;
+            setState(() => _isNavigating = true);
+
+            await Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => const NewSaleScreen()),
             );
+
+            if (mounted) {
+              setState(() => _isNavigating = false);
+            }
           },
           borderRadius: BorderRadius.circular(16),
           child: Container(
@@ -766,6 +774,10 @@ class _NavBarPageState extends State<NavBarPage>
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: () async {
+          if (_isNavigating) return;
+
+          setState(() => _isNavigating = true);
+
           setState(() {
             _currentIndex = index;
           });
@@ -777,6 +789,10 @@ class _NavBarPageState extends State<NavBarPage>
           }
 
           await _loadRentalStatus();
+
+          if (mounted) {
+            setState(() => _isNavigating = false);
+          }
         },
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 280),
@@ -858,61 +874,66 @@ class _NavBarPageState extends State<NavBarPage>
     final screenWidth = MediaQuery.of(context).size.width;
     final isSmallScreen = screenWidth < _kLargePhoneMax;
 
-    return Scaffold(
-      backgroundColor: _backgroundColor,
-      body: Column(
-        children: [
-          // Clean AppBar
-          _buildCleanAppBar(screenWidth),
+    return AbsorbPointer(
+      absorbing: _isNavigating,
+      child: Scaffold(
+        backgroundColor: _backgroundColor,
+        body: Column(
+          children: [
+            // Clean AppBar
+            _buildCleanAppBar(screenWidth),
 
-          // Main content
-          Expanded(
-            child: Padding(
-              padding: EdgeInsets.only(
-                top: isSmallScreen ? 8 : 10,
-                left: _pagePadding(screenWidth).horizontal / 4,
-                right: _pagePadding(screenWidth).horizontal / 4,
-                bottom: _pagePadding(screenWidth).horizontal / 11,
-              ),
-              child: Column(
-                children: [
-                  // Action buttons
-                  if ([0, 1, 2].contains(_currentIndex))
-                    _buildAddSaleButton(screenWidth),
-                  if (_currentIndex == 3) _buildAddItemButton(screenWidth),
+            // Main content
+            Expanded(
+              child: Padding(
+                padding: EdgeInsets.only(
+                  top: isSmallScreen ? 8 : 10,
+                  left: _pagePadding(screenWidth).horizontal / 4,
+                  right: _pagePadding(screenWidth).horizontal / 4,
+                  bottom: _pagePadding(screenWidth).horizontal / 11,
+                ),
+                child: Column(
+                  children: [
+                    // Action buttons
+                    if ([0, 1, 2].contains(_currentIndex))
+                      _buildAddSaleButton(screenWidth),
+                    if (_currentIndex == 3) _buildAddItemButton(screenWidth),
 
-                  SizedBox(height: _scaleForWidth(screenWidth, 16)),
+                    SizedBox(height: _scaleForWidth(screenWidth, 16)),
 
-                  // Page content
-                  Expanded(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: _surfaceColor,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: _dividerColor),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.03),
-                            blurRadius: 16,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(20),
-                        child: _pages[_currentIndex],
+                    // Page content
+                    Expanded(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: _surfaceColor,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: _dividerColor),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.03),
+                              blurRadius: 16,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(20),
+                          child: _pages[_currentIndex],
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
-      ),
+          ],
+        ),
 
-      // Clean Navigation Bar
-      bottomNavigationBar: SafeArea(child: _buildCleanNavigation(screenWidth)),
+        // Clean Navigation Bar
+        bottomNavigationBar: SafeArea(
+          child: _buildCleanNavigation(screenWidth),
+        ),
+      ),
     );
   }
 }

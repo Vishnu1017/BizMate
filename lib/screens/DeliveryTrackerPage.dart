@@ -150,7 +150,10 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
 
   Future<void> _loadProfileUser() async {
     try {
-      final sessionBox = await Hive.openBox('session');
+      final sessionBox =
+          Hive.isBoxOpen('session')
+              ? Hive.box('session')
+              : await Hive.openBox('session');
       final email = sessionBox.get('currentUserEmail');
 
       if (email == null) return;
@@ -221,7 +224,10 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
 
   Future<void> _loadHiveData() async {
     try {
-      final sessionBox = await Hive.openBox('session');
+      final sessionBox =
+          Hive.isBoxOpen('session')
+              ? Hive.box('session')
+              : await Hive.openBox('session');
       final email = sessionBox.get('currentUserEmail');
 
       if (email == null) return;
@@ -319,7 +325,10 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
           deliveryStatusHistory.map((e) => jsonEncode(e)).toList();
 
       // ✅ USE SAME BOX AS CALENDAR PAGE
-      final sessionBox = await Hive.openBox('session');
+      final sessionBox =
+          Hive.isBoxOpen('session')
+              ? Hive.box('session')
+              : await Hive.openBox('session');
       final email = sessionBox.get('currentUserEmail');
 
       if (email == null) return;
@@ -429,11 +438,13 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
             : 'Link not available';
     final phone = widget.sale.phoneNumber.replaceAll(' ', '');
 
-    if (phone.length < 10 || !RegExp(r'^[0-9]+$').hasMatch(phone)) {
+    String cleaned = phone.replaceAll(RegExp(r'[^\d]'), '');
+
+    if (cleaned.length < 10) {
       AppSnackBar.showWarning(
         context,
-        message: "Please enter a valid 10-digit phone number",
-        duration: Duration(seconds: 2),
+        message: "Please enter a valid phone number",
+        duration: const Duration(seconds: 2),
       );
       return;
     }
@@ -752,7 +763,7 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
                     width: double.infinity,
                     padding: EdgeInsets.all(8 * scale),
                     decoration: BoxDecoration(
-                      color: Colors.grey[40],
+                      color: const Color(0xFFF8FAFC),
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(color: Colors.grey[100]!),
                     ),
@@ -1062,7 +1073,9 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
                 final w = constraints.maxWidth * progress;
                 return Align(
                   alignment: Alignment.centerLeft,
-                  child: Container(
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 500),
+                    curve: Curves.easeInOut,
                     width: w,
                     height: double.infinity,
                     decoration: BoxDecoration(
@@ -1512,7 +1525,6 @@ class _LargeTitleDelegate extends SliverPersistentHeaderDelegate {
       ),
       child: Stack(
         children: [
-          // ---------- CENTERED TITLE BLOCK ----------
           Positioned.fill(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,

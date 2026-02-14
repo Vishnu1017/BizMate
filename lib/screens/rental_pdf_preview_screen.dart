@@ -26,6 +26,8 @@ class RentalPdfPreviewScreen extends StatelessWidget {
 
     return Scaffold(
       extendBodyBehindAppBar: true,
+
+      // ------------------ APP BAR ------------------
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(60),
         child: AppBar(
@@ -53,6 +55,8 @@ class RentalPdfPreviewScreen extends StatelessWidget {
           centerTitle: true,
         ),
       ),
+
+      // ------------------ BODY ------------------
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -94,15 +98,19 @@ class RentalPdfPreviewScreen extends StatelessWidget {
           },
         ),
       ),
+
+      // ------------------ SHARE BUTTON ------------------
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+
       floatingActionButton: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [Color(0xFF2563EB), Color(0xFF1E40AF), Color(0xFF020617)],
             stops: [0.0, 0.6, 1.0],
             begin: Alignment.bottomRight,
             end: Alignment.topLeft,
           ),
-          borderRadius: BorderRadius.circular(30),
+          borderRadius: BorderRadius.all(Radius.circular(30)),
         ),
         child: FloatingActionButton.extended(
           backgroundColor: Colors.transparent,
@@ -126,18 +134,19 @@ Thanks for renting with us!
 
             final file = XFile(filePath);
 
-            // 1️⃣ Copy message to clipboard
+            // 1️⃣ Copy message
             await Clipboard.setData(ClipboardData(text: message));
+
             AppSnackBar.showSuccess(
               context,
               message:
                   "Message copied! Paste it in WhatsApp after selecting contact.",
-              duration: Duration(seconds: 2),
+              duration: const Duration(seconds: 2),
             );
 
             await Future.delayed(const Duration(milliseconds: 300));
 
-            // 2️⃣ Share PDF and message
+            // 2️⃣ Share
             try {
               await Share.shareXFiles(
                 [file],

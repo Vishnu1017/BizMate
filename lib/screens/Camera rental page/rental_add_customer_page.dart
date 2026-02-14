@@ -1252,7 +1252,7 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          onPressed: () => Navigator.pop(context),
+          onPressed: _isSaving ? null : () => Navigator.pop(context),
           icon: Container(
             width: 30 * scale,
             height: 30 * scale,
@@ -1335,512 +1335,522 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
             )
           else
             SafeArea(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(20),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 20),
+              child: AbsorbPointer(
+                absorbing: _isSaving,
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(20),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      children: [
+                        const SizedBox(height: 20),
 
-                      // Header
-                      Container(
-                        padding: EdgeInsets.all(16 * scale),
-                        margin: EdgeInsets.only(bottom: 16 * scale),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(20),
-                          gradient: LinearGradient(
-                            colors: [
-                              Colors.white.withOpacity(0.15),
-                              Colors.white.withOpacity(0.08),
-                            ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
+                        // Header
+                        Container(
+                          padding: EdgeInsets.all(16 * scale),
+                          margin: EdgeInsets.only(bottom: 16 * scale),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(20),
+                            gradient: LinearGradient(
+                              colors: [
+                                Colors.white.withOpacity(0.15),
+                                Colors.white.withOpacity(0.08),
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            border: Border.all(
+                              color: Colors.white.withOpacity(0.2),
+                              width: 1,
+                            ),
                           ),
-                          border: Border.all(
-                            color: Colors.white.withOpacity(0.2),
-                            width: 1,
-                          ),
-                        ),
-                        child: Column(
-                          children: [
-                            Text(
-                              "Rental Agreement",
-                              style: TextStyle(
-                                fontSize: 24 * scale,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                                letterSpacing: 1.2,
+                          child: Column(
+                            children: [
+                              Text(
+                                "Rental Agreement",
+                                style: TextStyle(
+                                  fontSize: 24 * scale,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                  letterSpacing: 1.2,
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              "Complete customer details to finalize rental",
-                              style: TextStyle(
-                                color: Colors.white.withOpacity(0.8),
-                                fontSize: 12 * scale,
-                                fontWeight: FontWeight.w500,
+                              const SizedBox(height: 8),
+                              Text(
+                                "Complete customer details to finalize rental",
+                                style: TextStyle(
+                                  color: Colors.white.withOpacity(0.8),
+                                  fontSize: 12 * scale,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                textAlign: TextAlign.center,
                               ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      // Image Section
-                      Container(
-                        margin: EdgeInsets.only(bottom: 16 * scale),
-                        height: 170 * scale,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(20 * scale),
-                          gradient: const LinearGradient(
-                            colors: [
-                              Color(0xFF1A237E), // Deep Blue
-                              Color(0xFF00BCD4), // Aqua
-                              Color(0xFF4DD0E1), // Soft Mint / Cyan
                             ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
                           ),
-
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.3),
-                              blurRadius: 20 * scale,
-                              offset: const Offset(0, 10),
-                            ),
-                          ],
                         ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(20 * scale),
-                          child:
-                              RentalCart.items.length <= 1
-                                  // ================= SINGLE ITEM (UNCHANGED UI) =================
-                                  ? Stack(
-                                    children: [
-                                      Positioned.fill(
-                                        child:
-                                            item.imagePath.isNotEmpty &&
-                                                    File(
-                                                      item.imagePath,
-                                                    ).existsSync()
-                                                ? Image.file(
-                                                  File(item.imagePath),
-                                                  fit: BoxFit.cover,
-                                                )
-                                                : Center(
-                                                  child: Column(
-                                                    mainAxisAlignment:
-                                                        MainAxisAlignment
-                                                            .center,
-                                                    children: [
-                                                      Icon(
-                                                        Icons
-                                                            .image_not_supported,
-                                                        size: 60 * scale,
-                                                        color: Colors.white
-                                                            .withOpacity(0.6),
-                                                      ),
-                                                      const SizedBox(height: 8),
-                                                      Text(
-                                                        "No Image",
-                                                        style: TextStyle(
+
+                        // Image Section
+                        Container(
+                          margin: EdgeInsets.only(bottom: 16 * scale),
+                          height: 170 * scale,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(20 * scale),
+                            gradient: const LinearGradient(
+                              colors: [
+                                Color(0xFF1A237E), // Deep Blue
+                                Color(0xFF00BCD4), // Aqua
+                                Color(0xFF4DD0E1), // Soft Mint / Cyan
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.3),
+                                blurRadius: 20 * scale,
+                                offset: const Offset(0, 10),
+                              ),
+                            ],
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(20 * scale),
+                            child:
+                                RentalCart.items.length <= 1
+                                    // ================= SINGLE ITEM (UNCHANGED UI) =================
+                                    ? Stack(
+                                      children: [
+                                        Positioned.fill(
+                                          child:
+                                              item.imagePath.isNotEmpty &&
+                                                      File(
+                                                        item.imagePath,
+                                                      ).existsSync()
+                                                  ? Image.file(
+                                                    File(item.imagePath),
+                                                    fit: BoxFit.cover,
+                                                  )
+                                                  : Center(
+                                                    child: Column(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .center,
+                                                      children: [
+                                                        Icon(
+                                                          Icons
+                                                              .image_not_supported,
+                                                          size: 60 * scale,
                                                           color: Colors.white
                                                               .withOpacity(0.6),
-                                                          fontSize: 14,
                                                         ),
-                                                      ),
-                                                    ],
+                                                        const SizedBox(
+                                                          height: 8,
+                                                        ),
+                                                        Text(
+                                                          "No Image",
+                                                          style: TextStyle(
+                                                            color: Colors.white
+                                                                .withOpacity(
+                                                                  0.6,
+                                                                ),
+                                                            fontSize: 14,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
                                                   ),
-                                                ),
-                                      ),
-
-                                      // Overlay
-                                      Positioned(
-                                        bottom: 0,
-                                        left: 0,
-                                        right: 0,
-                                        child: Container(
-                                          height: 60,
-                                          decoration: BoxDecoration(
-                                            gradient: LinearGradient(
-                                              begin: Alignment.bottomCenter,
-                                              end: Alignment.topCenter,
-                                              colors: [
-                                                Colors.black.withOpacity(0.6),
-                                                Colors.transparent,
-                                              ],
-                                            ),
-                                          ),
                                         ),
-                                      ),
 
-                                      // Item Name
-                                      Positioned(
-                                        bottom: 12,
-                                        left: 16,
-                                        child: Container(
-                                          padding: EdgeInsets.symmetric(
-                                            horizontal: 10 * scale,
-                                            vertical: 4 * scale,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: Colors.white.withOpacity(
-                                              0.2,
-                                            ),
-                                            borderRadius: BorderRadius.circular(
-                                              12,
-                                            ),
-                                            border: Border.all(
-                                              color: Colors.white.withOpacity(
-                                                0.3,
+                                        // Overlay
+                                        Positioned(
+                                          bottom: 0,
+                                          left: 0,
+                                          right: 0,
+                                          child: Container(
+                                            height: 60,
+                                            decoration: BoxDecoration(
+                                              gradient: LinearGradient(
+                                                begin: Alignment.bottomCenter,
+                                                end: Alignment.topCenter,
+                                                colors: [
+                                                  Colors.black.withOpacity(0.6),
+                                                  Colors.transparent,
+                                                ],
                                               ),
                                             ),
                                           ),
-                                          child: Text(
-                                            item.name,
-                                            style: TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 10 * scale,
-                                              fontWeight: FontWeight.w600,
+                                        ),
+
+                                        // Item Name
+                                        Positioned(
+                                          bottom: 12,
+                                          left: 16,
+                                          child: Container(
+                                            padding: EdgeInsets.symmetric(
+                                              horizontal: 10 * scale,
+                                              vertical: 4 * scale,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: Colors.white.withOpacity(
+                                                0.2,
+                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                              border: Border.all(
+                                                color: Colors.white.withOpacity(
+                                                  0.3,
+                                                ),
+                                              ),
+                                            ),
+                                            child: Text(
+                                              item.name,
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 10 * scale,
+                                                fontWeight: FontWeight.w600,
+                                              ),
                                             ),
                                           ),
                                         ),
-                                      ),
-                                    ],
-                                  )
-                                  // ================= MULTIPLE ITEMS =================
-                                  : ListView.builder(
-                                    scrollDirection: Axis.horizontal,
-                                    itemCount: RentalCart.items.length,
-                                    itemBuilder: (context, index) {
-                                      final cartItem = RentalCart.items[index];
+                                      ],
+                                    )
+                                    // ================= MULTIPLE ITEMS =================
+                                    : ListView.builder(
+                                      scrollDirection: Axis.horizontal,
+                                      itemCount: RentalCart.items.length,
+                                      itemBuilder: (context, index) {
+                                        final cartItem =
+                                            RentalCart.items[index];
 
-                                      return Stack(
-                                        children: [
-                                          Container(
-                                            width: 200 * scale,
-                                            margin: const EdgeInsets.only(
-                                              right: 8,
-                                            ),
-                                            child:
-                                                cartItem
-                                                            .item
-                                                            .imagePath
-                                                            .isNotEmpty &&
+                                        return Stack(
+                                          children: [
+                                            Container(
+                                              width: 200 * scale,
+                                              margin: const EdgeInsets.only(
+                                                right: 8,
+                                              ),
+                                              child:
+                                                  cartItem
+                                                              .item
+                                                              .imagePath
+                                                              .isNotEmpty &&
+                                                          File(
+                                                            cartItem
+                                                                .item
+                                                                .imagePath,
+                                                          ).existsSync()
+                                                      ? Image.file(
                                                         File(
                                                           cartItem
                                                               .item
                                                               .imagePath,
-                                                        ).existsSync()
-                                                    ? Image.file(
-                                                      File(
-                                                        cartItem.item.imagePath,
+                                                        ),
+                                                        fit: BoxFit.cover,
+                                                      )
+                                                      : Center(
+                                                        child: Icon(
+                                                          Icons
+                                                              .image_not_supported,
+                                                          size: 50,
+                                                          color: Colors.white
+                                                              .withOpacity(0.6),
+                                                        ),
                                                       ),
-                                                      fit: BoxFit.cover,
-                                                    )
-                                                    : Center(
-                                                      child: Icon(
-                                                        Icons
-                                                            .image_not_supported,
-                                                        size: 50,
-                                                        color: Colors.white
-                                                            .withOpacity(0.6),
-                                                      ),
-                                                    ),
-                                          ),
+                                            ),
 
-                                          // Overlay
-                                          Positioned(
-                                            bottom: 0,
-                                            left: 0,
-                                            right: 0,
-                                            child: Container(
-                                              height: 60,
-                                              decoration: BoxDecoration(
-                                                gradient: LinearGradient(
-                                                  begin: Alignment.bottomCenter,
-                                                  end: Alignment.topCenter,
-                                                  colors: [
-                                                    Colors.black.withOpacity(
-                                                      0.6,
-                                                    ),
-                                                    Colors.transparent,
-                                                  ],
+                                            // Overlay
+                                            Positioned(
+                                              bottom: 0,
+                                              left: 0,
+                                              right: 0,
+                                              child: Container(
+                                                height: 60,
+                                                decoration: BoxDecoration(
+                                                  gradient: LinearGradient(
+                                                    begin:
+                                                        Alignment.bottomCenter,
+                                                    end: Alignment.topCenter,
+                                                    colors: [
+                                                      Colors.black.withOpacity(
+                                                        0.6,
+                                                      ),
+                                                      Colors.transparent,
+                                                    ],
+                                                  ),
                                                 ),
                                               ),
                                             ),
-                                          ),
 
-                                          // Item Name Badge
-                                          Positioned(
-                                            bottom: 12,
-                                            left: 12,
-                                            child: Container(
-                                              padding: EdgeInsets.symmetric(
-                                                horizontal: 10 * scale,
-                                                vertical: 4 * scale,
-                                              ),
-                                              decoration: BoxDecoration(
-                                                color: Colors.white.withOpacity(
-                                                  0.2,
+                                            // Item Name Badge
+                                            Positioned(
+                                              bottom: 12,
+                                              left: 12,
+                                              child: Container(
+                                                padding: EdgeInsets.symmetric(
+                                                  horizontal: 10 * scale,
+                                                  vertical: 4 * scale,
                                                 ),
-                                                borderRadius:
-                                                    BorderRadius.circular(12),
-                                                border: Border.all(
+                                                decoration: BoxDecoration(
                                                   color: Colors.white
-                                                      .withOpacity(0.3),
+                                                      .withOpacity(0.2),
+                                                  borderRadius:
+                                                      BorderRadius.circular(12),
+                                                  border: Border.all(
+                                                    color: Colors.white
+                                                        .withOpacity(0.3),
+                                                  ),
                                                 ),
-                                              ),
-                                              child: Text(
-                                                cartItem.item.name,
-                                                maxLines: 1,
-                                                overflow: TextOverflow.ellipsis,
-                                                style: TextStyle(
-                                                  color: Colors.white,
-                                                  fontSize: 10 * scale,
-                                                  fontWeight: FontWeight.w600,
+                                                child: Text(
+                                                  cartItem.item.name,
+                                                  maxLines: 1,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                  style: TextStyle(
+                                                    color: Colors.white,
+                                                    fontSize: 10 * scale,
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
                                                 ),
                                               ),
                                             ),
-                                          ),
-                                        ],
-                                      );
-                                    },
-                                  ),
-                        ),
-                      ),
-
-                      // Customer Details Card
-                      Container(
-                        padding: EdgeInsets.all(16 * scale),
-                        margin: EdgeInsets.only(bottom: 16 * scale),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(20),
-                          gradient: LinearGradient(
-                            colors: [
-                              Colors.white.withOpacity(0.15),
-                              Colors.white.withOpacity(0.08),
-                            ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          border: Border.all(
-                            color: Colors.white.withOpacity(0.2),
-                            width: 1.5,
+                                          ],
+                                        );
+                                      },
+                                    ),
                           ),
                         ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Container(
-                                  padding: EdgeInsets.all(6 * scale),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.2),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Icon(
-                                    Icons.person_outline,
-                                    color: Colors.white,
-                                    size: 16 * scale,
-                                  ),
-                                ),
-                                SizedBox(width: 12 * scale),
-                                Text(
-                                  "Customer Details",
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 14 * scale,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            SizedBox(height: 12 * scale),
-                            _buildGlassTextField(
-                              label: "Customer Name",
-                              icon: Icons.person,
-                              controller: nameController,
-                              validator:
-                                  (value) =>
-                                      value == null || value.trim().isEmpty
-                                          ? "Please enter customer name"
-                                          : null,
-                              keyboardType: TextInputType.name,
-                              onTap: _handleCustomerFieldTap,
-                            ),
-                            _buildGlassTextField(
-                              label: "Phone Number",
-                              icon: Icons.phone,
-                              controller: phoneController,
-                              keyboardType: TextInputType.phone,
-                              validator: (value) {
-                                if (value == null || value.trim().isEmpty) {
-                                  return "Please enter phone number";
-                                } else if (value.trim().length != 10) {
-                                  return "Enter a valid 10-digit phone number";
-                                }
-                                return null;
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
 
-                      // Date Time Section
-                      Container(
-                        padding: EdgeInsets.all(16 * scale),
-                        margin: EdgeInsets.only(bottom: 16 * scale),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(20),
-                          gradient: LinearGradient(
-                            colors: [
-                              Colors.white.withOpacity(0.15),
-                              Colors.white.withOpacity(0.08),
-                            ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          border: Border.all(
-                            color: Colors.white.withOpacity(0.2),
-                            width: 1.5,
-                          ),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Container(
-                                  padding: EdgeInsets.all(6 * scale),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.2),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Icon(
-                                    Icons.calendar_today,
-                                    color: Colors.white,
-                                    size: 16 * scale,
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Text(
-                                  "Rental Period",
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 14 * scale,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            SizedBox(height: 12 * scale),
-                            Row(
-                              children: [
-                                _buildDateTimeButton(true),
-                                const SizedBox(width: 12),
-                                _buildDateTimeButton(false),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      // Discount & Tax Section
-                      _buildDiscountTaxSection(),
-
-                      // Rental Summary
-                      _buildRentalInfoCard(),
-                      SizedBox(height: 25 * scale),
-
-                      // Save Button
-                      AnimatedContainer(
-                        duration: const Duration(milliseconds: 300),
-                        transform:
-                            _isSaving
-                                ? (Matrix4.identity()..scale(0.95))
-                                : Matrix4.identity(),
-                        child: Container(
+                        // Customer Details Card
+                        Container(
+                          padding: EdgeInsets.all(16 * scale),
+                          margin: EdgeInsets.only(bottom: 16 * scale),
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(20),
                             gradient: LinearGradient(
-                              colors:
-                                  _isSaving
-                                      ? [Colors.grey, Colors.grey.shade600]
-                                      : [Colors.white, Colors.white70],
+                              colors: [
+                                Colors.white.withOpacity(0.15),
+                                Colors.white.withOpacity(0.08),
+                              ],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                             ),
-                            boxShadow: [
-                              BoxShadow(
-                                color:
-                                    _isSaving
-                                        ? Colors.grey.withOpacity(0.5)
-                                        : Colors.white.withOpacity(0.4),
-                                blurRadius: 15,
-                                offset: const Offset(0, 8),
+                            border: Border.all(
+                              color: Colors.white.withOpacity(0.2),
+                              width: 1.5,
+                            ),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: EdgeInsets.all(6 * scale),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withOpacity(0.2),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Icon(
+                                      Icons.person_outline,
+                                      color: Colors.white,
+                                      size: 16 * scale,
+                                    ),
+                                  ),
+                                  SizedBox(width: 12 * scale),
+                                  Text(
+                                    "Customer Details",
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 14 * scale,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
                               ),
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.2),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
+                              SizedBox(height: 12 * scale),
+                              _buildGlassTextField(
+                                label: "Customer Name",
+                                icon: Icons.person,
+                                controller: nameController,
+                                validator:
+                                    (value) =>
+                                        value == null || value.trim().isEmpty
+                                            ? "Please enter customer name"
+                                            : null,
+                                keyboardType: TextInputType.name,
+                                onTap: _handleCustomerFieldTap,
+                              ),
+                              _buildGlassTextField(
+                                label: "Phone Number",
+                                icon: Icons.phone,
+                                controller: phoneController,
+                                keyboardType: TextInputType.phone,
+                                validator: (value) {
+                                  if (value == null || value.trim().isEmpty) {
+                                    return "Please enter phone number";
+                                  } else if (value.trim().length != 10) {
+                                    return "Enter a valid 10-digit phone number";
+                                  }
+                                  return null;
+                                },
                               ),
                             ],
                           ),
-                          child: Material(
-                            color: Colors.transparent,
+                        ),
+
+                        // Date Time Section
+                        Container(
+                          padding: EdgeInsets.all(16 * scale),
+                          margin: EdgeInsets.only(bottom: 16 * scale),
+                          decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(20),
-                            child: InkWell(
-                              onTap: _isSaving ? null : saveCustomerAndSale,
-                              borderRadius: BorderRadius.circular(20),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 18,
-                                  horizontal: 40,
-                                ),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    if (_isSaving)
-                                      SizedBox(
-                                        width: 20,
-                                        height: 20,
-                                        child: CircularProgressIndicator(
-                                          color: Colors.grey.shade700,
-                                          strokeWidth: 2,
-                                        ),
-                                      )
-                                    else
-                                      const Icon(
-                                        Icons.save_alt,
-                                        color: Color(0xFF1A237E),
-                                        size: 22,
-                                      ),
-                                    const SizedBox(width: 12),
-                                    Text(
-                                      _isSaving
-                                          ? "Saving..."
-                                          : "Confirm Rental",
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 16,
-                                        color:
-                                            _isSaving
-                                                ? Colors.grey.shade700
-                                                : const Color(0xFF1A237E),
-                                      ),
+                            gradient: LinearGradient(
+                              colors: [
+                                Colors.white.withOpacity(0.15),
+                                Colors.white.withOpacity(0.08),
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            border: Border.all(
+                              color: Colors.white.withOpacity(0.2),
+                              width: 1.5,
+                            ),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: EdgeInsets.all(6 * scale),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withOpacity(0.2),
+                                      borderRadius: BorderRadius.circular(12),
                                     ),
-                                  ],
+                                    child: Icon(
+                                      Icons.calendar_today,
+                                      color: Colors.white,
+                                      size: 16 * scale,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Text(
+                                    "Rental Period",
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 14 * scale,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: 12 * scale),
+                              Row(
+                                children: [
+                                  _buildDateTimeButton(true),
+                                  const SizedBox(width: 12),
+                                  _buildDateTimeButton(false),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        // Discount & Tax Section
+                        _buildDiscountTaxSection(),
+
+                        // Rental Summary
+                        _buildRentalInfoCard(),
+                        SizedBox(height: 25 * scale),
+
+                        // Save Button
+                        AnimatedContainer(
+                          duration: const Duration(milliseconds: 300),
+                          transform:
+                              _isSaving
+                                  ? (Matrix4.identity()..scale(0.95))
+                                  : Matrix4.identity(),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(20),
+                              gradient: LinearGradient(
+                                colors:
+                                    _isSaving
+                                        ? [Colors.grey, Colors.grey.shade600]
+                                        : [Colors.white, Colors.white70],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color:
+                                      _isSaving
+                                          ? Colors.grey.withOpacity(0.5)
+                                          : Colors.white.withOpacity(0.4),
+                                  blurRadius: 15,
+                                  offset: const Offset(0, 8),
+                                ),
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.2),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Material(
+                              color: Colors.transparent,
+                              borderRadius: BorderRadius.circular(20),
+                              child: InkWell(
+                                onTap: _isSaving ? null : saveCustomerAndSale,
+                                borderRadius: BorderRadius.circular(20),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 18,
+                                    horizontal: 40,
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      if (_isSaving)
+                                        SizedBox(
+                                          width: 20,
+                                          height: 20,
+                                          child: CircularProgressIndicator(
+                                            color: Colors.grey.shade700,
+                                            strokeWidth: 2,
+                                          ),
+                                        )
+                                      else
+                                        const Icon(
+                                          Icons.save_alt,
+                                          color: Color(0xFF1A237E),
+                                          size: 22,
+                                        ),
+                                      const SizedBox(width: 12),
+                                      Text(
+                                        _isSaving
+                                            ? "Saving..."
+                                            : "Confirm Rental",
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                          color:
+                                              _isSaving
+                                                  ? Colors.grey.shade700
+                                                  : const Color(0xFF1A237E),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
                             ),
                           ),
                         ),
-                      ),
-                      SizedBox(height: 10 * scale),
-                    ],
+                        SizedBox(height: 10 * scale),
+                      ],
+                    ),
                   ),
                 ),
               ),

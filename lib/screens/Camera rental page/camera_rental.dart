@@ -1046,176 +1046,183 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFf8f9fa),
-      body: NestedScrollView(
-        headerSliverBuilder: (context, innerBoxIsScrolled) {
-          return [
-            SliverToBoxAdapter(
-              child: AdvancedSearchBar(
-                hintText: 'Search customers, items, phone...',
-                onSearchChanged: _handleSearchChanged,
-                onDateRangeChanged: _handleDateRangeChanged,
-                showDateFilter: true,
+      body: AbsorbPointer(
+        absorbing: _isLoading,
+        child: NestedScrollView(
+          headerSliverBuilder: (context, innerBoxIsScrolled) {
+            return [
+              SliverToBoxAdapter(
+                child: AdvancedSearchBar(
+                  hintText: 'Search customers, items, phone...',
+                  onSearchChanged: _handleSearchChanged,
+                  onDateRangeChanged: _handleDateRangeChanged,
+                  showDateFilter: true,
+                ),
               ),
-            ),
-            SliverToBoxAdapter(child: _buildStatsCard()),
-          ];
-        },
-        body:
-            _isLoading
-                ? _buildLoadingState()
-                : ValueListenableBuilder(
-                  valueListenable: userBox.listenable(),
-                  builder: (context, Box box, _) {
-                    List<RentalSaleModel> allSales = [];
-                    try {
-                      allSales = List<RentalSaleModel>.from(
-                        box.get("rental_sales", defaultValue: []),
+              SliverToBoxAdapter(child: _buildStatsCard()),
+            ];
+          },
+          body:
+              _isLoading
+                  ? _buildLoadingState()
+                  : ValueListenableBuilder(
+                    valueListenable: userBox.listenable(),
+                    builder: (context, Box box, _) {
+                      List<RentalSaleModel> allSales = [];
+                      try {
+                        allSales = List<RentalSaleModel>.from(
+                          box.get("rental_sales", defaultValue: []),
+                        );
+                      } catch (_) {
+                        allSales = [];
+                      }
+
+                      allSales.sort(
+                        (a, b) => b.rentalDateTime.compareTo(a.rentalDateTime),
                       );
-                    } catch (_) {
-                      allSales = [];
-                    }
 
-                    allSales.sort(
-                      (a, b) => b.rentalDateTime.compareTo(a.rentalDateTime),
-                    );
+                      List<RentalSaleModel> filteredSales = _groupSales(
+                        List<RentalSaleModel>.from(allSales),
+                      );
 
-                    List<RentalSaleModel> filteredSales = _groupSales(
-                      List<RentalSaleModel>.from(allSales),
-                    );
+                      if (_searchQuery.isNotEmpty) {
+                        final query = _searchQuery.toLowerCase();
+                        filteredSales =
+                            filteredSales.where((sale) {
+                              final customerName =
+                                  sale.customerName.toLowerCase();
+                              final itemName = sale.itemName.toLowerCase();
+                              final customerPhone =
+                                  sale.customerPhone.toLowerCase();
+                              final totalCost = sale.totalCost.toString();
+                              final amountPaid = sale.amountPaid.toString();
+                              final fromDate =
+                                  _formatDateTime(
+                                    sale.fromDateTime,
+                                  ).toLowerCase();
+                              final toDate =
+                                  _formatDateTime(
+                                    sale.toDateTime,
+                                  ).toLowerCase();
 
-                    if (_searchQuery.isNotEmpty) {
-                      final query = _searchQuery.toLowerCase();
-                      filteredSales =
-                          filteredSales.where((sale) {
-                            final customerName =
-                                sale.customerName.toLowerCase();
-                            final itemName = sale.itemName.toLowerCase();
-                            final customerPhone =
-                                sale.customerPhone.toLowerCase();
-                            final totalCost = sale.totalCost.toString();
-                            final amountPaid = sale.amountPaid.toString();
-                            final fromDate =
-                                _formatDateTime(
-                                  sale.fromDateTime,
-                                ).toLowerCase();
-                            final toDate =
-                                _formatDateTime(sale.toDateTime).toLowerCase();
+                              return customerName.contains(query) ||
+                                  itemName.contains(query) ||
+                                  customerPhone.contains(query) ||
+                                  totalCost.contains(query) ||
+                                  amountPaid.contains(query) ||
+                                  fromDate.contains(query) ||
+                                  toDate.contains(query);
+                            }).toList();
+                      }
 
-                            return customerName.contains(query) ||
-                                itemName.contains(query) ||
-                                customerPhone.contains(query) ||
-                                totalCost.contains(query) ||
-                                amountPaid.contains(query) ||
-                                fromDate.contains(query) ||
-                                toDate.contains(query);
-                          }).toList();
-                    }
+                      if (_selectedRange != null) {
+                        filteredSales =
+                            filteredSales.where((sale) {
+                              return sale.fromDateTime.isAfter(
+                                    _selectedRange!.start.subtract(
+                                      const Duration(days: 1),
+                                    ),
+                                  ) &&
+                                  sale.toDateTime.isBefore(
+                                    _selectedRange!.end.add(
+                                      const Duration(days: 1),
+                                    ),
+                                  );
+                            }).toList();
+                      }
 
-                    if (_selectedRange != null) {
-                      filteredSales =
-                          filteredSales.where((sale) {
-                            return sale.fromDateTime.isAfter(
-                                  _selectedRange!.start.subtract(
-                                    const Duration(days: 1),
-                                  ),
-                                ) &&
-                                sale.toDateTime.isBefore(
-                                  _selectedRange!.end.add(
-                                    const Duration(days: 1),
-                                  ),
-                                );
-                          }).toList();
-                    }
+                      if (allSales.isEmpty) {
+                        return _buildEmptyState();
+                      }
 
-                    if (allSales.isEmpty) {
-                      return _buildEmptyState();
-                    }
+                      if (filteredSales.isEmpty) {
+                        return _buildNoResultsState();
+                      }
 
-                    if (filteredSales.isEmpty) {
-                      return _buildNoResultsState();
-                    }
+                      return LayoutBuilder(
+                        builder: (context, constraints) {
+                          final isVeryWide = constraints.maxWidth > 1000;
+                          final maxWidth =
+                              isVeryWide ? 900.0 : constraints.maxWidth;
 
-                    return LayoutBuilder(
-                      builder: (context, constraints) {
-                        final isVeryWide = constraints.maxWidth > 1000;
-                        final maxWidth =
-                            isVeryWide ? 900.0 : constraints.maxWidth;
-
-                        return Column(
-                          children: [
-                            Padding(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: isVeryWide ? 32 : 24,
-                                vertical: 16,
-                              ),
-                              child: Row(
-                                children: [
-                                  Icon(
-                                    Icons.list_alt_rounded,
-                                    color: Colors.grey.shade600,
-                                    size: 14 * scale,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    '${filteredSales.length} ${filteredSales.length == 1 ? 'rental' : 'rentals'}',
-                                    style: TextStyle(
+                          return Column(
+                            children: [
+                              Padding(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: isVeryWide ? 32 : 24,
+                                  vertical: 12,
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.list_alt_rounded,
                                       color: Colors.grey.shade600,
-                                      fontSize: 12 * scale,
-                                      fontWeight: FontWeight.w600,
+                                      size: 14 * scale,
                                     ),
-                                  ),
-                                  const Spacer(),
-                                  Text(
-                                    'Latest first',
-                                    style: TextStyle(
-                                      color: Colors.grey.shade500,
-                                      fontSize: 10 * scale,
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      '${filteredSales.length} ${filteredSales.length == 1 ? 'rental' : 'rentals'}',
+                                      style: TextStyle(
+                                        color: Colors.grey.shade600,
+                                        fontSize: 12 * scale,
+                                        fontWeight: FontWeight.w600,
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                    const Spacer(),
+                                    Text(
+                                      'Latest first',
+                                      style: TextStyle(
+                                        color: Colors.grey.shade500,
+                                        fontSize: 10 * scale,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ),
-                            Expanded(
-                              child: Align(
-                                alignment: Alignment.topCenter,
-                                child: ConstrainedBox(
-                                  constraints: BoxConstraints(
-                                    maxWidth: maxWidth,
-                                  ),
-                                  child: ListView.builder(
-                                    controller: _scrollController,
-                                    padding: const EdgeInsets.only(bottom: 20),
-                                    itemCount: filteredSales.length,
-                                    itemBuilder: (context, index) {
-                                      final sale = filteredSales[index];
-                                      final originalIndex =
-                                          _findOriginalSaleIndex(
-                                            allSales,
-                                            sale,
-                                          );
+                              Expanded(
+                                child: Align(
+                                  alignment: Alignment.topCenter,
+                                  child: ConstrainedBox(
+                                    constraints: BoxConstraints(
+                                      maxWidth: maxWidth,
+                                    ),
+                                    child: ListView.builder(
+                                      controller: _scrollController,
+                                      padding: EdgeInsets.only(
+                                        bottom: 20 * scale,
+                                      ),
+                                      itemCount: filteredSales.length,
+                                      itemBuilder: (context, index) {
+                                        final sale = filteredSales[index];
+                                        final originalIndex =
+                                            _findOriginalSaleIndex(
+                                              allSales,
+                                              sale,
+                                            );
 
-                                      return LayoutBuilder(
-                                        builder: (context, cardConstraints) {
-                                          final isWideCard =
-                                              cardConstraints.maxWidth > 600;
-                                          return _buildSaleCard(
-                                            sale,
-                                            originalIndex,
-                                            isWideCard,
-                                          );
-                                        },
-                                      );
-                                    },
+                                        return LayoutBuilder(
+                                          builder: (context, cardConstraints) {
+                                            final isWideCard =
+                                                cardConstraints.maxWidth > 600;
+                                            return _buildSaleCard(
+                                              sale,
+                                              originalIndex,
+                                              isWideCard,
+                                            );
+                                          },
+                                        );
+                                      },
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                          ],
-                        );
-                      },
-                    );
-                  },
-                ),
+                            ],
+                          );
+                        },
+                      );
+                    },
+                  ),
+        ),
       ),
     );
   }

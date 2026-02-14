@@ -31,11 +31,20 @@ class _ModernCalendarRangeState extends State<ModernCalendarRange> {
 
   final List<String> _weekdays = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
 
+  DateTime _normalize(DateTime d) => DateTime(d.year, d.month, d.day);
+
   @override
   void initState() {
     super.initState();
-    _selectedStartDate = widget.selectedStartDate;
-    _selectedEndDate = widget.selectedEndDate;
+
+    _selectedStartDate =
+        widget.selectedStartDate != null
+            ? _normalize(widget.selectedStartDate!)
+            : null;
+    _selectedEndDate =
+        widget.selectedEndDate != null
+            ? _normalize(widget.selectedEndDate!)
+            : null;
 
     if (_selectedStartDate != null) {
       _currentMonth = _selectedStartDate!;
@@ -58,12 +67,27 @@ class _ModernCalendarRangeState extends State<ModernCalendarRange> {
     });
   }
 
+  bool _isSelectable(DateTime date) {
+    final d = _normalize(date);
+
+    if (widget.minDate != null && d.isBefore(_normalize(widget.minDate!))) {
+      return false;
+    }
+
+    if (widget.maxDate != null && d.isAfter(_normalize(widget.maxDate!))) {
+      return false;
+    }
+
+    return true;
+  }
+
   List<DateTime> _getDaysInMonth() {
     final first = DateTime(_currentMonth.year, _currentMonth.month, 1);
     final last = DateTime(_currentMonth.year, _currentMonth.month + 1, 0);
     final days = <DateTime>[];
 
     int startingWeekday = first.weekday;
+
     for (int i = 1; i < startingWeekday; i++) {
       days.add(first.subtract(Duration(days: startingWeekday - i)));
     }
@@ -79,32 +103,27 @@ class _ModernCalendarRangeState extends State<ModernCalendarRange> {
     return days;
   }
 
-  bool _isToday(DateTime d) =>
-      d.year == DateTime.now().year &&
-      d.month == DateTime.now().month &&
-      d.day == DateTime.now().day;
+  bool _isToday(DateTime d) {
+    final now = DateTime.now();
+    return d.year == now.year && d.month == now.month && d.day == now.day;
+  }
 
   bool _isCurrentMonth(DateTime d) =>
       d.month == _currentMonth.month && d.year == _currentMonth.year;
 
   bool _isStartDate(DateTime d) =>
-      _selectedStartDate != null &&
-      d.year == _selectedStartDate!.year &&
-      d.month == _selectedStartDate!.month &&
-      d.day == _selectedStartDate!.day;
+      _selectedStartDate != null && _normalize(d) == _selectedStartDate;
 
   bool _isEndDate(DateTime d) =>
-      _selectedEndDate != null &&
-      d.year == _selectedEndDate!.year &&
-      d.month == _selectedEndDate!.month &&
-      d.day == _selectedEndDate!.day;
+      _selectedEndDate != null && _normalize(d) == _selectedEndDate;
 
   bool _isInRange(DateTime d) {
     if (_selectedStartDate == null || _selectedEndDate == null) return false;
-
-    return (d.isAfter(_selectedStartDate!) && d.isBefore(_selectedEndDate!)) ||
-        _isStartDate(d) ||
-        _isEndDate(d);
+    final date = _normalize(d);
+    return (date.isAfter(_selectedStartDate!) &&
+            date.isBefore(_selectedEndDate!)) ||
+        _isStartDate(date) ||
+        _isEndDate(date);
   }
 
   bool _isInHoverRange(DateTime d) {
@@ -112,12 +131,13 @@ class _ModernCalendarRangeState extends State<ModernCalendarRange> {
 
     if (_selectedEndDate == null) {
       final start = _selectedStartDate!;
-      final hover = _hoverDate!;
+      final hover = _normalize(_hoverDate!);
+      final date = _normalize(d);
 
       if (start.isBefore(hover)) {
-        return d.isAfter(start) && d.isBefore(hover);
+        return date.isAfter(start) && date.isBefore(hover);
       } else if (start.isAfter(hover)) {
-        return d.isAfter(hover) && d.isBefore(start);
+        return date.isAfter(hover) && date.isBefore(start);
       }
     }
     return false;
@@ -128,21 +148,24 @@ class _ModernCalendarRangeState extends State<ModernCalendarRange> {
     return _isInRange(d) && !_isStartDate(d) && !_isEndDate(d);
   }
 
-  /// ❗ Modified: REMOVED auto-callback. Save button handles it now.
   void _onDateSelected(DateTime date) {
+    if (!_isSelectable(date)) return;
+
+    final normalized = _normalize(date);
+
     setState(() {
       if (_selectedStartDate == null) {
-        _selectedStartDate = date;
+        _selectedStartDate = normalized;
         _selectedEndDate = null;
       } else if (_selectedEndDate == null) {
-        if (date.isBefore(_selectedStartDate!)) {
+        if (normalized.isBefore(_selectedStartDate!)) {
           _selectedEndDate = _selectedStartDate;
-          _selectedStartDate = date;
+          _selectedStartDate = normalized;
         } else {
-          _selectedEndDate = date;
+          _selectedEndDate = normalized;
         }
       } else {
-        _selectedStartDate = date;
+        _selectedStartDate = normalized;
         _selectedEndDate = null;
       }
     });
@@ -157,6 +180,8 @@ class _ModernCalendarRangeState extends State<ModernCalendarRange> {
   }
 
   Color _getDateColor(DateTime date, bool currentMonth) {
+    if (!_isSelectable(date)) return Colors.grey.shade300;
+
     if (_isStartDate(date) || _isEndDate(date)) return Colors.white;
     if (_isInSelectedRange(date)) return Colors.blue.shade700;
     if (_isToday(date)) return Colors.black87;

@@ -94,12 +94,12 @@ class _RentalSaleDetailScreenState extends State<RentalSaleDetailScreen> {
   }
 
   // SAME saveChanges()
-  void saveChanges() async {
+  Future<void> saveChanges() async {
     if (customerController.text.trim().isEmpty) {
       AppSnackBar.showError(
         context,
         message: "Customer name cannot be empty!",
-        duration: Duration(seconds: 2),
+        duration: const Duration(seconds: 2),
       );
       return;
     }
@@ -109,15 +109,17 @@ class _RentalSaleDetailScreenState extends State<RentalSaleDetailScreen> {
       AppSnackBar.showError(
         context,
         message: "Enter a valid 10-digit phone!",
-        duration: Duration(seconds: 2),
+        duration: const Duration(seconds: 2),
       );
       return;
     }
 
-    double total = double.tryParse(totalController.text) ?? 0;
-    double paid =
+    final double total = double.tryParse(totalController.text) ?? 0;
+    final double paidInput =
         double.tryParse(
-          amountController.text.isEmpty ? "0" : amountController.text,
+          amountController.text.trim().isEmpty
+              ? "0"
+              : amountController.text.trim(),
         ) ??
         0;
 
@@ -125,58 +127,88 @@ class _RentalSaleDetailScreenState extends State<RentalSaleDetailScreen> {
       AppSnackBar.showError(
         context,
         message: "Total must be more than 0",
-        duration: Duration(seconds: 2),
+        duration: const Duration(seconds: 2),
       );
       return;
     }
 
-    final newPayment = Payment(
-      amount: isFullyPaid ? total : paid,
-      date: DateTime.now(),
-      mode: _selectedMode,
-    );
-
-    final updatedSale = RentalSaleModel(
-      id: widget.sale.id,
-      customerName: customerController.text.trim(),
-      customerPhone: phoneController.text.trim(),
-      itemName: itemController.text.trim(),
-      imageUrl: widget.sale.imageUrl,
-      ratePerDay:
-          double.tryParse(rateController.text) ?? widget.sale.ratePerDay,
-      numberOfDays:
-          int.tryParse(daysController.text) ?? widget.sale.numberOfDays,
-      totalCost: total,
-      fromDateTime: widget.sale.fromDateTime,
-      toDateTime: widget.sale.toDateTime,
-      pdfFilePath: widget.sale.pdfFilePath,
-      paymentMode: _selectedMode,
-      amountPaid: newPayment.amount,
-      rentalDateTime: widget.sale.rentalDateTime,
-      paymentHistory: [newPayment, ...widget.sale.paymentHistory],
-    );
+    if (!isFullyPaid && paidInput > total) {
+      AppSnackBar.showError(
+        context,
+        message: "Paid amount cannot exceed total",
+        duration: const Duration(seconds: 2),
+      );
+      return;
+    }
 
     final safeEmail = widget.userEmail
         .replaceAll('.', '_')
         .replaceAll('@', '_');
+
+    if (!Hive.isBoxOpen("userdata_$safeEmail")) {
+      await Hive.openBox("userdata_$safeEmail");
+    }
+
     final box = Hive.box("userdata_$safeEmail");
 
     List<RentalSaleModel> originalList = List<RentalSaleModel>.from(
       box.get("rental_sales", defaultValue: []),
     );
 
-    int realIndex = originalList.length - 1 - widget.index;
+    final realIndex = originalList.indexWhere((s) => s.id == widget.sale.id);
 
-    if (realIndex >= 0 && realIndex < originalList.length) {
-      originalList[realIndex] = updatedSale;
+    if (realIndex == -1) {
+      AppSnackBar.showError(context, message: "Sale not found!");
+      return;
     }
+
+    final existingSale = originalList[realIndex];
+
+    double finalPaidAmount = isFullyPaid ? total : paidInput;
+
+    // ✅ Only create payment entry if amount > 0
+    List<Payment> updatedHistory = List.from(existingSale.paymentHistory);
+
+    if (finalPaidAmount > 0) {
+      final newPayment = Payment(
+        amount: finalPaidAmount,
+        date: DateTime.now(),
+        mode: _selectedMode,
+      );
+
+      updatedHistory = [newPayment, ...updatedHistory];
+    }
+
+    final updatedSale = RentalSaleModel(
+      id: existingSale.id,
+      customerName: customerController.text.trim(),
+      customerPhone: phoneController.text.trim(),
+      itemName: itemController.text.trim(),
+      imageUrl: existingSale.imageUrl,
+      ratePerDay:
+          double.tryParse(rateController.text) ?? existingSale.ratePerDay,
+      numberOfDays:
+          int.tryParse(daysController.text) ?? existingSale.numberOfDays,
+      totalCost: total,
+      fromDateTime: existingSale.fromDateTime,
+      toDateTime: existingSale.toDateTime,
+      pdfFilePath: existingSale.pdfFilePath,
+      paymentMode: _selectedMode,
+      amountPaid: finalPaidAmount,
+      rentalDateTime: existingSale.rentalDateTime,
+      paymentHistory: updatedHistory,
+    );
+
+    originalList[realIndex] = updatedSale;
 
     await box.put("rental_sales", originalList);
 
+    if (!mounted) return;
+
     AppSnackBar.showSuccess(
       context,
-      message: "Rental sale updated!",
-      duration: Duration(seconds: 2),
+      message: "Rental sale updated successfully!",
+      duration: const Duration(seconds: 2),
     );
 
     Navigator.pop(context, true);

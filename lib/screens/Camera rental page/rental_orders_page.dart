@@ -139,7 +139,7 @@ class _RentalOrdersPageState extends State<RentalOrdersPage> {
     filteredOrders = temp;
   }
 
-  void _deleteOrder(int index) {
+  void _deleteOrderById(String orderId) {
     showConfirmDialog(
       context: context,
       title: "Delete Order?",
@@ -149,7 +149,9 @@ class _RentalOrdersPageState extends State<RentalOrdersPage> {
       onConfirm: () {
         final raw = userBox.get('rental_sales', defaultValue: []);
         List<RentalSaleModel> updatedList = List<RentalSaleModel>.from(raw);
-        updatedList.removeAt(index);
+
+        updatedList.removeWhere((o) => o.id == orderId);
+
         userBox.put('rental_sales', updatedList);
       },
     );
@@ -318,8 +320,34 @@ class _RentalOrdersPageState extends State<RentalOrdersPage> {
                                 ),
                               ),
                               confirmDismiss: (_) async {
-                                _deleteOrder(originalIndex);
-                                return false;
+                                bool confirmed = false;
+
+                                await showConfirmDialog(
+                                  context: context,
+                                  title: "Delete Order?",
+                                  message:
+                                      "Are you sure you want to permanently delete this order?",
+                                  icon: Icons.delete_forever_rounded,
+                                  iconColor: Colors.redAccent,
+                                  onConfirm: () {
+                                    confirmed = true;
+                                  },
+                                );
+
+                                if (confirmed) {
+                                  final raw = userBox.get(
+                                    'rental_sales',
+                                    defaultValue: [],
+                                  );
+                                  List<RentalSaleModel> updatedList =
+                                      List<RentalSaleModel>.from(raw);
+                                  updatedList.removeWhere(
+                                    (o) => o.id == order.id,
+                                  );
+                                  userBox.put('rental_sales', updatedList);
+                                }
+
+                                return confirmed;
                               },
                               child: _buildOrderCard(
                                 order,

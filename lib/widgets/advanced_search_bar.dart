@@ -299,6 +299,7 @@ class _AdvancedSearchBarState extends State<AdvancedSearchBar>
   void _toggleMenu() => _isMenuOpen ? _hideMenu() : _showMenu();
 
   void _showMenu() {
+    if (_isMenuOpen) return;
     _ensureAnimationsInitialized();
     if (!_animationsInitialized || !mounted) return;
 
@@ -365,6 +366,7 @@ class _AdvancedSearchBarState extends State<AdvancedSearchBar>
 
   void _hideMenu() {
     if (!_animationsInitialized || !mounted) {
+      if (!_isMenuOpen) return;
       _removeOverlay();
       return;
     }

@@ -190,7 +190,7 @@ class _RentalItemsState extends State<RentalItems> {
     setState(() {});
   }
 
-  void _deleteItem(int index) {
+  void _deleteItem(RentalItem itemToDelete) {
     showConfirmDialog(
       context: context,
       title: "Delete Item?",
@@ -201,10 +201,13 @@ class _RentalItemsState extends State<RentalItems> {
         final raw = userBox.get('rental_items', defaultValue: []);
         List<RentalItem> originalList = List<RentalItem>.from(raw);
 
-        // 🔥 Because UI is reversed
-        final reversedIndex = originalList.length - 1 - index;
-
-        originalList.removeAt(reversedIndex);
+        // 🔥 Remove by matching item (SAFE even with filters & reverse)
+        originalList.removeWhere(
+          (item) =>
+              item.name == itemToDelete.name &&
+              item.brand == itemToDelete.brand &&
+              item.imagePath == itemToDelete.imagePath,
+        );
 
         userBox.put('rental_items', originalList);
       },
@@ -360,15 +363,28 @@ class _RentalItemsState extends State<RentalItems> {
             final originalIndex = index;
 
             return GestureDetector(
-              onLongPress: () => _deleteItem(originalIndex),
+              onLongPress: () => _deleteItem(item),
               onTap: () {
+                final raw = userBox.get('rental_items', defaultValue: []);
+                List<RentalItem> originalList = List<RentalItem>.from(raw);
+
+                // 🔥 Find REAL index inside Hive box
+                final realIndex = originalList.indexWhere(
+                  (i) =>
+                      i.name == item.name &&
+                      i.brand == item.brand &&
+                      i.imagePath == item.imagePath,
+                );
+
+                if (realIndex == -1) return; // safety
+
                 Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder:
                         (_) => EditRentalItemPage(
                           item: item,
-                          index: originalIndex,
+                          index: realIndex, // ✅ correct index
                           userEmail: widget.userEmail,
                         ),
                   ),
@@ -636,7 +652,7 @@ class _RentalItemsState extends State<RentalItems> {
                         ),
                         const SizedBox(width: 6),
                         InkWell(
-                          onTap: () => _deleteItem(index),
+                          onTap: () => _deleteItem(item),
                           child: Container(
                             decoration: const BoxDecoration(
                               color: Colors.black54,

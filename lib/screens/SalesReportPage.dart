@@ -48,6 +48,7 @@ class _SalesReportPageState extends State<SalesReportPage> {
   bool _isDropdownOpen = false;
   final ScrollController _scrollController = ScrollController();
   int _previousSalesCount = 0;
+  bool get _isGenerating => _isLoadingPdf || _isLoadingCsv;
 
   LinearGradient getProgressGradient(double percentage) {
     if (percentage <= 20) {
@@ -760,7 +761,7 @@ class _SalesReportPageState extends State<SalesReportPage> {
 
   Future<void> _exportToCSV(BuildContext context) async {
     try {
-      setState(() => _isLoadingCsv = true);
+      setState(() => _isLoadingCsv = false);
       final sales = getFilteredSales();
 
       if (sales.isEmpty) {
@@ -1481,26 +1482,38 @@ class _SalesReportPageState extends State<SalesReportPage> {
     );
     final dateFormat = DateFormat('dd MMM, yy');
 
-    return Scaffold(
-      body: CustomScrollView(
-        controller: _scrollController,
-        slivers: [
-          _buildSliverAppBar(),
-          _buildTopFiltersSection(customerMap, currencyFormat),
-          _buildCustomerHeader(customerMap),
-          SliverList(
-            delegate: SliverChildBuilderDelegate((context, index) {
-              final customerKey = customerMap.keys.elementAt(index);
-              final transactions = customerMap[customerKey]!;
-              return _buildCustomerCard(
-                customerKey,
-                transactions,
-                currencyFormat,
-                dateFormat,
-              );
-            }, childCount: customerMap.length),
+    return AbsorbPointer(
+      absorbing: _isGenerating,
+      child: Stack(
+        children: [
+          Scaffold(
+            body: CustomScrollView(
+              controller: _scrollController,
+              slivers: [
+                _buildSliverAppBar(),
+                _buildTopFiltersSection(customerMap, currencyFormat),
+                _buildCustomerHeader(customerMap),
+                SliverList(
+                  delegate: SliverChildBuilderDelegate((context, index) {
+                    final customerKey = customerMap.keys.elementAt(index);
+                    final transactions = customerMap[customerKey]!;
+                    return _buildCustomerCard(
+                      customerKey,
+                      transactions,
+                      currencyFormat,
+                      dateFormat,
+                    );
+                  }, childCount: customerMap.length),
+                ),
+                const SliverToBoxAdapter(child: SizedBox(height: 32)),
+              ],
+            ),
           ),
-          const SliverToBoxAdapter(child: SizedBox(height: 32)),
+          if (_isGenerating)
+            Container(
+              color: Colors.black.withOpacity(0.15),
+              child: const Center(child: CircularProgressIndicator()),
+            ),
         ],
       ),
     );

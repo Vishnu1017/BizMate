@@ -40,6 +40,7 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage>
     with SingleTickerProviderStateMixin {
   bool _isLoggingOut = false;
+  bool _isDeleting = false;
   late String name;
   late String role;
   late String email;
@@ -1839,8 +1840,9 @@ class _ProfilePageState extends State<ProfilePage>
   }
 
   Future<void> _logout() async {
-    if (_isLoggingOut) return;
-    setState(() => _isLoggingOut = true);
+    if (_isLoggingOut) return; // 🔥 Prevent double tap
+
+    setState(() => _isLoggingOut = true); // ✅ ADD HERE (TOP)
 
     try {
       final sessionBox = await Hive.openBox('session');
@@ -1848,21 +1850,24 @@ class _ProfilePageState extends State<ProfilePage>
       await sessionBox.close();
 
       if (!mounted) return;
+
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (context) => LoginScreen()),
         (route) => false,
       );
     } catch (e) {
-      debugPrint('Logout error: $e');
       if (!mounted) return;
+
       AppSnackBar.showError(
         context,
         message: 'Logout failed. Please try again.',
         duration: Duration(seconds: 2),
       );
     } finally {
-      setState(() => _isLoggingOut = false);
+      if (mounted) {
+        setState(() => _isLoggingOut = false); // 🔥 Reset if error
+      }
     }
   }
 
@@ -2004,6 +2009,9 @@ class _ProfilePageState extends State<ProfilePage>
   }
 
   Future<void> deleteCurrentUser(String email) async {
+    if (_isDeleting) return; // ✅ Prevent double tap
+    setState(() => _isDeleting = true); // ✅ LOCK UI immediately
+
     try {
       print("Deleting account for: $email");
 
@@ -2020,9 +2028,6 @@ class _ProfilePageState extends State<ProfilePage>
 
       if (userKey != null) {
         await userBox.delete(userKey);
-        print("User deleted from Hive");
-      } else {
-        print("User not found in Hive");
       }
 
       final storage = FlutterSecureStorage(
@@ -2032,40 +2037,15 @@ class _ProfilePageState extends State<ProfilePage>
       await storage.delete(key: "passcode_$email");
       await storage.delete(key: "passcode_type_$email");
 
-      print("Passcode + Type deleted");
-
       final prefs = await SharedPreferences.getInstance();
-      final imgPath = prefs.getString('${email}_profileImagePath');
-
-      if (imgPath != null) {
-        final file = File(imgPath);
-        if (await file.exists()) {
-          await file.delete();
-          print("Profile image deleted");
-        }
-      }
-
       await prefs.remove('${email}_profileImagePath');
       await prefs.remove('${email}_rentalEnabled');
 
-      print("SharedPrefs cleared");
-
       if (Hive.isBoxOpen('session')) {
         await Hive.box('session').clear();
-      } else {
-        final sessionBox = await Hive.openBox('session');
-        await sessionBox.clear();
       }
 
-      print("Session cleared");
-
       if (!mounted) return;
-
-      AppSnackBar.showSuccess(
-        context,
-        message: "Account deleted successfully!",
-        duration: Duration(seconds: 2),
-      );
 
       Navigator.pushAndRemoveUntil(
         context,
@@ -2073,15 +2053,14 @@ class _ProfilePageState extends State<ProfilePage>
         (route) => false,
       );
     } catch (e) {
-      print("Delete error: $e");
-
-      if (!mounted) return;
-
-      AppSnackBar.showError(
-        context,
-        message: "Error deleting account",
-        duration: Duration(seconds: 2),
-      );
+      if (mounted) {
+        setState(() => _isDeleting = false); // 🔥 unlock on error
+        AppSnackBar.showError(
+          context,
+          message: "Error deleting account",
+          duration: const Duration(seconds: 2),
+        );
+      }
     }
   }
 
@@ -2093,108 +2072,111 @@ class _ProfilePageState extends State<ProfilePage>
 
     return Scaffold(
       backgroundColor: Color(0xFFF8FAFC),
-      body: AnimatedBuilder(
-        animation: _animationController,
-        builder: (context, child) {
-          return Container(
-            height: screenHeight,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [Colors.white, Color(0xFFF8FAFC), Color(0xFFF1F5F9)],
+      body: AbsorbPointer(
+        absorbing: _isLoggingOut,
+        child: AnimatedBuilder(
+          animation: _animationController,
+          builder: (context, child) {
+            return Container(
+              height: screenHeight,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Colors.white, Color(0xFFF8FAFC), Color(0xFFF1F5F9)],
+                ),
               ),
-            ),
-            child: Stack(
-              children: [
-                // Background decorative elements
-                Positioned(
-                  top: -50,
-                  right: -50,
-                  child: Container(
-                    width: 200,
-                    height: 200,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: RadialGradient(
-                        colors: [
-                          Color(0xFF3B82F6).withOpacity(0.05),
-                          Colors.transparent,
-                        ],
+              child: Stack(
+                children: [
+                  // Background decorative elements
+                  Positioned(
+                    top: -50,
+                    right: -50,
+                    child: Container(
+                      width: 200,
+                      height: 200,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: RadialGradient(
+                          colors: [
+                            Color(0xFF3B82F6).withOpacity(0.05),
+                            Colors.transparent,
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                ),
-                Positioned(
-                  bottom: -50,
-                  left: -50,
-                  child: Container(
-                    width: 200,
-                    height: 200,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: RadialGradient(
-                        colors: [
-                          Color(0xFF10B981).withOpacity(0.05),
-                          Colors.transparent,
-                        ],
+                  Positioned(
+                    bottom: -50,
+                    left: -50,
+                    child: Container(
+                      width: 200,
+                      height: 200,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: RadialGradient(
+                          colors: [
+                            Color(0xFF10B981).withOpacity(0.05),
+                            Colors.transparent,
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                ),
 
-                // Main content with animation
-                Transform.translate(
-                  offset: Offset(0, _slideAnimation.value),
-                  child: Opacity(
-                    opacity: _fadeAnimation.value,
-                    child: MediaQuery.removePadding(
-                      context: context,
-                      removeTop: true, // ✅ removes status bar gap
-                      child: SingleChildScrollView(
-                        physics: const BouncingScrollPhysics(),
-                        child: Padding(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 10 * scale,
-                            vertical: 14, // ✅ reduced from 60
-                          ),
-                          child: Column(
-                            children: [
-                              // Profile Header Card
-                              _buildProfileHeader(isSmallScreen),
-                              SizedBox(height: 10 * scale),
-
-                              // Personal Info Section
-                              _buildPersonalInfoSection(isSmallScreen),
-
-                              // Security Section (for all users)
-                              if (!_isEditing) ...[
+                  // Main content with animation
+                  Transform.translate(
+                    offset: Offset(0, _slideAnimation.value),
+                    child: Opacity(
+                      opacity: _fadeAnimation.value,
+                      child: MediaQuery.removePadding(
+                        context: context,
+                        removeTop: true, // ✅ removes status bar gap
+                        child: SingleChildScrollView(
+                          physics: const BouncingScrollPhysics(),
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 10 * scale,
+                              vertical: 14, // ✅ reduced from 60
+                            ),
+                            child: Column(
+                              children: [
+                                // Profile Header Card
+                                _buildProfileHeader(isSmallScreen),
                                 SizedBox(height: 10 * scale),
-                                _buildSecuritySection(isSmallScreen),
-                              ],
 
-                              // Rental Section (for photographers only)
-                              if (role == 'Photographer' && !_isEditing) ...[
-                                SizedBox(height: 10 * scale),
-                                _buildRentalSection(isSmallScreen),
-                              ],
+                                // Personal Info Section
+                                _buildPersonalInfoSection(isSmallScreen),
 
-                              // Action Buttons
-                              if (!_isEditing) ...[
-                                SizedBox(height: 15 * scale),
-                                _buildActionButtons(isSmallScreen),
+                                // Security Section (for all users)
+                                if (!_isEditing) ...[
+                                  SizedBox(height: 10 * scale),
+                                  _buildSecuritySection(isSmallScreen),
+                                ],
+
+                                // Rental Section (for photographers only)
+                                if (role == 'Photographer' && !_isEditing) ...[
+                                  SizedBox(height: 10 * scale),
+                                  _buildRentalSection(isSmallScreen),
+                                ],
+
+                                // Action Buttons
+                                if (!_isEditing) ...[
+                                  SizedBox(height: 15 * scale),
+                                  _buildActionButtons(isSmallScreen),
+                                ],
                               ],
-                            ],
+                            ),
                           ),
                         ),
                       ),
                     ),
                   ),
-                ),
-              ],
-            ),
-          );
-        },
+                ],
+              ),
+            );
+          },
+        ),
       ),
     );
   }

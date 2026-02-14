@@ -26,10 +26,10 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen>
     with SingleTickerProviderStateMixin {
   bool isCreating = false;
-  bool _isLoggedIn = false;
   bool _obscurePassword = true;
   late AnimationController _controller;
   String selectedRole = 'None';
+  bool _isProcessing = false;
 
   final List<String> roles = [
     'None',
@@ -117,6 +117,9 @@ class _LoginScreenState extends State<LoginScreen>
   // 🔥 CREATE ACCOUNT
   // ----------------------------------------------------------------------
   Future<void> createAccount() async {
+    if (_isProcessing) return;
+
+    setState(() => _isProcessing = true);
     final fullName = fullNameController.text.trim();
     final phone = phoneController.text.trim();
     final email = emailController.text.trim();
@@ -215,6 +218,9 @@ class _LoginScreenState extends State<LoginScreen>
     } catch (e) {
       showError("Account creation failed. Try again.");
     }
+    if (mounted) {
+      setState(() => _isProcessing = false);
+    }
   }
 
   // ----------------------------------------------------------------------
@@ -245,21 +251,22 @@ class _LoginScreenState extends State<LoginScreen>
   // 🔥 LOGIN
   // ----------------------------------------------------------------------
   Future<void> login() async {
-    if (_isLoggedIn) return;
-    _isLoggedIn = true;
+    if (_isProcessing) return;
+
+    setState(() => _isProcessing = true);
 
     final input = emailController.text.trim();
     final password = passwordController.text.trim();
 
     if (input.isEmpty) {
       showError("Please enter your email or phone number");
-      _isLoggedIn = false;
+      setState(() => _isProcessing = false);
       return;
     }
 
     if (password.isEmpty) {
       showError("Please enter your password");
-      _isLoggedIn = false;
+      setState(() => _isProcessing = false);
       return;
     }
 
@@ -283,14 +290,14 @@ class _LoginScreenState extends State<LoginScreen>
 
       if (existsUser.name.isEmpty) {
         showError("User not found. Please create an account.");
-        _isLoggedIn = false;
+        setState(() => _isProcessing = false);
         return;
       }
 
       // Password verification
       if (existsUser.password != password) {
         showError("Incorrect password");
-        _isLoggedIn = false;
+        setState(() => _isProcessing = false);
         return;
       }
 
@@ -330,7 +337,7 @@ class _LoginScreenState extends State<LoginScreen>
     } catch (e) {
       showError("Login failed. Try again.");
     } finally {
-      _isLoggedIn = false;
+      setState(() => _isProcessing = false);
     }
   }
 
@@ -670,6 +677,8 @@ class _LoginScreenState extends State<LoginScreen>
                       Expanded(
                         child: ElevatedButton(
                           onPressed: () async {
+                            if (_isProcessing) return;
+                            setState(() => _isProcessing = true);
                             final newPass = newPasswordController.text.trim();
                             final confirmPass =
                                 confirmPasswordController.text.trim();
@@ -705,6 +714,9 @@ class _LoginScreenState extends State<LoginScreen>
 
                             Navigator.pop(context);
                             showSuccess("Password updated successfully!");
+                            if (mounted) {
+                              setState(() => _isProcessing = false);
+                            }
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.blue.shade700,
@@ -750,289 +762,345 @@ class _LoginScreenState extends State<LoginScreen>
     final w = MediaQuery.of(context).size.width;
 
     return Scaffold(
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFF3EE4D8), Color(0xFF1FB5D0), Color(0xFF0F73B8)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
-        child: SafeArea(
-          child: SingleChildScrollView(
-            padding: EdgeInsets.symmetric(
-              horizontal: w * 0.08,
-              vertical: h * 0.05,
-            ),
-            child: Column(
-              children: [
-                SizedBox(height: h * 0.05),
-                Text(
-                  isCreating ? "Join Us!" : "Welcome Back",
-                  style: TextStyle(
-                    fontSize: h * 0.035,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+      body: Stack(
+        children: [
+          AbsorbPointer(
+            absorbing: _isProcessing,
+            child: Container(
+              width: double.infinity,
+              height: double.infinity,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Color(0xFF3EE4D8),
+                    Color(0xFF1FB5D0),
+                    Color(0xFF0F73B8),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+              child: SafeArea(
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: w * 0.08,
+                    vertical: h * 0.05,
                   ),
-                ),
-                SizedBox(height: h * 0.015),
-                Text(
-                  isCreating ? "Create your account" : "Login to continue",
-                  style: TextStyle(color: Colors.white70, fontSize: h * 0.018),
-                ),
-                SizedBox(height: h * 0.05),
-
-                AnimatedSize(
-                  duration: const Duration(milliseconds: 300),
                   child: Column(
                     children: [
-                      if (isCreating)
-                        TextField(
-                          controller: fullNameController,
-                          style: const TextStyle(color: Colors.white),
-                          decoration: InputDecoration(
-                            labelText: "Full Name",
-                            labelStyle: const TextStyle(color: Colors.white70),
-                            enabledBorder: OutlineInputBorder(
-                              borderSide: const BorderSide(
-                                color: Colors.white54,
-                              ),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderSide: const BorderSide(color: Colors.white),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            errorText:
-                                _isFullNameValid
-                                    ? null
-                                    : "Name must be at least 2 characters",
-                            errorStyle: TextStyle(
-                              color: Colors.redAccent, // 👈 Change color here
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                      SizedBox(height: h * 0.05),
+                      Text(
+                        isCreating ? "Join Us!" : "Welcome Back",
+                        style: TextStyle(
+                          fontSize: h * 0.035,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
                         ),
+                      ),
+                      SizedBox(height: h * 0.015),
+                      Text(
+                        isCreating
+                            ? "Create your account"
+                            : "Login to continue",
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontSize: h * 0.018,
+                        ),
+                      ),
+                      SizedBox(height: h * 0.05),
 
-                      if (isCreating) SizedBox(height: h * 0.025),
-
-                      if (isCreating)
-                        DropdownButtonFormField<String>(
-                          initialValue: selectedRole,
-                          dropdownColor: Colors.blue.shade900,
-                          icon: const Icon(
-                            Icons.arrow_drop_down,
-                            color: Colors.white,
-                          ),
-                          style: const TextStyle(color: Colors.white),
-                          decoration: InputDecoration(
-                            labelText: "Your Profession",
-                            labelStyle: const TextStyle(color: Colors.white70),
-                            enabledBorder: OutlineInputBorder(
-                              borderSide: const BorderSide(
-                                color: Colors.white54,
-                              ),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                          ),
-                          items:
-                              roles
-                                  .map(
-                                    (r) => DropdownMenuItem(
-                                      value: r,
-                                      child: Text(r),
+                      AnimatedSize(
+                        duration: const Duration(milliseconds: 300),
+                        child: Column(
+                          children: [
+                            if (isCreating)
+                              TextField(
+                                controller: fullNameController,
+                                style: const TextStyle(color: Colors.white),
+                                decoration: InputDecoration(
+                                  labelText: "Full Name",
+                                  labelStyle: const TextStyle(
+                                    color: Colors.white70,
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderSide: const BorderSide(
+                                      color: Colors.white54,
                                     ),
-                                  )
-                                  .toList(),
-                          onChanged:
-                              (val) => setState(() => selectedRole = val!),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderSide: const BorderSide(
+                                      color: Colors.white,
+                                    ),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  errorText:
+                                      _isFullNameValid
+                                          ? null
+                                          : "Name must be at least 2 characters",
+                                  errorStyle: TextStyle(
+                                    color:
+                                        Colors
+                                            .redAccent, // 👈 Change color here
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+
+                            if (isCreating) SizedBox(height: h * 0.025),
+
+                            if (isCreating)
+                              DropdownButtonFormField<String>(
+                                initialValue: selectedRole,
+                                dropdownColor: Colors.blue.shade900,
+                                icon: const Icon(
+                                  Icons.arrow_drop_down,
+                                  color: Colors.white,
+                                ),
+                                style: const TextStyle(color: Colors.white),
+                                decoration: InputDecoration(
+                                  labelText: "Your Profession",
+                                  labelStyle: const TextStyle(
+                                    color: Colors.white70,
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderSide: const BorderSide(
+                                      color: Colors.white54,
+                                    ),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                ),
+                                items:
+                                    roles
+                                        .map(
+                                          (r) => DropdownMenuItem(
+                                            value: r,
+                                            child: Text(r),
+                                          ),
+                                        )
+                                        .toList(),
+                                onChanged:
+                                    (val) =>
+                                        setState(() => selectedRole = val!),
+                              ),
+
+                            if (isCreating) SizedBox(height: h * 0.025),
+
+                            if (isCreating)
+                              TextField(
+                                controller: phoneController,
+                                keyboardType: TextInputType.phone,
+                                style: const TextStyle(color: Colors.white),
+                                decoration: InputDecoration(
+                                  labelText: "Phone Number",
+                                  labelStyle: const TextStyle(
+                                    color: Colors.white70,
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderSide: const BorderSide(
+                                      color: Colors.white54,
+                                    ),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderSide: const BorderSide(
+                                      color: Colors.white,
+                                    ),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  errorText:
+                                      _isPhoneValid
+                                          ? null
+                                          : "Enter a valid 10-digit phone number",
+                                  errorStyle: TextStyle(
+                                    color:
+                                        Colors
+                                            .redAccent, // 👈 Change color here
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+
+                            if (isCreating) SizedBox(height: h * 0.025),
+
+                            TextField(
+                              controller: emailController,
+                              keyboardType: TextInputType.emailAddress,
+                              style: const TextStyle(color: Colors.white),
+                              decoration: InputDecoration(
+                                labelText:
+                                    isCreating ? "Email" : "Email or Phone",
+                                labelStyle: const TextStyle(
+                                  color: Colors.white70,
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderSide: const BorderSide(
+                                    color: Colors.white54,
+                                  ),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderSide: const BorderSide(
+                                    color: Colors.white,
+                                  ),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                errorText:
+                                    _isEmailValid
+                                        ? null
+                                        : isCreating
+                                        ? "Enter a valid email"
+                                        : "Enter valid email / phone",
+                                errorStyle: TextStyle(
+                                  color:
+                                      Colors.redAccent, // 👈 Change color here
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+
+                            SizedBox(height: h * 0.025),
+
+                            TextField(
+                              controller: passwordController,
+                              obscureText: _obscurePassword,
+                              style: const TextStyle(color: Colors.white),
+                              decoration: InputDecoration(
+                                labelText: "Password",
+                                labelStyle: const TextStyle(
+                                  color: Colors.white70,
+                                ),
+                                prefixIcon: const Icon(
+                                  Icons.lock,
+                                  color: Colors.white70,
+                                ),
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    _obscurePassword
+                                        ? Icons.visibility
+                                        : Icons.visibility_off,
+                                    color: Colors.white70,
+                                  ),
+                                  onPressed:
+                                      () => setState(
+                                        () =>
+                                            _obscurePassword =
+                                                !_obscurePassword,
+                                      ),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderSide: const BorderSide(
+                                    color: Colors.white54,
+                                  ),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderSide: const BorderSide(
+                                    color: Colors.white,
+                                  ),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                errorText:
+                                    _isPasswordValid
+                                        ? null
+                                        : "Password must be at least 6 characters",
+                                errorStyle: TextStyle(
+                                  color:
+                                      Colors.redAccent, // 👈 Change color here
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // 🔥 Forgot Password button
+                      if (!isCreating)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 10, right: 4),
+                          child: Align(
+                            alignment: Alignment.centerRight,
+                            child: TextButton(
+                              onPressed: _showResetPasswordDialog,
+                              child: const Text(
+                                "Forgot Password?",
+                                style: TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                          ),
                         ),
 
-                      if (isCreating) SizedBox(height: h * 0.025),
+                      SizedBox(height: h * 0.04),
 
-                      if (isCreating)
-                        TextField(
-                          controller: phoneController,
-                          keyboardType: TextInputType.phone,
-                          style: const TextStyle(color: Colors.white),
-                          decoration: InputDecoration(
-                            labelText: "Phone Number",
-                            labelStyle: const TextStyle(color: Colors.white70),
-                            enabledBorder: OutlineInputBorder(
-                              borderSide: const BorderSide(
-                                color: Colors.white54,
-                              ),
+                      // Login / Signup button
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: isCreating ? createAccount : login,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            foregroundColor: Colors.blue.shade700,
+                            padding: EdgeInsets.symmetric(vertical: h * 0.02),
+                            shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10),
                             ),
-                            focusedBorder: OutlineInputBorder(
-                              borderSide: const BorderSide(color: Colors.white),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            errorText:
-                                _isPhoneValid
-                                    ? null
-                                    : "Enter a valid 10-digit phone number",
-                            errorStyle: TextStyle(
-                              color: Colors.redAccent, // 👈 Change color here
+                          ),
+                          child: Text(
+                            isCreating ? "SIGN UP" : "LOGIN",
+                            style: TextStyle(
+                              fontSize: h * 0.02,
                               fontWeight: FontWeight.bold,
                             ),
-                          ),
-                        ),
-
-                      if (isCreating) SizedBox(height: h * 0.025),
-
-                      TextField(
-                        controller: emailController,
-                        keyboardType: TextInputType.emailAddress,
-                        style: const TextStyle(color: Colors.white),
-                        decoration: InputDecoration(
-                          labelText: isCreating ? "Email" : "Email or Phone",
-                          labelStyle: const TextStyle(color: Colors.white70),
-                          enabledBorder: OutlineInputBorder(
-                            borderSide: const BorderSide(color: Colors.white54),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderSide: const BorderSide(color: Colors.white),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          errorText:
-                              _isEmailValid
-                                  ? null
-                                  : isCreating
-                                  ? "Enter a valid email"
-                                  : "Enter valid email / phone",
-                          errorStyle: TextStyle(
-                            color: Colors.redAccent, // 👈 Change color here
-                            fontWeight: FontWeight.bold,
                           ),
                         ),
                       ),
 
-                      SizedBox(height: h * 0.025),
+                      SizedBox(height: h * 0.03),
 
-                      TextField(
-                        controller: passwordController,
-                        obscureText: _obscurePassword,
-                        style: const TextStyle(color: Colors.white),
-                        decoration: InputDecoration(
-                          labelText: "Password",
-                          labelStyle: const TextStyle(color: Colors.white70),
-                          prefixIcon: const Icon(
-                            Icons.lock,
-                            color: Colors.white70,
-                          ),
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              _obscurePassword
-                                  ? Icons.visibility
-                                  : Icons.visibility_off,
+                      TextButton(
+                        onPressed: toggleMode,
+                        child: RichText(
+                          text: TextSpan(
+                            text:
+                                isCreating
+                                    ? "Already have an account? "
+                                    : "Don’t have an account? ",
+                            style: TextStyle(
                               color: Colors.white70,
+                              fontSize: h * 0.016,
                             ),
-                            onPressed:
-                                () => setState(
-                                  () => _obscurePassword = !_obscurePassword,
+                            children: [
+                              TextSpan(
+                                text: isCreating ? "Login" : "Sign up",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: h * 0.02,
                                 ),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderSide: const BorderSide(color: Colors.white54),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderSide: const BorderSide(color: Colors.white),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          errorText:
-                              _isPasswordValid
-                                  ? null
-                                  : "Password must be at least 6 characters",
-                          errorStyle: TextStyle(
-                            color: Colors.redAccent, // 👈 Change color here
-                            fontWeight: FontWeight.bold,
+                              ),
+                            ],
                           ),
                         ),
                       ),
                     ],
                   ),
                 ),
-
-                // 🔥 Forgot Password button
-                if (!isCreating)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 10, right: 4),
-                    child: Align(
-                      alignment: Alignment.centerRight,
-                      child: TextButton(
-                        onPressed: _showResetPasswordDialog,
-                        child: const Text(
-                          "Forgot Password?",
-                          style: TextStyle(color: Colors.white70, fontSize: 14),
-                        ),
-                      ),
-                    ),
-                  ),
-
-                SizedBox(height: h * 0.04),
-
-                // Login / Signup button
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: isCreating ? createAccount : login,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: Colors.blue.shade700,
-                      padding: EdgeInsets.symmetric(vertical: h * 0.02),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    child: Text(
-                      isCreating ? "SIGN UP" : "LOGIN",
-                      style: TextStyle(
-                        fontSize: h * 0.02,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-
-                SizedBox(height: h * 0.03),
-
-                TextButton(
-                  onPressed: toggleMode,
-                  child: RichText(
-                    text: TextSpan(
-                      text:
-                          isCreating
-                              ? "Already have an account? "
-                              : "Don’t have an account? ",
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: h * 0.016,
-                      ),
-                      children: [
-                        TextSpan(
-                          text: isCreating ? "Login" : "Sign up",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: h * 0.02,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
-        ),
+          if (_isProcessing)
+            Container(
+              color: Colors.black.withOpacity(0.2),
+              child: const Center(child: CircularProgressIndicator()),
+            ),
+        ],
       ),
     );
   }

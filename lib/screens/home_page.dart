@@ -8,6 +8,7 @@ import 'package:bizmate/widgets/advanced_search_bar.dart'
     show AdvancedSearchBar;
 import 'package:bizmate/widgets/sale_options_menu.dart' show SaleOptionsMenu;
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:intl/intl.dart';
 
@@ -40,6 +41,8 @@ class _HomePageState extends State<HomePage>
   Box? userBox;
   final ScrollController _scrollController = ScrollController();
   int _previousSalesCount = 0;
+  bool _isSendingReminder = false;
+  double scale = 1.0;
 
   Future<void> _loadCurrentUserData() async {
     final user = await _getCurrentUserName();
@@ -691,89 +694,288 @@ class _HomePageState extends State<HomePage>
                                                 label = "SALE : DUE";
                                                 badgeColor =
                                                     Colors.orange[700]!;
-
-                                                final due =
-                                                    sale.totalAmount -
-                                                    sale.amount;
-                                                final phone =
-                                                    sale.phoneNumber
-                                                        .replaceAll('+91', '')
-                                                        .trim();
-                                                final signature =
-                                                    _currentUserName.isNotEmpty
-                                                        ? ' - $_currentUserName'
-                                                        : '';
-                                                final msg =
-                                                    "Hello ${sale.customerName}, your payment of ₹${due.toStringAsFixed(2)} is overdue for more than 7 days. Please make the payment at the earliest. - $signature";
-                                                if (phone != null &&
-                                                    phone.isNotEmpty) {
-                                                  WidgetsBinding.instance
-                                                      .addPostFrameCallback((
-                                                        _,
-                                                      ) {
-                                                        WhatsAppHelper.sendWhatsAppMessage(
-                                                          phone: phone,
-                                                          message: msg,
-                                                        );
-                                                      });
-                                                }
                                               } else {
                                                 label = "SALE : PARTIAL";
                                                 badgeColor = Colors.lightBlue;
                                               }
 
-                                              return Align(
-                                                alignment:
-                                                    Alignment.centerRight,
-                                                child: Container(
-                                                  margin: EdgeInsets.only(
-                                                    top: 6,
-                                                  ),
-                                                  padding: EdgeInsets.symmetric(
-                                                    horizontal:
-                                                        isVerySmallScreen
-                                                            ? 6
-                                                            : isSmallScreen
-                                                            ? 8
-                                                            : 12,
-                                                    vertical:
-                                                        isVerySmallScreen
-                                                            ? 3
-                                                            : isSmallScreen
-                                                            ? 4
-                                                            : 5,
-                                                  ),
-                                                  decoration: BoxDecoration(
-                                                    color: badgeColor,
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                          12,
-                                                        ),
-                                                    boxShadow: [
-                                                      BoxShadow(
-                                                        color: badgeColor
-                                                            .withOpacity(0.3),
-                                                        blurRadius: 4,
-                                                        offset: Offset(0, 2),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                  child: Text(
-                                                    label,
-                                                    style: TextStyle(
-                                                      color: Colors.white,
-                                                      fontSize:
+                                              return Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.end,
+                                                children: [
+                                                  // ✅ SALE BADGE
+                                                  Container(
+                                                    margin: EdgeInsets.only(
+                                                      top: 6,
+                                                    ),
+                                                    padding: EdgeInsets.symmetric(
+                                                      horizontal:
                                                           isVerySmallScreen
-                                                              ? 9
+                                                              ? 6
                                                               : isSmallScreen
-                                                              ? 10
+                                                              ? 8
                                                               : 12,
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      letterSpacing: 0.5,
+                                                      vertical:
+                                                          isVerySmallScreen
+                                                              ? 3
+                                                              : isSmallScreen
+                                                              ? 4
+                                                              : 5,
+                                                    ),
+                                                    decoration: BoxDecoration(
+                                                      color: badgeColor,
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            12,
+                                                          ),
+                                                      boxShadow: [
+                                                        BoxShadow(
+                                                          color: badgeColor
+                                                              .withOpacity(0.3),
+                                                          blurRadius: 4,
+                                                          offset: Offset(0, 2),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                    child: Text(
+                                                      label,
+                                                      style: TextStyle(
+                                                        color: Colors.white,
+                                                        fontSize:
+                                                            isVerySmallScreen
+                                                                ? 9
+                                                                : isSmallScreen
+                                                                ? 10
+                                                                : 12,
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        letterSpacing: 0.5,
+                                                      ),
                                                     ),
                                                   ),
-                                                ),
+
+                                                  // ✅ SEND REMINDER BUTTON (ONLY IF DUE)
+                                                  if (isDueOver7Days) ...[
+                                                    SizedBox(height: 6),
+
+                                                    GestureDetector(
+                                                      onTap: () async {
+                                                        final due =
+                                                            sale.totalAmount -
+                                                            sale.amount;
+                                                        final phone =
+                                                            sale.phoneNumber
+                                                                .replaceAll(
+                                                                  '+91',
+                                                                  '',
+                                                                )
+                                                                .trim();
+
+                                                        final signature =
+                                                            _currentUserName
+                                                                    .isNotEmpty
+                                                                ? ' - $_currentUserName'
+                                                                : '';
+
+                                                        final msg =
+                                                            "Hello ${sale.customerName}, your payment of ₹${due.toStringAsFixed(2)} is overdue for more than 7 days. Please make the payment at the earliest.$signature";
+
+                                                        final bool?
+                                                        confirm = await showDialog<
+                                                          bool
+                                                        >(
+                                                          context: context,
+                                                          builder: (context) {
+                                                            return AlertDialog(
+                                                              shape: RoundedRectangleBorder(
+                                                                borderRadius:
+                                                                    BorderRadius.circular(
+                                                                      16,
+                                                                    ),
+                                                              ),
+                                                              title: Row(
+                                                                children: [
+                                                                  FaIcon(
+                                                                    FontAwesomeIcons
+                                                                        .whatsapp,
+                                                                    color:
+                                                                        Colors
+                                                                            .green,
+                                                                    size:
+                                                                        18 *
+                                                                        scale,
+                                                                  ),
+                                                                  SizedBox(
+                                                                    width:
+                                                                        10 *
+                                                                        scale,
+                                                                  ),
+                                                                  Text(
+                                                                    "Send Reminder",
+                                                                    style: TextStyle(
+                                                                      fontSize:
+                                                                          16 *
+                                                                          scale,
+                                                                    ),
+                                                                  ),
+                                                                ],
+                                                              ),
+                                                              content: Text(
+                                                                "Send WhatsApp reminder to ${sale.customerName} for ₹${due.toStringAsFixed(2)}?",
+                                                                style:
+                                                                    TextStyle(
+                                                                      fontSize:
+                                                                          12 *
+                                                                          scale,
+                                                                    ),
+                                                              ),
+                                                              actions: [
+                                                                TextButton(
+                                                                  onPressed:
+                                                                      () => Navigator.pop(
+                                                                        context,
+                                                                        false,
+                                                                      ),
+                                                                  child: Text(
+                                                                    "Cancel",
+                                                                    style: TextStyle(
+                                                                      color:
+                                                                          Colors
+                                                                              .black,
+                                                                      fontSize:
+                                                                          14 *
+                                                                          scale,
+                                                                    ),
+                                                                  ),
+                                                                ),
+                                                                ElevatedButton(
+                                                                  style: ElevatedButton.styleFrom(
+                                                                    backgroundColor:
+                                                                        Colors
+                                                                            .green,
+                                                                    shape: RoundedRectangleBorder(
+                                                                      borderRadius:
+                                                                          BorderRadius.circular(
+                                                                            8,
+                                                                          ),
+                                                                    ),
+                                                                  ),
+                                                                  onPressed:
+                                                                      () => Navigator.pop(
+                                                                        context,
+                                                                        true,
+                                                                      ),
+                                                                  child: Text(
+                                                                    "Send",
+                                                                    style: TextStyle(
+                                                                      color:
+                                                                          Colors
+                                                                              .white,
+                                                                      fontSize:
+                                                                          14 *
+                                                                          scale,
+                                                                    ),
+                                                                  ),
+                                                                ),
+                                                              ],
+                                                            );
+                                                          },
+                                                        );
+
+                                                        if (confirm == true &&
+                                                            phone.isNotEmpty) {
+                                                          setState(
+                                                            () =>
+                                                                _isSendingReminder =
+                                                                    true,
+                                                          );
+
+                                                          try {
+                                                            await WhatsAppHelper.sendWhatsAppMessage(
+                                                              phone: phone,
+                                                              message: msg,
+                                                            );
+                                                          } catch (_) {}
+
+                                                          if (mounted) {
+                                                            setState(
+                                                              () =>
+                                                                  _isSendingReminder =
+                                                                      false,
+                                                            );
+                                                          }
+                                                        }
+                                                      },
+                                                      child: Container(
+                                                        padding:
+                                                            EdgeInsets.symmetric(
+                                                              horizontal:
+                                                                  8 * scale,
+                                                              vertical:
+                                                                  6 * scale,
+                                                            ),
+                                                        decoration: BoxDecoration(
+                                                          gradient:
+                                                              LinearGradient(
+                                                                colors: [
+                                                                  Color(
+                                                                    0xFF25D366,
+                                                                  ),
+                                                                  Color(
+                                                                    0xFF128C7E,
+                                                                  ),
+                                                                ],
+                                                              ),
+                                                          borderRadius:
+                                                              BorderRadius.circular(
+                                                                10,
+                                                              ),
+                                                          boxShadow: [
+                                                            BoxShadow(
+                                                              color: Color(
+                                                                0xFF25D366,
+                                                              ).withOpacity(
+                                                                0.3,
+                                                              ),
+                                                              blurRadius: 6,
+                                                              offset: Offset(
+                                                                0,
+                                                                3,
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                        child: Row(
+                                                          mainAxisSize:
+                                                              MainAxisSize.min,
+                                                          children: [
+                                                            FaIcon(
+                                                              FontAwesomeIcons
+                                                                  .whatsapp,
+                                                              color:
+                                                                  Colors.white,
+                                                              size: 14 * scale,
+                                                            ),
+                                                            SizedBox(width: 6),
+                                                            Text(
+                                                              "Send Reminder",
+                                                              style: TextStyle(
+                                                                color:
+                                                                    Colors
+                                                                        .white,
+                                                                fontSize:
+                                                                    11 * scale,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .w600,
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ],
                                               );
                                             },
                                           ),
@@ -856,7 +1058,19 @@ class _HomePageState extends State<HomePage>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[100],
-      body: Stack(children: [buildSalesList()]),
+      body: Stack(
+        children: [
+          // 🔥 BLOCK TOUCHES WHEN SENDING
+          AbsorbPointer(absorbing: _isSendingReminder, child: buildSalesList()),
+
+          // 🔥 OPTIONAL LOADING OVERLAY
+          if (_isSendingReminder)
+            Container(
+              color: Colors.black.withOpacity(0.15),
+              child: const Center(child: CircularProgressIndicator()),
+            ),
+        ],
+      ),
     );
   }
 }

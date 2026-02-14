@@ -26,8 +26,7 @@ class _ModernCalendarState extends State<ModernCalendar> {
   late DateTime _selectedDate;
   double scale = 1.0;
   bool _hasUserSelectedDate = false;
-
-  int _monthDirection = 0; // -1 previous, 1 next
+  int _monthDirection = 0;
 
   final List<String> _weekdays = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
 
@@ -40,23 +39,38 @@ class _ModernCalendarState extends State<ModernCalendar> {
 
   void _previousMonth() {
     setState(() {
+      _monthDirection = -1;
       _currentMonth = DateTime(_currentMonth.year, _currentMonth.month - 1);
     });
   }
 
   void _nextMonth() {
     setState(() {
+      _monthDirection = 1;
       _currentMonth = DateTime(_currentMonth.year, _currentMonth.month + 1);
     });
   }
 
   List<DateTime> _getDaysInMonth() {
+    final first = DateTime(_currentMonth.year, _currentMonth.month, 1);
     final last = DateTime(_currentMonth.year, _currentMonth.month + 1, 0);
+
     final days = <DateTime>[];
+
+    int startingWeekday = first.weekday;
+
+    for (int i = 1; i < startingWeekday; i++) {
+      days.add(first.subtract(Duration(days: startingWeekday - i)));
+    }
 
     for (int i = 0; i < last.day; i++) {
       days.add(DateTime(_currentMonth.year, _currentMonth.month, i + 1));
     }
+
+    while (days.length % 7 != 0) {
+      days.add(days.last.add(const Duration(days: 1)));
+    }
+
     return days;
   }
 
@@ -75,6 +89,7 @@ class _ModernCalendarState extends State<ModernCalendar> {
 
   bool _isInRange(DateTime d) {
     if (widget.startDate == null || widget.endDate == null) return false;
+
     return (d.isAfter(widget.startDate!) ||
             d.isAtSameMomentAs(widget.startDate!)) &&
         (d.isBefore(widget.endDate!) || d.isAtSameMomentAs(widget.endDate!));
@@ -90,10 +105,8 @@ class _ModernCalendarState extends State<ModernCalendar> {
         if (details.primaryVelocity == null) return;
 
         if (details.primaryVelocity! < 0) {
-          _monthDirection = 1;
           _nextMonth();
         } else if (details.primaryVelocity! > 0) {
-          _monthDirection = -1;
           _previousMonth();
         }
       },
@@ -119,8 +132,6 @@ class _ModernCalendarState extends State<ModernCalendar> {
               children: [
                 _buildHeader(width),
                 _buildWeekdays(width),
-
-                /// 🔥 SMOOTH MONTH ANIMATION
                 AnimatedSwitcher(
                   duration: const Duration(milliseconds: 400),
                   transitionBuilder: (child, animation) {
@@ -139,7 +150,7 @@ class _ModernCalendarState extends State<ModernCalendar> {
                       end: 1.0,
                     ).animate(curved);
 
-                    final scale = Tween<double>(
+                    final scaleAnim = Tween<double>(
                       begin: 0.95,
                       end: 1.0,
                     ).animate(curved);
@@ -148,7 +159,7 @@ class _ModernCalendarState extends State<ModernCalendar> {
                       opacity: fade,
                       child: SlideTransition(
                         position: slide,
-                        child: ScaleTransition(scale: scale, child: child),
+                        child: ScaleTransition(scale: scaleAnim, child: child),
                       ),
                     );
                   },
@@ -157,7 +168,6 @@ class _ModernCalendarState extends State<ModernCalendar> {
                     child: _buildGrid(days),
                   ),
                 ),
-
                 Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 16,
@@ -228,8 +238,6 @@ class _ModernCalendarState extends State<ModernCalendar> {
       ),
     );
   }
-
-  // -------------------- UI HELPERS --------------------
 
   Widget _buildHeader(double width) {
     return Container(
@@ -306,6 +314,7 @@ class _ModernCalendarState extends State<ModernCalendar> {
         ),
         itemBuilder: (_, index) {
           final date = days[index];
+
           return InkWell(
             borderRadius: BorderRadius.circular(12),
             onTap:
@@ -329,6 +338,11 @@ class _ModernCalendarState extends State<ModernCalendar> {
                             Colors.purple.shade600,
                           ],
                         ),
+                        borderRadius: BorderRadius.circular(10),
+                      )
+                      : _isInRange(date)
+                      ? BoxDecoration(
+                        color: Colors.blue.shade100.withOpacity(0.5),
                         borderRadius: BorderRadius.circular(10),
                       )
                       : BoxDecoration(borderRadius: BorderRadius.circular(10)),

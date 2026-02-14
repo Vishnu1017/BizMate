@@ -33,6 +33,7 @@ class _DashboardPageState extends State<DashboardPage> {
   int previousMonthsCount = 0;
   List<Sale> sales = [];
   List<RentalSaleModel> rentalSales = [];
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -49,6 +50,12 @@ class _DashboardPageState extends State<DashboardPage> {
     await _loadSalesData();
     await _loadRentalSalesData();
     fetchSaleOverview(_selectedRange);
+
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   Future<void> _loadSalesData() async {
@@ -256,8 +263,8 @@ class _DashboardPageState extends State<DashboardPage> {
             : 1.25;
 
     // While data is being prepared, show a subtle loader (keeps original behaviour)
-    if (salesData.isEmpty) {
-      return Center(child: CircularProgressIndicator());
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
     }
 
     final currencyFormat = NumberFormat.simpleCurrency(
@@ -551,7 +558,8 @@ class _DashboardPageState extends State<DashboardPage> {
                                       LineChartBarData(
                                         spots: salesData,
                                         isCurved: true,
-                                        gradient: LinearGradient(
+                                        curveSmoothness: 0.35,
+                                        gradient: const LinearGradient(
                                           colors: [
                                             Color(0xFF2563EB),
                                             Color(0xFF1E40AF),
@@ -562,7 +570,22 @@ class _DashboardPageState extends State<DashboardPage> {
                                           end: Alignment.topLeft,
                                         ),
                                         barWidth: 3.0 * scale,
-                                        dotData: FlDotData(show: true),
+                                        dotData: FlDotData(
+                                          show: true,
+                                          getDotPainter: (
+                                            spot,
+                                            percent,
+                                            bar,
+                                            index,
+                                          ) {
+                                            return FlDotCirclePainter(
+                                              radius: 4 * scale,
+                                              color: const Color(0xFF1E40AF),
+                                              strokeWidth: 2,
+                                              strokeColor: Colors.white,
+                                            );
+                                          },
+                                        ),
                                         belowBarData: BarAreaData(show: false),
                                       ),
                                     ],

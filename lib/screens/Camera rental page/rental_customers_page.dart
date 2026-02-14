@@ -28,6 +28,7 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
   double scale = 1.0;
   final ScrollController _scrollController = ScrollController();
   int _previousCustomerCount = 0;
+  bool _isDeleting = false;
 
   List<CustomerModel> customers = [];
   List<CustomerModel> allCustomers = []; // FULL backup list (important)
@@ -214,15 +215,30 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
   // ⭐ DELETE CUSTOMER
   // ---------------------------------------------------------------------------
   Future<void> _deleteCustomer(int index) async {
-    // Defensive: ensure index valid
+    if (_isDeleting) return; // 🚫 prevent double tap
+
     if (index < 0 || index >= customers.length) return;
+
+    setState(() => _isDeleting = true);
 
     final customer = customers[index];
 
     try {
-      // USER BOX delete
+      // 🔹 Optimistic UI update (smooth UX)
+      setState(() {
+        allCustomers.removeWhere(
+          (c) =>
+              c.name == customer.name &&
+              c.phone == customer.phone &&
+              c.createdAt == customer.createdAt,
+        );
+        customers.removeAt(index);
+      });
+
+      // ================= USER BOX DELETE =================
       if (userBox != null) {
         List<CustomerModel> userCustomers = [];
+
         try {
           userCustomers = List<CustomerModel>.from(
             userBox!.get("customers", defaultValue: []),
@@ -241,7 +257,7 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
         await userBox!.put("customers", userCustomers);
       }
 
-      // MAIN BOX delete
+      // ================= MAIN BOX DELETE =================
       final mainList = customerBox.values.toList();
       final mainIndex = mainList.indexWhere(
         (c) =>
@@ -250,32 +266,26 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
             c.createdAt == customer.createdAt,
       );
 
-      if (mainIndex != -1) await customerBox.deleteAt(mainIndex);
+      if (mainIndex != -1) {
+        await customerBox.deleteAt(mainIndex);
+      }
 
-      // SAFETY: ensure widget still mounted before updating UI
-      if (!mounted) return;
-
-      // DELETE from UI lists
-      setState(() {
-        allCustomers.removeWhere(
-          (c) =>
-              c.name == customer.name &&
-              c.phone == customer.phone &&
-              c.createdAt == customer.createdAt,
-        );
-        customers.removeAt(index);
-      });
-
+      // ================= DELETE RELATED SALES =================
       await _deleteCustomerRentalSales(customer.name, customer.phone);
 
       if (!mounted) return;
+
       AppSnackBar.showSuccess(context, message: "${customer.name} deleted");
     } catch (e) {
+      if (!mounted) return;
+
+      AppSnackBar.showError(context, message: 'Failed to delete customer');
+
+      // 🔁 Reload customers if something fails
+      await _loadCustomers();
+    } finally {
       if (mounted) {
-        AppSnackBar.showError(
-          context,
-          message: 'Failed to delete customer: $e',
-        );
+        setState(() => _isDeleting = false);
       }
     }
   }
@@ -402,7 +412,6 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
           ),
           child: Icon(Icons.delete, color: Colors.white, size: 30 * scale),
         ),
-
         child: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -748,16 +757,19 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
                               ? (_searchQuery.isNotEmpty
                                   ? _buildNoMatchState(_searchQuery)
                                   : _buildEmptyState())
-                              : ListView.builder(
-                                controller: _scrollController,
-                                padding: const EdgeInsets.only(bottom: 20),
-                                itemCount: customers.length,
-                                itemBuilder: (context, index) {
-                                  return _buildCustomerCard(
-                                    customers[index],
-                                    index,
-                                  );
-                                },
+                              : AbsorbPointer(
+                                absorbing: _isDeleting,
+                                child: ListView.builder(
+                                  controller: _scrollController,
+                                  padding: const EdgeInsets.only(bottom: 20),
+                                  itemCount: customers.length,
+                                  itemBuilder: (context, index) {
+                                    return _buildCustomerCard(
+                                      customers[index],
+                                      index,
+                                    );
+                                  },
+                                ),
                               ),
                     ),
                   ),

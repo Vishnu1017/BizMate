@@ -210,7 +210,10 @@ class _ProductsPageState extends State<ProductsPage> {
 
                       return Dismissible(
                         key: Key(product.name + index.toString()),
-                        direction: DismissDirection.endToStart,
+                        direction:
+                            _searchQuery.isEmpty
+                                ? DismissDirection.endToStart
+                                : DismissDirection.none,
                         confirmDismiss: (_) => _confirmDelete(realIndex),
                         background: Container(
                           alignment: Alignment.centerRight,

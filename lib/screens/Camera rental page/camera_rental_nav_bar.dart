@@ -47,6 +47,7 @@ class _CameraRentalNavBarState extends State<CameraRentalNavBar> {
   final Color _textSecondary = const Color.fromARGB(255, 72, 72, 72);
   final Color _dividerColor = const Color(0xFFE0E0E0);
   double scale = 1.0;
+  bool _isLoading = false;
 
   final List<String> _titles = [
     "Camera Rental Sales",
@@ -571,64 +572,66 @@ class _CameraRentalNavBarState extends State<CameraRentalNavBar> {
 
     return Scaffold(
       backgroundColor: _backgroundColor,
-      body: Column(
-        children: [
-          // Clean AppBar (matching NavBarPage)
-          _buildCleanAppBar(screenWidth),
+      body: AbsorbPointer(
+        absorbing: _isLoading,
+        child: Column(
+          children: [
+            // Clean AppBar (matching NavBarPage)
+            _buildCleanAppBar(screenWidth),
 
-          // Main content
-          Expanded(
-            child: Padding(
-              padding: EdgeInsets.only(
-                top: isSmallScreen ? 8 : 10,
-                left: _pagePadding(screenWidth).horizontal / 4,
-                right: _pagePadding(screenWidth).horizontal / 4,
-                bottom: _pagePadding(screenWidth).horizontal / 11,
-              ),
-              child: Column(
-                children: [
-                  // Add Rental Item button (when on Items page)
-                  if (_currentIndex == 2) _buildAddRentalButton(screenWidth),
-                  // Page content
-                  Expanded(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: _surfaceColor,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: _dividerColor),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.03),
-                            blurRadius: 16,
-                            offset: const Offset(0, 4),
+            // Main content
+            Expanded(
+              child: Padding(
+                padding: EdgeInsets.only(
+                  top: isSmallScreen ? 8 : 10,
+                  left: _pagePadding(screenWidth).horizontal / 4,
+                  right: _pagePadding(screenWidth).horizontal / 4,
+                  bottom: _pagePadding(screenWidth).horizontal / 11,
+                ),
+                child: Column(
+                  children: [
+                    // Add Rental Item button (when on Items page)
+                    if (_currentIndex == 2) _buildAddRentalButton(screenWidth),
+                    // Page content
+                    Expanded(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: _surfaceColor,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: _dividerColor),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.03),
+                              blurRadius: 16,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(20),
+                          child: AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 300),
+                            child: _pages[_currentIndex],
+                            transitionBuilder: (
+                              Widget child,
+                              Animation<double> animation,
+                            ) {
+                              return FadeTransition(
+                                opacity: animation,
+                                child: child,
+                              );
+                            },
                           ),
-                        ],
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(20),
-                        child: AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 300),
-                          child: _pages[_currentIndex],
-                          transitionBuilder: (
-                            Widget child,
-                            Animation<double> animation,
-                          ) {
-                            return FadeTransition(
-                              opacity: animation,
-                              child: child,
-                            );
-                          },
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-
       // Clean Navigation Bar (matching NavBarPage)
       bottomNavigationBar: SafeArea(child: _buildCleanNavigation(screenWidth)),
     );

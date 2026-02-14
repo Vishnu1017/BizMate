@@ -5,13 +5,11 @@ Future<bool> showConfirmDialog({
   required BuildContext context,
   required String title,
   required String message,
-  required VoidCallback onConfirm, // <-- REQUIRED (same as before)
+  required VoidCallback onConfirm,
   IconData icon = Icons.delete_forever_rounded,
   Color iconColor = Colors.redAccent,
 }) async {
-  bool confirmed = false;
-
-  await showGeneralDialog(
+  final result = await showGeneralDialog<bool>(
     context: context,
     barrierDismissible: true,
     barrierLabel: '',
@@ -61,7 +59,7 @@ Future<bool> showConfirmDialog({
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         ElevatedButton(
-                          onPressed: () => Navigator.pop(ctx),
+                          onPressed: () => Navigator.pop(ctx, false),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.white12,
                           ),
@@ -72,8 +70,7 @@ Future<bool> showConfirmDialog({
                         ),
                         ElevatedButton(
                           onPressed: () {
-                            confirmed = true;
-                            Navigator.pop(context);
+                            Navigator.pop(ctx, true);
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.redAccent,
@@ -101,9 +98,10 @@ Future<bool> showConfirmDialog({
     },
   );
 
-  if (confirmed) {
-    onConfirm(); // <-- YOU WANTED THIS
+  if (result == true) {
+    onConfirm();
+    return true;
   }
 
-  return confirmed;
+  return false;
 }

@@ -154,28 +154,77 @@ class DiscountTaxWidget extends StatelessWidget {
     String? suffixText,
     VoidCallback? onTap,
   }) {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        color: Colors.grey.shade200.withOpacity(0.3),
-        border: Border.all(color: Colors.grey.shade400),
-      ),
-      child: TextFormField(
-        controller: controller,
-        onTap: onTap,
-        keyboardType: const TextInputType.numberWithOptions(decimal: true),
-        decoration: InputDecoration(
-          border: InputBorder.none,
-          labelText: label,
-          prefixIcon: Icon(icon, size: 18),
-          prefixText: prefixText,
-          suffixText: suffixText,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 12,
-            vertical: 12,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final double localScale = (constraints.maxWidth / 390).clamp(0.95, 1.1);
+
+        final bool isCompact =
+            icon == Icons.percent || icon == Icons.currency_rupee;
+
+        return Container(
+          margin: EdgeInsets.symmetric(vertical: 6 * localScale),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12 * localScale),
+            color: Colors.grey.shade200.withOpacity(0.3),
+            border: Border.all(color: Colors.grey.shade400, width: 1),
           ),
-        ),
-      ),
+          child: TextFormField(
+            controller: controller,
+            onTap: onTap,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            style: TextStyle(
+              fontSize: 14 * localScale,
+              fontWeight: FontWeight.w500,
+              color: Colors.black87,
+            ),
+            decoration: InputDecoration(
+              isDense: true,
+              border: InputBorder.none,
+              labelText: label,
+              labelStyle: TextStyle(
+                fontSize: 13 * localScale,
+                color: Colors.black54,
+                fontWeight: FontWeight.w500,
+              ),
+
+              // ICON
+              prefixIcon: Icon(
+                icon,
+                size: 18 * localScale,
+                color: Colors.grey.shade700,
+              ),
+
+              // 🔥 Better icon alignment
+              prefixIconConstraints: BoxConstraints(
+                minWidth: isCompact ? 32 * localScale : 40 * localScale,
+                minHeight: 36 * localScale,
+              ),
+
+              // 🔥 Clean compact padding
+              contentPadding: EdgeInsets.fromLTRB(
+                isCompact ? 6 * localScale : 12 * localScale,
+                12 * localScale,
+                12 * localScale,
+                12 * localScale,
+              ),
+
+              prefixText: prefixText,
+              prefixStyle: TextStyle(
+                fontSize: 13 * localScale,
+                color: Colors.black87,
+                fontWeight: FontWeight.w500,
+              ),
+
+              suffixText: suffixText,
+              suffixStyle: TextStyle(
+                fontSize: 13 * localScale,
+                color: Colors.black87,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 

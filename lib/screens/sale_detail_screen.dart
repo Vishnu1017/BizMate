@@ -26,6 +26,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
   bool isFullyPaid = false;
   String _selectedMode = 'Cash';
   double scale = 1.0;
+  bool _isSaving = false;
 
   final List<String> _paymentModes = [
     'Cash',
@@ -85,7 +86,8 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
   }
 
   void saveChanges() async {
-    // VALIDATION
+    if (_isSaving) return;
+    setState(() => _isSaving = true);
     if (customerController.text.trim().isEmpty) {
       AppSnackBar.showError(context, message: "Customer name cannot be empty!");
       return;
@@ -197,6 +199,8 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
     );
 
     Navigator.pop(context);
+    setState(() => _isSaving = false);
+    Navigator.pop(context);
   }
 
   @override
@@ -250,479 +254,476 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
         final titleSize = 13.0 * scale;
         final subtitleSize = 9.0 * scale;
 
-        return Scaffold(
-          backgroundColor: const Color(0xFFF8FAFC),
-          appBar: AppBar(
-            elevation: 0,
-            backgroundColor: Colors.white,
-            foregroundColor: const Color(0xFF1E40AF),
-            title: Text(
-              "Edit Sale Details",
-              style: TextStyle(
-                color: const Color(0xFF1E40AF),
-                fontWeight: FontWeight.w600,
-                fontSize: 18 * scale,
+        return AbsorbPointer(
+          absorbing: _isSaving,
+          child: Scaffold(
+            backgroundColor: const Color(0xFFF8FAFC),
+            appBar: AppBar(
+              elevation: 0,
+              backgroundColor: Colors.white,
+              foregroundColor: const Color(0xFF1E40AF),
+              title: Text(
+                "Edit Sale Details",
+                style: TextStyle(
+                  color: const Color(0xFF1E40AF),
+                  fontWeight: FontWeight.w600,
+                  fontSize: 18 * scale,
+                ),
               ),
+              centerTitle: true,
+              leading: IconButton(
+                icon: Icon(Icons.arrow_back, size: 20 * scale),
+                onPressed: () => Navigator.pop(context),
+              ),
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.save_rounded),
+                  onPressed: _isSaving ? null : saveChanges,
+                ),
+              ],
             ),
-            centerTitle: true,
-            leading: IconButton(
-              icon: Icon(Icons.arrow_back, size: 20 * scale),
-              onPressed: () => Navigator.pop(context),
-            ),
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.save_rounded),
-                onPressed: saveChanges,
-                tooltip: 'Save Changes',
-              ),
-            ],
-          ),
-          body: SafeArea(
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              padding: EdgeInsets.symmetric(
-                horizontal: horizontalPadding,
-                vertical: 18,
-              ),
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(maxWidth: bodyWidth),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Header Card
-                        Container(
-                          width: double.infinity,
-                          padding: EdgeInsets.all(cardPadding),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.05),
-                                blurRadius: 16,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Container(
-                                    padding: EdgeInsets.all(6 * scale),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFFEFF6FF),
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: Icon(
-                                      Icons.receipt_long_rounded,
-                                      color: Color(0xFF1E40AF),
-                                      size: 20 * scale,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          widget.sale.productName,
-                                          style: TextStyle(
-                                            fontSize: titleSize,
-                                            fontWeight: FontWeight.w600,
-                                            color: const Color(0xFF1E40AF),
-                                          ),
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          formatted,
-                                          style: TextStyle(
-                                            fontSize: subtitleSize,
-                                            color: Colors.grey.shade600,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                      vertical: 6,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: statusColor.withOpacity(0.1),
-                                      borderRadius: BorderRadius.circular(20),
-                                    ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(
-                                          statusIcon,
-                                          size: 10 * scale,
-                                          color: statusColor,
-                                        ),
-                                        const SizedBox(width: 4),
-                                        Text(
-                                          statusText,
-                                          style: TextStyle(
-                                            fontSize: 10 * scale,
-                                            fontWeight: FontWeight.w600,
-                                            color: statusColor,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              SizedBox(height: 12 * scale),
-                              const Divider(height: 1),
-                              SizedBox(height: 12 * scale),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  _buildAmountItem(
-                                    "Total Amount",
-                                    "₹${total.toStringAsFixed(2)}",
-                                    Icons.currency_rupee_rounded,
-                                    const Color(0xFF1E40AF),
-                                  ),
-                                  _buildAmountItem(
-                                    "Balance",
-                                    "₹${balance.abs().toStringAsFixed(2)}",
-                                    balance >= 0
-                                        ? Icons.arrow_outward_rounded
-                                        : Icons.arrow_downward_rounded,
-                                    balance >= 0
-                                        ? const Color(0xFFEF4444)
-                                        : const Color(0xFF10B981),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        SizedBox(height: 10 * scale),
-
-                        // Customer Information Card
-                        Container(
-                          width: double.infinity,
-                          padding: EdgeInsets.all(cardPadding),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.05),
-                                blurRadius: 16,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "Customer Information",
-                                style: TextStyle(
-                                  fontSize: 14 * scale,
-                                  fontWeight: FontWeight.w600,
-                                  color: Color(0xFF1E40AF),
+            body: SafeArea(
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                padding: EdgeInsets.symmetric(
+                  horizontal: horizontalPadding,
+                  vertical: 18,
+                ),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(maxWidth: bodyWidth),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Header Card
+                          Container(
+                            width: double.infinity,
+                            padding: EdgeInsets.all(cardPadding),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.05),
+                                  blurRadius: 16,
+                                  offset: const Offset(0, 4),
                                 ),
-                              ),
-                              SizedBox(height: 12 * scale),
-                              _buildModernTextField(
-                                controller: customerController,
-                                label: "Customer Name",
-                                icon: Icons.person_outline_rounded,
-                                isRequired: true,
-                                keyboardType: TextInputType.name,
-                              ),
-                              const SizedBox(height: 12),
-                              _buildModernTextField(
-                                controller: phoneController,
-                                label: "Phone Number",
-                                icon: Icons.phone_iphone_rounded,
-                                keyboardType: TextInputType.phone,
-                                isRequired: true,
-                              ),
-                              const SizedBox(height: 12),
-                              _buildModernTextField(
-                                controller: productController,
-                                label: "Product",
-                                icon: Icons.shopping_bag_outlined,
-                                enabled: false,
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        SizedBox(height: 10 * scale),
-
-                        // Payment Details Card
-                        Container(
-                          width: double.infinity,
-                          padding: EdgeInsets.all(cardPadding),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.05),
-                                blurRadius: 16,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "Payment Details",
-                                style: TextStyle(
-                                  fontSize: 14 * scale,
-                                  fontWeight: FontWeight.w600,
-                                  color: Color(0xFF1E40AF),
-                                ),
-                              ),
-                              SizedBox(height: 12 * scale),
-                              // Total Amount
-                              _buildPaymentRow(
-                                "Total Amount",
-                                "₹${total.toStringAsFixed(2)}",
-                                Icons.currency_rupee_rounded,
-                                const Color(0xFF1E40AF),
-                              ),
-                              SizedBox(height: 12 * scale),
-
-                              // Received Amount with Toggle
-                              Container(
-                                padding: EdgeInsets.symmetric(
-                                  vertical: 10 * scale,
-                                  horizontal: 14 * scale,
-                                ),
-                                decoration: BoxDecoration(
-                                  color:
-                                      isFullyPaid
-                                          ? const Color(
-                                            0xFF10B981,
-                                          ).withOpacity(0.1)
-                                          : Colors.grey.shade50,
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(
-                                    color:
-                                        isFullyPaid
-                                            ? const Color(
-                                              0xFF10B981,
-                                            ).withOpacity(0.3)
-                                            : Colors.grey.shade200,
-                                  ),
-                                ),
-                                child: Row(
+                              ],
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
                                   children: [
                                     Container(
                                       padding: EdgeInsets.all(6 * scale),
                                       decoration: BoxDecoration(
-                                        color:
-                                            isFullyPaid
-                                                ? const Color(0xFF10B981)
-                                                : Colors.grey.shade300,
-                                        borderRadius: BorderRadius.circular(8),
+                                        color: const Color(0xFFEFF6FF),
+                                        borderRadius: BorderRadius.circular(12),
                                       ),
                                       child: Icon(
-                                        Icons.payments_outlined,
-                                        color:
-                                            isFullyPaid
-                                                ? Colors.white
-                                                : Colors.grey.shade600,
+                                        Icons.receipt_long_rounded,
+                                        color: Color(0xFF1E40AF),
                                         size: 20 * scale,
                                       ),
                                     ),
-                                    SizedBox(width: 10 * scale),
+                                    const SizedBox(width: 12),
                                     Expanded(
                                       child: Column(
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,
                                         children: [
                                           Text(
-                                            "Received Amount",
+                                            widget.sale.productName,
                                             style: TextStyle(
-                                              fontSize: 12 * scale,
-                                              color: Colors.grey.shade700,
-                                              fontWeight: FontWeight.w500,
+                                              fontSize: titleSize,
+                                              fontWeight: FontWeight.w600,
+                                              color: const Color(0xFF1E40AF),
                                             ),
                                           ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            formatted,
+                                            style: TextStyle(
+                                              fontSize: subtitleSize,
+                                              color: Colors.grey.shade600,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 6,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: statusColor.withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            statusIcon,
+                                            size: 10 * scale,
+                                            color: statusColor,
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            statusText,
+                                            style: TextStyle(
+                                              fontSize: 10 * scale,
+                                              fontWeight: FontWeight.w600,
+                                              color: statusColor,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                SizedBox(height: 12 * scale),
+                                const Divider(height: 1),
+                                SizedBox(height: 12 * scale),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    _buildAmountItem(
+                                      "Total Amount",
+                                      "₹${total.toStringAsFixed(2)}",
+                                      Icons.currency_rupee_rounded,
+                                      const Color(0xFF1E40AF),
+                                    ),
+                                    _buildAmountItem(
+                                      "Balance",
+                                      "₹${balance.abs().toStringAsFixed(2)}",
+                                      balance >= 0
+                                          ? Icons.arrow_outward_rounded
+                                          : Icons.arrow_downward_rounded,
+                                      balance >= 0
+                                          ? const Color(0xFFEF4444)
+                                          : const Color(0xFF10B981),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          SizedBox(height: 10 * scale),
+
+                          // Customer Information Card
+                          Container(
+                            width: double.infinity,
+                            padding: EdgeInsets.all(cardPadding),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.05),
+                                  blurRadius: 16,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "Customer Information",
+                                  style: TextStyle(
+                                    fontSize: 14 * scale,
+                                    fontWeight: FontWeight.w600,
+                                    color: Color(0xFF1E40AF),
+                                  ),
+                                ),
+                                SizedBox(height: 12 * scale),
+                                _buildModernTextField(
+                                  controller: customerController,
+                                  label: "Customer Name",
+                                  icon: Icons.person_outline_rounded,
+                                  isRequired: true,
+                                  keyboardType: TextInputType.name,
+                                ),
+                                const SizedBox(height: 12),
+                                _buildModernTextField(
+                                  controller: phoneController,
+                                  label: "Phone Number",
+                                  icon: Icons.phone_iphone_rounded,
+                                  keyboardType: TextInputType.phone,
+                                  isRequired: true,
+                                ),
+                                const SizedBox(height: 12),
+                                _buildModernTextField(
+                                  controller: productController,
+                                  label: "Product",
+                                  icon: Icons.shopping_bag_outlined,
+                                  enabled: false,
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          SizedBox(height: 10 * scale),
+
+                          // Payment Details Card
+                          Container(
+                            width: double.infinity,
+                            padding: EdgeInsets.all(cardPadding),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.05),
+                                  blurRadius: 16,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "Payment Details",
+                                  style: TextStyle(
+                                    fontSize: 14 * scale,
+                                    fontWeight: FontWeight.w600,
+                                    color: Color(0xFF1E40AF),
+                                  ),
+                                ),
+                                SizedBox(height: 12 * scale),
+                                // Total Amount
+                                _buildPaymentRow(
+                                  "Total Amount",
+                                  "₹${total.toStringAsFixed(2)}",
+                                  Icons.currency_rupee_rounded,
+                                  const Color(0xFF1E40AF),
+                                ),
+                                SizedBox(height: 12 * scale),
+
+                                // Received Amount with Toggle
+                                Container(
+                                  padding: EdgeInsets.symmetric(
+                                    vertical: 10 * scale,
+                                    horizontal: 14 * scale,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color:
+                                        isFullyPaid
+                                            ? const Color(
+                                              0xFF10B981,
+                                            ).withOpacity(0.1)
+                                            : Colors.grey.shade50,
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color:
                                           isFullyPaid
-                                              ? Text(
-                                                "₹${total.toStringAsFixed(2)}",
-                                                style: TextStyle(
-                                                  fontSize: 16 * scale,
-                                                  fontWeight: FontWeight.w700,
-                                                  color: Color(0xFF10B981),
-                                                ),
-                                              )
-                                              : SizedBox(
-                                                height: 40 * scale,
-                                                child: TextFormField(
-                                                  controller: amountController,
-                                                  keyboardType:
-                                                      const TextInputType.numberWithOptions(
-                                                        decimal: true,
-                                                      ),
-                                                  inputFormatters: [
-                                                    FilteringTextInputFormatter.allow(
-                                                      RegExp(r'^\d*\.?\d{0,2}'),
-                                                    ),
-                                                  ],
+                                              ? const Color(
+                                                0xFF10B981,
+                                              ).withOpacity(0.3)
+                                              : Colors.grey.shade200,
+                                    ),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        padding: EdgeInsets.all(6 * scale),
+                                        decoration: BoxDecoration(
+                                          color:
+                                              isFullyPaid
+                                                  ? const Color(0xFF10B981)
+                                                  : Colors.grey.shade300,
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                        ),
+                                        child: Icon(
+                                          Icons.payments_outlined,
+                                          color:
+                                              isFullyPaid
+                                                  ? Colors.white
+                                                  : Colors.grey.shade600,
+                                          size: 20 * scale,
+                                        ),
+                                      ),
+                                      SizedBox(width: 10 * scale),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              "Received Amount",
+                                              style: TextStyle(
+                                                fontSize: 12 * scale,
+                                                color: Colors.grey.shade700,
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                            isFullyPaid
+                                                ? Text(
+                                                  "₹${total.toStringAsFixed(2)}",
                                                   style: TextStyle(
                                                     fontSize: 16 * scale,
                                                     fontWeight: FontWeight.w700,
                                                     color: Color(0xFF10B981),
                                                   ),
-                                                  decoration: InputDecoration(
-                                                    hintText: "0.00",
-                                                    hintStyle: TextStyle(
-                                                      color: const Color(
-                                                        0xFF10B981,
-                                                      ).withOpacity(0.5),
-                                                    ),
-                                                    border: InputBorder.none,
-                                                    contentPadding:
-                                                        EdgeInsets.zero,
-                                                    prefixText: "₹",
-                                                    prefixStyle: TextStyle(
+                                                )
+                                                : SizedBox(
+                                                  height: 40 * scale,
+                                                  child: TextFormField(
+                                                    controller:
+                                                        amountController,
+                                                    keyboardType:
+                                                        const TextInputType.numberWithOptions(
+                                                          decimal: true,
+                                                        ),
+                                                    inputFormatters: [
+                                                      FilteringTextInputFormatter.allow(
+                                                        RegExp(
+                                                          r'^\d*\.?\d{0,2}',
+                                                        ),
+                                                      ),
+                                                    ],
+                                                    style: TextStyle(
                                                       fontSize: 16 * scale,
                                                       fontWeight:
                                                           FontWeight.w700,
                                                       color: Color(0xFF10B981),
                                                     ),
+                                                    decoration: InputDecoration(
+                                                      hintText: "0.00",
+                                                      hintStyle: TextStyle(
+                                                        color: const Color(
+                                                          0xFF10B981,
+                                                        ).withOpacity(0.5),
+                                                      ),
+                                                      border: InputBorder.none,
+                                                      contentPadding:
+                                                          EdgeInsets.zero,
+                                                      prefixText: "₹",
+                                                      prefixStyle: TextStyle(
+                                                        fontSize: 16 * scale,
+                                                        fontWeight:
+                                                            FontWeight.w700,
+                                                        color: Color(
+                                                          0xFF10B981,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    onChanged:
+                                                        (_) => setState(() {}),
+                                                    validator: (value) {
+                                                      if (!isFullyPaid &&
+                                                          (value == null ||
+                                                              value
+                                                                  .trim()
+                                                                  .isEmpty)) {
+                                                        return null; // not required unless user toggles fully paid off
+                                                      }
+                                                      final val =
+                                                          double.tryParse(
+                                                            value ?? '',
+                                                          );
+                                                      if (val == null) {
+                                                        return 'Enter a valid amount';
+                                                      }
+                                                      if (val < 0) {
+                                                        return 'Amount cannot be negative';
+                                                      }
+                                                      return null;
+                                                    },
                                                   ),
-                                                  onChanged:
-                                                      (_) => setState(() {}),
-                                                  validator: (value) {
-                                                    if (!isFullyPaid &&
-                                                        (value == null ||
-                                                            value
-                                                                .trim()
-                                                                .isEmpty)) {
-                                                      return null; // not required unless user toggles fully paid off
-                                                    }
-                                                    final val = double.tryParse(
-                                                      value ?? '',
-                                                    );
-                                                    if (val == null) {
-                                                      return 'Enter a valid amount';
-                                                    }
-                                                    if (val < 0) {
-                                                      return 'Amount cannot be negative';
-                                                    }
-                                                    return null;
-                                                  },
                                                 ),
-                                              ),
-                                        ],
+                                          ],
+                                        ),
                                       ),
-                                    ),
-                                    Transform.scale(
-                                      scale: 0.75 * scale,
-                                      child: Switch.adaptive(
-                                        value: isFullyPaid,
-                                        onChanged: (value) {
-                                          setState(() {
-                                            isFullyPaid = value;
-                                            if (isFullyPaid) {
-                                              amountController.text = total
-                                                  .toStringAsFixed(2);
-                                            } else {
-                                              amountController.clear();
-                                            }
-                                          });
-                                        },
-                                        activeColor: const Color(0xFF10B981),
+                                      Transform.scale(
+                                        scale: 0.75 * scale,
+                                        child: Switch.adaptive(
+                                          value: isFullyPaid,
+                                          onChanged: (value) {
+                                            setState(() {
+                                              isFullyPaid = value;
+                                              if (isFullyPaid) {
+                                                amountController.text = total
+                                                    .toStringAsFixed(2);
+                                              } else {
+                                                amountController.clear();
+                                              }
+                                            });
+                                          },
+                                          activeColor: const Color(0xFF10B981),
+                                        ),
                                       ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              SizedBox(height: 14 * scale),
-
-                              // Payment Mode
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    "Payment Mode",
-                                    style: TextStyle(
-                                      fontSize: 12 * scale,
-                                      fontWeight: FontWeight.w500,
-                                      color: Colors.grey.shade700,
-                                    ),
+                                    ],
                                   ),
-                                  SizedBox(height: 8 * scale),
-                                  Wrap(
-                                    spacing: 8 * scale,
-                                    runSpacing: 8 * scale,
-                                    children:
-                                        _paymentModes.map((mode) {
-                                          final isSelected =
-                                              _selectedMode == mode;
-                                          return GestureDetector(
-                                            onTap:
-                                                () => setState(
-                                                  () => _selectedMode = mode,
+                                ),
+                                SizedBox(height: 14 * scale),
+
+                                // Payment Mode
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      "Payment Mode",
+                                      style: TextStyle(
+                                        fontSize: 12 * scale,
+                                        fontWeight: FontWeight.w500,
+                                        color: Colors.grey.shade700,
+                                      ),
+                                    ),
+                                    SizedBox(height: 8 * scale),
+                                    Wrap(
+                                      spacing: 8 * scale,
+                                      runSpacing: 8 * scale,
+                                      children:
+                                          _paymentModes.map((mode) {
+                                            final isSelected =
+                                                _selectedMode == mode;
+                                            return GestureDetector(
+                                              onTap:
+                                                  () => setState(
+                                                    () => _selectedMode = mode,
+                                                  ),
+                                              child: Container(
+                                                padding: EdgeInsets.symmetric(
+                                                  horizontal: 14 * scale,
+                                                  vertical: 8 * scale,
                                                 ),
-                                            child: Container(
-                                              padding: EdgeInsets.symmetric(
-                                                horizontal: 14 * scale,
-                                                vertical: 8 * scale,
-                                              ),
-                                              decoration: BoxDecoration(
-                                                color:
-                                                    isSelected
-                                                        ? const Color(
-                                                          0xFF1E40AF,
-                                                        )
-                                                        : Colors.grey.shade50,
-                                                borderRadius:
-                                                    BorderRadius.circular(12),
-                                                border: Border.all(
+                                                decoration: BoxDecoration(
                                                   color:
                                                       isSelected
                                                           ? const Color(
                                                             0xFF1E40AF,
                                                           )
-                                                          : Colors
-                                                              .grey
-                                                              .shade200,
-                                                ),
-                                              ),
-                                              child: Row(
-                                                mainAxisSize: MainAxisSize.min,
-                                                children: [
-                                                  Icon(
-                                                    _getIconForMode(mode),
-                                                    size: 16 * scale,
+                                                          : Colors.grey.shade50,
+                                                  borderRadius:
+                                                      BorderRadius.circular(12),
+                                                  border: Border.all(
                                                     color:
                                                         isSelected
-                                                            ? Colors.white
-                                                            : const Color(
+                                                            ? const Color(
                                                               0xFF1E40AF,
-                                                            ),
+                                                            )
+                                                            : Colors
+                                                                .grey
+                                                                .shade200,
                                                   ),
-                                                  SizedBox(width: 6 * scale),
-                                                  Text(
-                                                    mode,
-                                                    style: TextStyle(
-                                                      fontSize: 12 * scale,
-                                                      fontWeight:
-                                                          FontWeight.w500,
+                                                ),
+                                                child: Row(
+                                                  mainAxisSize:
+                                                      MainAxisSize.min,
+                                                  children: [
+                                                    Icon(
+                                                      _getIconForMode(mode),
+                                                      size: 16 * scale,
                                                       color:
                                                           isSelected
                                                               ? Colors.white
@@ -730,55 +731,70 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                                                 0xFF1E40AF,
                                                               ),
                                                     ),
-                                                  ),
-                                                ],
+                                                    SizedBox(width: 6 * scale),
+                                                    Text(
+                                                      mode,
+                                                      style: TextStyle(
+                                                        fontSize: 12 * scale,
+                                                        fontWeight:
+                                                            FontWeight.w500,
+                                                        color:
+                                                            isSelected
+                                                                ? Colors.white
+                                                                : const Color(
+                                                                  0xFF1E40AF,
+                                                                ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
                                               ),
-                                            ),
-                                          );
-                                        }).toList(),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                        SizedBox(height: 20 * scale),
-
-                        // Save Button
-                        SizedBox(
-                          width: double.infinity,
-                          height: 50 * scale,
-                          child: ElevatedButton(
-                            onPressed: saveChanges,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF1E40AF),
-                              foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(14),
-                              ),
-                              elevation: 0,
-                              shadowColor: Colors.transparent,
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.save_rounded,
-                                  size: 18 * scale * scale,
-                                ),
-                                SizedBox(width: 8 * scale),
-                                Text(
-                                  "Save Changes",
-                                  style: TextStyle(
-                                    fontSize: 14 * scale,
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                                            );
+                                          }).toList(),
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
                           ),
-                        ),
-                      ],
+                          SizedBox(height: 20 * scale),
+
+                          // Save Button
+                          SizedBox(
+                            width: double.infinity,
+                            height: 50 * scale,
+                            child: ElevatedButton(
+                              onPressed: _isSaving ? null : saveChanges,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF1E40AF),
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                                elevation: 0,
+                                shadowColor: Colors.transparent,
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.save_rounded,
+                                    size: 18 * scale * scale,
+                                  ),
+                                  SizedBox(width: 8 * scale),
+                                  Text(
+                                    "Save Changes",
+                                    style: TextStyle(
+                                      fontSize: 14 * scale,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),

@@ -301,6 +301,7 @@ class _SelectItemsScreenState extends State<SelectItemsScreen> {
           message: "No products found. Please add products.",
           duration: const Duration(seconds: 3),
         );
+        setState(() => _isLoadingProducts = false);
         return;
       }
 
@@ -875,560 +876,608 @@ class _SelectItemsScreenState extends State<SelectItemsScreen> {
       onTap: () {
         FocusScope.of(context).unfocus();
       },
-      child: Scaffold(
-        backgroundColor: const Color(0xFFF8FAFF),
-        appBar: AppBar(
-          iconTheme: const IconThemeData(
-            color: Colors.white, // ← makes the back arrow white
-          ),
-          title: Text(
-            "Add Item",
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          centerTitle: true,
-          elevation: 0,
-          toolbarHeight: 56 * scale,
-          flexibleSpace: Container(
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [
-                  Color(0xFF2563EB),
-                  Color(0xFF1E40AF),
-                  Color(0xFF020617),
-                ],
-                stops: [0.0, 0.6, 1.0],
-                begin: Alignment.bottomRight,
-                end: Alignment.topLeft,
-              ),
-            ),
-          ),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.help_outline),
-              onPressed: _showHelpDialog,
-              tooltip: "Help",
-            ),
-          ],
-        ),
-        body: SafeArea(
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              // responsive padding
-              final horizontalPadding = isTablet ? 14.0 * scale : 18.0 * scale;
-              final bottomInset = MediaQuery.of(context).viewInsets.bottom;
-              return Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: horizontalPadding,
-                  vertical: 14 * scale,
+      child: AbsorbPointer(
+        absorbing: _isLoadingProducts,
+        child: Stack(
+          children: [
+            Scaffold(
+              backgroundColor: const Color(0xFFF8FAFF),
+              appBar: AppBar(
+                iconTheme: const IconThemeData(
+                  color: Colors.white, // ← makes the back arrow white
                 ),
-                child: Form(
-                  key: _formKey,
-                  child: SingleChildScrollView(
-                    physics: const BouncingScrollPhysics(),
-                    padding: EdgeInsets.only(bottom: 20 + bottomInset),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Item Details Card
-                        Card(
-                          elevation: 2,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          color: Colors.white,
-                          child: Padding(
-                            padding: EdgeInsets.all(16 * scale),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Container(
-                                      width: 32 * scale,
-                                      height: 32 * scale,
-                                      decoration: BoxDecoration(
-                                        gradient: const LinearGradient(
-                                          colors: [
-                                            Color(0xFF2563EB),
-                                            Color(0xFF1E40AF),
-                                            Color(0xFF020617),
-                                          ],
-                                          stops: [0.0, 0.6, 1.0],
-                                          begin: Alignment.bottomRight,
-                                          end: Alignment.topLeft,
-                                        ),
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: Icon(
-                                        Icons.shopping_bag,
-                                        color: Colors.white,
-                                        size: 18 * scale,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: Text(
-                                        "Item Details",
-                                        style: Theme.of(
-                                          context,
-                                        ).textTheme.titleLarge?.copyWith(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 16 * scale,
-                                          color: const Color(0xFF333333),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
+                title: Text(
+                  "Add Item",
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                centerTitle: true,
+                elevation: 0,
+                toolbarHeight: 56 * scale,
+                flexibleSpace: Container(
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [
+                        Color(0xFF2563EB),
+                        Color(0xFF1E40AF),
+                        Color(0xFF020617),
+                      ],
+                      stops: [0.0, 0.6, 1.0],
+                      begin: Alignment.bottomRight,
+                      end: Alignment.topLeft,
+                    ),
+                  ),
+                ),
+                actions: [
+                  IconButton(
+                    icon: const Icon(Icons.help_outline),
+                    onPressed: _showHelpDialog,
+                    tooltip: "Help",
+                  ),
+                ],
+              ),
+              body: SafeArea(
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    // responsive padding
+                    final horizontalPadding =
+                        isTablet ? 14.0 * scale : 18.0 * scale;
+                    final bottomInset =
+                        MediaQuery.of(context).viewInsets.bottom;
+                    return Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: horizontalPadding,
+                        vertical: 14 * scale,
+                      ),
+                      child: Form(
+                        key: _formKey,
+                        child: SingleChildScrollView(
+                          physics: const BouncingScrollPhysics(),
+                          padding: EdgeInsets.only(bottom: 20 + bottomInset),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Item Details Card
+                              Card(
+                                elevation: 2,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
                                 ),
-                                const SizedBox(height: 20),
-
-                                // Item Name Field
-                                TextFormField(
-                                  controller: itemController,
-                                  focusNode: _itemFocusNode,
-                                  onTap: showItemPicker,
-                                  style: TextStyle(fontSize: 14 * scale),
-                                  readOnly: false, // 🔥 Allow typing
-                                  decoration: _buildInputDecoration(
-                                    "Item Name",
-                                    Icons.inventory_2,
-                                  ).copyWith(
-                                    suffixIcon: IconButton(
-                                      icon:
-                                          _isLoadingProducts
-                                              ? const SizedBox(
-                                                width: 20,
-                                                height: 20,
-                                                child:
-                                                    CircularProgressIndicator(
-                                                      strokeWidth: 2,
-                                                    ),
-                                              )
-                                              : Icon(
-                                                Icons.arrow_drop_down,
-                                                color: Color(0xFF1E40AF),
+                                color: Colors.white,
+                                child: Padding(
+                                  padding: EdgeInsets.all(16 * scale),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Container(
+                                            width: 32 * scale,
+                                            height: 32 * scale,
+                                            decoration: BoxDecoration(
+                                              gradient: const LinearGradient(
+                                                colors: [
+                                                  Color(0xFF2563EB),
+                                                  Color(0xFF1E40AF),
+                                                  Color(0xFF020617),
+                                                ],
+                                                stops: [0.0, 0.6, 1.0],
+                                                begin: Alignment.bottomRight,
+                                                end: Alignment.topLeft,
                                               ),
-                                      onPressed: showItemPicker,
-                                    ),
-                                  ),
-
-                                  // -------------------
-                                  // VALIDATION
-                                  // -------------------
-                                  validator: (value) {
-                                    if (value == null || value.trim().isEmpty) {
-                                      return "Enter item name";
-                                    }
-                                    return null;
-                                  },
-
-                                  // -------------------
-                                  // TYPING + AUTO CAPITALIZATION
-                                  // -------------------
-                                  onChanged: (value) {
-                                    if (value.isEmpty) return;
-
-                                    final cursorPosition =
-                                        itemController.selection.baseOffset;
-
-                                    final formatted = value.splitMapJoin(
-                                      ' ',
-                                      onNonMatch:
-                                          (word) =>
-                                              word.isNotEmpty
-                                                  ? word[0].toUpperCase() +
-                                                      (word.length > 1
-                                                          ? word
-                                                              .substring(1)
-                                                              .toLowerCase()
-                                                          : '')
-                                                  : '',
-                                    );
-
-                                    if (formatted != value) {
-                                      itemController.value = itemController
-                                          .value
-                                          .copyWith(
-                                            text: formatted,
-                                            selection: TextSelection.collapsed(
-                                              offset: cursorPosition.clamp(
-                                                0,
-                                                formatted.length,
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                            ),
+                                            child: Icon(
+                                              Icons.shopping_bag,
+                                              color: Colors.white,
+                                              size: 18 * scale,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 12),
+                                          Expanded(
+                                            child: Text(
+                                              "Item Details",
+                                              style: Theme.of(
+                                                context,
+                                              ).textTheme.titleLarge?.copyWith(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 16 * scale,
+                                                color: const Color(0xFF333333),
                                               ),
                                             ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 20),
+
+                                      // Item Name Field
+                                      TextFormField(
+                                        controller: itemController,
+                                        focusNode: _itemFocusNode,
+                                        onTap: showItemPicker,
+                                        style: TextStyle(fontSize: 14 * scale),
+                                        readOnly: false, // 🔥 Allow typing
+                                        decoration: _buildInputDecoration(
+                                          "Item Name",
+                                          Icons.inventory_2,
+                                        ).copyWith(
+                                          suffixIcon: IconButton(
+                                            icon:
+                                                _isLoadingProducts
+                                                    ? const SizedBox(
+                                                      width: 20,
+                                                      height: 20,
+                                                      child:
+                                                          CircularProgressIndicator(
+                                                            strokeWidth: 2,
+                                                          ),
+                                                    )
+                                                    : Icon(
+                                                      Icons.arrow_drop_down,
+                                                      color: Color(0xFF1E40AF),
+                                                    ),
+                                            onPressed: showItemPicker,
+                                          ),
+                                        ),
+
+                                        // -------------------
+                                        // VALIDATION
+                                        // -------------------
+                                        validator: (value) {
+                                          if (value == null ||
+                                              value.trim().isEmpty) {
+                                            return "Enter item name";
+                                          }
+                                          return null;
+                                        },
+
+                                        // -------------------
+                                        // TYPING + AUTO CAPITALIZATION
+                                        // -------------------
+                                        onChanged: (value) {
+                                          if (value.isEmpty) return;
+
+                                          final cursorPosition =
+                                              itemController
+                                                  .selection
+                                                  .baseOffset;
+
+                                          final formatted = value.splitMapJoin(
+                                            ' ',
+                                            onNonMatch:
+                                                (word) =>
+                                                    word.isNotEmpty
+                                                        ? word[0]
+                                                                .toUpperCase() +
+                                                            (word.length > 1
+                                                                ? word
+                                                                    .substring(
+                                                                      1,
+                                                                    )
+                                                                    .toLowerCase()
+                                                                : '')
+                                                        : '',
                                           );
-                                    }
 
-                                    // Reset list-selection flag if user types manually
-                                    if (isItemSelectedFromList) {
-                                      setState(() {
-                                        isItemSelectedFromList = false;
-                                      });
-                                    }
-                                  },
+                                          if (formatted != value) {
+                                            itemController.value =
+                                                itemController.value.copyWith(
+                                                  text: formatted,
+                                                  selection:
+                                                      TextSelection.collapsed(
+                                                        offset: cursorPosition
+                                                            .clamp(
+                                                              0,
+                                                              formatted.length,
+                                                            ),
+                                                      ),
+                                                );
+                                          }
 
-                                  textInputAction: TextInputAction.next,
-                                  onFieldSubmitted: (_) {
-                                    _quantityFocusNode.requestFocus();
-                                  },
-                                ),
-                                const SizedBox(height: 16),
+                                          // Reset list-selection flag if user types manually
+                                          if (isItemSelectedFromList) {
+                                            setState(() {
+                                              isItemSelectedFromList = false;
+                                            });
+                                          }
+                                        },
 
-                                // Quantity and Unit Row
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: TextFormField(
-                                        controller: quantityController,
-                                        focusNode: _quantityFocusNode,
+                                        textInputAction: TextInputAction.next,
+                                        onFieldSubmitted: (_) {
+                                          _quantityFocusNode.requestFocus();
+                                        },
+                                      ),
+                                      const SizedBox(height: 16),
+
+                                      // Quantity and Unit Row
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: TextFormField(
+                                              controller: quantityController,
+                                              focusNode: _quantityFocusNode,
+                                              style: TextStyle(
+                                                fontSize: 14 * scale,
+                                              ),
+                                              decoration: _buildInputDecoration(
+                                                "Quantity",
+                                                Icons.numbers,
+                                              ),
+                                              keyboardType:
+                                                  TextInputType.number,
+                                              inputFormatters: [
+                                                FilteringTextInputFormatter
+                                                    .digitsOnly,
+                                                LengthLimitingTextInputFormatter(
+                                                  4,
+                                                ),
+                                              ],
+                                              validator: (value) {
+                                                if (value == null ||
+                                                    value.trim().isEmpty) {
+                                                  return 'Please enter quantity';
+                                                }
+                                                final quantity = int.tryParse(
+                                                  value,
+                                                );
+                                                if (quantity == null ||
+                                                    quantity <= 0) {
+                                                  return 'Quantity must be greater than 0';
+                                                }
+                                                if (quantity > 9999) {
+                                                  return 'Maximum quantity is 9999';
+                                                }
+                                                return null;
+                                              },
+                                              textInputAction:
+                                                  TextInputAction.next,
+                                              onFieldSubmitted: (_) {
+                                                _rateFocusNode.requestFocus();
+                                              },
+                                            ),
+                                          ),
+                                          const SizedBox(width: 12),
+                                          Expanded(
+                                            child: Container(
+                                              decoration: BoxDecoration(
+                                                color: Colors.white,
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
+                                                border: Border.all(
+                                                  color: Colors.grey.shade300,
+                                                ),
+                                              ),
+                                              child: Padding(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 12,
+                                                    ),
+                                                child: DropdownButtonHideUnderline(
+                                                  child: DropdownButton<String>(
+                                                    value: selectedUnit,
+                                                    style: TextStyle(
+                                                      fontSize: 14 * scale,
+                                                      color: Colors.black,
+                                                    ),
+                                                    isExpanded: true,
+                                                    icon: const Icon(
+                                                      Icons.arrow_drop_down,
+                                                    ),
+                                                    hint: Text(
+                                                      "Unit",
+                                                      style: TextStyle(
+                                                        color:
+                                                            Colors
+                                                                .grey
+                                                                .shade600,
+                                                        fontSize: 14 * scale,
+                                                      ),
+                                                    ),
+                                                    items:
+                                                        units.map((
+                                                          String value,
+                                                        ) {
+                                                          return DropdownMenuItem<
+                                                            String
+                                                          >(
+                                                            value: value,
+                                                            child: Text(value),
+                                                          );
+                                                        }).toList(),
+                                                    onChanged: (value) {
+                                                      setState(() {
+                                                        selectedUnit = value;
+                                                      });
+                                                    },
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 16),
+
+                                      // Rate Field
+                                      TextFormField(
+                                        controller: rateController,
+                                        focusNode: _rateFocusNode,
                                         style: TextStyle(fontSize: 14 * scale),
                                         decoration: _buildInputDecoration(
-                                          "Quantity",
-                                          Icons.numbers,
+                                          "Rate (Price/Unit)",
+                                          Icons.currency_rupee,
                                         ),
-                                        keyboardType: TextInputType.number,
+                                        keyboardType:
+                                            const TextInputType.numberWithOptions(
+                                              decimal: true,
+                                            ),
                                         inputFormatters: [
-                                          FilteringTextInputFormatter
-                                              .digitsOnly,
-                                          LengthLimitingTextInputFormatter(4),
+                                          FilteringTextInputFormatter.allow(
+                                            RegExp(r'^\d+\.?\d{0,2}'),
+                                          ),
+                                          LengthLimitingTextInputFormatter(10),
                                         ],
                                         validator: (value) {
                                           if (value == null ||
                                               value.trim().isEmpty) {
-                                            return 'Please enter quantity';
+                                            return 'Please enter a rate';
                                           }
-                                          final quantity = int.tryParse(value);
-                                          if (quantity == null ||
-                                              quantity <= 0) {
-                                            return 'Quantity must be greater than 0';
-                                          }
-                                          if (quantity > 9999) {
-                                            return 'Maximum quantity is 9999';
+                                          final rate = double.tryParse(value);
+                                          if (rate == null || rate <= 0) {
+                                            return 'Rate must be greater than 0';
                                           }
                                           return null;
                                         },
-                                        textInputAction: TextInputAction.next,
-                                        onFieldSubmitted: (_) {
-                                          _rateFocusNode.requestFocus();
-                                        },
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: Container(
-                                        decoration: BoxDecoration(
-                                          color: Colors.white,
-                                          borderRadius: BorderRadius.circular(
-                                            12,
-                                          ),
-                                          border: Border.all(
-                                            color: Colors.grey.shade300,
-                                          ),
-                                        ),
-                                        child: Padding(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 12,
-                                          ),
-                                          child: DropdownButtonHideUnderline(
-                                            child: DropdownButton<String>(
-                                              value: selectedUnit,
-                                              style: TextStyle(
-                                                fontSize: 14 * scale,
-                                                color: Colors.black,
-                                              ),
-                                              isExpanded: true,
-                                              icon: const Icon(
-                                                Icons.arrow_drop_down,
-                                              ),
-                                              hint: Text(
-                                                "Unit",
-                                                style: TextStyle(
-                                                  color: Colors.grey.shade600,
-                                                  fontSize: 14 * scale,
-                                                ),
-                                              ),
-                                              items:
-                                                  units.map((String value) {
-                                                    return DropdownMenuItem<
-                                                      String
-                                                    >(
-                                                      value: value,
-                                                      child: Text(value),
-                                                    );
-                                                  }).toList(),
-                                              onChanged: (value) {
-                                                setState(() {
-                                                  selectedUnit = value;
-                                                });
-                                              },
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 16),
-
-                                // Rate Field
-                                TextFormField(
-                                  controller: rateController,
-                                  focusNode: _rateFocusNode,
-                                  style: TextStyle(fontSize: 14 * scale),
-                                  decoration: _buildInputDecoration(
-                                    "Rate (Price/Unit)",
-                                    Icons.currency_rupee,
-                                  ),
-                                  keyboardType:
-                                      const TextInputType.numberWithOptions(
-                                        decimal: true,
-                                      ),
-                                  inputFormatters: [
-                                    FilteringTextInputFormatter.allow(
-                                      RegExp(r'^\d+\.?\d{0,2}'),
-                                    ),
-                                    LengthLimitingTextInputFormatter(10),
-                                  ],
-                                  validator: (value) {
-                                    if (value == null || value.trim().isEmpty) {
-                                      return 'Please enter a rate';
-                                    }
-                                    final rate = double.tryParse(value);
-                                    if (rate == null || rate <= 0) {
-                                      return 'Rate must be greater than 0';
-                                    }
-                                    return null;
-                                  },
-                                  textInputAction: TextInputAction.done,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-
-                        // Only show Discount & Tax and Summary when item is entered
-                        if (showSummarySections) ...[
-                          // Discount & Tax Card
-                          Card(
-                            elevation: 2,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            color: Colors.white,
-                            child: Padding(
-                              padding: EdgeInsets.all(16 * scale),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Container(
-                                        width: 32 * scale,
-                                        height: 32 * scale,
-                                        decoration: BoxDecoration(
-                                          gradient: LinearGradient(
-                                            colors: [
-                                              Color(0xFF4ECDC4),
-                                              Color(0xFF44A08D),
-                                            ],
-                                            begin: Alignment.topLeft,
-                                            end: Alignment.bottomRight,
-                                          ),
-                                          borderRadius: BorderRadius.circular(
-                                            12,
-                                          ),
-                                        ),
-                                        child: Icon(
-                                          Icons.discount,
-                                          color: Colors.white,
-                                          size: 18 * scale,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 12),
-                                      Expanded(
-                                        child: Text(
-                                          "Discount & Tax",
-                                          style: Theme.of(
-                                            context,
-                                          ).textTheme.titleLarge?.copyWith(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 16 * scale,
-                                            color: const Color(0xFF333333),
-                                          ),
-                                        ),
+                                        textInputAction: TextInputAction.done,
                                       ),
                                     ],
                                   ),
-                                  const SizedBox(height: 20),
-                                  DiscountTaxWidget(
-                                    discountPercentController:
-                                        discountPercentController,
-                                    discountAmountController:
-                                        discountAmountController,
-                                    isEditingPercent: isEditingPercent,
-                                    onModeChange:
-                                        (value) => setState(() {
-                                          isEditingPercent = value;
-                                        }),
-                                    subtotal: summary['subtotal']!,
-                                    selectedTaxRate: selectedTaxRate,
-                                    selectedTaxType: selectedTaxType,
-                                    taxRateOptions: taxRateOptions,
-                                    onTaxRateChanged:
-                                        (val) => setState(() {
-                                          selectedTaxRate = val;
-                                        }),
-                                    onTaxTypeChanged:
-                                        (val) => setState(() {
-                                          selectedTaxType = val!;
-                                        }),
-                                    parsedTaxRate: parseTaxRate(),
-                                    taxAmount: summary['taxAmount']!,
-                                  ),
-                                ],
+                                ),
                               ),
-                            ),
-                          ),
-                          const SizedBox(height: 20),
+                              const SizedBox(height: 20),
 
-                          // Total Summary Card
-                          Card(
-                            elevation: 2,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            color: Colors.white,
-                            child: Padding(
-                              padding: EdgeInsets.all(16 * scale),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Container(
-                                        width: 32 * scale,
-                                        height: 32 * scale,
-                                        decoration: BoxDecoration(
-                                          gradient: LinearGradient(
-                                            colors: [
-                                              Color(0xFFFF6B6B),
-                                              Color(0xFFFF8E8E),
-                                            ],
-                                            begin: Alignment.topLeft,
-                                            end: Alignment.bottomRight,
-                                          ),
-                                          borderRadius: BorderRadius.circular(
-                                            12,
-                                          ),
-                                        ),
-                                        child: Icon(
-                                          Icons.summarize,
-                                          color: Colors.white,
-                                          size: 18 * scale,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 12),
-                                      Expanded(
-                                        child: Text(
-                                          "Total Summary",
-                                          style: Theme.of(
-                                            context,
-                                          ).textTheme.titleLarge?.copyWith(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 16 * scale,
-                                            color: const Color(0xFF333333),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
+                              // Only show Discount & Tax and Summary when item is entered
+                              if (showSummarySections) ...[
+                                // Discount & Tax Card
+                                Card(
+                                  elevation: 2,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
                                   ),
-                                  const SizedBox(height: 20),
-                                  Container(
-                                    padding: const EdgeInsets.all(16),
-                                    decoration: BoxDecoration(
-                                      gradient: LinearGradient(
-                                        colors: [
-                                          Theme.of(
-                                            context,
-                                          ).primaryColor.withOpacity(0.08),
-                                          Theme.of(
-                                            context,
-                                          ).primaryColorDark.withOpacity(0.08),
-                                        ],
-                                        begin: Alignment.topLeft,
-                                        end: Alignment.bottomRight,
-                                      ),
-                                      borderRadius: BorderRadius.circular(16),
-                                    ),
+                                  color: Colors.white,
+                                  child: Padding(
+                                    padding: EdgeInsets.all(16 * scale),
                                     child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
-                                        _buildSummaryRow(
-                                          "Subtotal",
-                                          summary['subtotal']!,
+                                        Row(
+                                          children: [
+                                            Container(
+                                              width: 32 * scale,
+                                              height: 32 * scale,
+                                              decoration: BoxDecoration(
+                                                gradient: LinearGradient(
+                                                  colors: [
+                                                    Color(0xFF4ECDC4),
+                                                    Color(0xFF44A08D),
+                                                  ],
+                                                  begin: Alignment.topLeft,
+                                                  end: Alignment.bottomRight,
+                                                ),
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
+                                              ),
+                                              child: Icon(
+                                                Icons.discount,
+                                                color: Colors.white,
+                                                size: 18 * scale,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 12),
+                                            Expanded(
+                                              child: Text(
+                                                "Discount & Tax",
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .titleLarge
+                                                    ?.copyWith(
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      fontSize: 16 * scale,
+                                                      color: const Color(
+                                                        0xFF333333,
+                                                      ),
+                                                    ),
+                                              ),
+                                            ),
+                                          ],
                                         ),
-                                        Divider(
-                                          height: 24,
-                                          color: Colors.grey.shade300,
+                                        const SizedBox(height: 20),
+                                        DiscountTaxWidget(
+                                          discountPercentController:
+                                              discountPercentController,
+                                          discountAmountController:
+                                              discountAmountController,
+                                          isEditingPercent: isEditingPercent,
+                                          onModeChange:
+                                              (value) => setState(() {
+                                                isEditingPercent = value;
+                                              }),
+                                          subtotal: summary['subtotal']!,
+                                          selectedTaxRate: selectedTaxRate,
+                                          selectedTaxType: selectedTaxType,
+                                          taxRateOptions: taxRateOptions,
+                                          onTaxRateChanged:
+                                              (val) => setState(() {
+                                                selectedTaxRate = val;
+                                              }),
+                                          onTaxTypeChanged:
+                                              (val) => setState(() {
+                                                selectedTaxType = val!;
+                                              }),
+                                          parsedTaxRate: parseTaxRate(),
+                                          taxAmount: summary['taxAmount']!,
                                         ),
-                                        _buildSummaryRow(
-                                          "Discount",
-                                          -summary['discountAmount']!,
-                                          color: const Color(0xFF4ECDC4),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 20),
+
+                                // Total Summary Card
+                                Card(
+                                  elevation: 2,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  color: Colors.white,
+                                  child: Padding(
+                                    padding: EdgeInsets.all(16 * scale),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Container(
+                                              width: 32 * scale,
+                                              height: 32 * scale,
+                                              decoration: BoxDecoration(
+                                                gradient: LinearGradient(
+                                                  colors: [
+                                                    Color(0xFFFF6B6B),
+                                                    Color(0xFFFF8E8E),
+                                                  ],
+                                                  begin: Alignment.topLeft,
+                                                  end: Alignment.bottomRight,
+                                                ),
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
+                                              ),
+                                              child: Icon(
+                                                Icons.summarize,
+                                                color: Colors.white,
+                                                size: 18 * scale,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 12),
+                                            Expanded(
+                                              child: Text(
+                                                "Total Summary",
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .titleLarge
+                                                    ?.copyWith(
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      fontSize: 16 * scale,
+                                                      color: const Color(
+                                                        0xFF333333,
+                                                      ),
+                                                    ),
+                                              ),
+                                            ),
+                                          ],
                                         ),
-                                        Divider(
-                                          height: 24,
-                                          color: Colors.grey.shade300,
-                                        ),
-                                        _buildSummaryRow(
-                                          "Tax",
-                                          summary['taxAmount']!,
-                                          color: const Color(0xFFFF6B6B),
-                                        ),
-                                        Divider(
-                                          height: 24 * scale,
-                                          color: Colors.grey.shade300,
-                                        ),
+                                        const SizedBox(height: 20),
                                         Container(
-                                          padding: const EdgeInsets.all(14),
-                                          height: 45 * scale,
-                                          width: 300 * scale,
+                                          padding: const EdgeInsets.all(16),
                                           decoration: BoxDecoration(
-                                            gradient: const LinearGradient(
+                                            gradient: LinearGradient(
                                               colors: [
-                                                Color(0xFF2563EB),
-                                                Color(0xFF1E40AF),
-                                                Color(0xFF020617),
+                                                Theme.of(context).primaryColor
+                                                    .withOpacity(0.08),
+                                                Theme.of(context)
+                                                    .primaryColorDark
+                                                    .withOpacity(0.08),
                                               ],
-                                              stops: [0.0, 0.6, 1.0],
-                                              begin: Alignment.bottomRight,
-                                              end: Alignment.topLeft,
+                                              begin: Alignment.topLeft,
+                                              end: Alignment.bottomRight,
                                             ),
                                             borderRadius: BorderRadius.circular(
-                                              12,
+                                              16,
                                             ),
                                           ),
-                                          child: Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.spaceBetween,
+                                          child: Column(
                                             children: [
-                                              Text(
-                                                "Total Amount",
-                                                style: TextStyle(
-                                                  color: Colors.white,
-                                                  fontSize: 12 * scale,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
+                                              _buildSummaryRow(
+                                                "Subtotal",
+                                                summary['subtotal']!,
                                               ),
-                                              Text(
-                                                "₹${summary['total']!.toStringAsFixed(2)}",
-                                                style: TextStyle(
-                                                  color: Colors.white,
-                                                  fontSize: 14 * scale,
-                                                  fontWeight: FontWeight.bold,
+                                              Divider(
+                                                height: 24,
+                                                color: Colors.grey.shade300,
+                                              ),
+                                              _buildSummaryRow(
+                                                "Discount",
+                                                -summary['discountAmount']!,
+                                                color: const Color(0xFF4ECDC4),
+                                              ),
+                                              Divider(
+                                                height: 24,
+                                                color: Colors.grey.shade300,
+                                              ),
+                                              _buildSummaryRow(
+                                                "Tax",
+                                                summary['taxAmount']!,
+                                                color: const Color(0xFFFF6B6B),
+                                              ),
+                                              Divider(
+                                                height: 24 * scale,
+                                                color: Colors.grey.shade300,
+                                              ),
+                                              Container(
+                                                padding: const EdgeInsets.all(
+                                                  14,
+                                                ),
+                                                height: 45 * scale,
+                                                width: 300 * scale,
+                                                decoration: BoxDecoration(
+                                                  gradient:
+                                                      const LinearGradient(
+                                                        colors: [
+                                                          Color(0xFF2563EB),
+                                                          Color(0xFF1E40AF),
+                                                          Color(0xFF020617),
+                                                        ],
+                                                        stops: [0.0, 0.6, 1.0],
+                                                        begin:
+                                                            Alignment
+                                                                .bottomRight,
+                                                        end: Alignment.topLeft,
+                                                      ),
+                                                  borderRadius:
+                                                      BorderRadius.circular(12),
+                                                ),
+                                                child: Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment
+                                                          .spaceBetween,
+                                                  children: [
+                                                    Text(
+                                                      "Total Amount",
+                                                      style: TextStyle(
+                                                        color: Colors.white,
+                                                        fontSize: 12 * scale,
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                      ),
+                                                    ),
+                                                    Text(
+                                                      "₹${summary['total']!.toStringAsFixed(2)}",
+                                                      style: TextStyle(
+                                                        color: Colors.white,
+                                                        fontSize: 14 * scale,
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                      ),
+                                                    ),
+                                                  ],
                                                 ),
                                               ),
                                             ],
@@ -1437,174 +1486,190 @@ class _SelectItemsScreenState extends State<SelectItemsScreen> {
                                       ],
                                     ),
                                   ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-                        ],
+                                ),
+                                const SizedBox(height: 20),
+                              ],
 
-                        // Empty state when no item entered
-                        if (!showSummarySections)
-                          Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.all(32),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFF8FAFF),
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(
-                                color: Colors.grey.shade300,
-                                width: 2,
+                              // Empty state when no item entered
+                              if (!showSummarySections)
+                                Container(
+                                  width: double.infinity,
+                                  padding: const EdgeInsets.all(32),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFF8FAFF),
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(
+                                      color: Colors.grey.shade300,
+                                      width: 2,
+                                    ),
+                                  ),
+                                  child: Column(
+                                    children: [
+                                      Icon(
+                                        Icons.add_circle_outline,
+                                        size: 55 * scale,
+                                        color: Colors.grey.shade400,
+                                      ),
+                                      const SizedBox(height: 16),
+                                      Text(
+                                        "Enter item details to see calculations",
+                                        style: TextStyle(
+                                          fontSize: 14 * scale,
+                                          color: Colors.grey.shade600,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        "Discount, tax and total will appear here",
+                                        style: TextStyle(
+                                          fontSize: 12 * scale,
+                                          color: Colors.grey.shade500,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+
+              // Bottom Buttons
+              bottomNavigationBar: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  border: Border(top: BorderSide(color: Colors.grey.shade200)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 10,
+                      offset: const Offset(0, -5),
+                    ),
+                  ],
+                ),
+                child: SafeArea(
+                  top: false,
+                  child: Padding(
+                    padding: EdgeInsets.all(16 * scale),
+                    child: Row(
+                      children: [
+                        // Save & New Button
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: _saveAndNew,
+                            style: OutlinedButton.styleFrom(
+                              padding: EdgeInsets.symmetric(
+                                vertical: 14 * scale,
                               ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              side: BorderSide(color: Color(0xFF1E40AF)),
                             ),
-                            child: Column(
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Icon(
                                   Icons.add_circle_outline,
-                                  size: 55 * scale,
-                                  color: Colors.grey.shade400,
+                                  color: Color(0xFF1E40AF),
+                                  size: 20 * scale,
                                 ),
-                                const SizedBox(height: 16),
+                                const SizedBox(width: 8),
                                 Text(
-                                  "Enter item details to see calculations",
+                                  "Save & New",
                                   style: TextStyle(
+                                    color: Color(0xFF1E40AF),
+                                    fontWeight: FontWeight.w600,
                                     fontSize: 14 * scale,
-                                    color: Colors.grey.shade600,
                                   ),
-                                  textAlign: TextAlign.center,
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  "Discount, tax and total will appear here",
-                                  style: TextStyle(
-                                    fontSize: 12 * scale,
-                                    color: Colors.grey.shade500,
-                                  ),
-                                  textAlign: TextAlign.center,
                                 ),
                               ],
                             ),
                           ),
+                        ),
+
+                        SizedBox(width: 20 * scale),
+
+                        // Save & Close Button
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: () {
+                              if (!_formKey.currentState!.validate()) return;
+
+                              final summary = getCalculatedSummary();
+                              Navigator.pop(context, {
+                                'itemName': itemController.text.trim(),
+                                'qty':
+                                    double.tryParse(quantityController.text) ??
+                                    0,
+                                'rate':
+                                    double.tryParse(rateController.text) ?? 0,
+                                'unit': selectedUnit ?? '',
+                                'tax': parseTaxRate(),
+                                'discount':
+                                    double.tryParse(
+                                      discountPercentController.text,
+                                    ) ??
+                                    0,
+                                'discountAmount':
+                                    double.tryParse(
+                                      discountAmountController.text,
+                                    ) ??
+                                    0,
+                                'totalAmount': summary['total']!,
+                                'subtotal': summary['subtotal']!,
+                                'taxType': selectedTaxType,
+                              });
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Color(0xFF1E40AF),
+                              padding: EdgeInsets.symmetric(
+                                vertical: 14 * scale,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              elevation: 2,
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.check,
+                                  color: Colors.white,
+                                  size: 20 * scale,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  "Save Item",
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14 * scale,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                   ),
                 ),
-              );
-            },
-          ),
-        ),
-
-        // Bottom Buttons
-        bottomNavigationBar: Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            border: Border(top: BorderSide(color: Colors.grey.shade200)),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 10,
-                offset: const Offset(0, -5),
-              ),
-            ],
-          ),
-          child: SafeArea(
-            top: false,
-            child: Padding(
-              padding: EdgeInsets.all(16 * scale),
-              child: Row(
-                children: [
-                  // Save & New Button
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: _saveAndNew,
-                      style: OutlinedButton.styleFrom(
-                        padding: EdgeInsets.symmetric(vertical: 14 * scale),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        side: BorderSide(color: Color(0xFF1E40AF)),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.add_circle_outline,
-                            color: Color(0xFF1E40AF),
-                            size: 20 * scale,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            "Save & New",
-                            style: TextStyle(
-                              color: Color(0xFF1E40AF),
-                              fontWeight: FontWeight.w600,
-                              fontSize: 14 * scale,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  SizedBox(width: 20 * scale),
-
-                  // Save & Close Button
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        if (!_formKey.currentState!.validate()) return;
-
-                        final summary = getCalculatedSummary();
-                        Navigator.pop(context, {
-                          'itemName': itemController.text.trim(),
-                          'qty': double.tryParse(quantityController.text) ?? 0,
-                          'rate': double.tryParse(rateController.text) ?? 0,
-                          'unit': selectedUnit ?? '',
-                          'tax': parseTaxRate(),
-                          'discount':
-                              double.tryParse(discountPercentController.text) ??
-                              0,
-                          'discountAmount':
-                              double.tryParse(discountAmountController.text) ??
-                              0,
-                          'totalAmount': summary['total']!,
-                          'subtotal': summary['subtotal']!,
-                          'taxType': selectedTaxType,
-                        });
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Color(0xFF1E40AF),
-                        padding: EdgeInsets.symmetric(vertical: 14 * scale),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        elevation: 2,
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.check,
-                            color: Colors.white,
-                            size: 20 * scale,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            "Save Item",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14 * scale,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
               ),
             ),
-          ),
+            if (_isLoadingProducts)
+              Container(
+                color: Colors.black.withOpacity(0.15),
+                child: const Center(child: CircularProgressIndicator()),
+              ),
+          ],
         ),
       ),
     );
