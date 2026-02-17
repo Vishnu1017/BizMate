@@ -3066,101 +3066,123 @@ class _ProfilePageState extends State<ProfilePage>
   }
 
   Widget _buildActionButtons(bool isSmallScreen) {
-    return Row(
-      children: [
-        Expanded(
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 20,
-                  offset: Offset(0, 5),
-                ),
-              ],
-              border: Border.all(color: Color(0xFFE2E8F0)),
-            ),
-            child: TextButton(
-              onPressed: _logout,
-              style: TextButton.styleFrom(
-                padding: EdgeInsets.symmetric(vertical: 18),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.logout_rounded,
-                    color: Color(0xFF64748B),
-                    size: 18 * scale,
-                  ),
-                  SizedBox(width: 10),
-                  Text(
-                    'Logout',
-                    style: TextStyle(
-                      fontSize: 14 * scale,
-                      color: Color(0xFF64748B),
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final double buttonScale =
+            (constraints.maxWidth / 360).clamp(0.85, 1.0) * scale;
 
-        SizedBox(width: 16 * scale),
+        final double buttonHeight = 48 * buttonScale;
+        final double radius = 14 * buttonScale;
+        final double iconSize = 16 * buttonScale;
+        final double textSize = 13 * buttonScale;
 
-        Expanded(
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              gradient: LinearGradient(
-                colors: [Color(0xFFEF4444), Color(0xFFDC2626)],
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Color(0xFFEF4444).withOpacity(0.3),
-                  blurRadius: 15,
-                  spreadRadius: 2,
-                ),
-              ],
-            ),
-            child: TextButton(
-              onPressed: () => _showEnhancedDeleteDialog(context),
-              style: TextButton.styleFrom(
-                padding: EdgeInsets.symmetric(vertical: 18),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.delete_forever_rounded,
+        return Row(
+          children: [
+            // ================= LOGOUT =================
+            Expanded(
+              child: SizedBox(
+                height: buttonHeight,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
                     color: Colors.white,
-                    size: 18 * scale,
+                    borderRadius: BorderRadius.circular(radius),
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.06),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
-                  SizedBox(width: 10),
-                  Text(
-                    'Delete',
-                    style: TextStyle(
-                      fontSize: 14 * scale,
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
+                  child: Material(
+                    color: Colors.transparent,
+                    borderRadius: BorderRadius.circular(radius),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(radius),
+                      onTap: _logout, // ✅ unchanged
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.logout_rounded,
+                            size: iconSize,
+                            color: const Color(0xFF64748B),
+                          ),
+                          SizedBox(width: 8 * buttonScale),
+                          Text(
+                            'Logout',
+                            style: TextStyle(
+                              fontSize: textSize,
+                              color: const Color(0xFF64748B),
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ],
+                ),
               ),
             ),
-          ),
-        ),
-      ],
+
+            SizedBox(width: 12 * buttonScale),
+
+            // ================= DELETE =================
+            Expanded(
+              child: SizedBox(
+                height: buttonHeight,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFFEF4444), Color(0xFFDC2626)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(radius),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFFEF4444).withOpacity(0.35),
+                        blurRadius: 14,
+                        offset: const Offset(0, 5),
+                      ),
+                    ],
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    borderRadius: BorderRadius.circular(radius),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(radius),
+                      onTap:
+                          () =>
+                              _showEnhancedDeleteDialog(context), // ✅ unchanged
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.delete_forever_rounded,
+                            size: iconSize,
+                            color: Colors.white,
+                          ),
+                          SizedBox(width: 8 * buttonScale),
+                          Text(
+                            'Delete',
+                            style: TextStyle(
+                              fontSize: textSize,
+                              color: Colors.white,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 

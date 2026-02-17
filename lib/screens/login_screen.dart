@@ -30,6 +30,7 @@ class _LoginScreenState extends State<LoginScreen>
   late AnimationController _controller;
   String selectedRole = 'None';
   bool _isProcessing = false;
+  double scale = 1.0;
 
   final List<String> roles = [
     'None',
@@ -429,70 +430,141 @@ class _LoginScreenState extends State<LoginScreen>
 
     showDialog(
       context: context,
-      builder:
-          (context) => Dialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    Color(0xFF3EE4D8),
-                    Color(0xFF1FB5D0),
-                    Color(0xFF0F73B8),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(20),
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        final media = MediaQuery.of(dialogContext);
+
+        return Dialog(
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal: 24,
+            vertical: 24,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          backgroundColor: Colors.transparent,
+          child: Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxHeight: media.size.height * 0.85,
+                maxWidth: 500,
               ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.lock_reset, size: 50, color: Colors.white),
-                  const SizedBox(height: 16),
-                  const Text(
-                    "Reset Password",
-                    style: TextStyle(color: Colors.white, fontSize: 22),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: resetEmailController,
-                    keyboardType: TextInputType.emailAddress,
-                    style: const TextStyle(color: Colors.white),
-                    decoration: InputDecoration(
-                      labelText: "Enter your email",
-                      labelStyle: const TextStyle(color: Colors.white70),
-                      errorText: _isResetEmailValid ? null : "Invalid email",
-                      errorStyle: TextStyle(
-                        color: Colors.redAccent, // 👈 Change color here
-                        fontWeight: FontWeight.bold,
+              child: Material(
+                borderRadius: BorderRadius.circular(20),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: Container(
+                    padding: EdgeInsets.all(22 * scale),
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Color(0xFF3EE4D8),
+                          Color(0xFF1FB5D0),
+                          Color(0xFF0F73B8),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
                       ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: const BorderSide(color: Colors.white38),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: const BorderSide(color: Colors.white),
+                    ),
+                    child: SingleChildScrollView(
+                      keyboardDismissBehavior:
+                          ScrollViewKeyboardDismissBehavior.onDrag,
+                      physics: const ClampingScrollPhysics(),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Align(
+                            alignment: Alignment.topRight,
+                            child: IconButton(
+                              icon: Icon(
+                                Icons.close,
+                                color: Colors.white,
+                                size: 20 * scale,
+                              ),
+                              onPressed: () => Navigator.pop(dialogContext),
+                            ),
+                          ),
+
+                          SizedBox(height: 8 * scale),
+
+                          Icon(
+                            Icons.lock_reset,
+                            size: 50 * scale,
+                            color: Colors.white,
+                          ),
+
+                          SizedBox(height: 18 * scale),
+
+                          Text(
+                            "Reset Password",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18 * scale,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+
+                          SizedBox(height: 16 * scale),
+
+                          TextField(
+                            controller: resetEmailController,
+                            keyboardType: TextInputType.emailAddress,
+                            style: const TextStyle(color: Colors.white),
+                            decoration: InputDecoration(
+                              labelText: "Enter your email",
+                              labelStyle: const TextStyle(
+                                color: Colors.white70,
+                              ),
+                              errorText:
+                                  _isResetEmailValid ? null : "Invalid email",
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide: const BorderSide(
+                                  color: Colors.white38,
+                                ),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide: const BorderSide(
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+
+                          SizedBox(height: 18 * scale),
+
+                          SizedBox(
+                            width: double.infinity,
+                            height: 44 * scale,
+                            child: ElevatedButton(
+                              onPressed: _handlePasswordReset,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.white,
+                                foregroundColor: Colors.blue.shade700,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              child: Text(
+                                "Reset Password",
+                                style: TextStyle(
+                                  fontSize: 13 * scale,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
-                  const SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: _handlePasswordReset,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: Colors.blue.shade700,
-                    ),
-                    child: const Text("Reset Password"),
-                  ),
-                ],
+                ),
               ),
             ),
           ),
+        );
+      },
     );
   }
 
@@ -510,7 +582,6 @@ class _LoginScreenState extends State<LoginScreen>
 
     final usersBox = Hive.box<User>('users');
 
-    // Find the user
     final user = usersBox.values.firstWhere(
       (u) => u.email == email,
       orElse:
@@ -531,225 +602,358 @@ class _LoginScreenState extends State<LoginScreen>
       return;
     }
 
-    // Close email dialog
     Navigator.pop(context);
 
-    // Open new password dialog
     final newPasswordController = TextEditingController();
     final confirmPasswordController = TextEditingController();
 
     showDialog(
       context: context,
-      builder:
-          (context) => Dialog(
-            insetPadding: const EdgeInsets.all(24),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(28),
-            ),
-            elevation: 0,
-            backgroundColor: Colors.transparent,
-            child: Container(
-              padding: const EdgeInsets.all(32),
-              decoration: BoxDecoration(
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        final media = MediaQuery.of(dialogContext);
+
+        return Dialog(
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal: 20,
+            vertical: 24,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(28),
+          ),
+          backgroundColor: Colors.transparent,
+          child: Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxHeight: media.size.height * 0.9,
+                maxWidth: 500, // tablet safe
+              ),
+              child: Material(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(28),
-                border: Border.all(color: Colors.grey.shade100, width: 1.5),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 40,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Header with Icon
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              Color(0xFF3EE4D8),
-                              Color(0xFF1FB5D0),
-                              Color(0xFF0F73B8),
+                elevation: 10,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(28),
+                  child: ScrollConfiguration(
+                    behavior: const ScrollBehavior().copyWith(
+                      overscroll: false,
+                    ),
+                    child: SingleChildScrollView(
+                      keyboardDismissBehavior:
+                          ScrollViewKeyboardDismissBehavior.onDrag,
+                      physics: const ClampingScrollPhysics(),
+                      padding: EdgeInsets.all(28 * scale),
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          final double responsiveScale =
+                              (constraints.maxWidth / 360).clamp(0.85, 1.05) *
+                              scale;
+
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              // ================= HEADER =================
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: EdgeInsets.all(
+                                      12 * responsiveScale,
+                                    ),
+                                    decoration: const BoxDecoration(
+                                      gradient: LinearGradient(
+                                        colors: [
+                                          Color(0xFF3EE4D8),
+                                          Color(0xFF1FB5D0),
+                                          Color(0xFF0F73B8),
+                                        ],
+                                      ),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Icon(
+                                      Icons.lock_reset_rounded,
+                                      color: Colors.white,
+                                      size: 20 * responsiveScale,
+                                    ),
+                                  ),
+                                  SizedBox(width: 12 * responsiveScale),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          "Create New Password",
+                                          style: TextStyle(
+                                            fontSize: 18 * responsiveScale,
+                                            fontWeight: FontWeight.w800,
+                                            color: Colors.grey.shade900,
+                                          ),
+                                        ),
+                                        SizedBox(height: 4 * responsiveScale),
+                                        Text(
+                                          "Secure your account with a new password",
+                                          style: TextStyle(
+                                            fontSize: 11 * responsiveScale,
+                                            color: Colors.grey.shade600,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+
+                              SizedBox(height: 22 * responsiveScale),
+
+                              _PasswordStrengthIndicator(newPasswordController),
+
+                              SizedBox(height: 18 * responsiveScale),
+
+                              _ModernPasswordField(
+                                controller: newPasswordController,
+                                label: "New Password",
+                                hint: "Enter at least 6 characters",
+                              ),
+
+                              SizedBox(height: 16 * responsiveScale),
+
+                              _ModernPasswordField(
+                                controller: confirmPasswordController,
+                                label: "Confirm Password",
+                                hint: "Re-enter your password",
+                              ),
+
+                              SizedBox(height: 10 * responsiveScale),
+
+                              _PasswordMatchIndicator(
+                                newPasswordController,
+                                confirmPasswordController,
+                              ),
+
+                              SizedBox(height: 28 * responsiveScale),
+
+                              // ================= BUTTONS =================
+                              LayoutBuilder(
+                                builder: (context, constraints) {
+                                  final double buttonScale =
+                                      (constraints.maxWidth / 360).clamp(
+                                        0.85,
+                                        1.0,
+                                      ) *
+                                      responsiveScale;
+
+                                  final double height = 46 * buttonScale;
+                                  final double radius = 14 * buttonScale;
+                                  final double textSize = 12 * buttonScale;
+                                  final double iconSize = 16 * buttonScale;
+
+                                  return Row(
+                                    children: [
+                                      // CANCEL
+                                      Expanded(
+                                        child: SizedBox(
+                                          height: height,
+                                          child: DecoratedBox(
+                                            decoration: BoxDecoration(
+                                              color: Colors.grey.shade100,
+                                              borderRadius:
+                                                  BorderRadius.circular(radius),
+                                              border: Border.all(
+                                                color: Colors.grey.shade300,
+                                                width: 1.2,
+                                              ),
+                                            ),
+                                            child: Material(
+                                              color: Colors.transparent,
+                                              borderRadius:
+                                                  BorderRadius.circular(radius),
+                                              child: InkWell(
+                                                borderRadius:
+                                                    BorderRadius.circular(
+                                                      radius,
+                                                    ),
+                                                onTap:
+                                                    () => Navigator.pop(
+                                                      dialogContext,
+                                                    ),
+                                                child: Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.center,
+                                                  children: [
+                                                    Icon(
+                                                      Icons.close_rounded,
+                                                      size: iconSize,
+                                                      color: Colors.black,
+                                                    ),
+                                                    SizedBox(
+                                                      width: 6 * buttonScale,
+                                                    ),
+                                                    Text(
+                                                      "Cancel",
+                                                      style: TextStyle(
+                                                        color: Colors.black,
+                                                        fontWeight:
+                                                            FontWeight.w700,
+                                                        fontSize: textSize,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+
+                                      SizedBox(width: 12 * buttonScale),
+
+                                      // UPDATE
+                                      Expanded(
+                                        child: SizedBox(
+                                          height: height,
+                                          child: DecoratedBox(
+                                            decoration: BoxDecoration(
+                                              gradient: LinearGradient(
+                                                colors: [
+                                                  Colors.blue.shade700,
+                                                  Colors.blue.shade900,
+                                                ],
+                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(radius),
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: Colors.blue
+                                                      .withOpacity(0.3),
+                                                  blurRadius: 10,
+                                                  offset: const Offset(0, 4),
+                                                ),
+                                              ],
+                                            ),
+                                            child: Material(
+                                              color: Colors.transparent,
+                                              borderRadius:
+                                                  BorderRadius.circular(radius),
+                                              child: InkWell(
+                                                borderRadius:
+                                                    BorderRadius.circular(
+                                                      radius,
+                                                    ),
+                                                onTap: () async {
+                                                  if (_isProcessing) return;
+
+                                                  setState(
+                                                    () => _isProcessing = true,
+                                                  );
+
+                                                  final newPass =
+                                                      newPasswordController.text
+                                                          .trim();
+                                                  final confirmPass =
+                                                      confirmPasswordController
+                                                          .text
+                                                          .trim();
+
+                                                  if (newPass.length < 6) {
+                                                    showError(
+                                                      "Password must be at least 6 characters",
+                                                    );
+                                                    setState(
+                                                      () =>
+                                                          _isProcessing = false,
+                                                    );
+                                                    return;
+                                                  }
+
+                                                  if (newPass != confirmPass) {
+                                                    showError(
+                                                      "Passwords do not match",
+                                                    );
+                                                    setState(
+                                                      () =>
+                                                          _isProcessing = false,
+                                                    );
+                                                    return;
+                                                  }
+
+                                                  final userIndex = usersBox
+                                                      .values
+                                                      .toList()
+                                                      .indexOf(user);
+
+                                                  final updatedUser = User(
+                                                    name: user.name,
+                                                    email: user.email,
+                                                    phone: user.phone,
+                                                    password: newPass,
+                                                    role: user.role,
+                                                    upiId: user.upiId,
+                                                    imageUrl: user.imageUrl,
+                                                  );
+
+                                                  await usersBox.putAt(
+                                                    userIndex,
+                                                    updatedUser,
+                                                  );
+
+                                                  Navigator.pop(dialogContext);
+
+                                                  showSuccess(
+                                                    "Password updated successfully!",
+                                                  );
+
+                                                  if (mounted) {
+                                                    setState(
+                                                      () =>
+                                                          _isProcessing = false,
+                                                    );
+                                                  }
+                                                },
+                                                child: Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.center,
+                                                  children: [
+                                                    Icon(
+                                                      Icons.lock_reset_rounded,
+                                                      size: iconSize,
+                                                      color: Colors.white,
+                                                    ),
+                                                    SizedBox(
+                                                      width: 6 * buttonScale,
+                                                    ),
+                                                    Text(
+                                                      "Update Password",
+                                                      style: TextStyle(
+                                                        color: Colors.white,
+                                                        fontWeight:
+                                                            FontWeight.w700,
+                                                        fontSize: textSize,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                },
+                              ),
                             ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.lock_reset_rounded,
-                          color: Colors.white,
-                          size: 24,
-                        ),
+                          );
+                        },
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              "Create New Password",
-                              style: TextStyle(
-                                fontSize: 22,
-                                fontWeight: FontWeight.w800,
-                                color: Colors.grey.shade900,
-                                letterSpacing: -0.3,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              "Secure your account with a new password",
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: Colors.grey.shade600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
-
-                  const SizedBox(height: 24),
-
-                  // Password Strength Indicator
-                  _PasswordStrengthIndicator(newPasswordController),
-
-                  const SizedBox(height: 20),
-
-                  // New Password Field
-                  _ModernPasswordField(
-                    controller: newPasswordController,
-                    label: "New Password",
-                    hint: "Enter at least 6 characters",
-                  ),
-
-                  const SizedBox(height: 18),
-
-                  // Confirm Password Field
-                  _ModernPasswordField(
-                    controller: confirmPasswordController,
-                    label: "Confirm Password",
-                    hint: "Re-enter your password",
-                  ),
-
-                  const SizedBox(height: 8),
-
-                  // Password Match Indicator
-                  _PasswordMatchIndicator(
-                    newPasswordController,
-                    confirmPasswordController,
-                  ),
-
-                  const SizedBox(height: 26),
-
-                  // Action buttons
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextButton(
-                          onPressed: () => Navigator.pop(context),
-                          style: TextButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            backgroundColor: Colors.grey.shade100,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                          ),
-                          child: Text(
-                            "Cancel",
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.grey.shade700,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: () async {
-                            if (_isProcessing) return;
-                            setState(() => _isProcessing = true);
-                            final newPass = newPasswordController.text.trim();
-                            final confirmPass =
-                                confirmPasswordController.text.trim();
-
-                            if (newPass.length < 6) {
-                              showError(
-                                "Password must be at least 6 characters",
-                              );
-                              return;
-                            }
-
-                            if (newPass != confirmPass) {
-                              showError("Passwords do not match");
-                              return;
-                            }
-
-                            // Update password in Hive
-                            final userIndex = usersBox.values.toList().indexOf(
-                              user,
-                            );
-
-                            final updatedUser = User(
-                              name: user.name,
-                              email: user.email,
-                              phone: user.phone,
-                              password: newPass,
-                              role: user.role,
-                              upiId: user.upiId,
-                              imageUrl: user.imageUrl,
-                            );
-
-                            await usersBox.putAt(userIndex, updatedUser);
-
-                            Navigator.pop(context);
-                            showSuccess("Password updated successfully!");
-                            if (mounted) {
-                              setState(() => _isProcessing = false);
-                            }
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blue.shade700,
-                            foregroundColor: Colors.white,
-                            elevation: 0,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                            shadowColor: Colors.transparent,
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: const [
-                              Text(
-                                "Update Password",
-                                style: TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              SizedBox(width: 8),
-                              Icon(Icons.arrow_forward_rounded, size: 18),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                ),
               ),
             ),
           ),
+        );
+      },
     );
   }
 
@@ -1021,16 +1225,19 @@ class _LoginScreenState extends State<LoginScreen>
                       // 🔥 Forgot Password button
                       if (!isCreating)
                         Padding(
-                          padding: const EdgeInsets.only(top: 10, right: 4),
+                          padding: EdgeInsets.only(
+                            top: 10 * scale,
+                            right: 4 * scale,
+                          ),
                           child: Align(
                             alignment: Alignment.centerRight,
                             child: TextButton(
                               onPressed: _showResetPasswordDialog,
-                              child: const Text(
+                              child: Text(
                                 "Forgot Password?",
                                 style: TextStyle(
                                   color: Colors.white70,
-                                  fontSize: 14,
+                                  fontSize: 14 * scale,
                                 ),
                               ),
                             ),
@@ -1270,6 +1477,7 @@ class _ModernPasswordField extends StatefulWidget {
 
 class _ModernPasswordFieldState extends State<_ModernPasswordField> {
   bool _obscureText = true;
+  double scale = 1.0;
 
   @override
   Widget build(BuildContext context) {
@@ -1279,12 +1487,12 @@ class _ModernPasswordFieldState extends State<_ModernPasswordField> {
         Text(
           widget.label,
           style: TextStyle(
-            fontSize: 14,
+            fontSize: 12 * scale,
             fontWeight: FontWeight.w600,
             color: Colors.grey.shade800,
           ),
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: 8 * scale),
         Container(
           decoration: BoxDecoration(
             color: Colors.grey.shade50,
@@ -1294,7 +1502,7 @@ class _ModernPasswordFieldState extends State<_ModernPasswordField> {
           child: TextField(
             controller: widget.controller,
             obscureText: _obscureText,
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+            style: TextStyle(fontSize: 14 * scale, fontWeight: FontWeight.w500),
             decoration: InputDecoration(
               hintText: widget.hint,
               hintStyle: TextStyle(
@@ -1302,9 +1510,9 @@ class _ModernPasswordFieldState extends State<_ModernPasswordField> {
                 fontWeight: FontWeight.w400,
               ),
               border: InputBorder.none,
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 16,
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 12 * scale,
+                vertical: 12 * scale,
               ),
               suffixIcon: IconButton(
                 onPressed: () {
@@ -1317,7 +1525,7 @@ class _ModernPasswordFieldState extends State<_ModernPasswordField> {
                       ? Icons.visibility_off_rounded
                       : Icons.visibility_rounded,
                   color: Colors.grey.shade500,
-                  size: 20,
+                  size: 20 * scale,
                 ),
               ),
             ),
@@ -1344,6 +1552,8 @@ class _PasswordMatchIndicator extends StatefulWidget {
 }
 
 class _PasswordMatchIndicatorState extends State<_PasswordMatchIndicator> {
+  double scale = 1.0;
+
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder(
@@ -1367,13 +1577,13 @@ class _PasswordMatchIndicatorState extends State<_PasswordMatchIndicator> {
                     isMatch ? Icons.check_circle_rounded : Icons.error_rounded,
                     color:
                         isMatch ? Colors.green.shade500 : Colors.red.shade500,
-                    size: 16,
+                    size: 16 * scale,
                   ),
-                  const SizedBox(width: 6),
+                  SizedBox(width: 6 * scale),
                   Text(
                     isMatch ? "Passwords match" : "Passwords don't match",
                     style: TextStyle(
-                      fontSize: 12,
+                      fontSize: 10 * scale,
                       color:
                           isMatch ? Colors.green.shade600 : Colors.red.shade600,
                       fontWeight: FontWeight.w500,
