@@ -16,6 +16,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'utils/responsive.dart';
@@ -196,6 +197,7 @@ class _CustomSplashScreenState extends State<CustomSplashScreen>
   late final AnimationController _controller;
   late final Animation<double> _animation;
   late final Animation<double> _floatAnimation;
+  String _appVersion = "";
   Timer? _navTimer;
   bool _navigated = false;
 
@@ -224,7 +226,24 @@ class _CustomSplashScreenState extends State<CustomSplashScreen>
       ),
     );
 
+    _loadAppVersion();
     _initializeApp();
+  }
+
+  Future<void> _loadAppVersion() async {
+    try {
+      final info = await PackageInfo.fromPlatform();
+
+      if (!mounted) return;
+
+      setState(() {
+        _appVersion = "v${info.version}";
+      });
+    } catch (e) {
+      setState(() {
+        _appVersion = "Version unavailable";
+      });
+    }
   }
 
   Future<void> _initializeApp() async {
@@ -609,6 +628,22 @@ class _CustomSplashScreenState extends State<CustomSplashScreen>
                       },
                     ),
                   ],
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: 20,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: Text(
+                  _appVersion.isEmpty ? "Loading version..." : _appVersion,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.white.withOpacity(0.85),
+                    fontWeight: FontWeight.w500,
+                    letterSpacing: 1.2,
+                  ),
                 ),
               ),
             ),
