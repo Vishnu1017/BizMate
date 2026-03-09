@@ -87,9 +87,12 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
 
   void saveChanges() async {
     if (_isSaving) return;
+
     setState(() => _isSaving = true);
+
     if (customerController.text.trim().isEmpty) {
       AppSnackBar.showError(context, message: "Customer name cannot be empty!");
+      setState(() => _isSaving = false);
       return;
     }
 
@@ -100,10 +103,12 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
         context,
         message: "Enter a valid 10-digit phone number!",
       );
+      setState(() => _isSaving = false);
       return;
     }
 
     double total = double.tryParse(totalAmountController.text) ?? 0;
+
     double paid =
         double.tryParse(
           amountController.text.isEmpty ? "0" : amountController.text,
@@ -115,6 +120,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
         context,
         message: "Total amount must be greater than 0!",
       );
+      setState(() => _isSaving = false);
       return;
     }
 
@@ -123,10 +129,10 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
         context,
         message: "Paid amount cannot be negative!",
       );
+      setState(() => _isSaving = false);
       return;
     }
 
-    // Session load
     if (!Hive.isBoxOpen('session')) await Hive.openBox('session');
     final sessionBox = Hive.box('session');
     final email = sessionBox.get("currentUserEmail");
@@ -136,6 +142,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
         context,
         message: "Session expired. Please login again.",
       );
+      setState(() => _isSaving = false);
       return;
     }
 
@@ -143,29 +150,25 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
         .toString()
         .replaceAll('.', '_')
         .replaceAll('@', '_');
+
     final userBox = await Hive.openBox("userdata_$safeEmail");
 
-    // Read existing sales
     List<Sale> sales = [];
+
     try {
       sales = List<Sale>.from(userBox.get("sales", defaultValue: []));
     } catch (_) {
       sales = [];
     }
 
-    // === UNIQUE IDENTIFIER ===
-    // DO NOT UPDATE BY INDEX.
-    // Instead update sale with exact matching timestamp.
     final targetDate = widget.sale.dateTime;
 
-    // Generate new payment record
     final newPayment = Payment(
       amount: isFullyPaid ? total : paid,
       date: DateTime.now(),
       mode: _selectedMode,
     );
 
-    // Create updated sale object
     final updatedSale = Sale(
       customerName: customerController.text,
       phoneNumber: phoneController.text,
@@ -181,7 +184,6 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
       item: widget.sale.item,
     );
 
-    // === FIXED: Update ONLY the sale with matching dateTime ===
     for (int i = 0; i < sales.length; i++) {
       if (sales[i].dateTime == targetDate) {
         sales[i] = updatedSale;
@@ -189,18 +191,19 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
       }
     }
 
-    // Save list back
     await userBox.put("sales", sales);
+
+    if (!mounted) return;
 
     AppSnackBar.showSuccess(
       context,
       message: 'Sale updated successfully!',
-      duration: Duration(seconds: 2),
+      duration: const Duration(seconds: 2),
     );
 
-    Navigator.pop(context);
     setState(() => _isSaving = false);
-    Navigator.pop(context);
+
+    Navigator.pop(context, true);
   }
 
   @override
