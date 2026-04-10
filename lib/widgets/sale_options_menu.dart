@@ -488,6 +488,7 @@ class SaleOptionsMenu extends StatelessWidget {
   ) async {
     return await showDialog<double?>(
       context: context,
+      barrierDismissible: false,
       builder: (context) => _buildAmountDialog(context, balanceAmount),
     );
   }
@@ -500,172 +501,176 @@ class SaleOptionsMenu extends StatelessWidget {
       text: balanceAmount.toStringAsFixed(2),
     );
 
-    return Dialog(
-      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: ConstrainedBox(
-        constraints: BoxConstraints(maxWidth: maxWidth),
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.only(bottom: 16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Header
-                Container(
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [
-                        Color(0xFF2563EB),
-                        Color(0xFF1E40AF),
-                        Color(0xFF020617),
-                      ],
-                      stops: [0.0, 0.6, 1.0],
-                      begin: Alignment.bottomRight,
-                      end: Alignment.topLeft,
-                    ),
-                    borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(16),
-                    ),
-                  ),
-                  padding: const EdgeInsets.symmetric(vertical: 20),
-                  child: Column(
-                    children: const [
-                      Icon(
-                        Icons.qr_code_2_rounded,
-                        size: 40,
-                        color: Colors.white,
+    return WillPopScope(
+      onWillPop: () async => false,
+      child: Dialog(
+        insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: maxWidth),
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Header
+                  Container(
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [
+                          Color(0xFF2563EB),
+                          Color(0xFF1E40AF),
+                          Color(0xFF020617),
+                        ],
+                        stops: [0.0, 0.6, 1.0],
+                        begin: Alignment.bottomRight,
+                        end: Alignment.topLeft,
                       ),
-                      SizedBox(height: 8),
-                      Text(
-                        'Customize UPI Amount',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w600,
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(16),
+                      ),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 20),
+                    child: Column(
+                      children: const [
+                        Icon(
+                          Icons.qr_code_2_rounded,
+                          size: 40,
                           color: Colors.white,
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Body
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 20,
-                  ),
-                  child: Column(
-                    children: [
-                      const Text(
-                        "Enter the amount you want to show in the UPI QR. Leave it empty if the customer should enter manually.",
-                        style: TextStyle(fontSize: 14, color: Colors.black87),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 16),
-                      TextField(
-                        controller: controller,
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
-                        ),
-                        decoration: InputDecoration(
-                          labelText: 'Amount (₹)',
-                          prefixIcon: const Icon(Icons.currency_rupee),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
+                        SizedBox(height: 8),
+                        Text(
+                          'Customize UPI Amount',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
                           ),
-                          filled: true,
-                          fillColor: Colors.grey[100],
                         ),
-                      ),
-                      const SizedBox(height: 24),
+                      ],
+                    ),
+                  ),
 
-                      /// ✅ ACTIONS
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          /// ✅ CANCEL → JUST CLOSE DIALOG
-                          TextButton(
-                            child: Text(
-                              'Cancel',
-                              style: TextStyle(color: Colors.grey[700]),
+                  // Body
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 20,
+                    ),
+                    child: Column(
+                      children: [
+                        const Text(
+                          "Enter the amount you want to show in the UPI QR. Leave it empty if the customer should enter manually.",
+                          style: TextStyle(fontSize: 14, color: Colors.black87),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 16),
+                        TextField(
+                          controller: controller,
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
+                          decoration: InputDecoration(
+                            labelText: 'Amount (₹)',
+                            prefixIcon: const Icon(Icons.currency_rupee),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
                             ),
-                            onPressed: () {
-                              Navigator.of(context).pop(); // ✅ CLOSE ONLY
-                            },
+                            filled: true,
+                            fillColor: Colors.grey[100],
                           ),
-                          const SizedBox(width: 10),
+                        ),
+                        const SizedBox(height: 24),
 
-                          /// ✅ GENERATE QR
-                          ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.transparent, // IMPORTANT
-                              shadowColor: Colors.transparent,
-                              padding: EdgeInsets.zero,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
+                        /// ✅ ACTIONS
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            /// ✅ CANCEL → JUST CLOSE DIALOG
+                            TextButton(
+                              child: Text(
+                                'Cancel',
+                                style: TextStyle(color: Colors.grey[700]),
                               ),
+                              onPressed: () {
+                                Navigator.of(context).pop(); // ✅ CLOSE ONLY
+                              },
                             ),
-                            onPressed: () {
-                              final input = controller.text.trim();
+                            const SizedBox(width: 10),
 
-                              // ❌ EMPTY → close dialog, DO NOTHING
-                              if (input.isEmpty) {
-                                Navigator.of(context).pop();
-                                return;
-                              }
-
-                              final parsed = double.tryParse(input);
-
-                              // ❌ INVALID or ZERO → close dialog, DO NOTHING
-                              if (parsed == null || parsed <= 0) {
-                                Navigator.of(context).pop();
-                                return;
-                              }
-
-                              // ✅ VALID AMOUNT
-                              Navigator.of(context).pop(parsed);
-                            },
-                            child: Ink(
-                              decoration: const BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [
-                                    Color(0xFF2563EB),
-                                    Color(0xFF1E40AF),
-                                    Color(0xFF020617),
-                                  ],
-                                  stops: [0.0, 0.6, 1.0],
-                                  begin: Alignment.bottomRight,
-                                  end: Alignment.topLeft,
-                                ),
-                                borderRadius: BorderRadius.all(
-                                  Radius.circular(10),
+                            /// ✅ GENERATE QR
+                            ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor:
+                                    Colors.transparent, // IMPORTANT
+                                shadowColor: Colors.transparent,
+                                padding: EdgeInsets.zero,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
                                 ),
                               ),
-                              child: Container(
-                                alignment: Alignment.center,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 24,
-                                  vertical: 12,
+                              onPressed: () {
+                                final input = controller.text.trim();
+
+                                // ❌ EMPTY → close dialog, DO NOTHING
+                                if (input.isEmpty) {
+                                  Navigator.of(context).pop();
+                                  return;
+                                }
+
+                                final parsed = double.tryParse(input);
+
+                                // ❌ INVALID or ZERO → close dialog, DO NOTHING
+                                if (parsed == null || parsed <= 0) {
+                                  Navigator.of(context).pop();
+                                  return;
+                                }
+
+                                // ✅ VALID AMOUNT
+                                Navigator.of(context).pop(parsed);
+                              },
+                              child: Ink(
+                                decoration: const BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      Color(0xFF2563EB),
+                                      Color(0xFF1E40AF),
+                                      Color(0xFF020617),
+                                    ],
+                                    stops: [0.0, 0.6, 1.0],
+                                    begin: Alignment.bottomRight,
+                                    end: Alignment.topLeft,
+                                  ),
+                                  borderRadius: BorderRadius.all(
+                                    Radius.circular(10),
+                                  ),
                                 ),
-                                child: const Text(
-                                  'Generate QR',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.bold,
+                                child: Container(
+                                  alignment: Alignment.center,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 24,
+                                    vertical: 12,
+                                  ),
+                                  child: const Text(
+                                    'Generate QR',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                                 ),
                               ),
                             ),
-                          ),
-                        ],
-                      ),
-                    ],
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
