@@ -24,6 +24,8 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
   final phoneController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   DateTime selectedDate = DateTime.now();
+  List<DateTime> selectedEventDates = [];
+
   bool isLoading = false;
   bool isFullyPaid = false;
   final String _selectedMode = 'Cash';
@@ -167,10 +169,49 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
       userBox.get("sales", defaultValue: <Sale>[]),
     );
 
-    final phoneNumber = phoneController.text.trim();
+    final cleaned = phoneController.text.replaceAll(RegExp(r'[^\d]'), '');
+    final phoneNumber =
+        cleaned.startsWith('91') && cleaned.length == 12
+            ? cleaned.substring(2)
+            : cleaned;
     if (phoneNumber.isEmpty) return false;
 
     return sales.any((sale) => sale.phoneNumber.trim() == phoneNumber);
+  }
+
+  void _showEventCalendar(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return Container(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+          ),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: ModernCalendar(
+            onDateSelected: (DateTime date) {
+              setState(() {
+                final exists = selectedEventDates.any(
+                  (d) =>
+                      d.day == date.day &&
+                      d.month == date.month &&
+                      d.year == date.year,
+                );
+
+                if (!exists) {
+                  selectedEventDates.add(date);
+                }
+              });
+            },
+          ),
+        );
+      },
+    );
   }
 
   void addItem() async {
@@ -721,14 +762,24 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
     );
 
     // 🔹 Create sale
+    // 🔹 Normalize phone number
+    final cleaned = phoneController.text.replaceAll(RegExp(r'[^\d]'), '');
+
+    final normalizedPhone =
+        cleaned.startsWith('91') && cleaned.length == 12
+            ? cleaned.substring(2)
+            : cleaned;
+
+    // 🔹 Create sale
     final sale = Sale(
       customerName: customerController.text.trim(),
       item: productController.text.trim(),
       productName: productController.text.trim(),
-      phoneNumber: phoneController.text.trim(),
+      phoneNumber: normalizedPhone,
       amount: newPayment.amount,
       totalAmount: double.tryParse(totalAmountController.text) ?? 0,
-      dateTime: saleDateTime, // ✅ UNIQUE per sale
+      dateTime: saleDateTime,
+      eventDates: selectedEventDates, // ADD THIS
       deliveryStatus: 'All Non Editing Images',
       paymentHistory: [newPayment],
       discount: totalDiscount,
@@ -913,10 +964,20 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                         if (val == null || val.trim().isEmpty) {
                           return 'Enter phone number';
                         }
-                        if (!RegExp(r'^[0-9]{10}$').hasMatch(val)) {
-                          return 'Enter valid 10-digit number';
+
+                        // Remove everything except digits
+                        final cleaned = val.replaceAll(RegExp(r'[^\d]'), '');
+
+                        // Handle +91 (India country code)
+                        if (cleaned.length == 12 && cleaned.startsWith('91')) {
+                          final number = cleaned.substring(2);
+                          if (number.length == 10) return null;
                         }
-                        return null;
+
+                        // Normal 10 digit number
+                        if (cleaned.length == 10) return null;
+
+                        return 'Enter valid phone number';
                       },
                       onChanged: (value) {
                         if (isCustomerSelectedFromList) {
@@ -943,14 +1004,17 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      "Sale Date",
+                      "Booking & Event Dates",
                       style: TextStyle(
                         fontSize: 16 * scale,
                         fontWeight: FontWeight.bold,
                         color: const Color(0xFF333333),
                       ),
                     ),
+
                     const SizedBox(height: 16),
+
+                    /// BOOKING DATE
                     GestureDetector(
                       onTap: () => _showCustomCalendar(context),
                       child: Container(
@@ -962,13 +1026,10 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: [
-                              Color(0xFF2563EB).withOpacity(0.1),
-                              Color(0xFF1E40AF).withOpacity(0.1),
-                              Color(0xFF020617).withOpacity(0.1),
+                              const Color(0xFF2563EB).withOpacity(0.1),
+                              const Color(0xFF1E40AF).withOpacity(0.1),
+                              const Color(0xFF020617).withOpacity(0.1),
                             ],
-                            stops: [0.0, 0.6, 1.0],
-                            begin: Alignment.bottomRight,
-                            end: Alignment.topLeft,
                           ),
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
@@ -977,56 +1038,51 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                           ),
                         ),
                         child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Row(
-                              children: [
-                                Container(
-                                  width: 40,
-                                  height: 40,
-                                  decoration: BoxDecoration(
-                                    gradient: const LinearGradient(
-                                      colors: [
-                                        Color(0xFF2563EB),
-                                        Color(0xFF1E40AF),
-                                        Color(0xFF020617),
-                                      ],
-                                      stops: [0.0, 0.6, 1.0],
-                                      begin: Alignment.bottomRight,
-                                      end: Alignment.topLeft,
-                                    ),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: const Icon(
-                                    Icons.calendar_today,
-                                    color: Colors.white,
-                                    size: 20,
-                                  ),
-                                ),
-                                const SizedBox(width: 16),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      "Select Sale Date",
-                                      style: TextStyle(
-                                        fontSize: 12 * scale,
-                                        color: Colors.grey.shade600,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      "${selectedDate.day}/${selectedDate.month}/${selectedDate.year}",
-                                      style: TextStyle(
-                                        fontSize: 14 * scale,
-                                        fontWeight: FontWeight.bold,
-                                        color: const Color(0xFF333333),
-                                      ),
-                                    ),
+                            Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [
+                                    Color(0xFF2563EB),
+                                    Color(0xFF1E40AF),
+                                    Color(0xFF020617),
                                   ],
                                 ),
-                              ],
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Icon(
+                                Icons.calendar_today,
+                                color: Colors.white,
+                              ),
                             ),
+                            const SizedBox(width: 16),
+
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    "Booking Date",
+                                    style: TextStyle(
+                                      fontSize: 12 * scale,
+                                      color: Colors.grey.shade600,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    "${selectedDate.day}/${selectedDate.month}/${selectedDate.year}",
+                                    style: TextStyle(
+                                      fontSize: 14 * scale,
+                                      fontWeight: FontWeight.bold,
+                                      color: const Color(0xFF333333),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+
                             const Icon(
                               Icons.arrow_forward_ios,
                               size: 16,
@@ -1036,11 +1092,117 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                         ),
                       ),
                     ),
+
+                    const SizedBox(height: 15),
+
+                    /// EVENT DATES
+                    GestureDetector(
+                      onTap: () => _showEventCalendar(context),
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 8,
+                          horizontal: 10,
+                        ),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              const Color(0xFF2563EB).withOpacity(0.1),
+                              const Color(0xFF1E40AF).withOpacity(0.1),
+                              const Color(0xFF020617).withOpacity(0.1),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: const Color(0xFF1E40AF).withOpacity(0.3),
+                            width: 1.5,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [
+                                    Color(0xFF2563EB),
+                                    Color(0xFF1E40AF),
+                                    Color(0xFF020617),
+                                  ],
+                                ),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Icon(
+                                Icons.event_available,
+                                color: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    "Photography Event Dates",
+                                    style: TextStyle(
+                                      fontSize: 12 * scale,
+                                      color: Colors.grey.shade600,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    selectedEventDates.isEmpty
+                                        ? "Select Event Dates"
+                                        : "${selectedEventDates.length} Date(s) Selected",
+                                    style: TextStyle(
+                                      fontSize: 14 * scale,
+                                      fontWeight: FontWeight.bold,
+                                      color: const Color(0xFF333333),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                            const Icon(
+                              Icons.arrow_forward_ios,
+                              size: 16,
+                              color: Color(0xFF1E40AF),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    if (selectedEventDates.isNotEmpty) ...[
+                      const SizedBox(height: 15),
+
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children:
+                            selectedEventDates.map((date) {
+                              return Chip(
+                                backgroundColor: const Color(0xFFEEF4FF),
+                                label: Text(
+                                  "${date.day}/${date.month}/${date.year}",
+                                ),
+                                deleteIcon: const Icon(Icons.close, size: 18),
+                                onDeleted: () {
+                                  setState(() {
+                                    selectedEventDates.remove(date);
+                                  });
+                                },
+                              );
+                            }).toList(),
+                      ),
+                    ],
                   ],
                 ),
               ),
             ),
-            const SizedBox(height: 20),
 
             // Items Section
             Card(

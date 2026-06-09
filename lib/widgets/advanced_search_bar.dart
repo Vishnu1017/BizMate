@@ -320,41 +320,43 @@ class _AdvancedSearchBarState extends State<AdvancedSearchBar>
 
     _overlayEntry = OverlayEntry(
       builder: (context) {
-        return GestureDetector(
-          onTap: _hideMenu,
-          behavior: HitTestBehavior.translucent,
-          child: Stack(
-            children: [
-              Positioned.fill(
+        return Stack(
+          children: [
+            // BACKDROP (click outside closes menu)
+            Positioned.fill(
+              child: GestureDetector(
+                onTap: _hideMenu,
+                behavior: HitTestBehavior.translucent,
                 child: Container(color: Colors.black.withOpacity(0.40)),
               ),
+            ),
 
-              CompositedTransformFollower(
-                link: _layerLink,
-                offset: Offset(dx, 60), // ⭐ RIGHT ALIGNED MENU
-                showWhenUnlinked: false,
-                child: Material(
-                  color: Colors.transparent,
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(
-                      maxWidth: menuWidth,
-                      minWidth: menuWidth,
-                    ),
-                    child: SlideTransition(
-                      position: _slideAnimation!,
-                      child: FadeTransition(
-                        opacity: _fadeAnimation!,
-                        child: ScaleTransition(
-                          scale: _scaleAnimation!,
-                          child: _buildMenuUI(menuWidth),
-                        ),
+            // MENU
+            CompositedTransformFollower(
+              link: _layerLink,
+              offset: Offset(dx, 60),
+              showWhenUnlinked: false,
+              child: Material(
+                color: Colors.transparent,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxWidth: menuWidth,
+                    minWidth: menuWidth,
+                  ),
+                  child: SlideTransition(
+                    position: _slideAnimation!,
+                    child: FadeTransition(
+                      opacity: _fadeAnimation!,
+                      child: ScaleTransition(
+                        scale: _scaleAnimation!,
+                        child: _buildMenuUI(menuWidth),
                       ),
                     ),
                   ),
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         );
       },
     );
@@ -826,13 +828,17 @@ class _AdvancedSearchBarState extends State<AdvancedSearchBar>
                 color: filtered ? Colors.white : const Color(0xFF6B7280),
               ),
               if (filtered) ...[
-                SizedBox(width: 8 * scale),
-                Text(
-                  'Filtered',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 14 * scale,
-                    fontWeight: FontWeight.w600,
+                SizedBox(width: 4 * scale),
+                Flexible(
+                  child: Text(
+                    'Filtered',
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 14 * scale,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ],
@@ -932,7 +938,7 @@ class _AdvancedSearchBarState extends State<AdvancedSearchBar>
                     ],
                   ),
                 ),
-                SizedBox(width: 8 * scale),
+                SizedBox(width: 4 * scale),
                 closeButtonPolished(1.0, _clearDateFilter),
               ],
             ),

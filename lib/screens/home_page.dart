@@ -328,7 +328,8 @@ class _HomePageState extends State<HomePage>
                             ? "No results found for '$_searchQuery' in selected date range"
                             : _searchQuery.isNotEmpty
                             ? "No results found for '$_searchQuery'"
-                            : "No sales found in selected date range",
+                            : "No sales found from ${DateFormat('dd MMM').format(selectedRange!.start)}\n"
+                                "to ${DateFormat('dd MMM').format(selectedRange!.end)}",
                         style: TextStyle(
                           fontSize:
                               isVerySmallScreen
@@ -342,9 +343,7 @@ class _HomePageState extends State<HomePage>
                       ),
                     ),
                   ),
-                if (sales.isNotEmpty &&
-                    _searchQuery.isEmpty &&
-                    selectedRange == null)
+                if (sales.isNotEmpty)
                   Expanded(
                     child: ListView.builder(
                       controller: _scrollController,

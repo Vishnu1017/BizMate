@@ -12,10 +12,12 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart'
 import 'package:hive/hive.dart';
 import 'package:hugeicons/hugeicons.dart' show HugeIcon, HugeIcons;
 import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:bizmate/models/user_model.dart';
 import 'login_screen.dart';
+import 'package:path/path.dart' as p;
 
 class ProfilePage extends StatefulWidget {
   final User user;
@@ -168,33 +170,39 @@ class _ProfilePageState extends State<ProfilePage>
 
   Future<void> _loadImage() async {
     setState(() => _isImageLoading = true);
-    final prefs = await SharedPreferences.getInstance();
-    final path = prefs.getString('${widget.user.email}_profileImagePath');
 
-    if (path != null && path.isNotEmpty) {
-      final file = File(path);
-      try {
-        final exists = await file.exists();
-        if (exists) {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final savedPath = prefs.getString(
+        '${widget.user.email}_profileImagePath',
+      );
+
+      if (savedPath != null && savedPath.isNotEmpty) {
+        final file = File(savedPath);
+
+        if (await file.exists()) {
           setState(() {
             _profileImage = file;
             _isImageSaved = true;
           });
         } else {
+          // File deleted → clean preference
           await prefs.remove('${widget.user.email}_profileImagePath');
+
           setState(() {
             _profileImage = null;
             _isImageSaved = false;
           });
         }
-      } catch (e) {
-        debugPrint('Error loading image: $e');
+      } else {
         setState(() {
           _profileImage = null;
           _isImageSaved = false;
         });
       }
-    } else {
+    } catch (e) {
+      debugPrint("Load image error: $e");
+
       setState(() {
         _profileImage = null;
         _isImageSaved = false;
@@ -1699,8 +1707,8 @@ class _ProfilePageState extends State<ProfilePage>
         if (!mounted) return;
         AppSnackBar.showError(
           context,
-          message: 'Permission denied. Please allow access to gallery.',
-          duration: Duration(seconds: 2),
+          message: 'Please allow gallery permission',
+          duration: const Duration(seconds: 2),
         );
         return;
       }
@@ -1709,7 +1717,7 @@ class _ProfilePageState extends State<ProfilePage>
 
       final picked = await picker.pickImage(
         source: ImageSource.gallery,
-        imageQuality: 80,
+        imageQuality: 85,
         maxWidth: 800,
       );
 
@@ -1720,35 +1728,58 @@ class _ProfilePageState extends State<ProfilePage>
 
       final originalFile = File(picked.path);
 
+      // Optional compression
       final compressedFile = await ImageCompressionService.compressProfileImage(
         originalFile: originalFile,
       );
 
-      final file = compressedFile ?? originalFile;
-      final prefs = await SharedPreferences.getInstance();
+      final fileToSave = compressedFile ?? originalFile;
 
-      await prefs.setString('${widget.user.email}_profileImagePath', file.path);
+      // 🔥 SAVE TO PERMANENT STORAGE
+      final dir = await getApplicationDocumentsDirectory();
+
+      final filePath = p.join(dir.path, "${widget.user.email}_profile.jpg");
+
+      final savedFile = File(filePath);
+
+      // Delete old image if exists
+      if (await savedFile.exists()) {
+        await savedFile.delete();
+      }
+
+      final newImage = await fileToSave.copy(filePath);
+
+      // Save path
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(
+        '${widget.user.email}_profileImagePath',
+        newImage.path,
+      );
 
       if (!mounted) return;
+
       setState(() {
-        _profileImage = file;
-        _isImageLoading = false;
+        _profileImage = newImage;
         _isImageSaved = true;
+        _isImageLoading = false;
       });
 
       AppSnackBar.showSuccess(
         context,
-        message: 'Profile image updated successfully!',
-        duration: Duration(seconds: 2),
+        message: "Profile image updated",
+        duration: const Duration(seconds: 2),
       );
     } catch (e) {
-      debugPrint('Image picking error: $e');
-      setState(() => _isImageLoading = false);
+      debugPrint("Image error: $e");
+
       if (!mounted) return;
+
+      setState(() => _isImageLoading = false);
+
       AppSnackBar.showError(
         context,
-        message: 'Error picking image: ${e.toString()}',
-        duration: Duration(seconds: 2),
+        message: "Failed to update image",
+        duration: const Duration(seconds: 2),
       );
     }
   }

@@ -355,7 +355,7 @@ class _DashboardPageState extends State<DashboardPage> {
                               ),
                               padding: EdgeInsets.all(8.0 * scale),
                               child: Icon(
-                                FontAwesomeIcons.ellipsisV,
+                                FontAwesomeIcons.ellipsisV as IconData?,
                                 size: 15.0 * scale,
                                 color: Colors.blueAccent,
                               ),

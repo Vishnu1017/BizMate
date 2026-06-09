@@ -510,6 +510,7 @@ class _LoginScreenState extends State<LoginScreen>
                             controller: resetEmailController,
                             keyboardType: TextInputType.emailAddress,
                             style: const TextStyle(color: Colors.white),
+                            cursorColor: Colors.white,
                             decoration: InputDecoration(
                               labelText: "Enter your email",
                               labelStyle: const TextStyle(
@@ -1021,6 +1022,7 @@ class _LoginScreenState extends State<LoginScreen>
                               TextField(
                                 controller: fullNameController,
                                 style: const TextStyle(color: Colors.white),
+                                cursorColor: Colors.white,
                                 decoration: InputDecoration(
                                   labelText: "Full Name",
                                   labelStyle: const TextStyle(
@@ -1067,13 +1069,37 @@ class _LoginScreenState extends State<LoginScreen>
                                   labelStyle: const TextStyle(
                                     color: Colors.white70,
                                   ),
+
+                                  // Normal state
                                   enabledBorder: OutlineInputBorder(
                                     borderSide: const BorderSide(
                                       color: Colors.white54,
                                     ),
                                     borderRadius: BorderRadius.circular(10),
                                   ),
-                                  border: OutlineInputBorder(
+
+                                  // 🔥 WHEN CLICKED / FOCUSED
+                                  focusedBorder: OutlineInputBorder(
+                                    borderSide: const BorderSide(
+                                      color:
+                                          Colors.white, // ✅ FULL WHITE BORDER
+                                    ),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+
+                                  // Optional (when error)
+                                  errorBorder: OutlineInputBorder(
+                                    borderSide: const BorderSide(
+                                      color: Colors.redAccent,
+                                    ),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+
+                                  focusedErrorBorder: OutlineInputBorder(
+                                    borderSide: const BorderSide(
+                                      color: Colors.redAccent,
+                                      width: 2,
+                                    ),
                                     borderRadius: BorderRadius.circular(10),
                                   ),
                                 ),
@@ -1098,6 +1124,7 @@ class _LoginScreenState extends State<LoginScreen>
                                 controller: phoneController,
                                 keyboardType: TextInputType.phone,
                                 style: const TextStyle(color: Colors.white),
+                                cursorColor: Colors.white,
                                 decoration: InputDecoration(
                                   labelText: "Phone Number",
                                   labelStyle: const TextStyle(
@@ -1134,6 +1161,7 @@ class _LoginScreenState extends State<LoginScreen>
                               controller: emailController,
                               keyboardType: TextInputType.emailAddress,
                               style: const TextStyle(color: Colors.white),
+                              cursorColor: Colors.white,
                               decoration: InputDecoration(
                                 labelText:
                                     isCreating ? "Email" : "Email or Phone",
@@ -1172,6 +1200,7 @@ class _LoginScreenState extends State<LoginScreen>
                               controller: passwordController,
                               obscureText: _obscurePassword,
                               style: const TextStyle(color: Colors.white),
+                              cursorColor: Colors.white,
                               decoration: InputDecoration(
                                 labelText: "Password",
                                 labelStyle: const TextStyle(
@@ -1503,6 +1532,7 @@ class _ModernPasswordFieldState extends State<_ModernPasswordField> {
             controller: widget.controller,
             obscureText: _obscureText,
             style: TextStyle(fontSize: 14 * scale, fontWeight: FontWeight.w500),
+            cursorColor: Colors.white,
             decoration: InputDecoration(
               hintText: widget.hint,
               hintStyle: TextStyle(

@@ -463,7 +463,11 @@ class _CustomersPageState extends State<CustomersPage> {
     return Row(
       children: [
         faIcon != null
-            ? FaIcon(faIcon, color: color, size: isSmallScreen ? 16 : 20)
+            ? FaIcon(
+              faIcon as FaIconData?,
+              color: color,
+              size: isSmallScreen ? 16 : 20,
+            )
             : Icon(icon, color: color, size: isSmallScreen ? 18 : 22),
         const SizedBox(width: 8),
         Expanded(
@@ -643,7 +647,7 @@ class _CustomersPageState extends State<CustomersPage> {
                                     ),
                                     PopupMenuButton<String>(
                                       icon: Icon(
-                                        FontAwesomeIcons.whatsapp,
+                                        FontAwesomeIcons.whatsapp as IconData?,
                                         size: 20 * scale,
                                         color: Colors.white,
                                       ),

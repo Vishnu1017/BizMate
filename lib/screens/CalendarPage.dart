@@ -41,12 +41,31 @@ class _CalendarPageState extends State<CalendarPage> {
     Map<DateTime, List<dynamic>> events = {};
 
     for (final sale in sales) {
-      final date = DateTime.utc(
+      // Booking Date
+      final bookingDate = DateTime.utc(
         sale.dateTime.year,
         sale.dateTime.month,
         sale.dateTime.day,
       );
-      events.putIfAbsent(date, () => []).add(sale);
+
+      events.putIfAbsent(bookingDate, () => []).add(sale);
+
+      // Photography Event Dates
+      if (sale.eventDates.isNotEmpty) {
+        for (final eventDate in sale.eventDates) {
+          final eventDay = DateTime.utc(
+            eventDate.year,
+            eventDate.month,
+            eventDate.day,
+          );
+
+          events.putIfAbsent(eventDay, () => []).add({
+            'type': 'photo_event',
+            'sale': sale,
+            'date': eventDate,
+          });
+        }
+      }
     }
 
     for (final rental in rentals) {
@@ -264,7 +283,10 @@ class _CalendarPageState extends State<CalendarPage> {
                     color: Colors.grey.shade700,
                   ),
                 ),
+
                 const Spacer(),
+
+                // SALES
                 if (_selectedDay != null)
                   _buildSummaryChip(
                     count:
@@ -274,7 +296,25 @@ class _CalendarPageState extends State<CalendarPage> {
                     label: "Sales",
                     color: Colors.blue,
                   ),
+
                 SizedBox(width: 6 * scale),
+
+                // SHOOTS
+                if (_selectedDay != null)
+                  _buildSummaryChip(
+                    count:
+                        _getEventsForDay(_selectedDay!)
+                            .where(
+                              (e) => e is Map && e['type'] == 'photo_event',
+                            )
+                            .length,
+                    label: "Shoots",
+                    color: const Color(0xFFE11D48),
+                  ),
+
+                SizedBox(width: 6 * scale),
+
+                // RENTALS
                 if (_selectedDay != null)
                   _buildSummaryChip(
                     count:
@@ -336,6 +376,28 @@ class _CalendarPageState extends State<CalendarPage> {
                           itemBuilder: (context, index) {
                             final event = events[index];
 
+                            // PHOTO EVENT
+                            if (event is Map &&
+                                event['type'] == 'photo_event') {
+                              final Sale sale = event['sale'];
+
+                              return Padding(
+                                padding: EdgeInsets.only(bottom: 10 * scale),
+                                child: _eventCard(
+                                  icon: Icons.camera_alt_rounded,
+                                  title: sale.customerName,
+                                  subtitle: sale.productName,
+                                  color: const Color(0xFFE11D48),
+                                  tag: "SHOOT",
+                                  extra: Text(
+                                    "Photography Event",
+                                    style: _timeStyle,
+                                  ),
+                                ),
+                              );
+                            }
+
+                            // NORMAL SALE
                             if (event is Sale) {
                               return Padding(
                                 padding: EdgeInsets.only(bottom: 10 * scale),
@@ -347,17 +409,19 @@ class _CalendarPageState extends State<CalendarPage> {
                                   color: const Color(0xFF2563EB),
                                   tag: "SALE",
                                   extra: Text(
-                                    "Shoot date: ${DateFormat('dd MMM yyyy, hh:mm a').format(event.dateTime)}",
+                                    "Booking Date: ${DateFormat('dd MMM yyyy, hh:mm a').format(event.dateTime)}",
                                     style: _timeStyle,
                                   ),
                                 ),
                               );
                             }
 
+                            // RENTAL
                             if (event is RentalSaleModel) {
                               final from = DateFormat(
                                 'dd MMM yyyy, hh:mm a',
                               ).format(event.fromDateTime);
+
                               final to = DateFormat(
                                 'dd MMM yyyy, hh:mm a',
                               ).format(event.toDateTime);
@@ -376,7 +440,7 @@ class _CalendarPageState extends State<CalendarPage> {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text("From: $from", style: _timeStyle),
-                                      Text("To:   $to", style: _timeStyle),
+                                      Text("To: $to", style: _timeStyle),
                                     ],
                                   ),
                                 ),
