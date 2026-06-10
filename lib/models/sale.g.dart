@@ -13,24 +13,26 @@ class SaleAdapter extends TypeAdapter<Sale> {
   @override
   Sale read(BinaryReader reader) {
     final numOfFields = reader.readByte();
+
     final fields = <int, dynamic>{
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
+
     return Sale(
-      customerName: fields[0] as String,
-      amount: fields[1] as double,
-      productName: fields[2] as String,
-      dateTime: fields[3] as DateTime,
-      phoneNumber: fields[4] as String,
-      totalAmount: fields[5] as double,
-      discount: fields[11] as double,
-      item: fields[12] as String,
-      paymentHistory: (fields[6] as List).cast<Payment>(),
-      deliveryStatus: fields[7] as String,
-      deliveryLink: fields[8] as String,
-      paymentMode: fields[9] as String,
+      customerName: (fields[0] as String?) ?? '',
+      amount: (fields[1] as double?) ?? 0.0,
+      productName: (fields[2] as String?) ?? '',
+      dateTime: (fields[3] as DateTime?) ?? DateTime.now(),
+      phoneNumber: (fields[4] as String?) ?? '',
+      totalAmount: (fields[5] as double?) ?? 0.0,
+      paymentHistory: (fields[6] as List?)?.cast<Payment>() ?? <Payment>[],
+      deliveryStatus: (fields[7] as String?) ?? 'All Non Editing Images',
+      deliveryLink: (fields[8] as String?) ?? '',
+      paymentMode: (fields[9] as String?) ?? 'Cash',
       deliveryStatusHistory: (fields[10] as List?)?.cast<String>(),
-      eventDates: (fields[13] as List).cast<DateTime>(),
+      discount: (fields[11] as double?) ?? 0.0,
+      item: (fields[12] as String?) ?? '',
+      eventDates: (fields[13] as List?)?.cast<DateTime>() ?? <DateTime>[],
     );
   }
 

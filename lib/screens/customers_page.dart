@@ -646,8 +646,8 @@ class _CustomersPageState extends State<CustomersPage> {
                                       onPressed: () => _makePhoneCall(phone),
                                     ),
                                     PopupMenuButton<String>(
-                                      icon: Icon(
-                                        FontAwesomeIcons.whatsapp as IconData?,
+                                      icon: FaIcon(
+                                        FontAwesomeIcons.ellipsisVertical,
                                         size: 20 * scale,
                                         color: Colors.white,
                                       ),

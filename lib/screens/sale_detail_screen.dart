@@ -39,6 +39,8 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
 
   final _formKey = GlobalKey<FormState>();
 
+  List<DateTime> selectedEventDates = [];
+
   IconData _getIconForMode(String mode) {
     switch (mode) {
       case 'Cash':
@@ -73,6 +75,8 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
     _selectedMode =
         (widget.sale.paymentMode.isNotEmpty) ? widget.sale.paymentMode : 'Cash';
     isFullyPaid = (widget.sale.amount >= widget.sale.totalAmount);
+
+    selectedEventDates = List<DateTime>.from(widget.sale.eventDates ?? []);
   }
 
   @override
@@ -182,6 +186,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
       paymentHistory: [newPayment, ...widget.sale.paymentHistory],
       discount: widget.sale.discount,
       item: widget.sale.item,
+      eventDates: widget.sale.eventDates,
     );
 
     for (int i = 0; i < sales.length; i++) {

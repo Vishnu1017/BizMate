@@ -45,9 +45,9 @@ class Sale extends HiveObject {
   @HiveField(12)
   String item;
 
-  // NEW FIELD
+  // NEW FIELD (nullable for old Hive records)
   @HiveField(13)
-  List<DateTime> eventDates;
+  List<DateTime>? eventDates;
 
   Sale({
     required this.customerName,
@@ -58,16 +58,16 @@ class Sale extends HiveObject {
     required this.totalAmount,
     required this.discount,
     required this.item,
-
     this.paymentHistory = const [],
     this.deliveryStatus = 'All Non Editing Images',
     this.deliveryLink = '',
     this.paymentMode = 'Cash',
     this.deliveryStatusHistory,
-
-    // NEW
-    this.eventDates = const [],
+    this.eventDates,
   });
+
+  // Safe getter for old data
+  List<DateTime> get safeEventDates => eventDates ?? [];
 
   List<Map<String, dynamic>> get parsedDeliveryHistory {
     if (deliveryStatusHistory == null) return [];
@@ -108,7 +108,6 @@ class Sale extends HiveObject {
     if (discount > 0) {
       throw Exception("Deleting this sale is not allowed.");
     }
-
     return super.delete();
   }
 }

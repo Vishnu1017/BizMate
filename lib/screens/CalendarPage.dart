@@ -51,8 +51,8 @@ class _CalendarPageState extends State<CalendarPage> {
       events.putIfAbsent(bookingDate, () => []).add(sale);
 
       // Photography Event Dates
-      if (sale.eventDates.isNotEmpty) {
-        for (final eventDate in sale.eventDates) {
+      if (sale.safeEventDates.isNotEmpty) {
+        for (final eventDate in sale.safeEventDates) {
           final eventDay = DateTime.utc(
             eventDate.year,
             eventDate.month,
@@ -245,6 +245,60 @@ class _CalendarPageState extends State<CalendarPage> {
                     fontWeight: FontWeight.w700,
                     color: const Color(0xFF111827),
                   ),
+                ),
+                calendarBuilders: CalendarBuilders(
+                  markerBuilder: (context, day, events) {
+                    if (events.isEmpty) return const SizedBox();
+
+                    bool hasSale = events.any((e) => e is Sale);
+
+                    bool hasShoot = events.any(
+                      (e) => e is Map && e['type'] == 'photo_event',
+                    );
+
+                    bool hasRental = events.any((e) => e is RentalSaleModel);
+
+                    return Positioned(
+                      bottom: 4,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (hasSale)
+                            Container(
+                              width: 7,
+                              height: 7,
+                              margin: const EdgeInsets.symmetric(horizontal: 1),
+                              decoration: const BoxDecoration(
+                                color: Color(0xFF2563EB), // SALE BLUE
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+
+                          if (hasShoot)
+                            Container(
+                              width: 7,
+                              height: 7,
+                              margin: const EdgeInsets.symmetric(horizontal: 1),
+                              decoration: const BoxDecoration(
+                                color: Color(0xFFE11D48), // SHOOT RED
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+
+                          if (hasRental)
+                            Container(
+                              width: 7,
+                              height: 7,
+                              margin: const EdgeInsets.symmetric(horizontal: 1),
+                              decoration: const BoxDecoration(
+                                color: Color(0xFF7C3AED), // RENTAL PURPLE
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                        ],
+                      ),
+                    );
+                  },
                 ),
                 calendarStyle: CalendarStyle(
                   outsideDaysVisible: false,
