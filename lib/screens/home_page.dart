@@ -566,99 +566,194 @@ class _HomePageState extends State<HomePage>
                                           ),
                                         ),
                                         if (sale.safeEventDates.isNotEmpty) ...[
-                                          const SizedBox(height: 10),
+                                          SizedBox(height: 10 * scale),
 
-                                          Row(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Container(
-                                                width: 3,
-                                                height:
-                                                    (sale
-                                                                .safeEventDates
-                                                                .length *
-                                                            24)
-                                                        .toDouble(),
-                                                decoration: BoxDecoration(
-                                                  color: const Color(
-                                                    0xFFE11D48,
-                                                  ),
-                                                  borderRadius:
-                                                      BorderRadius.circular(20),
-                                                ),
+                                          Container(
+                                            width: double.infinity,
+                                            padding: EdgeInsets.all(10 * scale),
+                                            decoration: BoxDecoration(
+                                              color: const Color(
+                                                0xFFE11D48,
+                                              ).withOpacity(0.05),
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                              border: Border.all(
+                                                color: const Color(
+                                                  0xFFE11D48,
+                                                ).withOpacity(0.15),
                                               ),
-
-                                              const SizedBox(width: 12),
-
-                                              Expanded(
-                                                child: Column(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
-                                                  children: [
-                                                    Text(
-                                                      "Photography Schedule",
-                                                      style: TextStyle(
-                                                        fontSize: 12 * scale,
-                                                        fontWeight:
-                                                            FontWeight.w600,
-                                                        color: Colors.black87,
+                                            ),
+                                            child: IntrinsicHeight(
+                                              child: Row(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Container(
+                                                    width: 3,
+                                                    decoration: BoxDecoration(
+                                                      color: const Color(
+                                                        0xFFE11D48,
                                                       ),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            20,
+                                                          ),
                                                     ),
+                                                  ),
 
-                                                    const SizedBox(height: 6),
+                                                  SizedBox(width: 10 * scale),
 
-                                                    ...sale.safeEventDates.map(
-                                                      (date) => Padding(
-                                                        padding:
-                                                            const EdgeInsets.symmetric(
-                                                              vertical: 4,
-                                                            ),
-                                                        child: Row(
+                                                  Expanded(
+                                                    child: Column(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .start,
+                                                      children: [
+                                                        Row(
                                                           children: [
+                                                            const Icon(
+                                                              Icons
+                                                                  .camera_alt_rounded,
+                                                              size: 16,
+                                                              color: Color(
+                                                                0xFFE11D48,
+                                                              ),
+                                                            ),
+
+                                                            SizedBox(
+                                                              width: 6 * scale,
+                                                            ),
+
+                                                            Expanded(
+                                                              child: Text(
+                                                                "Photography Schedule",
+                                                                style: TextStyle(
+                                                                  fontSize:
+                                                                      12 *
+                                                                      scale,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .w600,
+                                                                  color:
+                                                                      Colors
+                                                                          .black87,
+                                                                ),
+                                                              ),
+                                                            ),
+
                                                             Container(
-                                                              width: 8,
-                                                              height: 8,
-                                                              decoration:
-                                                                  const BoxDecoration(
-                                                                    color: Color(
+                                                              padding:
+                                                                  const EdgeInsets.symmetric(
+                                                                    horizontal:
+                                                                        8,
+                                                                    vertical: 3,
+                                                                  ),
+                                                              decoration: BoxDecoration(
+                                                                color:
+                                                                    const Color(
                                                                       0xFFE11D48,
                                                                     ),
-                                                                    shape:
-                                                                        BoxShape
-                                                                            .circle,
-                                                                  ),
-                                                            ),
-
-                                                            const SizedBox(
-                                                              width: 10,
-                                                            ),
-
-                                                            Text(
-                                                              DateFormat(
-                                                                'dd MMM yyyy',
-                                                              ).format(date),
-                                                              style: TextStyle(
-                                                                fontSize:
-                                                                    11 * scale,
-                                                                color:
-                                                                    Colors
-                                                                        .grey
-                                                                        .shade700,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .w500,
+                                                                borderRadius:
+                                                                    BorderRadius.circular(
+                                                                      20,
+                                                                    ),
+                                                              ),
+                                                              child: Text(
+                                                                "${sale.safeEventDates.length}",
+                                                                style: TextStyle(
+                                                                  color:
+                                                                      Colors
+                                                                          .white,
+                                                                  fontSize:
+                                                                      10 *
+                                                                      scale,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .bold,
+                                                                ),
                                                               ),
                                                             ),
                                                           ],
                                                         ),
-                                                      ),
+
+                                                        SizedBox(
+                                                          height: 8 * scale,
+                                                        ),
+
+                                                        Column(
+                                                          children:
+                                                              sale.safeEventDates.map((
+                                                                date,
+                                                              ) {
+                                                                return Padding(
+                                                                  padding:
+                                                                      EdgeInsets.only(
+                                                                        bottom:
+                                                                            6 *
+                                                                            scale,
+                                                                      ),
+                                                                  child: Row(
+                                                                    crossAxisAlignment:
+                                                                        CrossAxisAlignment
+                                                                            .start,
+                                                                    children: [
+                                                                      Container(
+                                                                        margin: EdgeInsets.only(
+                                                                          top:
+                                                                              4 *
+                                                                              scale,
+                                                                        ),
+                                                                        width:
+                                                                            8,
+                                                                        height:
+                                                                            8,
+                                                                        decoration: const BoxDecoration(
+                                                                          color: Color(
+                                                                            0xFFE11D48,
+                                                                          ),
+                                                                          shape:
+                                                                              BoxShape.circle,
+                                                                        ),
+                                                                      ),
+
+                                                                      SizedBox(
+                                                                        width:
+                                                                            10 *
+                                                                            scale,
+                                                                      ),
+
+                                                                      Expanded(
+                                                                        child: Text(
+                                                                          DateFormat(
+                                                                            'EEEE, dd MMM yyyy',
+                                                                          ).format(
+                                                                            date,
+                                                                          ),
+                                                                          style: TextStyle(
+                                                                            fontSize:
+                                                                                11 *
+                                                                                scale,
+                                                                            color:
+                                                                                Colors.grey.shade700,
+                                                                            fontWeight:
+                                                                                FontWeight.w500,
+                                                                          ),
+                                                                        ),
+                                                                      ),
+                                                                    ],
+                                                                  ),
+                                                                );
+                                                              }).toList(),
+                                                        ),
+                                                      ],
                                                     ),
-                                                  ],
-                                                ),
+                                                  ),
+                                                ],
                                               ),
-                                            ],
+                                            ),
                                           ),
+
+                                          SizedBox(height: 10 * scale),
                                         ],
 
                                         Divider(height: 16, thickness: 1),
