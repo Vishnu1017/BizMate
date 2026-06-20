@@ -1,5 +1,6 @@
 // lib/screens/sale_detail_screen.dart
 import 'package:bizmate/models/payment.dart';
+import 'package:bizmate/widgets/ModernCalendar.dart';
 import 'package:bizmate/widgets/app_snackbar.dart' show AppSnackBar;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -40,6 +41,45 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
   final _formKey = GlobalKey<FormState>();
 
   List<DateTime> selectedEventDates = [];
+
+  Future<void> _selectMultipleDates() async {
+    final result = await showModalBottomSheet<List<DateTime>>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: ModernCalendar(
+            selectedDates: selectedEventDates,
+            onDateSelected: (DateTime date) {
+              setState(() {
+                final exists = selectedEventDates.any(
+                  (d) =>
+                      d.day == date.day &&
+                      d.month == date.month &&
+                      d.year == date.year,
+                );
+
+                if (!exists) {
+                  selectedEventDates.add(date);
+                }
+              });
+            },
+          ),
+        );
+      },
+    );
+
+    if (result != null) {
+      setState(() {
+        selectedEventDates = List<DateTime>.from(result);
+      });
+    }
+  }
 
   IconData _getIconForMode(String mode) {
     switch (mode) {
@@ -186,7 +226,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
       paymentHistory: [newPayment, ...widget.sale.paymentHistory],
       discount: widget.sale.discount,
       item: widget.sale.item,
-      eventDates: widget.sale.eventDates,
+      eventDates: selectedEventDates,
     );
 
     for (int i = 0; i < sales.length; i++) {
@@ -473,6 +513,111 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                   icon: Icons.shopping_bag_outlined,
                                   enabled: false,
                                 ),
+                              ],
+                            ),
+                          ),
+
+                          SizedBox(height: 10 * scale),
+
+                          Container(
+                            width: double.infinity,
+                            padding: EdgeInsets.all(cardPadding),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.05),
+                                  blurRadius: 16,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "Photography Schedule",
+                                  style: TextStyle(
+                                    fontSize: 14 * scale,
+                                    fontWeight: FontWeight.w600,
+                                    color: const Color(0xFF1E40AF),
+                                  ),
+                                ),
+
+                                SizedBox(height: 12 * scale),
+
+                                InkWell(
+                                  onTap: _selectMultipleDates,
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Container(
+                                    width: double.infinity,
+                                    padding: const EdgeInsets.all(14),
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(
+                                        color: const Color(
+                                          0xFFE11D48,
+                                        ).withOpacity(0.2),
+                                      ),
+                                      color: const Color(
+                                        0xFFE11D48,
+                                      ).withOpacity(0.05),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        const Icon(
+                                          Icons.camera_alt_rounded,
+                                          color: Color(0xFFE11D48),
+                                        ),
+
+                                        const SizedBox(width: 10),
+
+                                        Expanded(
+                                          child: Text(
+                                            selectedEventDates.isEmpty
+                                                ? "Select Event Dates"
+                                                : "${selectedEventDates.length} Date(s) Selected",
+                                            style: TextStyle(
+                                              fontSize: 12 * scale,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ),
+
+                                        const Icon(Icons.edit_calendar_rounded),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+
+                                if (selectedEventDates.isNotEmpty) ...[
+                                  SizedBox(height: 12 * scale),
+
+                                  Wrap(
+                                    spacing: 6,
+                                    runSpacing: 6,
+                                    children:
+                                        selectedEventDates.map((date) {
+                                          return Chip(
+                                            label: Text(
+                                              DateFormat(
+                                                'dd MMM yyyy',
+                                              ).format(date),
+                                            ),
+                                            deleteIcon: const Icon(
+                                              Icons.close,
+                                              size: 18,
+                                            ),
+                                            onDeleted: () {
+                                              setState(() {
+                                                selectedEventDates.remove(date);
+                                              });
+                                            },
+                                          );
+                                        }).toList(),
+                                  ),
+                                ],
                               ],
                             ),
                           ),

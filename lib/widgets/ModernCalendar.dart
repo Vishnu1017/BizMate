@@ -8,10 +8,12 @@ class ModernCalendar extends StatefulWidget {
   final Function(DateTime) onDateSelected;
   final DateTime? startDate;
   final DateTime? endDate;
+  final List<DateTime> selectedDates;
 
   const ModernCalendar({
     super.key,
     this.selectedDate,
+    this.selectedDates = const [],
     required this.onDateSelected,
     this.startDate,
     this.endDate,
