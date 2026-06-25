@@ -49,6 +49,9 @@ class Sale extends HiveObject {
   @HiveField(13)
   List<DateTime>? eventDates;
 
+  @HiveField(14)
+  List<DateTime>? completedEventDates;
+
   Sale({
     required this.customerName,
     required this.amount,
@@ -64,10 +67,35 @@ class Sale extends HiveObject {
     this.paymentMode = 'Cash',
     this.deliveryStatusHistory,
     this.eventDates,
+    this.completedEventDates = const [],
   });
 
   // Safe getter for old data
   List<DateTime> get safeEventDates => eventDates ?? [];
+
+  List<DateTime> get safeCompletedEventDates => completedEventDates ?? [];
+
+  bool get isPhotographyScheduleCompleted {
+    if (safeEventDates.isEmpty) return false;
+
+    final today = DateTime.now();
+
+    return safeEventDates.every((date) {
+      final eventDate = DateTime(date.year, date.month, date.day, 23, 59, 59);
+
+      return eventDate.isBefore(today);
+    });
+  }
+
+  int get completedPhotographyCount {
+    final today = DateTime.now();
+
+    return safeEventDates.where((date) {
+      final eventDate = DateTime(date.year, date.month, date.day, 23, 59, 59);
+
+      return eventDate.isBefore(today);
+    }).length;
+  }
 
   List<Map<String, dynamic>> get parsedDeliveryHistory {
     if (deliveryStatusHistory == null) return [];

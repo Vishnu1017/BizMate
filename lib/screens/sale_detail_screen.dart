@@ -301,6 +301,12 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
         // adaptive text sizes
         final titleSize = 13.0 * scale;
         final subtitleSize = 9.0 * scale;
+        final completedCount = widget.sale.completedPhotographyCount;
+
+        final allCompleted = widget.sale.isPhotographyScheduleCompleted;
+
+        final scheduleColor =
+            allCompleted ? const Color(0xFF16A34A) : const Color(0xFFE11D48);
 
         return AbsorbPointer(
           absorbing: _isSaving,
@@ -523,12 +529,16 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                             width: double.infinity,
                             padding: EdgeInsets.all(cardPadding),
                             decoration: BoxDecoration(
-                              color: Colors.white,
+                              color: scheduleColor.withOpacity(0.08),
                               borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: scheduleColor.withOpacity(0.35),
+                                width: 1.3,
+                              ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.05),
-                                  blurRadius: 16,
+                                  color: scheduleColor.withOpacity(0.12),
+                                  blurRadius: 12,
                                   offset: const Offset(0, 4),
                                 ),
                               ],
@@ -536,74 +546,187 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
-                                  "Photography Schedule",
-                                  style: TextStyle(
-                                    fontSize: 14 * scale,
-                                    fontWeight: FontWeight.w600,
-                                    color: const Color(0xFF1E40AF),
-                                  ),
+                                Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(10),
+                                      decoration: BoxDecoration(
+                                        color: scheduleColor.withOpacity(0.12),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Icon(
+                                        Icons.camera_alt_rounded,
+                                        color: scheduleColor,
+                                        size: 22,
+                                      ),
+                                    ),
+
+                                    const SizedBox(width: 12),
+
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            "Photography Schedule",
+                                            style: TextStyle(
+                                              fontSize: 15 * scale,
+                                              fontWeight: FontWeight.bold,
+                                              color: scheduleColor,
+                                            ),
+                                          ),
+
+                                          const SizedBox(height: 2),
+
+                                          Text(
+                                            "${selectedEventDates.length} Shoot Date(s)",
+                                            style: TextStyle(
+                                              fontSize: 11 * scale,
+                                              color: Colors.grey.shade700,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 5,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: scheduleColor,
+                                        borderRadius: BorderRadius.circular(30),
+                                      ),
+                                      child: Text(
+                                        allCompleted
+                                            ? "COMPLETED"
+                                            : "$completedCount/${selectedEventDates.length}",
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 10,
+                                        ),
+                                      ),
+                                    ),
+
+                                    if (allCompleted) ...[
+                                      const SizedBox(width: 8),
+                                      const Icon(
+                                        Icons.verified_rounded,
+                                        color: Color(0xFF16A34A),
+                                        size: 22,
+                                      ),
+                                    ],
+                                  ],
                                 ),
 
-                                SizedBox(height: 12 * scale),
+                                const SizedBox(height: 18),
 
                                 InkWell(
+                                  borderRadius: BorderRadius.circular(14),
                                   onTap: _selectMultipleDates,
-                                  borderRadius: BorderRadius.circular(12),
                                   child: Container(
-                                    width: double.infinity,
-                                    padding: const EdgeInsets.all(14),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 14,
+                                    ),
                                     decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(12),
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(14),
                                       border: Border.all(
-                                        color: const Color(
-                                          0xFFE11D48,
-                                        ).withOpacity(0.2),
+                                        color: scheduleColor.withOpacity(0.25),
                                       ),
-                                      color: const Color(
-                                        0xFFE11D48,
-                                      ).withOpacity(0.05),
                                     ),
                                     child: Row(
                                       children: [
-                                        const Icon(
-                                          Icons.camera_alt_rounded,
-                                          color: Color(0xFFE11D48),
+                                        Icon(
+                                          Icons.edit_calendar_rounded,
+                                          color: scheduleColor,
                                         ),
 
-                                        const SizedBox(width: 10),
+                                        const SizedBox(width: 12),
 
                                         Expanded(
                                           child: Text(
                                             selectedEventDates.isEmpty
-                                                ? "Select Event Dates"
-                                                : "${selectedEventDates.length} Date(s) Selected",
+                                                ? "Select Photography Schedule"
+                                                : "Edit Photography Schedule",
                                             style: TextStyle(
-                                              fontSize: 12 * scale,
-                                              fontWeight: FontWeight.w500,
+                                              fontWeight: FontWeight.w600,
+                                              fontSize: 13 * scale,
                                             ),
                                           ),
                                         ),
 
-                                        const Icon(Icons.edit_calendar_rounded),
+                                        Icon(
+                                          Icons.arrow_forward_ios_rounded,
+                                          size: 16,
+                                          color: scheduleColor,
+                                        ),
                                       ],
                                     ),
                                   ),
                                 ),
 
                                 if (selectedEventDates.isNotEmpty) ...[
-                                  SizedBox(height: 12 * scale),
+                                  const SizedBox(height: 16),
 
                                   Wrap(
-                                    spacing: 6,
-                                    runSpacing: 6,
+                                    spacing: 8,
+                                    runSpacing: 8,
                                     children:
                                         selectedEventDates.map((date) {
+                                          final completed = DateTime(
+                                            date.year,
+                                            date.month,
+                                            date.day,
+                                            23,
+                                            59,
+                                            59,
+                                          ).isBefore(DateTime.now());
+
                                           return Chip(
+                                            avatar: Icon(
+                                              completed
+                                                  ? Icons.check_circle
+                                                  : Icons.camera_alt_rounded,
+                                              color:
+                                                  completed
+                                                      ? const Color(0xFF16A34A)
+                                                      : const Color(0xFFE11D48),
+                                              size: 18,
+                                            ),
+                                            backgroundColor:
+                                                completed
+                                                    ? const Color(
+                                                      0xFF16A34A,
+                                                    ).withOpacity(.12)
+                                                    : const Color(
+                                                      0xFFE11D48,
+                                                    ).withOpacity(.08),
+                                            side: BorderSide(
+                                              color:
+                                                  completed
+                                                      ? const Color(0xFF16A34A)
+                                                      : const Color(0xFFE11D48),
+                                            ),
                                             label: Text(
                                               DateFormat(
                                                 'dd MMM yyyy',
                                               ).format(date),
+                                              style: TextStyle(
+                                                color:
+                                                    completed
+                                                        ? const Color(
+                                                          0xFF16A34A,
+                                                        )
+                                                        : const Color(
+                                                          0xFFE11D48,
+                                                        ),
+                                                fontWeight: FontWeight.w600,
+                                              ),
                                             ),
                                             deleteIcon: const Icon(
                                               Icons.close,

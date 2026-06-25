@@ -365,6 +365,15 @@ class _HomePageState extends State<HomePage>
                       itemCount: sales.length,
                       itemBuilder: (context, index) {
                         final sale = sales[index];
+                        final completedCount = sale.completedPhotographyCount;
+
+                        final allCompleted =
+                            sale.isPhotographyScheduleCompleted;
+
+                        final scheduleColor =
+                            allCompleted
+                                ? const Color(0xFF16A34A) // GREEN
+                                : const Color(0xFFE11D48); // RED
                         if (sale == null) return SizedBox.shrink();
 
                         // Get the original index from the box to maintain invoice numbering
@@ -572,15 +581,15 @@ class _HomePageState extends State<HomePage>
                                             width: double.infinity,
                                             padding: EdgeInsets.all(10 * scale),
                                             decoration: BoxDecoration(
-                                              color: const Color(
-                                                0xFFE11D48,
-                                              ).withOpacity(0.05),
+                                              color: scheduleColor.withOpacity(
+                                                0.08,
+                                              ),
                                               borderRadius:
                                                   BorderRadius.circular(12),
                                               border: Border.all(
-                                                color: const Color(
-                                                  0xFFE11D48,
-                                                ).withOpacity(0.15),
+                                                color: scheduleColor
+                                                    .withOpacity(0.35),
+                                                width: 1.2,
                                               ),
                                             ),
                                             child: IntrinsicHeight(
@@ -591,9 +600,7 @@ class _HomePageState extends State<HomePage>
                                                   Container(
                                                     width: 3,
                                                     decoration: BoxDecoration(
-                                                      color: const Color(
-                                                        0xFFE11D48,
-                                                      ),
+                                                      color: scheduleColor,
                                                       borderRadius:
                                                           BorderRadius.circular(
                                                             20,
@@ -611,13 +618,14 @@ class _HomePageState extends State<HomePage>
                                                       children: [
                                                         Row(
                                                           children: [
-                                                            const Icon(
+                                                            Icon(
                                                               Icons
                                                                   .camera_alt_rounded,
                                                               size: 16,
-                                                              color: Color(
-                                                                0xFFE11D48,
-                                                              ),
+                                                              color: scheduleColor
+                                                                  .withOpacity(
+                                                                    0.75,
+                                                                  ),
                                                             ),
 
                                                             SizedBox(
@@ -635,8 +643,7 @@ class _HomePageState extends State<HomePage>
                                                                       FontWeight
                                                                           .w600,
                                                                   color:
-                                                                      Colors
-                                                                          .black87,
+                                                                      scheduleColor,
                                                                 ),
                                                               ),
                                                             ),
@@ -650,23 +657,21 @@ class _HomePageState extends State<HomePage>
                                                                   ),
                                                               decoration: BoxDecoration(
                                                                 color:
-                                                                    const Color(
-                                                                      0xFFE11D48,
-                                                                    ),
+                                                                    scheduleColor,
                                                                 borderRadius:
                                                                     BorderRadius.circular(
                                                                       20,
                                                                     ),
                                                               ),
                                                               child: Text(
-                                                                "${sale.safeEventDates.length}",
-                                                                style: TextStyle(
+                                                                allCompleted
+                                                                    ? "COMPLETED"
+                                                                    : "$completedCount/${sale.safeEventDates.length}",
+                                                                style: const TextStyle(
                                                                   color:
                                                                       Colors
                                                                           .white,
-                                                                  fontSize:
-                                                                      10 *
-                                                                      scale,
+                                                                  fontSize: 10,
                                                                   fontWeight:
                                                                       FontWeight
                                                                           .bold,
@@ -685,6 +690,18 @@ class _HomePageState extends State<HomePage>
                                                               sale.safeEventDates.map((
                                                                 date,
                                                               ) {
+                                                                final isCompleted =
+                                                                    DateTime(
+                                                                      date.year,
+                                                                      date.month,
+                                                                      date.day,
+                                                                      23,
+                                                                      59,
+                                                                      59,
+                                                                    ).isBefore(
+                                                                      DateTime.now(),
+                                                                    );
+
                                                                 return Padding(
                                                                   padding:
                                                                       EdgeInsets.only(
@@ -707,10 +724,15 @@ class _HomePageState extends State<HomePage>
                                                                             8,
                                                                         height:
                                                                             8,
-                                                                        decoration: const BoxDecoration(
-                                                                          color: Color(
-                                                                            0xFFE11D48,
-                                                                          ),
+                                                                        decoration: BoxDecoration(
+                                                                          color:
+                                                                              isCompleted
+                                                                                  ? const Color(
+                                                                                    0xFF16A34A,
+                                                                                  )
+                                                                                  : const Color(
+                                                                                    0xFFE11D48,
+                                                                                  ),
                                                                           shape:
                                                                               BoxShape.circle,
                                                                         ),
@@ -733,13 +755,30 @@ class _HomePageState extends State<HomePage>
                                                                             fontSize:
                                                                                 11 *
                                                                                 scale,
-                                                                            color:
-                                                                                Colors.grey.shade700,
                                                                             fontWeight:
                                                                                 FontWeight.w500,
+                                                                            color:
+                                                                                isCompleted
+                                                                                    ? Colors.green.shade700
+                                                                                    : Colors.grey.shade700,
+                                                                            decoration:
+                                                                                isCompleted
+                                                                                    ? TextDecoration.lineThrough
+                                                                                    : TextDecoration.none,
                                                                           ),
                                                                         ),
                                                                       ),
+
+                                                                      if (isCompleted)
+                                                                        const Icon(
+                                                                          Icons
+                                                                              .check_circle,
+                                                                          color: Color(
+                                                                            0xFF16A34A,
+                                                                          ),
+                                                                          size:
+                                                                              18,
+                                                                        ),
                                                                     ],
                                                                   ),
                                                                 );
