@@ -366,14 +366,29 @@ class _HomePageState extends State<HomePage>
                       itemBuilder: (context, index) {
                         final sale = sales[index];
                         final completedCount = sale.completedPhotographyCount;
+                        final totalCount = sale.safeEventDates.length;
 
-                        final allCompleted =
-                            sale.isPhotographyScheduleCompleted;
+                        final allCompleted = completedCount == totalCount;
+                        final noneCompleted = completedCount == 0;
+                        final partiallyCompleted =
+                            completedCount > 0 && completedCount < totalCount;
+
+                        const Color greenColor = Color(0xFF16A34A);
+                        const Color redColor = Color(0xFFE11D48);
+
+                        final List<Color> scheduleGradient =
+                            allCompleted
+                                ? [greenColor, greenColor]
+                                : noneCompleted
+                                ? [redColor, redColor]
+                                : [greenColor, redColor];
 
                         final scheduleColor =
                             allCompleted
-                                ? const Color(0xFF16A34A) // GREEN
-                                : const Color(0xFFE11D48); // RED
+                                ? greenColor
+                                : noneCompleted
+                                ? redColor
+                                : greenColor;
                         if (sale == null) return SizedBox.shrink();
 
                         // Get the original index from the box to maintain invoice numbering
@@ -578,18 +593,31 @@ class _HomePageState extends State<HomePage>
                                           SizedBox(height: 10 * scale),
 
                                           Container(
-                                            width: double.infinity,
-                                            padding: EdgeInsets.all(10 * scale),
+                                            width: double.infinity * scale,
+                                            padding: EdgeInsets.symmetric(
+                                              horizontal: 10 * scale,
+                                              vertical: 8 * scale,
+                                            ),
                                             decoration: BoxDecoration(
-                                              color: scheduleColor.withOpacity(
-                                                0.08,
+                                              gradient: LinearGradient(
+                                                begin: Alignment.centerLeft,
+                                                end: Alignment.centerRight,
+                                                colors: [
+                                                  scheduleGradient.first
+                                                      .withOpacity(0.12),
+                                                  scheduleGradient.last
+                                                      .withOpacity(0.12),
+                                                ],
                                               ),
                                               borderRadius:
                                                   BorderRadius.circular(12),
                                               border: Border.all(
-                                                color: scheduleColor
-                                                    .withOpacity(0.35),
                                                 width: 1.2,
+                                                color:
+                                                    partiallyCompleted
+                                                        ? Colors.orange.shade300
+                                                        : scheduleColor
+                                                            .withOpacity(0.35),
                                               ),
                                             ),
                                             child: IntrinsicHeight(
@@ -598,9 +626,17 @@ class _HomePageState extends State<HomePage>
                                                     CrossAxisAlignment.start,
                                                 children: [
                                                   Container(
-                                                    width: 3,
+                                                    width: 2.5 * scale,
                                                     decoration: BoxDecoration(
-                                                      color: scheduleColor,
+                                                      gradient: LinearGradient(
+                                                        begin:
+                                                            Alignment.topCenter,
+                                                        end:
+                                                            Alignment
+                                                                .bottomCenter,
+                                                        colors:
+                                                            scheduleGradient,
+                                                      ),
                                                       borderRadius:
                                                           BorderRadius.circular(
                                                             20,
@@ -608,7 +644,7 @@ class _HomePageState extends State<HomePage>
                                                     ),
                                                   ),
 
-                                                  SizedBox(width: 10 * scale),
+                                                  SizedBox(width: 8 * scale),
 
                                                   Expanded(
                                                     child: Column(
@@ -621,11 +657,13 @@ class _HomePageState extends State<HomePage>
                                                             Icon(
                                                               Icons
                                                                   .camera_alt_rounded,
-                                                              size: 16,
-                                                              color: scheduleColor
-                                                                  .withOpacity(
-                                                                    0.75,
-                                                                  ),
+                                                              size: 12 * scale,
+                                                              color:
+                                                                  partiallyCompleted
+                                                                      ? Colors
+                                                                          .orange
+                                                                          .shade700
+                                                                      : scheduleColor,
                                                             ),
 
                                                             SizedBox(
@@ -637,27 +675,37 @@ class _HomePageState extends State<HomePage>
                                                                 "Photography Schedule",
                                                                 style: TextStyle(
                                                                   fontSize:
-                                                                      12 *
+                                                                      10 *
                                                                       scale,
                                                                   fontWeight:
                                                                       FontWeight
                                                                           .w600,
                                                                   color:
-                                                                      scheduleColor,
+                                                                      partiallyCompleted
+                                                                          ? Colors
+                                                                              .orange
+                                                                              .shade700
+                                                                          : scheduleColor,
                                                                 ),
                                                               ),
                                                             ),
 
                                                             Container(
                                                               padding:
-                                                                  const EdgeInsets.symmetric(
+                                                                  EdgeInsets.symmetric(
                                                                     horizontal:
-                                                                        8,
-                                                                    vertical: 3,
+                                                                        8 *
+                                                                        scale,
+                                                                    vertical:
+                                                                        3 *
+                                                                        scale,
                                                                   ),
                                                               decoration: BoxDecoration(
-                                                                color:
-                                                                    scheduleColor,
+                                                                gradient:
+                                                                    LinearGradient(
+                                                                      colors:
+                                                                          scheduleGradient,
+                                                                    ),
                                                                 borderRadius:
                                                                     BorderRadius.circular(
                                                                       20,
@@ -666,12 +714,15 @@ class _HomePageState extends State<HomePage>
                                                               child: Text(
                                                                 allCompleted
                                                                     ? "COMPLETED"
-                                                                    : "$completedCount/${sale.safeEventDates.length}",
-                                                                style: const TextStyle(
+                                                                    : partiallyCompleted
+                                                                    ? "$completedCount/$totalCount"
+                                                                    : "PENDING",
+                                                                style: TextStyle(
                                                                   color:
                                                                       Colors
                                                                           .white,
-                                                                  fontSize: 10,
+                                                                  fontSize:
+                                                                      8 * scale,
                                                                   fontWeight:
                                                                       FontWeight
                                                                           .bold,
@@ -706,7 +757,7 @@ class _HomePageState extends State<HomePage>
                                                                   padding:
                                                                       EdgeInsets.only(
                                                                         bottom:
-                                                                            6 *
+                                                                            2 *
                                                                             scale,
                                                                       ),
                                                                   child: Row(
@@ -717,13 +768,18 @@ class _HomePageState extends State<HomePage>
                                                                       Container(
                                                                         margin: EdgeInsets.only(
                                                                           top:
-                                                                              4 *
+                                                                              5 *
+                                                                              scale,
+                                                                          left:
+                                                                              3 *
                                                                               scale,
                                                                         ),
                                                                         width:
-                                                                            8,
+                                                                            6 *
+                                                                            scale,
                                                                         height:
-                                                                            8,
+                                                                            6 *
+                                                                            scale,
                                                                         decoration: BoxDecoration(
                                                                           color:
                                                                               isCompleted
@@ -753,7 +809,7 @@ class _HomePageState extends State<HomePage>
                                                                           ),
                                                                           style: TextStyle(
                                                                             fontSize:
-                                                                                11 *
+                                                                                10 *
                                                                                 scale,
                                                                             fontWeight:
                                                                                 FontWeight.w500,
@@ -770,14 +826,15 @@ class _HomePageState extends State<HomePage>
                                                                       ),
 
                                                                       if (isCompleted)
-                                                                        const Icon(
+                                                                        Icon(
                                                                           Icons
                                                                               .check_circle,
                                                                           color: Color(
                                                                             0xFF16A34A,
                                                                           ),
                                                                           size:
-                                                                              18,
+                                                                              14 *
+                                                                              scale,
                                                                         ),
                                                                     ],
                                                                   ),

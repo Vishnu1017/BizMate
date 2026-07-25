@@ -302,11 +302,29 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
         final titleSize = 13.0 * scale;
         final subtitleSize = 9.0 * scale;
         final completedCount = widget.sale.completedPhotographyCount;
+        final totalCount = selectedEventDates.length;
 
-        final allCompleted = widget.sale.isPhotographyScheduleCompleted;
+        final allCompleted = completedCount == totalCount && totalCount > 0;
+        final noneCompleted = completedCount == 0;
+        final partiallyCompleted =
+            completedCount > 0 && completedCount < totalCount;
+
+        const Color greenColor = Color(0xFF16A34A);
+        const Color redColor = Color(0xFFE11D48);
+
+        final List<Color> scheduleGradient =
+            allCompleted
+                ? [greenColor, greenColor]
+                : noneCompleted
+                ? [redColor, redColor]
+                : [greenColor, redColor];
 
         final scheduleColor =
-            allCompleted ? const Color(0xFF16A34A) : const Color(0xFFE11D48);
+            allCompleted
+                ? greenColor
+                : noneCompleted
+                ? redColor
+                : Colors.orange;
 
         return AbsorbPointer(
           absorbing: _isSaving,
@@ -529,15 +547,28 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                             width: double.infinity,
                             padding: EdgeInsets.all(cardPadding),
                             decoration: BoxDecoration(
-                              color: scheduleColor.withOpacity(0.08),
+                              gradient: LinearGradient(
+                                begin: Alignment.centerLeft,
+                                end: Alignment.centerRight,
+                                colors: [
+                                  scheduleGradient.first.withOpacity(.12),
+                                  scheduleGradient.last.withOpacity(.12),
+                                ],
+                              ),
                               borderRadius: BorderRadius.circular(16),
                               border: Border.all(
-                                color: scheduleColor.withOpacity(0.35),
+                                color:
+                                    partiallyCompleted
+                                        ? Colors.orange.shade300
+                                        : scheduleColor.withOpacity(.35),
                                 width: 1.3,
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: scheduleColor.withOpacity(0.12),
+                                  color: (partiallyCompleted
+                                          ? Colors.orange
+                                          : scheduleColor)
+                                      .withOpacity(.12),
                                   blurRadius: 12,
                                   offset: const Offset(0, 4),
                                 ),
@@ -551,12 +582,14 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                     Container(
                                       padding: const EdgeInsets.all(10),
                                       decoration: BoxDecoration(
-                                        color: scheduleColor.withOpacity(0.12),
+                                        gradient: LinearGradient(
+                                          colors: scheduleGradient,
+                                        ),
                                         borderRadius: BorderRadius.circular(12),
                                       ),
                                       child: Icon(
                                         Icons.camera_alt_rounded,
-                                        color: scheduleColor,
+                                        color: Colors.white,
                                         size: 22,
                                       ),
                                     ),
@@ -573,7 +606,10 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                             style: TextStyle(
                                               fontSize: 15 * scale,
                                               fontWeight: FontWeight.bold,
-                                              color: scheduleColor,
+                                              color:
+                                                  partiallyCompleted
+                                                      ? Colors.orange.shade700
+                                                      : scheduleColor,
                                             ),
                                           ),
 
@@ -596,13 +632,17 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                         vertical: 5,
                                       ),
                                       decoration: BoxDecoration(
-                                        color: scheduleColor,
+                                        gradient: LinearGradient(
+                                          colors: scheduleGradient,
+                                        ),
                                         borderRadius: BorderRadius.circular(30),
                                       ),
                                       child: Text(
                                         allCompleted
                                             ? "COMPLETED"
-                                            : "$completedCount/${selectedEventDates.length}",
+                                            : partiallyCompleted
+                                            ? "$completedCount/$totalCount"
+                                            : "PENDING",
                                         style: const TextStyle(
                                           color: Colors.white,
                                           fontWeight: FontWeight.bold,
@@ -636,14 +676,22 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                       color: Colors.white,
                                       borderRadius: BorderRadius.circular(14),
                                       border: Border.all(
-                                        color: scheduleColor.withOpacity(0.25),
+                                        color:
+                                            partiallyCompleted
+                                                ? Colors.orange.shade300
+                                                : scheduleColor.withOpacity(
+                                                  .25,
+                                                ),
                                       ),
                                     ),
                                     child: Row(
                                       children: [
                                         Icon(
                                           Icons.edit_calendar_rounded,
-                                          color: scheduleColor,
+                                          color:
+                                              partiallyCompleted
+                                                  ? Colors.orange.shade700
+                                                  : scheduleColor,
                                         ),
 
                                         const SizedBox(width: 12),
