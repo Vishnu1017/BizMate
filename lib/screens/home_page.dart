@@ -597,20 +597,20 @@ class _HomePageState extends State<HomePage>
                                             ),
                                             decoration: BoxDecoration(
                                               gradient: LinearGradient(
-                                                begin: Alignment.centerLeft,
-                                                end: Alignment.centerRight,
+                                                begin: Alignment.topLeft,
+                                                end: Alignment.bottomRight,
                                                 colors: [
                                                   const Color(
-                                                    0xFF16A34A,
+                                                    0xFF4ADE80,
                                                   ).withOpacity(0.25),
                                                   const Color(
-                                                    0xFF16A34A,
-                                                  ).withOpacity(0.25),
+                                                    0xFF22C55E,
+                                                  ).withOpacity(0.21),
                                                   const Color(
-                                                    0xFFE11D48,
-                                                  ).withOpacity(0.25),
+                                                    0xFFFB7185,
+                                                  ).withOpacity(0.21),
                                                   const Color(
-                                                    0xFFE11D48,
+                                                    0xFFF43F5E,
                                                   ).withOpacity(0.25),
                                                 ],
                                                 stops: [
@@ -621,15 +621,25 @@ class _HomePageState extends State<HomePage>
                                                 ],
                                               ),
                                               borderRadius:
-                                                  BorderRadius.circular(12),
+                                                  BorderRadius.circular(
+                                                    12 * scale,
+                                                  ),
                                               border: Border.all(
+                                                color: Colors.white.withOpacity(
+                                                  0.18,
+                                                ),
                                                 width: 1.2,
-                                                color:
-                                                    partiallyCompleted
-                                                        ? Colors.orange.shade300
-                                                        : scheduleColor
-                                                            .withOpacity(0.35),
                                               ),
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: const Color(
+                                                    0xFF16A34A,
+                                                  ).withOpacity(0.12),
+                                                  blurRadius: 14,
+                                                  spreadRadius: 1,
+                                                  offset: const Offset(0, 6),
+                                                ),
+                                              ],
                                             ),
                                             child: IntrinsicHeight(
                                               child: Row(
@@ -641,23 +651,23 @@ class _HomePageState extends State<HomePage>
                                                     decoration: BoxDecoration(
                                                       gradient: LinearGradient(
                                                         begin:
-                                                            Alignment.topCenter,
+                                                            Alignment.topLeft,
                                                         end:
                                                             Alignment
-                                                                .bottomCenter,
+                                                                .bottomRight,
                                                         colors: [
                                                           const Color(
-                                                            0xFF16A34A,
-                                                          ).withOpacity(0.75),
+                                                            0xFF34D399,
+                                                          ).withOpacity(0.85),
                                                           const Color(
                                                             0xFF16A34A,
-                                                          ).withOpacity(0.75),
+                                                          ).withOpacity(0.85),
+                                                          const Color(
+                                                            0xFFFB7185,
+                                                          ).withOpacity(0.85),
                                                           const Color(
                                                             0xFFE11D48,
-                                                          ).withOpacity(0.75),
-                                                          const Color(
-                                                            0xFFE11D48,
-                                                          ).withOpacity(0.75),
+                                                          ).withOpacity(0.85),
                                                         ],
                                                         stops: [
                                                           0.0,
@@ -668,8 +678,26 @@ class _HomePageState extends State<HomePage>
                                                       ),
                                                       borderRadius:
                                                           BorderRadius.circular(
-                                                            20,
+                                                            22,
                                                           ),
+                                                      border: Border.all(
+                                                        color: Colors.white
+                                                            .withOpacity(0.18),
+                                                        width: 1.2,
+                                                      ),
+                                                      boxShadow: [
+                                                        BoxShadow(
+                                                          color: const Color(
+                                                            0xFF16A34A,
+                                                          ).withOpacity(0.12),
+                                                          blurRadius: 14,
+                                                          spreadRadius: 1,
+                                                          offset: const Offset(
+                                                            0,
+                                                            6,
+                                                          ),
+                                                        ),
+                                                      ],
                                                     ),
                                                   ),
 
@@ -729,7 +757,52 @@ class _HomePageState extends State<HomePage>
                                                                         3 *
                                                                         scale,
                                                                   ),
-
+                                                              decoration: BoxDecoration(
+                                                                gradient: LinearGradient(
+                                                                  colors: [
+                                                                    Colors.white
+                                                                        .withOpacity(
+                                                                          0.2,
+                                                                        ),
+                                                                    Colors.white
+                                                                        .withOpacity(
+                                                                          0.1,
+                                                                        ),
+                                                                  ],
+                                                                ),
+                                                                borderRadius:
+                                                                    BorderRadius.circular(
+                                                                      12,
+                                                                    ),
+                                                                border: Border.all(
+                                                                  color:
+                                                                      allCompleted
+                                                                          ? Colors.green.withOpacity(
+                                                                            0.5,
+                                                                          )
+                                                                          : partiallyCompleted
+                                                                          ? Colors.orange.withOpacity(
+                                                                            0.5,
+                                                                          )
+                                                                          : Colors.red.withOpacity(
+                                                                            0.5,
+                                                                          ),
+                                                                  width: 1.2,
+                                                                ),
+                                                                boxShadow: [
+                                                                  BoxShadow(
+                                                                    color: Colors
+                                                                        .white
+                                                                        .withOpacity(
+                                                                          0.08,
+                                                                        ),
+                                                                    blurRadius:
+                                                                        6,
+                                                                    spreadRadius:
+                                                                        0,
+                                                                  ),
+                                                                ],
+                                                              ),
                                                               child: Text(
                                                                 allCompleted
                                                                     ? "COMPLETED"
@@ -738,8 +811,17 @@ class _HomePageState extends State<HomePage>
                                                                     : "PENDING",
                                                                 style: TextStyle(
                                                                   color:
-                                                                      Colors
-                                                                          .white,
+                                                                      allCompleted
+                                                                          ? Colors
+                                                                              .green
+                                                                              .shade300
+                                                                          : partiallyCompleted
+                                                                          ? Colors
+                                                                              .orange
+                                                                              .shade300
+                                                                          : Colors
+                                                                              .red
+                                                                              .shade300,
                                                                   fontSize:
                                                                       8 * scale,
                                                                   fontWeight:
