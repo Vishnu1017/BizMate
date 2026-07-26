@@ -365,30 +365,27 @@ class _HomePageState extends State<HomePage>
                       itemCount: sales.length,
                       itemBuilder: (context, index) {
                         final sale = sales[index];
+                        const Color greenColor = Color(0xFF16A34A);
+                        const Color redColor = Color(0xFFE11D48);
+
                         final completedCount = sale.completedPhotographyCount;
                         final totalCount = sale.safeEventDates.length;
 
-                        final allCompleted = completedCount == totalCount;
+                        final allCompleted =
+                            totalCount > 0 && completedCount == totalCount;
                         final noneCompleted = completedCount == 0;
                         final partiallyCompleted =
                             completedCount > 0 && completedCount < totalCount;
 
-                        const Color greenColor = Color(0xFF16A34A);
-                        const Color redColor = Color(0xFFE11D48);
-
-                        final List<Color> scheduleGradient =
-                            allCompleted
-                                ? [greenColor, greenColor]
-                                : noneCompleted
-                                ? [redColor, redColor]
-                                : [greenColor, redColor];
+                        final double progress =
+                            totalCount == 0 ? 0 : completedCount / totalCount;
 
                         final scheduleColor =
                             allCompleted
                                 ? greenColor
                                 : noneCompleted
                                 ? redColor
-                                : greenColor;
+                                : Colors.orange;
                         if (sale == null) return SizedBox.shrink();
 
                         // Get the original index from the box to maintain invoice numbering
@@ -603,10 +600,24 @@ class _HomePageState extends State<HomePage>
                                                 begin: Alignment.centerLeft,
                                                 end: Alignment.centerRight,
                                                 colors: [
-                                                  scheduleGradient.first
-                                                      .withOpacity(0.12),
-                                                  scheduleGradient.last
-                                                      .withOpacity(0.12),
+                                                  const Color(
+                                                    0xFF16A34A,
+                                                  ).withOpacity(0.25),
+                                                  const Color(
+                                                    0xFF16A34A,
+                                                  ).withOpacity(0.25),
+                                                  const Color(
+                                                    0xFFE11D48,
+                                                  ).withOpacity(0.25),
+                                                  const Color(
+                                                    0xFFE11D48,
+                                                  ).withOpacity(0.25),
+                                                ],
+                                                stops: [
+                                                  0.0,
+                                                  progress,
+                                                  progress,
+                                                  1.0,
                                                 ],
                                               ),
                                               borderRadius:
@@ -634,8 +645,26 @@ class _HomePageState extends State<HomePage>
                                                         end:
                                                             Alignment
                                                                 .bottomCenter,
-                                                        colors:
-                                                            scheduleGradient,
+                                                        colors: [
+                                                          const Color(
+                                                            0xFF16A34A,
+                                                          ).withOpacity(0.75),
+                                                          const Color(
+                                                            0xFF16A34A,
+                                                          ).withOpacity(0.75),
+                                                          const Color(
+                                                            0xFFE11D48,
+                                                          ).withOpacity(0.75),
+                                                          const Color(
+                                                            0xFFE11D48,
+                                                          ).withOpacity(0.75),
+                                                        ],
+                                                        stops: [
+                                                          0.0,
+                                                          progress,
+                                                          progress,
+                                                          1.0,
+                                                        ],
                                                       ),
                                                       borderRadius:
                                                           BorderRadius.circular(
@@ -700,17 +729,7 @@ class _HomePageState extends State<HomePage>
                                                                         3 *
                                                                         scale,
                                                                   ),
-                                                              decoration: BoxDecoration(
-                                                                gradient:
-                                                                    LinearGradient(
-                                                                      colors:
-                                                                          scheduleGradient,
-                                                                    ),
-                                                                borderRadius:
-                                                                    BorderRadius.circular(
-                                                                      20,
-                                                                    ),
-                                                              ),
+
                                                               child: Text(
                                                                 allCompleted
                                                                     ? "COMPLETED"
