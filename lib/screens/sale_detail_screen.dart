@@ -691,37 +691,34 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                         ],
                                       ),
                                     ),
-                                    // Percentage Ring
+                                    // Gradient Progress Ring
                                     SizedBox(
                                       width: 36 * scale,
                                       height: 36 * scale,
                                       child: Stack(
                                         alignment: Alignment.center,
                                         children: [
-                                          SizedBox(
-                                            width: 36 * scale,
-                                            height: 36 * scale,
-                                            child: CircularProgressIndicator(
-                                              value:
-                                                  totalCount > 0
-                                                      ? completedCount /
-                                                          totalCount
-                                                      : 0,
-                                              strokeWidth: 4,
-                                              backgroundColor:
-                                                  Colors.grey.shade100,
-                                              valueColor: AlwaysStoppedAnimation<
-                                                Color
-                                              >(
-                                                totalCount > 0 &&
-                                                        completedCount /
-                                                                totalCount ==
-                                                            1
-                                                    ? const Color(0xFF10B981)
-                                                    : const Color(0xFFEF4444),
-                                              ),
-                                            ),
+                                          // Gradient circular progress
+                                          CustomPaint(
+                                            painter:
+                                                GradientCircularProgressPainter(
+                                                  value:
+                                                      totalCount > 0
+                                                          ? completedCount /
+                                                              totalCount
+                                                          : 0,
+                                                  strokeWidth: 4,
+                                                  gradient: getProgressGradient(
+                                                    totalCount > 0
+                                                        ? (completedCount /
+                                                                totalCount) *
+                                                            100
+                                                        : 0,
+                                                  ),
+                                                ),
+                                            size: Size(36 * scale, 36 * scale),
                                           ),
+                                          // Percentage text
                                           Text(
                                             totalCount > 0
                                                 ? "${((completedCount / totalCount) * 100).toStringAsFixed(0)}%"
@@ -737,9 +734,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                     ),
                                   ],
                                 ),
-
                                 SizedBox(height: 10 * scale),
-
                                 // --- Stats Row ---
                                 Row(
                                   children: [
@@ -773,9 +768,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                     ),
                                   ],
                                 ),
-
                                 SizedBox(height: 10 * scale),
-
                                 InkWell(
                                   borderRadius: BorderRadius.circular(16),
                                   onTap: _selectMultipleDates,
@@ -899,7 +892,6 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                     ),
                                   ),
                                 ),
-
                                 // --- Date Chips with Modern Design ---
                                 if (selectedEventDates.isNotEmpty) ...[
                                   SizedBox(height: 10 * scale),
@@ -908,7 +900,8 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                     runSpacing: 8 * scale,
                                     children:
                                         selectedEventDates.map((date) {
-                                          final completed = DateTime(
+                                          // Check if date is completed (past)
+                                          final isCompleted = DateTime(
                                             date.year,
                                             date.month,
                                             date.day,
@@ -917,11 +910,16 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                             59,
                                           ).isBefore(DateTime.now());
 
+                                          // Check if date is today
                                           final isToday =
                                               date.day == DateTime.now().day &&
                                               date.month ==
                                                   DateTime.now().month &&
                                               date.year == DateTime.now().year;
+
+                                          // Determine if date is pending (not completed and not today)
+                                          final isPending =
+                                              !isCompleted && !isToday;
 
                                           return Container(
                                             child: Chip(
@@ -935,7 +933,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                                 decoration: BoxDecoration(
                                                   gradient: LinearGradient(
                                                     colors:
-                                                        completed
+                                                        isCompleted
                                                             ? [
                                                               const Color(
                                                                 0xFF10B981,
@@ -960,13 +958,13 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                                               const Color(
                                                                 0xFFF87171,
                                                               ),
-                                                            ],
+                                                            ], // Red for pending
                                                   ),
                                                   shape: BoxShape.circle,
                                                   boxShadow: [
                                                     BoxShadow(
                                                       color:
-                                                          completed
+                                                          isCompleted
                                                               ? const Color(
                                                                 0xFF10B981,
                                                               ).withOpacity(0.3)
@@ -985,7 +983,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                                   ],
                                                 ),
                                                 child: Icon(
-                                                  completed
+                                                  isCompleted
                                                       ? Icons.check_rounded
                                                       : isToday
                                                       ? Icons.today_rounded
@@ -997,7 +995,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                               backgroundColor: Colors.white,
                                               side: BorderSide(
                                                 color:
-                                                    completed
+                                                    isCompleted
                                                         ? const Color(
                                                           0xFF10B981,
                                                         ).withOpacity(0.3)
@@ -1007,12 +1005,14 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                                         ).withOpacity(0.3)
                                                         : const Color(
                                                           0xFFEF4444,
-                                                        ).withOpacity(0.2),
+                                                        ).withOpacity(
+                                                          0.2,
+                                                        ), // Red border for pending
                                                 width: 1.5,
                                               ),
                                               elevation: 2,
                                               shadowColor:
-                                                  completed
+                                                  isCompleted
                                                       ? const Color(
                                                         0xFF10B981,
                                                       ).withOpacity(0.1)
@@ -1040,7 +1040,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                                       letterSpacing: -0.3,
                                                     ),
                                                   ),
-                                                  if (completed) ...[
+                                                  if (isCompleted) ...[
                                                     const SizedBox(width: 6),
                                                     Container(
                                                       padding:
@@ -1079,7 +1079,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                                     ),
                                                   ],
                                                   if (isToday &&
-                                                      !completed) ...[
+                                                      !isCompleted) ...[
                                                     const SizedBox(width: 6),
                                                     Container(
                                                       padding:
@@ -1108,6 +1108,44 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                                         style: TextStyle(
                                                           color: const Color(
                                                             0xFF92400E,
+                                                          ),
+                                                          fontSize: 6 * scale,
+                                                          fontWeight:
+                                                              FontWeight.w800,
+                                                          letterSpacing: 0.5,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                  if (isPending) ...[
+                                                    const SizedBox(width: 6),
+                                                    Container(
+                                                      padding:
+                                                          EdgeInsets.symmetric(
+                                                            horizontal:
+                                                                4 * scale,
+                                                            vertical: 2 * scale,
+                                                          ),
+                                                      decoration: BoxDecoration(
+                                                        color: const Color(
+                                                          0xFFEF4444,
+                                                        ).withOpacity(0.1),
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                              4,
+                                                            ),
+                                                        border: Border.all(
+                                                          color: const Color(
+                                                            0xFFEF4444,
+                                                          ).withOpacity(0.15),
+                                                          width: 0.5,
+                                                        ),
+                                                      ),
+                                                      child: Text(
+                                                        "PENDING",
+                                                        style: TextStyle(
+                                                          color: const Color(
+                                                            0xFFDC2626,
                                                           ),
                                                           fontSize: 6 * scale,
                                                           fontWeight:
@@ -1149,7 +1187,6 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                         }).toList(),
                                   ),
                                 ],
-
                                 // --- Modern Empty State ---
                                 if (selectedEventDates.isEmpty) ...[
                                   SizedBox(height: 10 * scale),
@@ -1757,4 +1794,69 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
       ),
     );
   }
+}
+
+// Add this helper function at the top of your file
+LinearGradient getProgressGradient(double percentage) {
+  if (percentage <= 20) {
+    return LinearGradient(colors: [Color(0xFFE53935), Color(0xFFD32F2F)]);
+  } else if (percentage <= 50) {
+    return LinearGradient(colors: [Color(0xFFE53935), Color(0xFFFFA726)]);
+  } else if (percentage <= 75) {
+    return LinearGradient(
+      colors: [Color(0xFFFFA726), Color(0xFFFFEB3B), Color(0xFF66BB6A)],
+    );
+  } else {
+    return LinearGradient(colors: [Color(0xFF66BB6A), Color(0xFF2E7D32)]);
+  }
+}
+
+// Custom painter for gradient circular progress
+class GradientCircularProgressPainter extends CustomPainter {
+  final double value;
+  final double strokeWidth;
+  final LinearGradient gradient;
+
+  GradientCircularProgressPainter({
+    required this.value,
+    required this.strokeWidth,
+    required this.gradient,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = size.width / 2 - strokeWidth / 2;
+
+    // Draw background
+    final backgroundPaint =
+        Paint()
+          ..color = Colors.grey.shade100
+          ..strokeWidth = strokeWidth
+          ..style = PaintingStyle.stroke
+          ..strokeCap = StrokeCap.round;
+
+    canvas.drawCircle(center, radius, backgroundPaint);
+
+    // Draw gradient progress
+    final rect = Rect.fromCircle(center: center, radius: radius);
+    final paint =
+        Paint()
+          ..shader = gradient.createShader(rect)
+          ..strokeWidth = strokeWidth
+          ..style = PaintingStyle.stroke
+          ..strokeCap = StrokeCap.round;
+
+    final sweepAngle = 2 * 3.14159 * (value.clamp(0.0, 1.0));
+    canvas.drawArc(
+      Rect.fromCircle(center: center, radius: radius),
+      -3.14159 / 2,
+      sweepAngle,
+      false,
+      paint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }

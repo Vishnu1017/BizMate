@@ -1367,59 +1367,70 @@ class _HomePageState extends State<HomePage>
                                     ),
                                   ),
                                   if (!isVerySmallScreen) ...[
-                                    // SaleOptionsMenu with proper user data
-                                    _isUserDataLoaded
-                                        ? SaleOptionsMenu(
-                                          sale: sale,
-                                          originalIndex: originalIndex,
-                                          box: box,
-                                          isSmallScreen: isSmallScreen,
-                                          invoiceNumber:
-                                              invoiceNumber.toString(),
-                                          currentUserName: _currentUserName,
-                                          currentUserPhone: _currentUserPhone,
-                                          currentUserEmail: _currentUserEmail,
-                                          parentContext: context,
-                                        )
-                                        : SizedBox(
-                                          width: isSmallScreen ? 20 : 24,
-                                          child: Center(
-                                            child: SizedBox(
-                                              width: 16,
-                                              height: 16,
-                                              child: CircularProgressIndicator(
-                                                strokeWidth: 2,
+                                    // SaleOptionsMenu with proper user data - compact
+                                    SizedBox(
+                                      width: 30, // Minimal width for 3-dot menu
+                                      child:
+                                          _isUserDataLoaded
+                                              ? SaleOptionsMenu(
+                                                sale: sale,
+                                                originalIndex: originalIndex,
+                                                box: box,
+                                                isSmallScreen: isSmallScreen,
+                                                invoiceNumber:
+                                                    invoiceNumber.toString(),
+                                                currentUserName:
+                                                    _currentUserName,
+                                                currentUserPhone:
+                                                    _currentUserPhone,
+                                                currentUserEmail:
+                                                    _currentUserEmail,
+                                                parentContext: context,
+                                              )
+                                              : Center(
+                                                child: SizedBox(
+                                                  width: 14,
+                                                  height: 14,
+                                                  child:
+                                                      CircularProgressIndicator(
+                                                        strokeWidth: 2,
+                                                      ),
+                                                ),
                                               ),
-                                            ),
-                                          ),
-                                        ),
+                                    ),
                                   ] else ...[
-                                    // For very small screens
-                                    _isUserDataLoaded
-                                        ? SaleOptionsMenu(
-                                          sale: sale,
-                                          originalIndex: originalIndex,
-                                          box: box,
-                                          isSmallScreen: true,
-                                          invoiceNumber:
-                                              invoiceNumber.toString(),
-                                          currentUserName: _currentUserName,
-                                          currentUserPhone: _currentUserPhone,
-                                          currentUserEmail: _currentUserEmail,
-                                          parentContext: context,
-                                        )
-                                        : SizedBox(
-                                          width: 16,
-                                          child: Center(
-                                            child: SizedBox(
-                                              width: 12,
-                                              height: 12,
-                                              child: CircularProgressIndicator(
-                                                strokeWidth: 1.5,
+                                    // For very small screens - ultra compact
+                                    SizedBox(
+                                      width:
+                                          24, // Minimal width for small screens
+                                      child:
+                                          _isUserDataLoaded
+                                              ? SaleOptionsMenu(
+                                                sale: sale,
+                                                originalIndex: originalIndex,
+                                                box: box,
+                                                isSmallScreen: true,
+                                                invoiceNumber:
+                                                    invoiceNumber.toString(),
+                                                currentUserName:
+                                                    _currentUserName,
+                                                currentUserPhone:
+                                                    _currentUserPhone,
+                                                currentUserEmail:
+                                                    _currentUserEmail,
+                                                parentContext: context,
+                                              )
+                                              : Center(
+                                                child: SizedBox(
+                                                  width: 10,
+                                                  height: 10,
+                                                  child:
+                                                      CircularProgressIndicator(
+                                                        strokeWidth: 1.5,
+                                                      ),
+                                                ),
                                               ),
-                                            ),
-                                          ),
-                                        ),
+                                    ),
                                   ],
                                 ],
                               ),

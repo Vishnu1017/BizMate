@@ -23,12 +23,21 @@ class ModernCalendar extends StatefulWidget {
   State<ModernCalendar> createState() => _ModernCalendarState();
 }
 
-class _ModernCalendarState extends State<ModernCalendar> {
+class _ModernCalendarState extends State<ModernCalendar>
+    with SingleTickerProviderStateMixin {
   late DateTime _currentMonth;
   late DateTime _selectedDate;
   double scale = 1.0;
   bool _hasUserSelectedDate = false;
-  int _monthDirection = 0;
+
+  late AnimationController _swipeController;
+  late Animation<Offset> _slideAnimation;
+  late Animation<double> _fadeAnimation;
+  late Animation<double> _scaleAnimation;
+
+  double _dragOffset = 0.0;
+  bool _isDragging = false;
+  int _swipeDirection = 0;
 
   final List<String> _weekdays = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
 
@@ -37,20 +46,70 @@ class _ModernCalendarState extends State<ModernCalendar> {
     super.initState();
     _selectedDate = widget.selectedDate ?? DateTime.now();
     _currentMonth = DateTime(_selectedDate.year, _selectedDate.month);
+
+    _swipeController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 400),
+    );
+
+    _slideAnimation = Tween<Offset>(
+      begin: Offset.zero,
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(parent: _swipeController, curve: Curves.easeOutCubic),
+    );
+
+    _fadeAnimation = Tween<double>(begin: 1.0, end: 1.0).animate(
+      CurvedAnimation(parent: _swipeController, curve: Curves.easeOutCubic),
+    );
+
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 1.0).animate(
+      CurvedAnimation(parent: _swipeController, curve: Curves.easeOutCubic),
+    );
+  }
+
+  @override
+  void dispose() {
+    _swipeController.dispose();
+    super.dispose();
   }
 
   void _previousMonth() {
     setState(() {
-      _monthDirection = -1;
+      _swipeDirection = -1;
       _currentMonth = DateTime(_currentMonth.year, _currentMonth.month - 1);
+      _triggerSwipeAnimation();
     });
   }
 
   void _nextMonth() {
     setState(() {
-      _monthDirection = 1;
+      _swipeDirection = 1;
       _currentMonth = DateTime(_currentMonth.year, _currentMonth.month + 1);
+      _triggerSwipeAnimation();
     });
+  }
+
+  void _triggerSwipeAnimation() {
+    _swipeController.reset();
+
+    final offsetX = _swipeDirection * 0.4;
+    _slideAnimation = Tween<Offset>(
+      begin: Offset(offsetX, 0),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(parent: _swipeController, curve: Curves.easeOutCubic),
+    );
+
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _swipeController, curve: Curves.easeOutCubic),
+    );
+
+    _scaleAnimation = Tween<double>(begin: 0.92, end: 1.0).animate(
+      CurvedAnimation(parent: _swipeController, curve: Curves.easeOutCubic),
+    );
+
+    _swipeController.forward();
   }
 
   List<DateTime> _getDaysInMonth() {
@@ -103,14 +162,29 @@ class _ModernCalendarState extends State<ModernCalendar> {
     final width = MediaQuery.of(context).size.width;
 
     return GestureDetector(
+      onHorizontalDragStart: (details) {
+        _isDragging = true;
+        _dragOffset = 0.0;
+      },
+      onHorizontalDragUpdate: (details) {
+        if (!_isDragging) return;
+        _dragOffset += details.delta.dx;
+        setState(() {});
+      },
       onHorizontalDragEnd: (details) {
-        if (details.primaryVelocity == null) return;
-
-        if (details.primaryVelocity! < 0) {
-          _nextMonth();
-        } else if (details.primaryVelocity! > 0) {
-          _previousMonth();
+        _isDragging = false;
+        if (_dragOffset.abs() > 50) {
+          if (_dragOffset > 0) {
+            _previousMonth();
+          } else {
+            _nextMonth();
+          }
+        } else {
+          setState(() {
+            _dragOffset = 0.0;
+          });
         }
+        _dragOffset = 0.0;
       },
       child: ClipRRect(
         borderRadius: BorderRadius.circular(22),
@@ -134,41 +208,37 @@ class _ModernCalendarState extends State<ModernCalendar> {
               children: [
                 _buildHeader(width),
                 _buildWeekdays(width),
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 400),
-                  transitionBuilder: (child, animation) {
-                    final curved = CurvedAnimation(
-                      parent: animation,
-                      curve: Curves.easeInOutCubic,
-                    );
+                AnimatedBuilder(
+                  animation: _swipeController,
+                  builder: (context, child) {
+                    double offsetX = 0.0;
+                    double opacity = 1.0;
+                    double scaleValue = 1.0;
 
-                    final slide = Tween<Offset>(
-                      begin: Offset(_monthDirection * 0.3, 0),
-                      end: Offset.zero,
-                    ).animate(curved);
+                    if (_swipeController.isAnimating) {
+                      offsetX = _slideAnimation.value.dx;
+                      opacity = _fadeAnimation.value;
+                      scaleValue = _scaleAnimation.value;
+                    } else if (_isDragging) {
+                      offsetX = (_dragOffset / 300).clamp(-0.5, 0.5);
+                      opacity = 1.0 - (offsetX.abs() * 0.3);
+                      scaleValue = 1.0 - (offsetX.abs() * 0.05);
+                    }
 
-                    final fade = Tween<double>(
-                      begin: 0.0,
-                      end: 1.0,
-                    ).animate(curved);
+                    // Clamp values to safe ranges
+                    offsetX = offsetX.clamp(-0.5, 0.5);
+                    opacity = opacity.clamp(0.0, 1.0);
+                    scaleValue = scaleValue.clamp(0.5, 1.0);
 
-                    final scaleAnim = Tween<double>(
-                      begin: 0.95,
-                      end: 1.0,
-                    ).animate(curved);
-
-                    return FadeTransition(
-                      opacity: fade,
-                      child: SlideTransition(
-                        position: slide,
-                        child: ScaleTransition(scale: scaleAnim, child: child),
+                    return Transform.translate(
+                      offset: Offset(offsetX * width, 0),
+                      child: Opacity(
+                        opacity: opacity,
+                        child: Transform.scale(scale: scaleValue, child: child),
                       ),
                     );
                   },
-                  child: Container(
-                    key: ValueKey(_currentMonth),
-                    child: _buildGrid(days),
-                  ),
+                  child: _buildGrid(days),
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(
@@ -186,7 +256,30 @@ class _ModernCalendarState extends State<ModernCalendar> {
                       ),
                       const SizedBox(height: 14),
                       AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 250),
+                        duration: const Duration(milliseconds: 300),
+                        switchInCurve: Curves.easeOutCubic,
+                        switchOutCurve: Curves.easeInCubic,
+                        transitionBuilder: (child, animation) {
+                          final curved = CurvedAnimation(
+                            parent: animation,
+                            curve: Curves.easeOutCubic,
+                          );
+
+                          final scale = Tween<double>(
+                            begin: 0.5,
+                            end: 1.0,
+                          ).animate(curved);
+
+                          final fade = Tween<double>(
+                            begin: 0.0,
+                            end: 1.0,
+                          ).animate(curved);
+
+                          return ScaleTransition(
+                            scale: scale,
+                            child: FadeTransition(opacity: fade, child: child),
+                          );
+                        },
                         child:
                             _hasUserSelectedDate
                                 ? SizedBox(
@@ -316,11 +409,13 @@ class _ModernCalendarState extends State<ModernCalendar> {
         ),
         itemBuilder: (_, index) {
           final date = days[index];
+          final isCurrentMonth = _isCurrentMonth(date);
+          final isSelected = _isSelected(date);
 
           return InkWell(
             borderRadius: BorderRadius.circular(12),
             onTap:
-                _isCurrentMonth(date)
+                isCurrentMonth
                     ? () {
                       setState(() {
                         _selectedDate = date;
@@ -328,35 +423,41 @@ class _ModernCalendarState extends State<ModernCalendar> {
                       });
                     }
                     : null,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 220),
+            child: Container(
               margin: EdgeInsets.all(2 * scale),
-              decoration:
-                  _isSelected(date)
-                      ? BoxDecoration(
-                        gradient: LinearGradient(
+              decoration: BoxDecoration(
+                color: _getDateColor(date, isCurrentMonth),
+                borderRadius: BorderRadius.circular(10),
+                gradient:
+                    isSelected
+                        ? LinearGradient(
                           colors: [
                             Colors.blue.shade600,
                             Colors.purple.shade600,
                           ],
-                        ),
-                        borderRadius: BorderRadius.circular(10),
-                      )
-                      : _isInRange(date)
-                      ? BoxDecoration(
-                        color: Colors.blue.shade100.withOpacity(0.5),
-                        borderRadius: BorderRadius.circular(10),
-                      )
-                      : BoxDecoration(borderRadius: BorderRadius.circular(10)),
+                        )
+                        : null,
+                boxShadow:
+                    isSelected
+                        ? [
+                          BoxShadow(
+                            color: Colors.blue.shade300.withOpacity(0.3),
+                            blurRadius: 6.0,
+                            offset: const Offset(0, 2),
+                          ),
+                        ]
+                        : null,
+              ),
               child: Center(
-                child: Text(
-                  date.day.toString(),
+                child: AnimatedDefaultTextStyle(
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeOutCubic,
                   style: TextStyle(
                     fontSize: 14 * scale,
-                    fontWeight:
-                        _isSelected(date) ? FontWeight.bold : FontWeight.w500,
-                    color: _isSelected(date) ? Colors.white : Colors.black87,
+                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                    color: _getTextColor(date, isCurrentMonth),
                   ),
+                  child: Text(date.day.toString()),
                 ),
               ),
             ),
@@ -364,6 +465,19 @@ class _ModernCalendarState extends State<ModernCalendar> {
         },
       ),
     );
+  }
+
+  Color? _getDateColor(DateTime date, bool isCurrentMonth) {
+    if (_isSelected(date)) return null;
+    if (_isInRange(date)) return Colors.blue.shade100.withOpacity(0.5);
+    if (!isCurrentMonth) return Colors.grey.shade50;
+    return null;
+  }
+
+  Color _getTextColor(DateTime date, bool isCurrentMonth) {
+    if (_isSelected(date)) return Colors.white;
+    if (!isCurrentMonth) return Colors.grey.shade400;
+    return Colors.black87;
   }
 
   Widget _navButton(IconData icon, VoidCallback onTap) {
@@ -378,7 +492,7 @@ class _ModernCalendarState extends State<ModernCalendar> {
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.1),
-              blurRadius: 6,
+              blurRadius: 6.0,
               offset: const Offset(0, 2),
             ),
           ],
