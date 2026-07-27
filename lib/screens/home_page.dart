@@ -778,14 +778,14 @@ class _HomePageState extends State<HomePage>
                                                                   color:
                                                                       allCompleted
                                                                           ? Colors.green.withOpacity(
-                                                                            0.5,
+                                                                            0.9,
                                                                           )
                                                                           : partiallyCompleted
                                                                           ? Colors.orange.withOpacity(
-                                                                            0.5,
+                                                                            0.9,
                                                                           )
                                                                           : Colors.red.withOpacity(
-                                                                            0.5,
+                                                                            0.8,
                                                                           ),
                                                                   width: 1.2,
                                                                 ),
@@ -814,14 +814,11 @@ class _HomePageState extends State<HomePage>
                                                                       allCompleted
                                                                           ? Colors
                                                                               .green
-                                                                              .shade300
                                                                           : partiallyCompleted
                                                                           ? Colors
                                                                               .orange
-                                                                              .shade300
                                                                           : Colors
-                                                                              .red
-                                                                              .shade300,
+                                                                              .red,
                                                                   fontSize:
                                                                       8 * scale,
                                                                   fontWeight:

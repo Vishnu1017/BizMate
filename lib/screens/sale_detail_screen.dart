@@ -305,26 +305,8 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
         final totalCount = selectedEventDates.length;
 
         final allCompleted = completedCount == totalCount && totalCount > 0;
-        final noneCompleted = completedCount == 0;
         final partiallyCompleted =
             completedCount > 0 && completedCount < totalCount;
-
-        const Color greenColor = Color(0xFF16A34A);
-        const Color redColor = Color(0xFFE11D48);
-
-        final List<Color> scheduleGradient =
-            allCompleted
-                ? [greenColor, greenColor]
-                : noneCompleted
-                ? [redColor, redColor]
-                : [greenColor, redColor];
-
-        final scheduleColor =
-            allCompleted
-                ? greenColor
-                : noneCompleted
-                ? redColor
-                : Colors.orange;
 
         return AbsorbPointer(
           absorbing: _isSaving,
@@ -543,187 +525,387 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
 
                           SizedBox(height: 10 * scale),
 
+                          // ==============================================
+                          // MODERN PHOTOGRAPHY SCHEDULE CARD - RED & GREEN THEME
+                          // ==============================================
                           Container(
                             width: double.infinity,
                             padding: EdgeInsets.all(cardPadding),
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
-                                begin: Alignment.centerLeft,
-                                end: Alignment.centerRight,
-                                colors: [
-                                  scheduleGradient.first.withOpacity(.12),
-                                  scheduleGradient.last.withOpacity(.12),
-                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [Colors.white, const Color(0xFFF8FAFC)],
                               ),
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(
-                                color:
-                                    partiallyCompleted
-                                        ? Colors.orange.shade300
-                                        : scheduleColor.withOpacity(.35),
-                                width: 1.3,
-                              ),
+                              borderRadius: BorderRadius.circular(24),
                               boxShadow: [
                                 BoxShadow(
-                                  color: (partiallyCompleted
-                                          ? Colors.orange
-                                          : scheduleColor)
-                                      .withOpacity(.12),
-                                  blurRadius: 12,
-                                  offset: const Offset(0, 4),
+                                  color: Colors.black.withOpacity(0.04),
+                                  blurRadius: 30,
+                                  spreadRadius: 1,
+                                  offset: const Offset(0, 10),
+                                ),
+                                BoxShadow(
+                                  color:
+                                      allCompleted
+                                          ? const Color(
+                                            0xFF10B981,
+                                          ).withOpacity(0.08)
+                                          : const Color(
+                                            0xFFEF4444,
+                                          ).withOpacity(0.08),
+                                  blurRadius: 40,
+                                  spreadRadius: -5,
+                                  offset: const Offset(0, 15),
                                 ),
                               ],
+                              border: Border.all(
+                                color: Colors.grey.shade200,
+                                width: 1,
+                              ),
                             ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
+                                // --- Header ---
                                 Row(
                                   children: [
-                                    Container(
-                                      padding: const EdgeInsets.all(10),
+                                    // Animated Icon Container
+                                    AnimatedContainer(
+                                      duration: const Duration(
+                                        milliseconds: 400,
+                                      ),
+                                      curve: Curves.easeInOut,
+                                      padding: EdgeInsets.all(6 * scale),
                                       decoration: BoxDecoration(
                                         gradient: LinearGradient(
-                                          colors: scheduleGradient,
+                                          colors:
+                                              allCompleted
+                                                  ? [
+                                                    const Color(0xFF10B981),
+                                                    const Color(0xFF34D399),
+                                                  ]
+                                                  : [
+                                                    const Color(0xFFEF4444),
+                                                    const Color(0xFFF87171),
+                                                  ],
                                         ),
-                                        borderRadius: BorderRadius.circular(12),
+                                        borderRadius: BorderRadius.circular(10),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color:
+                                                allCompleted
+                                                    ? const Color(
+                                                      0xFF10B981,
+                                                    ).withOpacity(0.3)
+                                                    : const Color(
+                                                      0xFFEF4444,
+                                                    ).withOpacity(0.3),
+                                            blurRadius: 12,
+                                            spreadRadius: 0,
+                                          ),
+                                        ],
                                       ),
                                       child: Icon(
-                                        Icons.camera_alt_rounded,
+                                        allCompleted
+                                            ? Icons.done_all_rounded
+                                            : Icons.camera_alt_rounded,
                                         color: Colors.white,
-                                        size: 22,
+                                        size: 16 * scale,
                                       ),
                                     ),
-
-                                    const SizedBox(width: 12),
-
+                                    SizedBox(width: 12 * scale),
                                     Expanded(
                                       child: Column(
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,
                                         children: [
-                                          Text(
-                                            "Photography Schedule",
-                                            style: TextStyle(
-                                              fontSize: 15 * scale,
-                                              fontWeight: FontWeight.bold,
-                                              color:
-                                                  partiallyCompleted
-                                                      ? Colors.orange.shade700
-                                                      : scheduleColor,
-                                            ),
+                                          Row(
+                                            children: [
+                                              Text(
+                                                "Photography Schedule",
+                                                style: TextStyle(
+                                                  fontSize: 13 * scale,
+                                                  fontWeight: FontWeight.w700,
+                                                  color: const Color(
+                                                    0xFF0F172A,
+                                                  ),
+                                                  letterSpacing: -0.5,
+                                                ),
+                                              ),
+                                              const SizedBox(width: 8),
+                                              // Status Dot
+                                              AnimatedContainer(
+                                                duration: const Duration(
+                                                  milliseconds: 400,
+                                                ),
+                                                width: 6 * scale,
+                                                height: 6 * scale,
+                                                decoration: BoxDecoration(
+                                                  shape: BoxShape.circle,
+                                                  color:
+                                                      allCompleted
+                                                          ? const Color(
+                                                            0xFF10B981,
+                                                          )
+                                                          : partiallyCompleted
+                                                          ? const Color(
+                                                            0xFFF59E0B,
+                                                          )
+                                                          : const Color(
+                                                            0xFFEF4444,
+                                                          ),
+                                                  boxShadow: [
+                                                    BoxShadow(
+                                                      color:
+                                                          allCompleted
+                                                              ? const Color(
+                                                                0xFF10B981,
+                                                              ).withOpacity(0.5)
+                                                              : partiallyCompleted
+                                                              ? const Color(
+                                                                0xFFF59E0B,
+                                                              ).withOpacity(0.5)
+                                                              : const Color(
+                                                                0xFFEF4444,
+                                                              ).withOpacity(
+                                                                0.5,
+                                                              ),
+                                                      blurRadius: 8,
+                                                      spreadRadius: 0,
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ],
                                           ),
-
-                                          const SizedBox(height: 2),
-
+                                          SizedBox(height: 3 * scale),
                                           Text(
-                                            "${selectedEventDates.length} Shoot Date(s)",
+                                            "${selectedEventDates.length} shoot date${selectedEventDates.length != 1 ? 's' : ''}",
                                             style: TextStyle(
-                                              fontSize: 11 * scale,
-                                              color: Colors.grey.shade700,
+                                              fontSize: 8 * scale,
+                                              color: Colors.grey.shade500,
+                                              fontWeight: FontWeight.w500,
                                             ),
                                           ),
                                         ],
                                       ),
                                     ),
-
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 10,
-                                        vertical: 5,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        gradient: LinearGradient(
-                                          colors: scheduleGradient,
-                                        ),
-                                        borderRadius: BorderRadius.circular(30),
-                                      ),
-                                      child: Text(
-                                        allCompleted
-                                            ? "COMPLETED"
-                                            : partiallyCompleted
-                                            ? "$completedCount/$totalCount"
-                                            : "PENDING",
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 10,
-                                        ),
+                                    // Percentage Ring
+                                    SizedBox(
+                                      width: 36 * scale,
+                                      height: 36 * scale,
+                                      child: Stack(
+                                        alignment: Alignment.center,
+                                        children: [
+                                          SizedBox(
+                                            width: 36 * scale,
+                                            height: 36 * scale,
+                                            child: CircularProgressIndicator(
+                                              value:
+                                                  totalCount > 0
+                                                      ? completedCount /
+                                                          totalCount
+                                                      : 0,
+                                              strokeWidth: 4,
+                                              backgroundColor:
+                                                  Colors.grey.shade100,
+                                              valueColor: AlwaysStoppedAnimation<
+                                                Color
+                                              >(
+                                                totalCount > 0 &&
+                                                        completedCount /
+                                                                totalCount ==
+                                                            1
+                                                    ? const Color(0xFF10B981)
+                                                    : const Color(0xFFEF4444),
+                                              ),
+                                            ),
+                                          ),
+                                          Text(
+                                            totalCount > 0
+                                                ? "${((completedCount / totalCount) * 100).toStringAsFixed(0)}%"
+                                                : "0%",
+                                            style: TextStyle(
+                                              fontSize: 8 * scale,
+                                              fontWeight: FontWeight.w800,
+                                              color: const Color(0xFF0F172A),
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
-
-                                    if (allCompleted) ...[
-                                      const SizedBox(width: 8),
-                                      const Icon(
-                                        Icons.verified_rounded,
-                                        color: Color(0xFF16A34A),
-                                        size: 22,
-                                      ),
-                                    ],
                                   ],
                                 ),
 
-                                const SizedBox(height: 18),
+                                SizedBox(height: 10 * scale),
+
+                                // --- Stats Row ---
+                                Row(
+                                  children: [
+                                    _buildModernStat(
+                                      label: "Completed",
+                                      value: "$completedCount",
+                                      color: const Color(0xFF10B981),
+                                      icon: Icons.check_circle_outline_rounded,
+                                    ),
+                                    Container(
+                                      width: 1,
+                                      height: 30,
+                                      color: Colors.grey.shade200,
+                                    ),
+                                    _buildModernStat(
+                                      label: "Pending",
+                                      value: "${totalCount - completedCount}",
+                                      color: const Color(0xFFEF4444),
+                                      icon: Icons.pending_actions_rounded,
+                                    ),
+                                    Container(
+                                      width: 1,
+                                      height: 30,
+                                      color: Colors.grey.shade200,
+                                    ),
+                                    _buildModernStat(
+                                      label: "Total",
+                                      value: "$totalCount",
+                                      color: const Color(0xFF64748B),
+                                      icon: Icons.calendar_today_rounded,
+                                    ),
+                                  ],
+                                ),
+
+                                SizedBox(height: 10 * scale),
 
                                 InkWell(
-                                  borderRadius: BorderRadius.circular(14),
+                                  borderRadius: BorderRadius.circular(16),
                                   onTap: _selectMultipleDates,
                                   child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 16,
-                                      vertical: 14,
-                                    ),
+                                    padding: EdgeInsets.all(10 * scale),
                                     decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.circular(14),
+                                      gradient: LinearGradient(
+                                        colors:
+                                            allCompleted
+                                                ? [
+                                                  const Color(
+                                                    0xFF10B981,
+                                                  ).withOpacity(0.08),
+                                                  const Color(
+                                                    0xFF34D399,
+                                                  ).withOpacity(0.04),
+                                                ]
+                                                : [
+                                                  const Color(
+                                                    0xFFEF4444,
+                                                  ).withOpacity(0.08),
+                                                  const Color(
+                                                    0xFFF87171,
+                                                  ).withOpacity(0.04),
+                                                ],
+                                      ),
+                                      borderRadius: BorderRadius.circular(
+                                        12 * scale,
+                                      ),
                                       border: Border.all(
                                         color:
-                                            partiallyCompleted
-                                                ? Colors.orange.shade300
-                                                : scheduleColor.withOpacity(
-                                                  .25,
-                                                ),
+                                            allCompleted
+                                                ? const Color(
+                                                  0xFF10B981,
+                                                ).withOpacity(0.15)
+                                                : const Color(
+                                                  0xFFEF4444,
+                                                ).withOpacity(0.15),
+                                        width: 1.2,
                                       ),
                                     ),
                                     child: Row(
                                       children: [
-                                        Icon(
-                                          Icons.edit_calendar_rounded,
-                                          color:
-                                              partiallyCompleted
-                                                  ? Colors.orange.shade700
-                                                  : scheduleColor,
+                                        Container(
+                                          padding: const EdgeInsets.all(8),
+                                          decoration: BoxDecoration(
+                                            color:
+                                                allCompleted
+                                                    ? const Color(
+                                                      0xFF10B981,
+                                                    ).withOpacity(0.12)
+                                                    : const Color(
+                                                      0xFFEF4444,
+                                                    ).withOpacity(0.12),
+                                            borderRadius: BorderRadius.circular(
+                                              10 * scale,
+                                            ),
+                                          ),
+                                          child: Icon(
+                                            selectedEventDates.isEmpty
+                                                ? Icons.add_rounded
+                                                : Icons.edit_rounded,
+                                            color:
+                                                allCompleted
+                                                    ? const Color(0xFF10B981)
+                                                    : const Color(0xFFEF4444),
+                                            size: 12 * scale,
+                                          ),
                                         ),
-
-                                        const SizedBox(width: 12),
-
+                                        SizedBox(width: 10 * scale),
                                         Expanded(
                                           child: Text(
                                             selectedEventDates.isEmpty
-                                                ? "Select Photography Schedule"
-                                                : "Edit Photography Schedule",
+                                                ? "Add photography dates"
+                                                : "Manage schedule",
                                             style: TextStyle(
                                               fontWeight: FontWeight.w600,
-                                              fontSize: 13 * scale,
+                                              fontSize: 10 * scale,
+                                              color: const Color(0xFF0F172A),
                                             ),
                                           ),
                                         ),
-
+                                        Container(
+                                          padding: EdgeInsets.symmetric(
+                                            horizontal: 10 * scale,
+                                            vertical: 4 * scale,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color:
+                                                allCompleted
+                                                    ? const Color(
+                                                      0xFF10B981,
+                                                    ).withOpacity(0.1)
+                                                    : const Color(
+                                                      0xFFEF4444,
+                                                    ).withOpacity(0.1),
+                                            borderRadius: BorderRadius.circular(
+                                              10 * scale,
+                                            ),
+                                          ),
+                                          child: Text(
+                                            selectedEventDates.length
+                                                .toString(),
+                                            style: TextStyle(
+                                              color:
+                                                  allCompleted
+                                                      ? const Color(0xFF10B981)
+                                                      : const Color(0xFFEF4444),
+                                              fontWeight: FontWeight.w700,
+                                              fontSize: 10 * scale,
+                                            ),
+                                          ),
+                                        ),
+                                        SizedBox(width: 8 * scale),
                                         Icon(
                                           Icons.arrow_forward_ios_rounded,
-                                          size: 16,
-                                          color: scheduleColor,
+                                          size: 12 * scale,
+                                          color: Colors.grey.shade400,
                                         ),
                                       ],
                                     ),
                                   ),
                                 ),
 
+                                // --- Date Chips with Modern Design ---
                                 if (selectedEventDates.isNotEmpty) ...[
-                                  const SizedBox(height: 16),
-
+                                  SizedBox(height: 10 * scale),
                                   Wrap(
-                                    spacing: 8,
-                                    runSpacing: 8,
+                                    spacing: 8 * scale,
+                                    runSpacing: 8 * scale,
                                     children:
                                         selectedEventDates.map((date) {
                                           final completed = DateTime(
@@ -735,58 +917,296 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                             59,
                                           ).isBefore(DateTime.now());
 
-                                          return Chip(
-                                            avatar: Icon(
-                                              completed
-                                                  ? Icons.check_circle
-                                                  : Icons.camera_alt_rounded,
-                                              color:
+                                          final isToday =
+                                              date.day == DateTime.now().day &&
+                                              date.month ==
+                                                  DateTime.now().month &&
+                                              date.year == DateTime.now().year;
+
+                                          return Container(
+                                            child: Chip(
+                                              avatar: AnimatedContainer(
+                                                duration: const Duration(
+                                                  milliseconds: 300,
+                                                ),
+                                                padding: EdgeInsets.all(
+                                                  4 * scale,
+                                                ),
+                                                decoration: BoxDecoration(
+                                                  gradient: LinearGradient(
+                                                    colors:
+                                                        completed
+                                                            ? [
+                                                              const Color(
+                                                                0xFF10B981,
+                                                              ),
+                                                              const Color(
+                                                                0xFF34D399,
+                                                              ),
+                                                            ]
+                                                            : isToday
+                                                            ? [
+                                                              const Color(
+                                                                0xFFF59E0B,
+                                                              ),
+                                                              const Color(
+                                                                0xFFFBBF24,
+                                                              ),
+                                                            ]
+                                                            : [
+                                                              const Color(
+                                                                0xFFEF4444,
+                                                              ),
+                                                              const Color(
+                                                                0xFFF87171,
+                                                              ),
+                                                            ],
+                                                  ),
+                                                  shape: BoxShape.circle,
+                                                  boxShadow: [
+                                                    BoxShadow(
+                                                      color:
+                                                          completed
+                                                              ? const Color(
+                                                                0xFF10B981,
+                                                              ).withOpacity(0.3)
+                                                              : isToday
+                                                              ? const Color(
+                                                                0xFFF59E0B,
+                                                              ).withOpacity(0.3)
+                                                              : const Color(
+                                                                0xFFEF4444,
+                                                              ).withOpacity(
+                                                                0.3,
+                                                              ),
+                                                      blurRadius: 6,
+                                                      spreadRadius: 0,
+                                                    ),
+                                                  ],
+                                                ),
+                                                child: Icon(
                                                   completed
-                                                      ? const Color(0xFF16A34A)
-                                                      : const Color(0xFFE11D48),
-                                              size: 18,
-                                            ),
-                                            backgroundColor:
-                                                completed
-                                                    ? const Color(
-                                                      0xFF16A34A,
-                                                    ).withOpacity(.12)
-                                                    : const Color(
-                                                      0xFFE11D48,
-                                                    ).withOpacity(.08),
-                                            side: BorderSide(
-                                              color:
-                                                  completed
-                                                      ? const Color(0xFF16A34A)
-                                                      : const Color(0xFFE11D48),
-                                            ),
-                                            label: Text(
-                                              DateFormat(
-                                                'dd MMM yyyy',
-                                              ).format(date),
-                                              style: TextStyle(
+                                                      ? Icons.check_rounded
+                                                      : isToday
+                                                      ? Icons.today_rounded
+                                                      : Icons.event_rounded,
+                                                  size: 8 * scale,
+                                                  color: Colors.white,
+                                                ),
+                                              ),
+                                              backgroundColor: Colors.white,
+                                              side: BorderSide(
                                                 color:
                                                     completed
                                                         ? const Color(
-                                                          0xFF16A34A,
-                                                        )
+                                                          0xFF10B981,
+                                                        ).withOpacity(0.3)
+                                                        : isToday
+                                                        ? const Color(
+                                                          0xFFF59E0B,
+                                                        ).withOpacity(0.3)
                                                         : const Color(
-                                                          0xFFE11D48,
-                                                        ),
-                                                fontWeight: FontWeight.w600,
+                                                          0xFFEF4444,
+                                                        ).withOpacity(0.2),
+                                                width: 1.5,
                                               ),
+                                              elevation: 2,
+                                              shadowColor:
+                                                  completed
+                                                      ? const Color(
+                                                        0xFF10B981,
+                                                      ).withOpacity(0.1)
+                                                      : isToday
+                                                      ? const Color(
+                                                        0xFFF59E0B,
+                                                      ).withOpacity(0.1)
+                                                      : const Color(
+                                                        0xFFEF4444,
+                                                      ).withOpacity(0.1),
+                                              label: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Text(
+                                                    DateFormat(
+                                                      'dd MMM yyyy',
+                                                    ).format(date),
+                                                    style: TextStyle(
+                                                      color: const Color(
+                                                        0xFF1E293B,
+                                                      ),
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                      fontSize: 10 * scale,
+                                                      letterSpacing: -0.3,
+                                                    ),
+                                                  ),
+                                                  if (completed) ...[
+                                                    const SizedBox(width: 6),
+                                                    Container(
+                                                      padding:
+                                                          EdgeInsets.symmetric(
+                                                            horizontal:
+                                                                4 * scale,
+                                                            vertical: 2 * scale,
+                                                          ),
+                                                      decoration: BoxDecoration(
+                                                        color: const Color(
+                                                          0xFF10B981,
+                                                        ).withOpacity(0.1),
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                              4,
+                                                            ),
+                                                        border: Border.all(
+                                                          color: const Color(
+                                                            0xFF10B981,
+                                                          ).withOpacity(0.15),
+                                                          width: 0.5,
+                                                        ),
+                                                      ),
+                                                      child: Text(
+                                                        "DONE",
+                                                        style: TextStyle(
+                                                          color: const Color(
+                                                            0xFF10B981,
+                                                          ),
+                                                          fontSize: 6 * scale,
+                                                          fontWeight:
+                                                              FontWeight.w800,
+                                                          letterSpacing: 0.5,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                  if (isToday &&
+                                                      !completed) ...[
+                                                    const SizedBox(width: 6),
+                                                    Container(
+                                                      padding:
+                                                          EdgeInsets.symmetric(
+                                                            horizontal:
+                                                                4 * scale,
+                                                            vertical: 2 * scale,
+                                                          ),
+                                                      decoration: BoxDecoration(
+                                                        color: const Color(
+                                                          0xFFF59E0B,
+                                                        ).withOpacity(0.1),
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                              4,
+                                                            ),
+                                                        border: Border.all(
+                                                          color: const Color(
+                                                            0xFFF59E0B,
+                                                          ).withOpacity(0.15),
+                                                          width: 0.5,
+                                                        ),
+                                                      ),
+                                                      child: Text(
+                                                        "TODAY",
+                                                        style: TextStyle(
+                                                          color: const Color(
+                                                            0xFF92400E,
+                                                          ),
+                                                          fontSize: 6 * scale,
+                                                          fontWeight:
+                                                              FontWeight.w800,
+                                                          letterSpacing: 0.5,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ],
+                                              ),
+                                              deleteIcon: Container(
+                                                padding: EdgeInsets.all(
+                                                  4 * scale,
+                                                ),
+                                                decoration: BoxDecoration(
+                                                  color: Colors.grey.shade100,
+                                                  shape: BoxShape.circle,
+                                                  border: Border.all(
+                                                    color: Colors.grey.shade300,
+                                                    width: 0.5,
+                                                  ),
+                                                ),
+                                                child: Icon(
+                                                  Icons.close_rounded,
+                                                  color: Colors.grey.shade500,
+                                                  size: 8 * scale,
+                                                ),
+                                              ),
+                                              onDeleted: () {
+                                                setState(() {
+                                                  selectedEventDates.remove(
+                                                    date,
+                                                  );
+                                                });
+                                              },
                                             ),
-                                            deleteIcon: const Icon(
-                                              Icons.close,
-                                              size: 18,
-                                            ),
-                                            onDeleted: () {
-                                              setState(() {
-                                                selectedEventDates.remove(date);
-                                              });
-                                            },
                                           );
                                         }).toList(),
+                                  ),
+                                ],
+
+                                // --- Modern Empty State ---
+                                if (selectedEventDates.isEmpty) ...[
+                                  SizedBox(height: 10 * scale),
+                                  Center(
+                                    child: Container(
+                                      padding: EdgeInsets.symmetric(
+                                        vertical: 10 * scale,
+                                        horizontal: 15 * scale,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                          colors: [
+                                            const Color(
+                                              0xFFEF4444,
+                                            ).withOpacity(0.04),
+                                            const Color(
+                                              0xFFF87171,
+                                            ).withOpacity(0.02),
+                                          ],
+                                        ),
+                                        borderRadius: BorderRadius.circular(16),
+                                        border: Border.all(
+                                          color: const Color(
+                                            0xFFEF4444,
+                                          ).withOpacity(0.08),
+                                          width: 1,
+                                          style: BorderStyle.solid,
+                                        ),
+                                      ),
+                                      child: Column(
+                                        children: [
+                                          Icon(
+                                            Icons.photo_camera_outlined,
+                                            color: const Color(
+                                              0xFFEF4444,
+                                            ).withOpacity(0.2),
+                                            size: 24 * scale,
+                                          ),
+                                          SizedBox(height: 10 * scale),
+                                          Text(
+                                            "No dates scheduled",
+                                            style: TextStyle(
+                                              color: const Color(0xFF0F172A),
+                                              fontSize: 12 * scale,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                          Text(
+                                            "Tap above to add your first photography date",
+                                            style: TextStyle(
+                                              color: Colors.grey.shade400,
+                                              fontSize: 10 * scale,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
                                   ),
                                 ],
                               ],
@@ -1294,6 +1714,47 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  // --- Helper Widgets ---
+  Widget _buildModernStat({
+    required String label,
+    required String value,
+    required Color color,
+    required IconData icon,
+  }) {
+    return Expanded(
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 10 * scale, color: color.withOpacity(0.6)),
+              const SizedBox(width: 4),
+              Text(
+                value,
+                style: TextStyle(
+                  fontSize: 12 * scale,
+                  fontWeight: FontWeight.w800,
+                  color: color,
+                  letterSpacing: -0.5,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 8 * scale,
+              color: Colors.black54,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.3,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
