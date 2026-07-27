@@ -405,11 +405,11 @@ class _HomePageState extends State<HomePage>
                           margin: EdgeInsets.symmetric(
                             horizontal:
                                 isVerySmallScreen
-                                    ? 13
+                                    ? 9
                                     : isSmallScreen
-                                    ? 8
-                                    : 27,
-                            vertical: isVerySmallScreen ? 6 : 8,
+                                    ? 4
+                                    : 23,
+                            vertical: isVerySmallScreen ? 4 : 6,
                           ),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
@@ -432,15 +432,15 @@ class _HomePageState extends State<HomePage>
                             child: Padding(
                               padding: EdgeInsets.all(
                                 isVerySmallScreen
-                                    ? 10
+                                    ? 6
                                     : isSmallScreen
-                                    ? 12
-                                    : 16,
+                                    ? 8
+                                    : 12,
                               ),
                               child: Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  SizedBox(width: 15),
+                                  SizedBox(width: 6 * scale),
                                   if (!isVerySmallScreen) ...[
                                     Column(
                                       children: [
@@ -1391,7 +1391,7 @@ class _HomePageState extends State<HomePage>
                                     _isUserDataLoaded
                                         ? SizedBox(
                                           width:
-                                              20, // Minimal width for 3-dot menu
+                                              24, // Minimal width for 3-dot menu
                                           child: SaleOptionsMenu(
                                             sale: sale,
                                             originalIndex: originalIndex,
