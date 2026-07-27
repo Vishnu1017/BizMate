@@ -445,8 +445,14 @@ class _HomePageState extends State<HomePage>
                                     Column(
                                       children: [
                                         Container(
-                                          width: isSmallScreen ? 40 : 48,
-                                          height: isSmallScreen ? 40 : 48,
+                                          width:
+                                              isSmallScreen
+                                                  ? 32
+                                                  : 36, // Reduced from 40:48
+                                          height:
+                                              isSmallScreen
+                                                  ? 32
+                                                  : 36, // Reduced from 40:48
                                           decoration: const BoxDecoration(
                                             shape: BoxShape.circle,
                                             gradient: LinearGradient(
@@ -463,24 +469,33 @@ class _HomePageState extends State<HomePage>
                                           child: Icon(
                                             Icons.person,
                                             color: Colors.white,
-                                            size: isSmallScreen ? 20 : 24,
+                                            size:
+                                                isSmallScreen
+                                                    ? 16
+                                                    : 18, // Reduced from 20:24
                                           ),
                                         ),
-                                        SizedBox(height: 8),
+                                        SizedBox(height: 4), // Reduced from 8
                                         Text(
                                           "Invoice #$invoiceNumber",
                                           style: TextStyle(
-                                            fontSize: isSmallScreen ? 10 : 12,
+                                            fontSize:
+                                                isSmallScreen
+                                                    ? 8
+                                                    : 10, // Reduced from 10:12
                                             color: Colors.indigo,
                                           ),
                                         ),
-                                        SizedBox(height: 4),
+                                        SizedBox(height: 2), // Reduced from 4
                                         Text(
                                           DateFormat(
                                             'dd MMM',
                                           ).format(sale.dateTime),
                                           style: TextStyle(
-                                            fontSize: isSmallScreen ? 10 : 12,
+                                            fontSize:
+                                                isSmallScreen
+                                                    ? 8
+                                                    : 10, // Reduced from 10:12
                                             color: Colors.grey[600],
                                           ),
                                         ),
@@ -489,13 +504,18 @@ class _HomePageState extends State<HomePage>
                                             'hh:mm a',
                                           ).format(sale.dateTime),
                                           style: TextStyle(
-                                            fontSize: isSmallScreen ? 10 : 12,
+                                            fontSize:
+                                                isSmallScreen
+                                                    ? 8
+                                                    : 10, // Reduced from 10:12
                                             color: Colors.grey[600],
                                           ),
                                         ),
                                       ],
                                     ),
-                                    SizedBox(width: isSmallScreen ? 12 : 16),
+                                    SizedBox(
+                                      width: isSmallScreen ? 8 : 12,
+                                    ), // Reduced from 12:16
                                   ],
                                   Expanded(
                                     child: Column(
@@ -1367,70 +1387,69 @@ class _HomePageState extends State<HomePage>
                                     ),
                                   ),
                                   if (!isVerySmallScreen) ...[
-                                    // SaleOptionsMenu with proper user data - compact
-                                    SizedBox(
-                                      width: 30, // Minimal width for 3-dot menu
-                                      child:
-                                          _isUserDataLoaded
-                                              ? SaleOptionsMenu(
-                                                sale: sale,
-                                                originalIndex: originalIndex,
-                                                box: box,
-                                                isSmallScreen: isSmallScreen,
-                                                invoiceNumber:
-                                                    invoiceNumber.toString(),
-                                                currentUserName:
-                                                    _currentUserName,
-                                                currentUserPhone:
-                                                    _currentUserPhone,
-                                                currentUserEmail:
-                                                    _currentUserEmail,
-                                                parentContext: context,
-                                              )
-                                              : Center(
-                                                child: SizedBox(
-                                                  width: 14,
-                                                  height: 14,
-                                                  child:
-                                                      CircularProgressIndicator(
-                                                        strokeWidth: 2,
-                                                      ),
-                                                ),
+                                    // SaleOptionsMenu - ultra compact
+                                    _isUserDataLoaded
+                                        ? SizedBox(
+                                          width:
+                                              20, // Minimal width for 3-dot menu
+                                          child: SaleOptionsMenu(
+                                            sale: sale,
+                                            originalIndex: originalIndex,
+                                            box: box,
+                                            isSmallScreen: isSmallScreen,
+                                            invoiceNumber:
+                                                invoiceNumber.toString(),
+                                            currentUserName: _currentUserName,
+                                            currentUserPhone: _currentUserPhone,
+                                            currentUserEmail: _currentUserEmail,
+                                            parentContext: context,
+                                          ),
+                                        )
+                                        : SizedBox(
+                                          width: 24,
+                                          height: 24,
+                                          child: Center(
+                                            child: SizedBox(
+                                              width: 12,
+                                              height: 12,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2,
                                               ),
-                                    ),
+                                            ),
+                                          ),
+                                        ),
                                   ] else ...[
-                                    // For very small screens - ultra compact
-                                    SizedBox(
-                                      width:
-                                          24, // Minimal width for small screens
-                                      child:
-                                          _isUserDataLoaded
-                                              ? SaleOptionsMenu(
-                                                sale: sale,
-                                                originalIndex: originalIndex,
-                                                box: box,
-                                                isSmallScreen: true,
-                                                invoiceNumber:
-                                                    invoiceNumber.toString(),
-                                                currentUserName:
-                                                    _currentUserName,
-                                                currentUserPhone:
-                                                    _currentUserPhone,
-                                                currentUserEmail:
-                                                    _currentUserEmail,
-                                                parentContext: context,
-                                              )
-                                              : Center(
-                                                child: SizedBox(
-                                                  width: 10,
-                                                  height: 10,
-                                                  child:
-                                                      CircularProgressIndicator(
-                                                        strokeWidth: 1.5,
-                                                      ),
-                                                ),
+                                    // For very small screens - even more compact
+                                    _isUserDataLoaded
+                                        ? SizedBox(
+                                          width:
+                                              16, // Ultra minimal for small screens
+                                          child: SaleOptionsMenu(
+                                            sale: sale,
+                                            originalIndex: originalIndex,
+                                            box: box,
+                                            isSmallScreen: true,
+                                            invoiceNumber:
+                                                invoiceNumber.toString(),
+                                            currentUserName: _currentUserName,
+                                            currentUserPhone: _currentUserPhone,
+                                            currentUserEmail: _currentUserEmail,
+                                            parentContext: context,
+                                          ),
+                                        )
+                                        : SizedBox(
+                                          width: 20,
+                                          height: 20,
+                                          child: Center(
+                                            child: SizedBox(
+                                              width: 10,
+                                              height: 10,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 1.5,
                                               ),
-                                    ),
+                                            ),
+                                          ),
+                                        ),
                                   ],
                                 ],
                               ),

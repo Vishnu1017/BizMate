@@ -68,7 +68,7 @@ class SaleOptionsMenu extends StatelessWidget {
         final isPhotographer = snapshot.data == true;
 
         return PopupMenuButton<String>(
-          icon: Icon(Icons.more_vert, size: isSmallScreen ? 20 : 24),
+          icon: Icon(Icons.more_vert, size: isSmallScreen ? 16 : 20),
           onSelected: (value) => _handleMenuSelection(value, context),
           itemBuilder: (context) {
             final items = _buildMenuItems();
