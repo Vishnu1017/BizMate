@@ -51,9 +51,10 @@ class _ModernCalendarState extends State<ModernCalendar>
       CurvedAnimation(parent: _swipeController, curve: Curves.easeOutCubic),
     );
 
-    _fadeAnimation = Tween<double>(begin: 1.0, end: 0.0).animate(
-      CurvedAnimation(parent: _swipeController, curve: Curves.easeOut),
-    );
+    _fadeAnimation = Tween<double>(
+      begin: 1.0,
+      end: 0.0,
+    ).animate(CurvedAnimation(parent: _swipeController, curve: Curves.easeOut));
   }
 
   @override
@@ -130,8 +131,8 @@ class _ModernCalendarState extends State<ModernCalendar>
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardBg = isDark ? const Color(0xFF1E293B) : Colors.white;
-    final borderColor = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
+    final borderColor =
+        isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
 
     return GestureDetector(
       onHorizontalDragUpdate: (details) {
@@ -154,9 +155,10 @@ class _ModernCalendarState extends State<ModernCalendar>
           child: Container(
             width: width * 0.9,
             decoration: BoxDecoration(
-              color: isDark
-                  ? const Color(0xFF1E293B).withValues(alpha: 0.95)
-                  : Colors.white.withValues(alpha: 0.9),
+              color:
+                  isDark
+                      ? const Color(0xFF1E293B).withValues(alpha: 0.95)
+                      : Colors.white.withValues(alpha: 0.9),
               borderRadius: BorderRadius.circular(22),
               border: Border.all(color: borderColor, width: 1),
               boxShadow: [
@@ -210,51 +212,58 @@ class _ModernCalendarState extends State<ModernCalendar>
                         curve: Curves.easeOutCubic,
                       );
                       return ScaleTransition(
-                        scale: Tween<double>(begin: 0.5, end: 1.0).animate(curved),
+                        scale: Tween<double>(
+                          begin: 0.5,
+                          end: 1.0,
+                        ).animate(curved),
                         child: FadeTransition(
-                          opacity: Tween<double>(begin: 0.0, end: 1.0).animate(curved),
+                          opacity: Tween<double>(
+                            begin: 0.0,
+                            end: 1.0,
+                          ).animate(curved),
                           child: child,
                         ),
                       );
                     },
-                    child: _hasUserSelectedDate
-                        ? SizedBox(
-                            key: const ValueKey("save_btn"),
-                            width: double.infinity,
-                            height: 48,
-                            child: ElevatedButton(
-                              onPressed: () {
-                                widget.onDateSelected(_selectedDate);
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.blue.shade600,
-                                foregroundColor: Colors.white,
-                                elevation: 0,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
+                    child:
+                        _hasUserSelectedDate
+                            ? SizedBox(
+                              key: const ValueKey("save_btn"),
+                              width: double.infinity,
+                              height: 48,
+                              child: ElevatedButton(
+                                onPressed: () {
+                                  widget.onDateSelected(_selectedDate);
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.blue.shade600,
+                                  foregroundColor: Colors.white,
+                                  elevation: 0,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: const [
+                                    HugeIcon(
+                                      icon: HugeIcons.strokeRoundedTickDouble03,
+                                      size: 18,
+                                      color: Colors.white,
+                                    ),
+                                    SizedBox(width: 6),
+                                    Text(
+                                      "Save Date",
+                                      style: TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: const [
-                                  HugeIcon(
-                                    icon: HugeIcons.strokeRoundedTickDouble03,
-                                    size: 18,
-                                    color: Colors.white,
-                                  ),
-                                  SizedBox(width: 6),
-                                  Text(
-                                    "Save Date",
-                                    style: TextStyle(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          )
-                        : const SizedBox.shrink(),
+                            )
+                            : const SizedBox.shrink(),
                   ),
                 ),
               ],
@@ -267,8 +276,10 @@ class _ModernCalendarState extends State<ModernCalendar>
 
   Widget _buildHeader(BuildContext context, double width) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final titleColor = isDark ? const Color(0xFFF1F5F9) : const Color(0xFF1A1A1A);
-    final subtitleColor = isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+    final titleColor =
+        isDark ? const Color(0xFFF1F5F9) : const Color(0xFF1A1A1A);
+    final subtitleColor =
+        isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -289,10 +300,7 @@ class _ModernCalendarState extends State<ModernCalendar>
               const SizedBox(height: 2),
               Text(
                 "Select a date",
-                style: TextStyle(
-                  fontSize: width * 0.03,
-                  color: subtitleColor,
-                ),
+                style: TextStyle(fontSize: width * 0.03, color: subtitleColor),
               ),
             ],
           ),
@@ -304,27 +312,29 @@ class _ModernCalendarState extends State<ModernCalendar>
 
   Widget _buildWeekdays(BuildContext context, double width) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final weekdayColor = isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+    final weekdayColor =
+        isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       child: Row(
-        children: _weekdays
-            .map(
-              (day) => Expanded(
-                child: Center(
-                  child: Text(
-                    day,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: width * 0.03,
-                      color: weekdayColor,
+        children:
+            _weekdays
+                .map(
+                  (day) => Expanded(
+                    child: Center(
+                      child: Text(
+                        day,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: width * 0.03,
+                          color: weekdayColor,
+                        ),
+                      ),
                     ),
                   ),
-                ),
-              ),
-            )
-            .toList(),
+                )
+                .toList(),
       ),
     );
   }
@@ -347,36 +357,39 @@ class _ModernCalendarState extends State<ModernCalendar>
 
           return InkWell(
             borderRadius: BorderRadius.circular(12),
-            onTap: isCurrentMonth
-                ? () {
-                    setState(() {
-                      _selectedDate = date;
-                      _hasUserSelectedDate = true;
-                    });
-                  }
-                : null,
+            onTap:
+                isCurrentMonth
+                    ? () {
+                      setState(() {
+                        _selectedDate = date;
+                        _hasUserSelectedDate = true;
+                      });
+                    }
+                    : null,
             child: Container(
               margin: EdgeInsets.all(2 * scale),
               decoration: BoxDecoration(
                 color: _getDateColor(context, date, isCurrentMonth),
                 borderRadius: BorderRadius.circular(10),
-                gradient: isSelected
-                    ? LinearGradient(
-                        colors: [
-                          Colors.blue.shade600,
-                          Colors.purple.shade600,
-                        ],
-                      )
-                    : null,
-                boxShadow: isSelected
-                    ? [
-                        BoxShadow(
-                          color: Colors.blue.shade300.withValues(alpha: 0.3),
-                          blurRadius: 6.0,
-                          offset: const Offset(0, 2),
-                        ),
-                      ]
-                    : null,
+                gradient:
+                    isSelected
+                        ? LinearGradient(
+                          colors: [
+                            Colors.blue.shade600,
+                            Colors.purple.shade600,
+                          ],
+                        )
+                        : null,
+                boxShadow:
+                    isSelected
+                        ? [
+                          BoxShadow(
+                            color: Colors.blue.shade300.withValues(alpha: 0.3),
+                            blurRadius: 6.0,
+                            offset: const Offset(0, 2),
+                          ),
+                        ]
+                        : null,
               ),
               child: Center(
                 child: AnimatedDefaultTextStyle(
@@ -397,17 +410,29 @@ class _ModernCalendarState extends State<ModernCalendar>
     );
   }
 
-  Color? _getDateColor(BuildContext context, DateTime date, bool isCurrentMonth) {
+  Color? _getDateColor(
+    BuildContext context,
+    DateTime date,
+    bool isCurrentMonth,
+  ) {
     if (_isSelected(date)) return null;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    if (!isCurrentMonth) return isDark ? const Color(0xFF0F172A).withValues(alpha: 0.4) : Colors.grey.shade50;
+    if (!isCurrentMonth)
+      return isDark
+          ? const Color(0xFF0F172A).withValues(alpha: 0.4)
+          : Colors.grey.shade50;
     return null;
   }
 
-  Color _getTextColor(BuildContext context, DateTime date, bool isCurrentMonth) {
+  Color _getTextColor(
+    BuildContext context,
+    DateTime date,
+    bool isCurrentMonth,
+  ) {
     if (_isSelected(date)) return Colors.white;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    if (!isCurrentMonth) return isDark ? const Color(0xFF475569) : Colors.grey.shade400;
+    if (!isCurrentMonth)
+      return isDark ? const Color(0xFF475569) : Colors.grey.shade400;
     return isDark ? const Color(0xFFF1F5F9) : Colors.black87;
   }
 
