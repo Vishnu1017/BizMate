@@ -29,8 +29,10 @@ import 'utils/responsive.dart';
 /// ENTRY POINT
 /// ----------------------------------------------------------------
 Future<void> main() async {
-  WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
-  FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Immediately remove any native splash screen so CustomSplashScreen displays right away
+  FlutterNativeSplash.remove();
 
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
 
@@ -242,10 +244,8 @@ class _CustomSplashScreenState extends State<CustomSplashScreen>
     // Start animation immediately
     _controller.forward();
 
-    // Remove native splash screen as soon as Flutter renders the first frame
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      FlutterNativeSplash.remove();
-    });
+    // Ensure native splash is dismissed immediately so CustomSplashScreen is visible right away
+    FlutterNativeSplash.remove();
 
     _loadAppVersion();
     _initializeApp();
