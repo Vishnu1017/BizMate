@@ -1,4 +1,5 @@
 import 'package:bizmate/models/rental_sale_model.dart';
+import 'package:bizmate/utils/app_theme.dart';
 import 'package:bizmate/widgets/advanced_search_bar.dart'
     show AdvancedSearchBar;
 import 'package:bizmate/widgets/confirm_delete_dialog.dart';
@@ -213,7 +214,7 @@ class _RentalOrdersPageState extends State<RentalOrdersPage> {
                 scrollDirection: Axis.horizontal,
                 padding: EdgeInsets.symmetric(horizontal: 14 * scale),
                 itemCount: filters.length,
-                separatorBuilder: (_, __) => SizedBox(width: 8 * scale),
+                separatorBuilder: (_, _) => SizedBox(width: 8 * scale),
                 itemBuilder: (context, i) {
                   final filter = filters[i];
                   final selected = _statusFilter == filter;
@@ -232,21 +233,38 @@ class _RentalOrdersPageState extends State<RentalOrdersPage> {
                         borderRadius: BorderRadius.circular(30 * scale),
                         gradient:
                             selected
-                                ? const LinearGradient(
-                                  colors: [
-                                    Color(0xFF2563EB),
-                                    Color(0xFF1E40AF),
-                                    Color(0xFF020617),
-                                  ],
-                                  stops: [0.0, 0.6, 1.0],
-                                  begin: Alignment.bottomRight,
-                                  end: Alignment.topLeft,
-                                )
+                                ? (context.isDark
+                                    ? const LinearGradient(
+                                      colors: [
+                                        Color(0xFF38BDF8),
+                                        Color(0xFF60A5FA),
+                                        Color(0xFFBAE6FD),
+                                      ],
+                                      stops: [0.0, 0.6, 1.0],
+                                      begin: Alignment.bottomRight,
+                                      end: Alignment.topLeft,
+                                    )
+                                    : const LinearGradient(
+                                      colors: [
+                                        Color(0xFF2563EB),
+                                        Color(0xFF1E40AF),
+                                        Color(0xFF020617),
+                                      ],
+                                      stops: [0.0, 0.6, 1.0],
+                                      begin: Alignment.bottomRight,
+                                      end: Alignment.topLeft,
+                                    ))
                                 : LinearGradient(
                                   colors: [
-                                    Colors.grey.shade200,
-                                    Colors.grey.shade300,
+                                    Theme.of(
+                                      context,
+                                    ).colorScheme.surfaceContainerHigh,
+                                    Theme.of(
+                                      context,
+                                    ).colorScheme.surfaceContainerHigh,
                                   ],
+                                  begin: Alignment.bottomRight,
+                                  end: Alignment.topLeft,
                                 ),
                       ),
                       child: Row(
@@ -257,7 +275,7 @@ class _RentalOrdersPageState extends State<RentalOrdersPage> {
                             _getFilterIcon(filter),
                             size: 14 * scale,
                             color:
-                                selected ? Colors.white : Colors.grey.shade700,
+                                selected ? Colors.white : context.textSecondary,
                           ),
                           SizedBox(width: 6 * scale),
 
@@ -265,7 +283,8 @@ class _RentalOrdersPageState extends State<RentalOrdersPage> {
                           Text(
                             filter,
                             style: TextStyle(
-                              color: selected ? Colors.white : Colors.grey[800],
+                              color:
+                                  selected ? Colors.white : context.textPrimary,
                               fontWeight:
                                   selected ? FontWeight.w700 : FontWeight.w600,
                               fontSize: 12 * scale,
@@ -380,16 +399,32 @@ class _RentalOrdersPageState extends State<RentalOrdersPage> {
       margin: EdgeInsets.symmetric(horizontal: 10 * scale, vertical: 6 * scale),
       padding: EdgeInsets.all(14 * scale),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF2563EB), Color(0xFF1E40AF), Color(0xFF020617)],
-          stops: [0.0, 0.6, 1.0],
-          begin: Alignment.bottomRight,
-          end: Alignment.topLeft,
-        ),
+        gradient:
+            context.isDark
+                ? const LinearGradient(
+                  colors: [
+                    Color(0xFF38BDF8),
+                    Color(0xFF60A5FA),
+                    Color(0xFFBAE6FD),
+                  ],
+                  stops: [0.0, 0.6, 1.0],
+                  begin: Alignment.bottomRight,
+                  end: Alignment.topLeft,
+                )
+                : const LinearGradient(
+                  colors: [
+                    Color(0xFF2563EB),
+                    Color(0xFF1E40AF),
+                    Color(0xFF020617),
+                  ],
+                  stops: [0.0, 0.6, 1.0],
+                  begin: Alignment.bottomRight,
+                  end: Alignment.topLeft,
+                ),
         borderRadius: BorderRadius.circular(16 * scale),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF1E40AF).withOpacity(0.25),
+            color: const Color(0xFF1E40AF).withValues(alpha: 0.25),
             blurRadius: 10 * scale,
             offset: Offset(0, 5 * scale),
           ),
@@ -455,20 +490,20 @@ class _RentalOrdersPageState extends State<RentalOrdersPage> {
             width: 110 * scale,
             height: 110 * scale,
             decoration: BoxDecoration(
-              color: Colors.grey[100],
+              color: Theme.of(context).colorScheme.surfaceContainerHigh,
               shape: BoxShape.circle,
             ),
             child: Icon(
               Icons.inventory_2_outlined,
               size: 45 * scale,
-              color: Colors.grey[400],
+              color: context.textSecondary.withValues(alpha: 0.5),
             ),
           ),
           SizedBox(height: 18 * scale),
           Text(
             "No Orders Found",
             style: TextStyle(
-              color: Colors.grey[600],
+              color: context.textPrimary,
               fontSize: 16 * scale,
               fontWeight: FontWeight.w600,
             ),
@@ -476,7 +511,10 @@ class _RentalOrdersPageState extends State<RentalOrdersPage> {
           SizedBox(height: 6 * scale),
           Text(
             "Try adjusting your search or filter",
-            style: TextStyle(color: Colors.grey[500], fontSize: 13 * scale),
+            style: TextStyle(
+              color: context.textSecondary,
+              fontSize: 13 * scale,
+            ),
           ),
         ],
       ),
@@ -489,11 +527,12 @@ class _RentalOrdersPageState extends State<RentalOrdersPage> {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.appColors.card,
         borderRadius: BorderRadius.circular(16 * scale),
+        border: Border.all(color: context.borderColor),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: context.appColors.shadowColor,
             blurRadius: 12 * scale,
             offset: Offset(0, 4 * scale),
           ),
@@ -535,7 +574,7 @@ class _RentalOrdersPageState extends State<RentalOrdersPage> {
                             style: TextStyle(
                               fontSize: 16 * scale,
                               fontWeight: FontWeight.w600,
-                              color: Colors.black87,
+                              color: context.textPrimary,
                             ),
                           ),
                           Container(
@@ -544,7 +583,7 @@ class _RentalOrdersPageState extends State<RentalOrdersPage> {
                               vertical: 4 * scale,
                             ),
                             decoration: BoxDecoration(
-                              color: statusColor.withOpacity(0.1),
+                              color: statusColor.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(12 * scale),
                             ),
                             child: Row(
@@ -577,7 +616,7 @@ class _RentalOrdersPageState extends State<RentalOrdersPage> {
                       Text(
                         o.itemName,
                         style: TextStyle(
-                          color: Colors.grey[600],
+                          color: context.textSecondary,
                           fontSize: 14 * scale,
                           fontWeight: FontWeight.w500,
                         ),
@@ -589,7 +628,7 @@ class _RentalOrdersPageState extends State<RentalOrdersPage> {
                         "${DateFormat('dd MMM yyyy').format(o.fromDateTime)} - "
                         "${DateFormat('dd MMM yyyy').format(o.toDateTime)}",
                         style: TextStyle(
-                          color: Colors.grey[500],
+                          color: context.textSecondary,
                           fontSize: 12 * scale,
                         ),
                       ),
@@ -603,7 +642,7 @@ class _RentalOrdersPageState extends State<RentalOrdersPage> {
                             style: TextStyle(
                               fontSize: 16 * scale,
                               fontWeight: FontWeight.w700,
-                              color: Colors.black87,
+                              color: context.textPrimary,
                             ),
                           ),
 

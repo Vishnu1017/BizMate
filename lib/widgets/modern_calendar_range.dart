@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart' show HugeIcon, HugeIcons;
 import 'package:intl/intl.dart';
+import '../utils/app_theme.dart';
 
 class ModernCalendarRange extends StatefulWidget {
   final DateTime? selectedStartDate;
@@ -179,17 +180,17 @@ class _ModernCalendarRangeState extends State<ModernCalendarRange> {
     }
   }
 
-  Color _getDateColor(DateTime date, bool currentMonth) {
-    if (!_isSelectable(date)) return Colors.grey.shade300;
+  Color _getDateColor(DateTime date, bool currentMonth, bool isDark) {
+    if (!_isSelectable(date)) return isDark ? Colors.grey.shade700 : Colors.grey.shade300;
 
     if (_isStartDate(date) || _isEndDate(date)) return Colors.white;
-    if (_isInSelectedRange(date)) return Colors.blue.shade700;
-    if (_isToday(date)) return Colors.black87;
-    if (!currentMonth) return Colors.grey.shade400;
-    return Colors.black87;
+    if (_isInSelectedRange(date)) return isDark ? Colors.lightBlueAccent : Colors.blue.shade700;
+    if (_isToday(date)) return isDark ? Colors.orangeAccent : Colors.black87;
+    if (!currentMonth) return isDark ? Colors.grey.shade600 : Colors.grey.shade400;
+    return isDark ? Colors.white70 : Colors.black87;
   }
 
-  BoxDecoration _getDateDecoration(DateTime date) {
+  BoxDecoration _getDateDecoration(DateTime date, bool isDark) {
     final isStart = _isStartDate(date);
     final isEnd = _isEndDate(date);
     final isInRange = _isInSelectedRange(date);
@@ -218,16 +219,24 @@ class _ModernCalendarRangeState extends State<ModernCalendarRange> {
                 ),
         boxShadow: [
           BoxShadow(
-            color: Colors.blue.shade400.withOpacity(0.5),
+            color: Colors.blue.shade400.withValues(alpha: 0.5),
             blurRadius: 6,
             spreadRadius: 1,
           ),
         ],
       );
     } else if (isInRange) {
-      return BoxDecoration(color: Colors.blue.shade100.withOpacity(0.55));
+      return BoxDecoration(
+        color: isDark 
+            ? Colors.blue.shade900.withValues(alpha: 0.5) 
+            : Colors.blue.shade100.withValues(alpha: 0.55),
+      );
     } else if (isInHoverRange) {
-      return BoxDecoration(color: Colors.blue.shade50.withOpacity(0.4));
+      return BoxDecoration(
+        color: isDark 
+            ? Colors.blue.shade800.withValues(alpha: 0.3) 
+            : Colors.blue.shade50.withValues(alpha: 0.4),
+      );
     } else if (isToday && isCurrentMonth) {
       return BoxDecoration(
         border: Border.all(color: Colors.orange.shade400, width: 1.5),
@@ -260,6 +269,7 @@ class _ModernCalendarRangeState extends State<ModernCalendarRange> {
   Widget build(BuildContext context) {
     final days = _getDaysInMonth();
     final width = MediaQuery.of(context).size.width;
+    final isDark = context.isDark;
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(22),
@@ -269,10 +279,10 @@ class _ModernCalendarRangeState extends State<ModernCalendarRange> {
           width: width * 0.9,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(22),
-            color: Colors.white.withOpacity(0.85),
+            color: isDark ? const Color(0xFF1E293B) : Colors.white.withValues(alpha: 0.85),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.07),
+                color: Colors.black.withValues(alpha: 0.2),
                 blurRadius: 20,
                 offset: const Offset(0, 6),
               ),
@@ -282,16 +292,16 @@ class _ModernCalendarRangeState extends State<ModernCalendarRange> {
             mainAxisSize: MainAxisSize.min,
             children: [
               // HEADER
-              _buildHeader(width),
+              _buildHeader(width, isDark),
 
               // WEEKDAYS
-              _buildWeekdays(width),
+              _buildWeekdays(width, isDark),
 
               // GRID
-              _buildDateGrid(days, width),
+              _buildDateGrid(days, width, isDark),
 
               // FOOTER WITH SAVE BUTTON
-              _buildFooter(width),
+              _buildFooter(width, isDark),
             ],
           ),
         ),
@@ -299,13 +309,15 @@ class _ModernCalendarRangeState extends State<ModernCalendarRange> {
     );
   }
 
-  Widget _buildHeader(double width) {
+  Widget _buildHeader(double width, bool isDark) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
       decoration: BoxDecoration(
         borderRadius: const BorderRadius.vertical(top: Radius.circular(22)),
         gradient: LinearGradient(
-          colors: [Colors.blue.shade200, Colors.purple.shade200],
+          colors: isDark 
+              ? [const Color(0xFF1E3A8A), const Color(0xFF581C87)]
+              : [Colors.blue.shade200, Colors.purple.shade200],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -313,7 +325,7 @@ class _ModernCalendarRangeState extends State<ModernCalendarRange> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          _navButton(Icons.chevron_left_rounded, _previousMonth),
+          _navButton(Icons.chevron_left_rounded, _previousMonth, isDark),
           Column(
             children: [
               Text(
@@ -321,26 +333,26 @@ class _ModernCalendarRangeState extends State<ModernCalendarRange> {
                 style: TextStyle(
                   fontSize: width * 0.045,
                   fontWeight: FontWeight.bold,
-                  color: Colors.black87,
+                  color: isDark ? Colors.white : Colors.black87,
                 ),
               ),
-              SizedBox(height: 2),
+              const SizedBox(height: 2),
               Text(
                 "Select date range",
                 style: TextStyle(
                   fontSize: width * 0.03,
-                  color: Colors.black.withOpacity(0.6),
+                  color: isDark ? Colors.white70 : Colors.black.withValues(alpha: 0.6),
                 ),
               ),
             ],
           ),
-          _navButton(Icons.chevron_right_rounded, _nextMonth),
+          _navButton(Icons.chevron_right_rounded, _nextMonth, isDark),
         ],
       ),
     );
   }
 
-  Widget _buildWeekdays(double width) {
+  Widget _buildWeekdays(double width, bool isDark) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       child: Row(
@@ -352,7 +364,7 @@ class _ModernCalendarRangeState extends State<ModernCalendarRange> {
                       child: Text(
                         day,
                         style: TextStyle(
-                          color: Colors.grey.shade700,
+                          color: isDark ? Colors.grey.shade400 : Colors.grey.shade700,
                           fontWeight: FontWeight.w600,
                           fontSize: width * 0.03,
                         ),
@@ -365,14 +377,14 @@ class _ModernCalendarRangeState extends State<ModernCalendarRange> {
     );
   }
 
-  Widget _buildDateGrid(List<DateTime> days, double width) {
+  Widget _buildDateGrid(List<DateTime> days, double width, bool isDark) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12),
       child: GridView.builder(
         shrinkWrap: true,
-        physics: NeverScrollableScrollPhysics(),
+        physics: const NeverScrollableScrollPhysics(),
         itemCount: days.length,
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 7,
           childAspectRatio: 1.2,
         ),
@@ -386,8 +398,8 @@ class _ModernCalendarRangeState extends State<ModernCalendarRange> {
             child: GestureDetector(
               onTap: isCurrentMonth ? () => _onDateSelected(date) : null,
               child: AnimatedContainer(
-                duration: Duration(milliseconds: 200),
-                decoration: _getDateDecoration(date),
+                duration: const Duration(milliseconds: 200),
+                decoration: _getDateDecoration(date, isDark),
                 child: Center(
                   child: Text(
                     date.day.toString(),
@@ -397,7 +409,7 @@ class _ModernCalendarRangeState extends State<ModernCalendarRange> {
                           (_isStartDate(date) || _isEndDate(date))
                               ? FontWeight.bold
                               : FontWeight.w500,
-                      color: _getDateColor(date, isCurrentMonth),
+                      color: _getDateColor(date, isCurrentMonth, isDark),
                     ),
                   ),
                 ),
@@ -409,15 +421,15 @@ class _ModernCalendarRangeState extends State<ModernCalendarRange> {
     );
   }
 
-  Widget _buildFooter(double width) {
+  Widget _buildFooter(double width, bool isDark) {
     bool canSave = _selectedStartDate != null && _selectedEndDate != null;
 
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.vertical(bottom: Radius.circular(22)),
-        color: Colors.grey.shade200,
+        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(22)),
+        color: isDark ? const Color(0xFF0F172A) : Colors.grey.shade200,
       ),
       child: Column(
         children: [
@@ -427,11 +439,11 @@ class _ModernCalendarRangeState extends State<ModernCalendarRange> {
             style: TextStyle(
               fontWeight: FontWeight.w600,
               fontSize: width * 0.035,
-              color: Colors.grey.shade700,
+              color: isDark ? Colors.grey.shade300 : Colors.grey.shade700,
             ),
           ),
 
-          SizedBox(height: 14),
+          const SizedBox(height: 14),
 
           if (_selectedStartDate != null || _selectedEndDate != null)
             Row(
@@ -451,7 +463,7 @@ class _ModernCalendarRangeState extends State<ModernCalendarRange> {
                         }
                       },
                       style: ElevatedButton.styleFrom(
-                        padding: EdgeInsets.symmetric(
+                        padding: const EdgeInsets.symmetric(
                           horizontal: 20,
                           vertical: 12,
                         ),
@@ -461,7 +473,7 @@ class _ModernCalendarRangeState extends State<ModernCalendarRange> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: Row(
+                      child: const Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           HugeIcon(
@@ -475,7 +487,7 @@ class _ModernCalendarRangeState extends State<ModernCalendarRange> {
                     ),
                   ),
 
-                if (canSave) SizedBox(width: 12),
+                if (canSave) const SizedBox(width: 12),
 
                 // CLEAR BUTTON
                 Expanded(
@@ -488,17 +500,17 @@ class _ModernCalendarRangeState extends State<ModernCalendarRange> {
                       });
                     },
                     style: OutlinedButton.styleFrom(
-                      padding: EdgeInsets.symmetric(
+                      padding: const EdgeInsets.symmetric(
                         horizontal: 20,
                         vertical: 12,
                       ),
-                      side: BorderSide(color: Colors.red),
+                      side: const BorderSide(color: Colors.red),
                       foregroundColor: Colors.red,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: Row(
+                    child: const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         HugeIcon(
@@ -518,25 +530,26 @@ class _ModernCalendarRangeState extends State<ModernCalendarRange> {
     );
   }
 
-  Widget _navButton(IconData icon, VoidCallback onTap) {
+  Widget _navButton(IconData icon, VoidCallback onTap, bool isDark) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
       child: Container(
-        padding: EdgeInsets.all(6),
+        padding: const EdgeInsets.all(6),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: isDark ? const Color(0xFF334155) : Colors.white,
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 6,
-              offset: Offset(0, 2),
+              offset: const Offset(0, 2),
             ),
           ],
         ),
-        child: Icon(icon, color: Colors.black87, size: 20),
+        child: Icon(icon, color: isDark ? Colors.white : Colors.black87, size: 20),
       ),
     );
   }
 }
+

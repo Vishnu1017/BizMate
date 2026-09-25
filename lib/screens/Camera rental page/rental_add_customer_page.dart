@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:ui';
 import 'package:bizmate/services/rental_cart.dart';
 import 'package:bizmate/widgets/app_snackbar.dart' show AppSnackBar;
+import 'package:bizmate/widgets/app_theme_toggle.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import '../../../models/customer_model.dart';
@@ -147,8 +148,8 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  const Color(0xFF1A237E).withOpacity(0.98),
-                  const Color(0xFF00BCD4).withOpacity(0.95),
+                  const Color(0xFF1A237E).withValues(alpha: 0.98),
+                  const Color(0xFF00BCD4).withValues(alpha: 0.95),
                 ],
               ),
               borderRadius: const BorderRadius.vertical(
@@ -156,7 +157,7 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.3),
+                  color: Colors.black.withValues(alpha: 0.3),
                   blurRadius: 40,
                   offset: const Offset(0, -10),
                 ),
@@ -278,8 +279,8 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
                                         decoration: BoxDecoration(
                                           gradient: LinearGradient(
                                             colors: [
-                                              color.withOpacity(0.9),
-                                              color.withOpacity(0.7),
+                                              color.withValues(alpha: 0.9),
+                                              color.withValues(alpha: 0.7),
                                             ],
                                           ),
                                           borderRadius: BorderRadius.circular(
@@ -287,14 +288,14 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
                                           ),
                                           boxShadow: [
                                             BoxShadow(
-                                              color: color.withOpacity(0.3),
+                                              color: color.withValues(alpha: 0.3),
                                               blurRadius: 15,
                                               offset: const Offset(0, 5),
                                             ),
                                           ],
                                           border: Border.all(
-                                            color: Colors.white.withOpacity(
-                                              0.3,
+                                            color: Colors.white.withValues(
+                                              alpha: 0.3,
                                             ),
                                             width: 1.5,
                                           ),
@@ -700,19 +701,19 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
             borderRadius: BorderRadius.circular(18 * localScale),
             gradient: LinearGradient(
               colors: [
-                Colors.white.withOpacity(0.16),
-                Colors.white.withOpacity(0.08),
+                Colors.white.withValues(alpha: 0.16),
+                Colors.white.withValues(alpha: 0.08),
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             border: Border.all(
-              color: Colors.white.withOpacity(0.25),
+              color: Colors.white.withValues(alpha: 0.25),
               width: 1.4,
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.18),
+                color: Colors.black.withValues(alpha: 0.18),
                 blurRadius: 14 * localScale,
                 offset: const Offset(0, 8),
               ),
@@ -734,7 +735,7 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
               labelText: label,
               floatingLabelBehavior: FloatingLabelBehavior.auto,
               labelStyle: TextStyle(
-                color: Colors.white.withOpacity(0.8),
+                color: Colors.white.withValues(alpha: 0.8),
                 fontWeight: FontWeight.w600,
                 fontSize: 13 * localScale,
               ),
@@ -743,7 +744,7 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
               prefixIcon: Icon(
                 icon,
                 size: 18 * localScale,
-                color: Colors.white.withOpacity(0.85),
+                color: Colors.white.withValues(alpha: 0.85),
               ),
 
               // 🔥 SHRINK icon box ONLY for these 2 fields
@@ -762,14 +763,14 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
 
               suffixText: suffixText,
               suffixStyle: TextStyle(
-                color: Colors.white.withOpacity(0.8),
+                color: Colors.white.withValues(alpha: 0.8),
                 fontSize: 11 * localScale,
                 fontWeight: FontWeight.w600,
               ),
 
               prefixText: prefixText,
               prefixStyle: TextStyle(
-                color: Colors.white.withOpacity(0.8),
+                color: Colors.white.withValues(alpha: 0.8),
                 fontSize: 11 * localScale,
                 fontWeight: FontWeight.w600,
               ),
@@ -814,20 +815,20 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
         borderRadius: BorderRadius.circular(20),
         gradient: LinearGradient(
           colors: [
-            Colors.white.withOpacity(0.15),
-            Colors.white.withOpacity(0.08),
+            Colors.white.withValues(alpha: 0.15),
+            Colors.white.withValues(alpha: 0.08),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        border: Border.all(color: Colors.white.withOpacity(0.3), width: 1.5),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 1.5),
       ),
       child: DropdownButtonFormField<String>(
         initialValue: value,
         decoration: InputDecoration(
           labelText: label,
           labelStyle: TextStyle(
-            color: Colors.white.withOpacity(0.8),
+            color: Colors.white.withValues(alpha: 0.8),
             fontWeight: FontWeight.w600,
           ),
           border: InputBorder.none,
@@ -835,7 +836,7 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
         ),
         dropdownColor: const Color(0xFF1A237E),
         style: const TextStyle(color: Colors.white),
-        icon: Icon(Icons.arrow_drop_down, color: Colors.white.withOpacity(0.8)),
+        icon: Icon(Icons.arrow_drop_down, color: Colors.white.withValues(alpha: 0.8)),
         items:
             options
                 .map((opt) => DropdownMenuItem(value: opt, child: Text(opt)))
@@ -852,13 +853,13 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
         borderRadius: BorderRadius.circular(16),
         gradient: LinearGradient(
           colors: [
-            Colors.white.withOpacity(0.1),
-            Colors.white.withOpacity(0.05),
+            Colors.white.withValues(alpha: 0.1),
+            Colors.white.withValues(alpha: 0.05),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        border: Border.all(color: Colors.white.withOpacity(0.2)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
       ),
       child: Column(
         children: [
@@ -866,7 +867,7 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
             label,
             style: TextStyle(
               fontSize: 12,
-              color: Colors.white.withOpacity(0.8),
+              color: Colors.white.withValues(alpha: 0.8),
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -896,13 +897,13 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
           borderRadius: BorderRadius.circular(16),
           gradient: LinearGradient(
             colors: [
-              Colors.white.withOpacity(0.15),
-              Colors.white.withOpacity(0.08),
+              Colors.white.withValues(alpha: 0.15),
+              Colors.white.withValues(alpha: 0.08),
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          border: Border.all(color: Colors.white.withOpacity(0.3), width: 1.5),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 1.5),
         ),
         child: Material(
           color: Colors.transparent,
@@ -919,7 +920,7 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
                 children: [
                   Icon(
                     icon,
-                    color: Colors.white.withOpacity(0.8),
+                    color: Colors.white.withValues(alpha: 0.8),
                     size: 14 * scale,
                   ),
                   SizedBox(width: 10 * scale),
@@ -929,7 +930,7 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
                           ? "Select $label Date"
                           : _formatDateTime(dateTime),
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                         fontSize: 10 * scale,
                         fontWeight: FontWeight.w500,
                       ),
@@ -957,13 +958,13 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
         borderRadius: BorderRadius.circular(20),
         gradient: LinearGradient(
           colors: [
-            Colors.white.withOpacity(0.15),
-            Colors.white.withOpacity(0.08),
+            Colors.white.withValues(alpha: 0.15),
+            Colors.white.withValues(alpha: 0.08),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        border: Border.all(color: Colors.white.withOpacity(0.3), width: 1.5),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 1.5),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -974,7 +975,7 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
               Container(
                 padding: EdgeInsets.all(6 * scale),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
@@ -1011,7 +1012,7 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
             Text(
               "Items (${cartItems.length})",
               style: TextStyle(
-                color: Colors.white.withOpacity(0.9),
+                color: Colors.white.withValues(alpha: 0.9),
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
               ),
@@ -1089,7 +1090,7 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
           Text(
             label,
             style: TextStyle(
-              color: Colors.white.withOpacity(0.8),
+              color: Colors.white.withValues(alpha: 0.8),
               fontSize: 14,
               fontWeight: isTotal ? FontWeight.w600 : FontWeight.w500,
             ),
@@ -1115,13 +1116,13 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
         borderRadius: BorderRadius.circular(20),
         gradient: LinearGradient(
           colors: [
-            Colors.white.withOpacity(0.15),
-            Colors.white.withOpacity(0.08),
+            Colors.white.withValues(alpha: 0.15),
+            Colors.white.withValues(alpha: 0.08),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        border: Border.all(color: Colors.white.withOpacity(0.2), width: 1.5),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.2), width: 1.5),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1131,7 +1132,7 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
               Container(
                 padding: EdgeInsets.all(6 * scale),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
@@ -1251,6 +1252,12 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
+        actions: const [
+          Padding(
+            padding: EdgeInsets.only(right: 16),
+            child: AppThemeToggle(),
+          ),
+        ],
         leading: IconButton(
           onPressed: _isSaving ? null : () => Navigator.pop(context),
           icon: Container(
@@ -1258,10 +1265,10 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
             height: 30 * scale,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha: 0.2),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
+                  color: Colors.black.withValues(alpha: 0.1),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
@@ -1307,12 +1314,12 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
                       shape: BoxShape.circle,
                       gradient: LinearGradient(
                         colors: [
-                          Colors.white.withOpacity(0.2),
-                          Colors.white.withOpacity(0.1),
+                          Colors.white.withValues(alpha: 0.2),
+                          Colors.white.withValues(alpha: 0.1),
                         ],
                       ),
                       border: Border.all(
-                        color: Colors.white.withOpacity(0.3),
+                        color: Colors.white.withValues(alpha: 0.3),
                         width: 2,
                       ),
                     ),
@@ -1353,14 +1360,14 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
                             borderRadius: BorderRadius.circular(20),
                             gradient: LinearGradient(
                               colors: [
-                                Colors.white.withOpacity(0.15),
-                                Colors.white.withOpacity(0.08),
+                                Colors.white.withValues(alpha: 0.15),
+                                Colors.white.withValues(alpha: 0.08),
                               ],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                             ),
                             border: Border.all(
-                              color: Colors.white.withOpacity(0.2),
+                              color: Colors.white.withValues(alpha: 0.2),
                               width: 1,
                             ),
                           ),
@@ -1379,7 +1386,7 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
                               Text(
                                 "Complete customer details to finalize rental",
                                 style: TextStyle(
-                                  color: Colors.white.withOpacity(0.8),
+                                  color: Colors.white.withValues(alpha: 0.8),
                                   fontSize: 12 * scale,
                                   fontWeight: FontWeight.w500,
                                 ),
@@ -1407,7 +1414,7 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
 
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.3),
+                                color: Colors.black.withValues(alpha: 0.3),
                                 blurRadius: 20 * scale,
                                 offset: const Offset(0, 10),
                               ),
@@ -1441,7 +1448,7 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
                                                               .image_not_supported,
                                                           size: 60 * scale,
                                                           color: Colors.white
-                                                              .withOpacity(0.6),
+                                                              .withValues(alpha: 0.6),
                                                         ),
                                                         const SizedBox(
                                                           height: 8,
@@ -1450,8 +1457,8 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
                                                           "No Image",
                                                           style: TextStyle(
                                                             color: Colors.white
-                                                                .withOpacity(
-                                                                  0.6,
+                                                                .withValues(
+                                                                  alpha: 0.6,
                                                                 ),
                                                             fontSize: 14,
                                                           ),
@@ -1473,7 +1480,7 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
                                                 begin: Alignment.bottomCenter,
                                                 end: Alignment.topCenter,
                                                 colors: [
-                                                  Colors.black.withOpacity(0.6),
+                                                  Colors.black.withValues(alpha: 0.6),
                                                   Colors.transparent,
                                                 ],
                                               ),
@@ -1491,14 +1498,14 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
                                               vertical: 4 * scale,
                                             ),
                                             decoration: BoxDecoration(
-                                              color: Colors.white.withOpacity(
-                                                0.2,
+                                              color: Colors.white.withValues(
+                                                alpha: 0.2,
                                               ),
                                               borderRadius:
                                                   BorderRadius.circular(12),
                                               border: Border.all(
-                                                color: Colors.white.withOpacity(
-                                                  0.3,
+                                                color: Colors.white.withValues(
+                                                  alpha: 0.3,
                                                 ),
                                               ),
                                             ),
@@ -1553,7 +1560,7 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
                                                               .image_not_supported,
                                                           size: 50,
                                                           color: Colors.white
-                                                              .withOpacity(0.6),
+                                                              .withValues(alpha: 0.6),
                                                         ),
                                                       ),
                                             ),
@@ -1571,8 +1578,8 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
                                                         Alignment.bottomCenter,
                                                     end: Alignment.topCenter,
                                                     colors: [
-                                                      Colors.black.withOpacity(
-                                                        0.6,
+                                                      Colors.black.withValues(
+                                                        alpha: 0.6,
                                                       ),
                                                       Colors.transparent,
                                                     ],
@@ -1592,12 +1599,12 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
                                                 ),
                                                 decoration: BoxDecoration(
                                                   color: Colors.white
-                                                      .withOpacity(0.2),
+                                                      .withValues(alpha: 0.2),
                                                   borderRadius:
                                                       BorderRadius.circular(12),
                                                   border: Border.all(
                                                     color: Colors.white
-                                                        .withOpacity(0.3),
+                                                        .withValues(alpha: 0.3),
                                                   ),
                                                 ),
                                                 child: Text(
@@ -1628,14 +1635,14 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
                             borderRadius: BorderRadius.circular(20),
                             gradient: LinearGradient(
                               colors: [
-                                Colors.white.withOpacity(0.15),
-                                Colors.white.withOpacity(0.08),
+                                Colors.white.withValues(alpha: 0.15),
+                                Colors.white.withValues(alpha: 0.08),
                               ],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                             ),
                             border: Border.all(
-                              color: Colors.white.withOpacity(0.2),
+                              color: Colors.white.withValues(alpha: 0.2),
                               width: 1.5,
                             ),
                           ),
@@ -1647,7 +1654,7 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
                                   Container(
                                     padding: EdgeInsets.all(6 * scale),
                                     decoration: BoxDecoration(
-                                      color: Colors.white.withOpacity(0.2),
+                                      color: Colors.white.withValues(alpha: 0.2),
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: Icon(
@@ -1706,14 +1713,14 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
                             borderRadius: BorderRadius.circular(20),
                             gradient: LinearGradient(
                               colors: [
-                                Colors.white.withOpacity(0.15),
-                                Colors.white.withOpacity(0.08),
+                                Colors.white.withValues(alpha: 0.15),
+                                Colors.white.withValues(alpha: 0.08),
                               ],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                             ),
                             border: Border.all(
-                              color: Colors.white.withOpacity(0.2),
+                              color: Colors.white.withValues(alpha: 0.2),
                               width: 1.5,
                             ),
                           ),
@@ -1725,7 +1732,7 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
                                   Container(
                                     padding: EdgeInsets.all(6 * scale),
                                     decoration: BoxDecoration(
-                                      color: Colors.white.withOpacity(0.2),
+                                      color: Colors.white.withValues(alpha: 0.2),
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: Icon(
@@ -1786,13 +1793,13 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
                                 BoxShadow(
                                   color:
                                       _isSaving
-                                          ? Colors.grey.withOpacity(0.5)
-                                          : Colors.white.withOpacity(0.4),
+                                          ? Colors.grey.withValues(alpha: 0.5)
+                                          : Colors.white.withValues(alpha: 0.4),
                                   blurRadius: 15,
                                   offset: const Offset(0, 8),
                                 ),
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.2),
+                                  color: Colors.black.withValues(alpha: 0.2),
                                   blurRadius: 10,
                                   offset: const Offset(0, 4),
                                 ),
@@ -1866,7 +1873,7 @@ class _BackgroundPatternPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final paint =
         Paint()
-          ..color = Colors.white.withOpacity(0.03)
+          ..color = Colors.white.withValues(alpha: 0.03)
           ..style = PaintingStyle.fill;
 
     const circleSize = 80.0;
@@ -1923,7 +1930,7 @@ class CustomerCardPatternPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final paint =
         Paint()
-          ..color = color.withOpacity(0.3)
+          ..color = color.withValues(alpha: 0.3)
           ..style = PaintingStyle.fill;
 
     const circleSize = 60.0;

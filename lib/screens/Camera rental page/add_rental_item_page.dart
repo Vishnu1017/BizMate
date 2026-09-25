@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:bizmate/models/rental_item.dart';
 import 'package:bizmate/services/image_compression_service.dart';
 import 'package:bizmate/widgets/app_snackbar.dart' show AppSnackBar;
+import 'package:bizmate/widgets/app_theme_toggle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
@@ -182,7 +183,7 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: Colors.black.withValues(alpha: 0.2),
             blurRadius: 40,
             offset: const Offset(0, -10),
           ),
@@ -212,7 +213,7 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
                     width: 40 * Scale,
                     height: 40 * Scale,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF6366F1).withOpacity(0.1),
+                      color: const Color(0xFF6366F1).withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Icon(
@@ -291,9 +292,9 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
       child: Container(
         height: 140,
         decoration: BoxDecoration(
-          color: color.withOpacity(0.05),
+          color: color.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withOpacity(0.2), width: 1.5),
+          border: Border.all(color: color.withValues(alpha: 0.2), width: 1.5),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -302,7 +303,7 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
               width: 60,
               height: 60,
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(icon, size: 28, color: color),
@@ -460,8 +461,8 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
                   shape: BoxShape.circle,
                   gradient: LinearGradient(
                     colors: [
-                      const Color(0xFF6366F1).withOpacity(0.1),
-                      const Color(0xFF8B5CF6).withOpacity(0.05),
+                      const Color(0xFF6366F1).withValues(alpha: 0.1),
+                      const Color(0xFF8B5CF6).withValues(alpha: 0.05),
                     ],
                   ),
                 ),
@@ -478,8 +479,8 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
                   shape: BoxShape.circle,
                   gradient: LinearGradient(
                     colors: [
-                      const Color(0xFF10B981).withOpacity(0.1),
-                      const Color(0xFF059669).withOpacity(0.05),
+                      const Color(0xFF10B981).withValues(alpha: 0.1),
+                      const Color(0xFF059669).withValues(alpha: 0.05),
                     ],
                   ),
                 ),
@@ -498,6 +499,12 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
                   forceElevated: true,
                   surfaceTintColor: Colors.transparent,
                   shadowColor: Colors.transparent,
+                  actions: const [
+                    Padding(
+                      padding: EdgeInsets.only(right: 16),
+                      child: AppThemeToggle(),
+                    ),
+                  ],
 
                   flexibleSpace: FlexibleSpaceBar(
                     collapseMode: CollapseMode.pin,
@@ -528,7 +535,7 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
                               height: isDesktop ? 150 : (isTablet ? 120 : 100),
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: Colors.white.withOpacity(0.1),
+                                color: Colors.white.withValues(alpha: 0.1),
                               ),
                             ),
                           ),
@@ -559,10 +566,10 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
                       height: 30 * scale,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withValues(alpha: 0.2),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
+                            color: Colors.black.withValues(alpha: 0.1),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           ),
@@ -608,7 +615,7 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
             if (_showSuccess)
               Positioned.fill(
                 child: Container(
-                  color: Colors.black.withOpacity(0.4),
+                  color: Colors.black.withValues(alpha: 0.4),
                   child: Center(
                     child: Lottie.asset(
                       'assets/animations/success.json',
@@ -675,7 +682,7 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
           borderRadius: BorderRadius.circular(isDesktop ? 36 : 32),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 40,
               offset: const Offset(0, 20),
             ),
@@ -751,7 +758,7 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
               width: isDesktop ? 48 : (isTablet ? 44 : 40),
               height: isDesktop ? 48 : (isTablet ? 44 : 40),
               decoration: BoxDecoration(
-                color: const Color(0xFF6366F1).withOpacity(0.1),
+                color: const Color(0xFF6366F1).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(isDesktop ? 14 : 12),
               ),
               child: Icon(
@@ -807,7 +814,7 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
                   _selectedImage != null
                       ? [
                         BoxShadow(
-                          color: const Color(0xFF10B981).withOpacity(0.2),
+                          color: const Color(0xFF10B981).withValues(alpha: 0.2),
                           blurRadius: 20,
                           offset: const Offset(0, 8),
                         ),
@@ -823,7 +830,7 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
                           width: isDesktop ? 80 : (isTablet ? 72 : 64),
                           height: isDesktop ? 80 : (isTablet ? 72 : 64),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF6366F1).withOpacity(0.1),
+                            color: const Color(0xFF6366F1).withValues(alpha: 0.1),
                             shape: BoxShape.circle,
                           ),
                           child: Icon(
@@ -871,7 +878,7 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
                                 begin: Alignment.bottomCenter,
                                 end: Alignment.topCenter,
                                 colors: [
-                                  Colors.black.withOpacity(0.7),
+                                  Colors.black.withValues(alpha: 0.7),
                                   Colors.transparent,
                                 ],
                               ),
@@ -916,7 +923,7 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
                               child: Container(
                                 padding: EdgeInsets.all(isDesktop ? 10 : 8),
                                 decoration: BoxDecoration(
-                                  color: Colors.black.withOpacity(0.5),
+                                  color: Colors.black.withValues(alpha: 0.5),
                                   shape: BoxShape.circle,
                                 ),
                                 child: Icon(
@@ -975,7 +982,7 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
                 focusNode.hasFocus
                     ? [
                       BoxShadow(
-                        color: const Color(0xFF6366F1).withOpacity(0.1),
+                        color: const Color(0xFF6366F1).withValues(alpha: 0.1),
                         blurRadius: 15,
                         offset: const Offset(0, 5),
                       ),
@@ -1220,7 +1227,7 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
                 ),
                 margin: EdgeInsets.only(right: isDesktop ? 16 : 12),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF10B981).withOpacity(0.1),
+                  color: const Color(0xFF10B981).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(isDesktop ? 10 : 8),
                 ),
                 child: Text(
@@ -1395,7 +1402,7 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
         duration: const Duration(milliseconds: 300),
         height: isDesktop ? 64 : (isTablet ? 60 : 56),
         decoration: BoxDecoration(
-          color: isSelected ? color.withOpacity(0.1) : Colors.grey.shade200,
+          color: isSelected ? color.withValues(alpha: 0.1) : Colors.grey.shade200,
           borderRadius: BorderRadius.circular(isDesktop ? 18 : 16),
           border: Border.all(
             color: isSelected ? color : const Color(0xFFE2E8F0),
@@ -1405,7 +1412,7 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
               isSelected
                   ? [
                     BoxShadow(
-                      color: color.withOpacity(0.2),
+                      color: color.withValues(alpha: 0.2),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
@@ -1459,7 +1466,7 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
                       ? null
                       : [
                         BoxShadow(
-                          color: const Color(0xFF6366F1).withOpacity(0.25),
+                          color: const Color(0xFF6366F1).withValues(alpha: 0.25),
                           blurRadius: 14, // ⬅️ less blur
                           offset: const Offset(0, 4), // ⬅️ less lift
                         ),

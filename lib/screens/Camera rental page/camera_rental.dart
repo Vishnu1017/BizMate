@@ -3,6 +3,7 @@
 import 'dart:io';
 import 'package:bizmate/screens/Camera%20rental%20page/rental_sale_detail_screen.dart'
     show RentalSaleDetailScreen;
+import 'package:bizmate/utils/app_theme.dart';
 import 'package:bizmate/widgets/advanced_search_bar.dart'
     show AdvancedSearchBar;
 import 'package:bizmate/widgets/rental_sale_menu.dart' show RentalSaleMenu;
@@ -31,6 +32,7 @@ class CameraRentalPage extends StatefulWidget {
 class _CameraRentalPageState extends State<CameraRentalPage> {
   final ScrollController _scrollController = ScrollController();
   int _previousSaleCount = 0;
+
   LinearGradient getProgressGradient(double percentage) {
     if (percentage <= 20) {
       return const LinearGradient(
@@ -121,11 +123,13 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
           .toString()
           .replaceAll('.', '_')
           .replaceAll('@', '_');
+
       final boxName = "userdata_$safeEmail";
 
       if (!Hive.isBoxOpen(boxName)) {
         await Hive.openBox(boxName);
       }
+
       userBox = Hive.box(boxName);
     } catch (e) {
       debugPrint('Error opening user box: $e');
@@ -159,6 +163,7 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
       if (path != null && path.isNotEmpty) {
         final file = File(path);
         final exists = await file.exists();
+
         if (exists) {
           if (mounted) setState(() {});
         } else {
@@ -172,7 +177,9 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
 
   String _formatDateTime(DateTime dateTime) {
     final int hour12 = dateTime.hour % 12 == 0 ? 12 : dateTime.hour % 12;
+
     final String minute = dateTime.minute.toString().padLeft(2, '0');
+
     final String period = dateTime.hour >= 12 ? 'PM' : 'AM';
 
     return "${dateTime.day}/${dateTime.month}/${dateTime.year} "
@@ -184,7 +191,12 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
     final isTabletOrDesktop = screenWidth > 700;
     final adjustedSize = isTabletOrDesktop ? size + 8 : size;
 
-    // ✅ MULTI-ITEM CASE → CUSTOMER LETTER
+    final isDark = context.isDark;
+
+    // ============================================================
+    // MULTI ITEM
+    // ============================================================
+
     if (_hasMultipleItems(sale)) {
       final count = _getItemNames(sale).length;
 
@@ -204,10 +216,13 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
                   gradient: LinearGradient(
-                    colors: [
-                      Colors.blueGrey.shade300,
-                      Colors.blueGrey.shade500,
-                    ],
+                    colors:
+                        isDark
+                            ? const [Color(0xFF60A5FA), Color(0xFF93C5FD)]
+                            : [
+                              Colors.blueGrey.shade300,
+                              Colors.blueGrey.shade500,
+                            ],
                   ),
                 ),
               ),
@@ -219,19 +234,24 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
               height: adjustedSize - 16 * scale,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(12),
-                gradient: const LinearGradient(
-                  colors: [
-                    Color(0xFF2563EB),
-                    Color(0xFF1E40AF),
-                    Color(0xFF020617),
-                  ],
-                  stops: [0.0, 0.6, 1.0],
-                  begin: Alignment.bottomRight,
-                  end: Alignment.topLeft,
-                ),
+                gradient:
+                    isDark
+                        ? const LinearGradient(
+                          colors: [Color(0xFF93C5FD), Color(0xFF60A5FA)],
+                          begin: Alignment.bottomRight,
+                          end: Alignment.topLeft,
+                        )
+                        : const LinearGradient(
+                          colors: [Color(0xFF60A5FA), Color(0xFF2563EB)],
+                          begin: Alignment.bottomRight,
+                          end: Alignment.topLeft,
+                        ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.15),
+                    color:
+                        isDark
+                            ? const Color(0xFF60A5FA).withValues(alpha: 0.25)
+                            : const Color(0xFF1E40AF).withValues(alpha: 0.30),
                     blurRadius: 16,
                     offset: const Offset(0, 8),
                   ),
@@ -240,7 +260,7 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
               child: Center(
                 child: Icon(
                   Icons.photo_camera_rounded,
-                  color: Colors.white,
+                  color: isDark ? const Color(0xFF123A66) : Colors.white,
                   size: 30 * scale,
                 ),
               ),
@@ -256,13 +276,13 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
                   vertical: 2 * scale,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.black87,
+                  color: isDark ? const Color(0xFF1E3A5F) : Colors.black87,
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
                   "+$count",
                   style: TextStyle(
-                    color: Colors.white,
+                    color: isDark ? const Color(0xFFDCEBFF) : Colors.white,
                     fontSize: 8 * scale,
                     fontWeight: FontWeight.w700,
                   ),
@@ -274,21 +294,33 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
       );
     }
 
-    // ✅ SINGLE ITEM → EXISTING IMAGE LOGIC
+    // ============================================================
+    // SINGLE ITEM
+    // ============================================================
+
     return Container(
       width: adjustedSize,
       height: adjustedSize,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
-        gradient: const LinearGradient(
-          colors: [Color(0xFF2563EB), Color(0xFF1E40AF), Color(0xFF020617)],
-          stops: [0.0, 0.6, 1.0],
-          begin: Alignment.bottomRight,
-          end: Alignment.topLeft,
-        ),
+        gradient:
+            isDark
+                ? const LinearGradient(
+                  colors: [Color(0xFF93C5FD), Color(0xFF60A5FA)],
+                  begin: Alignment.bottomRight,
+                  end: Alignment.topLeft,
+                )
+                : const LinearGradient(
+                  colors: [Color(0xFF60A5FA), Color(0xFF2563EB)],
+                  begin: Alignment.bottomRight,
+                  end: Alignment.topLeft,
+                ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF1E40AF).withOpacity(0.4),
+            color:
+                isDark
+                    ? const Color(0xFF60A5FA).withValues(alpha: 0.25)
+                    : const Color(0xFF1E40AF).withValues(alpha: 0.30),
             blurRadius: 18,
             offset: const Offset(0, 8),
           ),
@@ -303,11 +335,12 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
               return Image.file(
                 File(sale.imageUrl!),
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) {
+                errorBuilder: (_, _, _) {
                   return _buildPlaceholderImage();
                 },
               );
             }
+
             return _buildPlaceholderImage();
           },
         ),
@@ -316,24 +349,36 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
   }
 
   Widget _buildPlaceholderImage() {
+    final isDark = context.isDark;
+
     return Container(
-      decoration: const BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF2563EB), Color(0xFF1E40AF), Color(0xFF020617)],
-          stops: [0.0, 0.6, 1.0],
-          begin: Alignment.bottomRight,
-          end: Alignment.topLeft,
-        ),
+      decoration: BoxDecoration(
+        gradient:
+            isDark
+                ? const LinearGradient(
+                  colors: [Color(0xFF93C5FD), Color(0xFF60A5FA)],
+                  begin: Alignment.bottomRight,
+                  end: Alignment.topLeft,
+                )
+                : const LinearGradient(
+                  colors: [Color(0xFF60A5FA), Color(0xFF2563EB)],
+                  begin: Alignment.bottomRight,
+                  end: Alignment.topLeft,
+                ),
       ),
-      child: const Column(
+      child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.photo_camera, color: Colors.white, size: 32),
-          SizedBox(height: 8),
+          Icon(
+            Icons.photo_camera,
+            color: isDark ? const Color(0xFF123A66) : Colors.white,
+            size: 32,
+          ),
+          const SizedBox(height: 8),
           Text(
             "Camera",
             style: TextStyle(
-              color: Colors.white,
+              color: isDark ? const Color(0xFF123A66) : Colors.white,
               fontSize: 14,
               fontWeight: FontWeight.w600,
             ),
@@ -351,10 +396,12 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
     try {
       final file = File(imageUrl);
       final exists = await file.exists();
+
       if (exists) {
         final length = await file.length();
         return length > 0;
       }
+
       return false;
     } catch (e) {
       debugPrint('Error checking image file: $e');
@@ -396,9 +443,9 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 6 * scale, vertical: 2 * scale),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
+        color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.7), width: 1),
+        border: Border.all(color: color.withValues(alpha: 0.7), width: 1),
       ),
       child: Text(
         status,
@@ -416,11 +463,15 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
     return ValueListenableBuilder(
       valueListenable: userBox.listenable(),
       builder: (context, Box box, _) {
+        final isDark = context.isDark;
+
         List<RentalSaleModel> allSales = [];
+
         try {
           allSales = List<RentalSaleModel>.from(
             box.get("rental_sales", defaultValue: []),
           );
+
           // 🔥 AUTO SCROLL WHEN NEW SALE ADDED
           if (allSales.length > _previousSaleCount) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -443,10 +494,12 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
           0.0,
           (sum, sale) => sum + sale.totalCost,
         );
+
         final totalPaid = allSales.fold(
           0.0,
           (sum, sale) => sum + sale.amountPaid,
         );
+
         final totalDue = totalAmount - totalPaid;
         final totalRentals = allSales.length;
 
@@ -457,17 +510,25 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
           ),
           padding: EdgeInsets.all(16 * scale),
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFF2563EB), Color(0xFF1E40AF), Color(0xFF020617)],
-              stops: [0.0, 0.6, 1.0],
-              begin: Alignment.bottomRight,
-              end: Alignment.topLeft,
-            ),
+            gradient:
+                isDark
+                    ? const LinearGradient(
+                      colors: [Color(0xFF93C5FD), Color(0xFF60A5FA)],
+                      begin: Alignment.bottomRight,
+                      end: Alignment.topLeft,
+                    )
+                    : const LinearGradient(
+                      colors: [Color(0xFF60A5FA), Color(0xFF2563EB)],
+                      begin: Alignment.bottomRight,
+                      end: Alignment.topLeft,
+                    ),
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF1E40AF).withOpacity(0.4),
-
+                color:
+                    isDark
+                        ? const Color(0xFF60A5FA).withValues(alpha: 0.20)
+                        : const Color(0xFF1E40AF).withValues(alpha: 0.30),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
               ),
@@ -495,14 +556,21 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
   }
 
   Widget _buildStatItem(IconData icon, String value, String label) {
+    final isDark = context.isDark;
+
+    final contentColor = isDark ? const Color(0xFF123A66) : Colors.white;
+
+    final secondaryColor =
+        isDark ? const Color(0xFF315D89) : Colors.white.withValues(alpha: 0.85);
+
     return Column(
       children: [
-        Icon(icon, color: Colors.white, size: 20 * scale * scale),
+        Icon(icon, color: contentColor, size: 20 * scale * scale),
         SizedBox(height: 4 * scale),
         Text(
           value,
           style: TextStyle(
-            color: Colors.white,
+            color: contentColor,
             fontSize: 14 * scale,
             fontWeight: FontWeight.w700,
           ),
@@ -511,7 +579,7 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
         Text(
           label,
           style: TextStyle(
-            color: Colors.white.withOpacity(0.85),
+            color: secondaryColor,
             fontSize: 10 * scale,
             fontWeight: FontWeight.w500,
           ),
@@ -521,6 +589,8 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
   }
 
   Widget _buildSaleCard(RentalSaleModel sale, int index, bool isWide) {
+    final isDark = context.isDark;
+
     final horizontalMargin = 10.0 * scale;
     final verticalMargin = 8.0 * scale;
     final radius = 20.0 * scale;
@@ -532,16 +602,28 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
         vertical: verticalMargin,
       ),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color:
+            isDark
+                ? Theme.of(context).colorScheme.surfaceContainerLow
+                : Colors.white,
         borderRadius: BorderRadius.circular(radius),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.shade300.withOpacity(0.7),
+            color:
+                isDark
+                    ? const Color(0xFF60A5FA).withValues(alpha: 0.10)
+                    : Colors.grey.shade300.withValues(alpha: 0.7),
             blurRadius: 18,
             offset: const Offset(0, 6),
           ),
         ],
-        border: Border.all(color: Colors.grey.shade100, width: 1),
+        border: Border.all(
+          color:
+              isDark
+                  ? Theme.of(context).colorScheme.outlineVariant
+                  : Colors.grey.shade100,
+          width: 1,
+        ),
       ),
       child: Material(
         color: Colors.transparent,
@@ -562,7 +644,6 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
               ),
             );
           },
-
           child: Padding(
             padding: padding,
             child:
@@ -576,6 +657,7 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
   }
 
   Widget _buildWideLayout(RentalSaleModel sale, int index) {
+    final isDark = context.isDark;
     final items = _getItemNames(sale);
 
     return Row(
@@ -596,7 +678,7 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
                     items.take(2).join(', '),
                     style: TextStyle(
                       fontSize: 12 * scale,
-                      color: Colors.black87,
+                      color: isDark ? context.textPrimary : Colors.black87,
                       fontWeight: FontWeight.w600,
                     ),
                     maxLines: 1,
@@ -607,7 +689,7 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
                       "+${items.length - 2} more",
                       style: TextStyle(
                         fontSize: 12 * scale,
-                        color: Colors.grey.shade600,
+                        color: context.textSecondary,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -625,6 +707,7 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
   }
 
   Widget _buildMobileLayout(RentalSaleModel sale, int index) {
+    final isDark = context.isDark;
     final screenWidth = MediaQuery.of(context).size.width;
     final isSmallPhone = screenWidth < 360;
     final items = _getItemNames(sale);
@@ -643,7 +726,6 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
                 children: [
                   _buildHeaderRow(sale, index),
                   SizedBox(height: 4 * scale),
-
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -651,7 +733,7 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
                         items.take(2).join(', '),
                         style: TextStyle(
                           fontSize: 8 * scale,
-                          color: Colors.black87,
+                          color: isDark ? context.textPrimary : Colors.black87,
                           fontWeight: FontWeight.w600,
                         ),
                         maxLines: 1,
@@ -662,7 +744,7 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
                           "+${items.length - 2} more",
                           style: TextStyle(
                             fontSize: 10 * scale,
-                            color: Colors.grey.shade600,
+                            color: context.textSecondary,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -682,6 +764,7 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
   }
 
   Widget _buildHeaderRow(RentalSaleModel sale, int index) {
+    final isDark = context.isDark;
     final customerPhone = sale.customerPhone.trim();
 
     return Row(
@@ -697,7 +780,7 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
                 style: TextStyle(
                   fontSize: 16 * scale,
                   fontWeight: FontWeight.w700,
-                  color: const Color(0xFF1a1a1a),
+                  color: isDark ? context.textPrimary : const Color(0xFF1A1A1A),
                 ),
                 overflow: TextOverflow.ellipsis,
                 maxLines: 1,
@@ -709,14 +792,14 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
                     Icon(
                       Icons.phone,
                       size: 12 * scale,
-                      color: Colors.grey.shade600,
+                      color: context.textSecondary,
                     ),
                     SizedBox(width: 4 * scale),
                     Text(
                       customerPhone,
                       style: TextStyle(
                         fontSize: 12 * scale,
-                        color: Colors.grey.shade600,
+                        color: context.textSecondary,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -749,7 +832,7 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
   Widget _buildDetailsRow(RentalSaleModel sale) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        // Adaptive max chip width → behaves like real production apps
+        // Adaptive max chip width
         double maxChipWidth = (constraints.maxWidth / 2) - 20;
 
         return Column(
@@ -776,7 +859,6 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
                 ),
               ],
             ),
-
             SizedBox(height: 8 * scale),
             Wrap(
               spacing: 12,
@@ -804,6 +886,8 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
   }
 
   Widget _buildAmountProgress(RentalSaleModel sale) {
+    final isDark = context.isDark;
+
     final double progress =
         sale.totalCost > 0 ? sale.amountPaid / sale.totalCost : 0.0;
 
@@ -821,7 +905,7 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
               style: TextStyle(
                 fontSize: 12 * scale,
                 fontWeight: FontWeight.w600,
-                color: Color(0xFF00C853),
+                color: const Color(0xFF00C853),
               ),
             ),
             Text(
@@ -841,7 +925,7 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
         Container(
           height: 8 * scale,
           decoration: BoxDecoration(
-            color: Colors.grey.shade200,
+            color: isDark ? const Color(0xFF334155) : Colors.grey.shade200,
             borderRadius: BorderRadius.circular(10),
           ),
           child: LayoutBuilder(
@@ -856,7 +940,6 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
             },
           ),
         ),
-
         SizedBox(height: 8 * scale),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -865,7 +948,7 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
               'Total: ₹${sale.totalCost.toInt()}',
               style: TextStyle(
                 fontSize: 10 * scale,
-                color: Colors.grey.shade600,
+                color: context.textSecondary,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -873,7 +956,7 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
               '${(progress * 100).toInt()}%',
               style: TextStyle(
                 fontSize: 10 * scale,
-                color: Colors.grey.shade600,
+                color: context.textSecondary,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -884,24 +967,34 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
   }
 
   Widget _buildDetailChip({required IconData icon, required String value}) {
+    final isDark = context.isDark;
+
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 8 * scale, vertical: 6 * scale),
       decoration: BoxDecoration(
-        color: Colors.grey.shade50,
+        color:
+            isDark
+                ? Theme.of(context).colorScheme.surfaceContainerHigh
+                : Colors.grey.shade50,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(
+          color:
+              isDark
+                  ? Theme.of(context).colorScheme.outlineVariant
+                  : Colors.grey.shade200,
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: Colors.grey.shade600, size: 8 * scale),
+          Icon(icon, color: context.textSecondary, size: 8 * scale),
           const SizedBox(width: 6),
           Flexible(
             child: Text(
               value,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                color: Colors.grey.shade700,
+                color: context.textSecondary,
                 fontSize: 8 * scale,
                 fontWeight: FontWeight.w500,
               ),
@@ -913,15 +1006,25 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
   }
 
   Widget _buildDateChip(String label, String value) {
+    final isDark = context.isDark;
+
     return Container(
       padding: EdgeInsets.symmetric(
         horizontal: 10 * scale,
         vertical: 6 * scale,
       ),
       decoration: BoxDecoration(
-        color: Colors.grey.shade50,
+        color:
+            isDark
+                ? Theme.of(context).colorScheme.surfaceContainerHigh
+                : Colors.grey.shade50,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(
+          color:
+              isDark
+                  ? Theme.of(context).colorScheme.outlineVariant
+                  : Colors.grey.shade200,
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -929,7 +1032,7 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
           Text(
             '$label: ',
             style: TextStyle(
-              color: Colors.grey.shade600,
+              color: context.textSecondary,
               fontSize: 8 * scale * scale,
               fontWeight: FontWeight.w500,
             ),
@@ -939,7 +1042,7 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
               value,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                color: Colors.grey.shade800,
+                color: context.textPrimary,
                 fontSize: 8 * scale,
                 fontWeight: FontWeight.bold,
               ),
@@ -951,8 +1054,12 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
   }
 
   Widget _buildEmptyState() {
+    final isDark = context.isDark;
+
     final screenWidth = MediaQuery.of(context).size.width;
+
     final isTabletOrDesktop = screenWidth > 700;
+
     final maxWidth = isTabletOrDesktop ? 400.0 : double.infinity;
 
     return Center(
@@ -965,13 +1072,13 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
               width: isTabletOrDesktop ? 140 : 120,
               height: isTabletOrDesktop ? 140 : 120,
               decoration: BoxDecoration(
-                color: Colors.grey.shade100,
+                color: isDark ? const Color(0xFF1E293B) : Colors.grey.shade100,
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 Icons.photo_camera_outlined,
                 size: isTabletOrDesktop ? 60 : 50,
-                color: Colors.grey.shade400,
+                color: isDark ? const Color(0xFF60A5FA) : Colors.grey.shade400,
               ),
             ),
             const SizedBox(height: 24),
@@ -979,7 +1086,7 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
               "No Rental Sales",
               style: TextStyle(
                 fontSize: isTabletOrDesktop ? 22 : 20,
-                color: Colors.grey.shade600,
+                color: context.textPrimary,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -989,7 +1096,7 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
               child: Text(
                 "Start by adding your first camera rental sale to get started",
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 14, color: Colors.grey.shade500),
+                style: TextStyle(fontSize: 14, color: context.textSecondary),
               ),
             ),
           ],
@@ -999,8 +1106,12 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
   }
 
   Widget _buildNoResultsState() {
+    final isDark = context.isDark;
+
     final screenWidth = MediaQuery.of(context).size.width;
+
     final isTabletOrDesktop = screenWidth > 700;
+
     final maxWidth = isTabletOrDesktop ? 400.0 : double.infinity;
 
     return Center(
@@ -1012,14 +1123,14 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
             Icon(
               Icons.search_off_rounded,
               size: isTabletOrDesktop ? 90 : 80,
-              color: Colors.grey.shade400,
+              color: isDark ? const Color(0xFF60A5FA) : Colors.grey.shade400,
             ),
             const SizedBox(height: 16),
             Text(
               "No Results Found",
               style: TextStyle(
                 fontSize: isTabletOrDesktop ? 20 : 18,
-                color: Colors.grey.shade600,
+                color: context.textPrimary,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -1033,7 +1144,7 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
                     ? "No results for '$_searchQuery'"
                     : "No rentals found in selected date range",
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 14, color: Colors.grey.shade500),
+                style: TextStyle(fontSize: 14, color: context.textSecondary),
               ),
             ),
           ],
@@ -1045,7 +1156,7 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFf8f9fa),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: AbsorbPointer(
         absorbing: _isLoading,
         child: NestedScrollView(
@@ -1069,6 +1180,7 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
                     valueListenable: userBox.listenable(),
                     builder: (context, Box box, _) {
                       List<RentalSaleModel> allSales = [];
+
                       try {
                         allSales = List<RentalSaleModel>.from(
                           box.get("rental_sales", defaultValue: []),
@@ -1087,19 +1199,26 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
 
                       if (_searchQuery.isNotEmpty) {
                         final query = _searchQuery.toLowerCase();
+
                         filteredSales =
                             filteredSales.where((sale) {
                               final customerName =
                                   sale.customerName.toLowerCase();
+
                               final itemName = sale.itemName.toLowerCase();
+
                               final customerPhone =
                                   sale.customerPhone.toLowerCase();
+
                               final totalCost = sale.totalCost.toString();
+
                               final amountPaid = sale.amountPaid.toString();
+
                               final fromDate =
                                   _formatDateTime(
                                     sale.fromDateTime,
                                   ).toLowerCase();
+
                               final toDate =
                                   _formatDateTime(
                                     sale.toDateTime,
@@ -1142,6 +1261,7 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
                       return LayoutBuilder(
                         builder: (context, constraints) {
                           final isVeryWide = constraints.maxWidth > 1000;
+
                           final maxWidth =
                               isVeryWide ? 900.0 : constraints.maxWidth;
 
@@ -1156,14 +1276,14 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
                                   children: [
                                     Icon(
                                       Icons.list_alt_rounded,
-                                      color: Colors.grey.shade600,
+                                      color: context.textSecondary,
                                       size: 14 * scale,
                                     ),
                                     const SizedBox(width: 8),
                                     Text(
                                       '${filteredSales.length} ${filteredSales.length == 1 ? 'rental' : 'rentals'}',
                                       style: TextStyle(
-                                        color: Colors.grey.shade600,
+                                        color: context.textSecondary,
                                         fontSize: 12 * scale,
                                         fontWeight: FontWeight.w600,
                                       ),
@@ -1172,7 +1292,7 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
                                     Text(
                                       'Latest first',
                                       style: TextStyle(
-                                        color: Colors.grey.shade500,
+                                        color: context.textSecondary,
                                         fontSize: 10 * scale,
                                       ),
                                     ),
@@ -1194,6 +1314,7 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
                                       itemCount: filteredSales.length,
                                       itemBuilder: (context, index) {
                                         final sale = filteredSales[index];
+
                                         final originalIndex =
                                             _findOriginalSaleIndex(
                                               allSales,
@@ -1204,6 +1325,7 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
                                           builder: (context, cardConstraints) {
                                             final isWideCard =
                                                 cardConstraints.maxWidth > 600;
+
                                             return _buildSaleCard(
                                               sale,
                                               originalIndex,
@@ -1228,7 +1350,10 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
   }
 
   Widget _buildLoadingState() {
+    final isDark = context.isDark;
+
     final screenWidth = MediaQuery.of(context).size.width;
+
     final isTabletOrDesktop = screenWidth > 700;
 
     return Center(
@@ -1240,8 +1365,8 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
             height: isTabletOrDesktop ? 90 : 80,
             child: CircularProgressIndicator(
               strokeWidth: 3,
-              valueColor: const AlwaysStoppedAnimation<Color>(
-                Color(0xFF1E40AF),
+              valueColor: AlwaysStoppedAnimation<Color>(
+                isDark ? const Color(0xFF60A5FA) : const Color(0xFF1E40AF),
               ),
             ),
           ),
@@ -1249,7 +1374,7 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
           Text(
             "Loading Rentals...",
             style: TextStyle(
-              color: Colors.grey.shade600,
+              color: context.textSecondary,
               fontSize: isTabletOrDesktop ? 18 : 16,
               fontWeight: FontWeight.w600,
             ),

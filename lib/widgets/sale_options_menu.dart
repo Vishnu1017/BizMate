@@ -4,6 +4,7 @@
 import 'package:bizmate/screens/DeliveryTrackerPage.dart'
     show DeliveryTrackerPage;
 import 'package:flutter/material.dart';
+import 'package:bizmate/utils/app_theme.dart';
 import 'package:hive/hive.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -518,16 +519,28 @@ class SaleOptionsMenu extends StatelessWidget {
                   Container(
                     width: double.infinity,
                     decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [
-                          Color(0xFF2563EB),
-                          Color(0xFF1E40AF),
-                          Color(0xFF020617),
-                        ],
-                        stops: [0.0, 0.6, 1.0],
-                        begin: Alignment.bottomRight,
-                        end: Alignment.topLeft,
-                      ),
+                      gradient:
+                          context.isDark
+                              ? const LinearGradient(
+                                colors: [
+                                  Color(0xFF38BDF8),
+                                  Color(0xFF60A5FA),
+                                  Color(0xFFBAE6FD),
+                                ],
+                                stops: [0.0, 0.6, 1.0],
+                                begin: Alignment.bottomRight,
+                                end: Alignment.topLeft,
+                              )
+                              : const LinearGradient(
+                                colors: [
+                                  Color(0xFF2563EB),
+                                  Color(0xFF1E40AF),
+                                  Color(0xFF020617),
+                                ],
+                                stops: [0.0, 0.6, 1.0],
+                                begin: Alignment.bottomRight,
+                                end: Alignment.topLeft,
+                              ),
                       borderRadius: const BorderRadius.vertical(
                         top: Radius.circular(16),
                       ),

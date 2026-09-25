@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:bizmate/screens/Camera rental page/view_rental_details_page.dart';
+import 'package:bizmate/utils/app_theme.dart';
 import 'package:bizmate/widgets/confirm_delete_dialog.dart';
 import 'package:bizmate/widgets/advanced_search_bar.dart';
 import 'package:flutter/material.dart';
@@ -228,71 +229,178 @@ class _RentalItemsState extends State<RentalItems> {
             showDateFilter: false,
           ),
 
+          // ============================================================
           // CATEGORY CHIPS
-          SizedBox(
-            height: 28 * scale,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              padding: EdgeInsets.symmetric(horizontal: 12 * scale),
-              itemCount: _categories.length,
-              separatorBuilder: (_, __) => SizedBox(width: 8 * scale),
-              itemBuilder: (context, i) {
-                final category = _categories[i];
-                bool selected = _selectedCategory == category;
+          // THEME CHANGES IMMEDIATELY WITH GLOBAL LIGHT/DARK TOGGLE
+          // ============================================================
+          Builder(
+            builder: (chipContext) {
+              // IMPORTANT:
+              // Read directly from Flutter's Theme inherited widget.
+              // This guarantees the chips rebuild immediately when the
+              // global ThemeMode changes.
+              final bool isDark =
+                  Theme.of(chipContext).brightness == Brightness.dark;
 
-                return GestureDetector(
-                  onTap: () {
-                    _selectedCategory = category;
-                    _filterItems();
-                  },
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 250),
-                    padding: EdgeInsets.symmetric(horizontal: 10 * scale),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(30 * scale),
-                      gradient:
-                          selected
-                              ? LinearGradient(
-                                colors: [
-                                  Color(0xFF2563EB),
-                                  Color(0xFF1E40AF),
-                                  Color(0xFF020617),
-                                ],
-                                stops: [0.0, 0.6, 1.0],
-                                begin: Alignment.bottomRight,
-                                end: Alignment.topLeft,
-                              )
-                              : LinearGradient(
-                                colors: [
-                                  Colors.grey.shade200,
-                                  Colors.grey.shade300,
-                                ],
-                              ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          _getCategoryIcon(category),
-                          size: 12 * scale,
-                          color: selected ? Colors.white : Colors.grey.shade700,
-                        ),
-                        SizedBox(width: 6 * scale),
-                        Text(
-                          category,
-                          style: TextStyle(
-                            color: selected ? Colors.white : Colors.grey[900],
-                            fontWeight:
-                                selected ? FontWeight.bold : FontWeight.w500,
-                            fontSize: 10 * scale,
+              return SizedBox(
+                height: 35 * scale,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  padding: EdgeInsets.symmetric(horizontal: 14 * scale),
+                  itemCount: _categories.length,
+                  separatorBuilder: (_, _) => SizedBox(width: 8 * scale),
+                  itemBuilder: (context, i) {
+                    final category = _categories[i];
+                    final bool selected = _selectedCategory == category;
+
+                    return GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _selectedCategory = category;
+                          _filterItems();
+                        });
+                      },
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        curve: Curves.easeOutCubic,
+
+                        padding: EdgeInsets.symmetric(horizontal: 12 * scale),
+
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(30 * scale),
+
+                          // ==================================================
+                          // SELECTED CHIP
+                          // ==================================================
+                          gradient:
+                              selected
+                                  ? (isDark
+                                      ? const LinearGradient(
+                                        colors: [
+                                          Color(0xFF38BDF8),
+                                          Color(0xFF60A5FA),
+                                          Color(0xFFBAE6FD),
+                                        ],
+                                        stops: [0.0, 0.6, 1.0],
+                                        begin: Alignment.bottomRight,
+                                        end: Alignment.topLeft,
+                                      )
+                                      : const LinearGradient(
+                                        colors: [
+                                          Color(0xFF2563EB),
+                                          Color(0xFF1E40AF),
+                                          Color(0xFF020617),
+                                        ],
+                                        stops: [0.0, 0.6, 1.0],
+                                        begin: Alignment.bottomRight,
+                                        end: Alignment.topLeft,
+                                      ))
+                                  : null,
+
+                          // ==================================================
+                          // UNSELECTED CHIP
+                          // ==================================================
+                          color:
+                              selected
+                                  ? null
+                                  : isDark
+                                  ? const Color(0xFF1E293B)
+                                  : Colors.white,
+
+                          // ==================================================
+                          // BORDER
+                          // ==================================================
+                          border: Border.all(
+                            color:
+                                selected
+                                    ? Colors.transparent
+                                    : isDark
+                                    ? const Color(0xFF334155)
+                                    : const Color(0xFFE2E8F0),
+                            width: 1,
                           ),
+
+                          // ==================================================
+                          // SHADOW
+                          // ==================================================
+                          boxShadow:
+                              selected
+                                  ? [
+                                    BoxShadow(
+                                      color:
+                                          isDark
+                                              ? const Color(
+                                                0xFF38BDF8,
+                                              ).withValues(alpha: 0.22)
+                                              : const Color(
+                                                0xFF2563EB,
+                                              ).withValues(alpha: 0.16),
+                                      blurRadius: 8 * scale,
+                                      offset: Offset(0, 3 * scale),
+                                    ),
+                                  ]
+                                  : [
+                                    BoxShadow(
+                                      color:
+                                          isDark
+                                              ? Colors.black.withValues(
+                                                alpha: 0.20,
+                                              )
+                                              : Colors.black.withValues(
+                                                alpha: 0.05,
+                                              ),
+                                      blurRadius: 5 * scale,
+                                      offset: Offset(0, 2 * scale),
+                                    ),
+                                  ],
                         ),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            ),
+
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // ==================================================
+                            // ICON
+                            // ==================================================
+                            Icon(
+                              _getCategoryIcon(category),
+                              size: 14 * scale,
+                              color:
+                                  selected
+                                      ? Colors.white
+                                      : isDark
+                                      ? const Color(0xFFCBD5E1)
+                                      : const Color(0xFF475569),
+                            ),
+
+                            SizedBox(width: 6 * scale),
+
+                            // ==================================================
+                            // TEXT
+                            // ==================================================
+                            Text(
+                              category,
+                              style: TextStyle(
+                                color:
+                                    selected
+                                        ? Colors.white
+                                        : isDark
+                                        ? const Color(0xFFCBD5E1)
+                                        : const Color(0xFF334155),
+                                fontWeight:
+                                    selected
+                                        ? FontWeight.w700
+                                        : FontWeight.w600,
+                                fontSize: 12 * scale,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              );
+            },
           ),
           SizedBox(height: 6 * scale),
           Expanded(
@@ -427,7 +535,7 @@ class _RentalItemsState extends State<RentalItems> {
             boxShadow: [
               if (isNewItem)
                 BoxShadow(
-                  color: Colors.redAccent.withOpacity(0.4),
+                  color: Colors.redAccent.withValues(alpha: 0.4),
                   blurRadius: 20,
                   spreadRadius: 2,
                 ),
@@ -546,7 +654,10 @@ class _RentalItemsState extends State<RentalItems> {
                             height: isSmallPhone ? 34 : 38,
                             child: ElevatedButton(
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF0D47A1),
+                                backgroundColor:
+                                    context.isDark
+                                        ? const Color(0xFF60A5FA)
+                                        : Color(0xFF0D47A1),
                                 padding: EdgeInsets.zero,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(10),
@@ -609,7 +720,7 @@ class _RentalItemsState extends State<RentalItems> {
                             borderRadius: BorderRadius.circular(20),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.redAccent.withOpacity(0.4),
+                                color: Colors.redAccent.withValues(alpha: 0.4),
                                 blurRadius: 8,
                                 offset: const Offset(0, 3),
                               ),
@@ -637,8 +748,8 @@ class _RentalItemsState extends State<RentalItems> {
                           decoration: BoxDecoration(
                             color:
                                 item.availability == 'Available'
-                                    ? Colors.green.withOpacity(0.9)
-                                    : Colors.redAccent.withOpacity(0.9),
+                                    ? Colors.green.withValues(alpha: 0.9)
+                                    : Colors.redAccent.withValues(alpha: 0.9),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(

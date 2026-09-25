@@ -2,8 +2,11 @@
 
 import 'dart:io';
 import 'dart:ui';
+import 'package:bizmate/services/backup_service.dart';
 import 'package:bizmate/services/image_compression_service.dart';
+import 'package:bizmate/utils/app_theme.dart';
 import 'package:bizmate/widgets/app_snackbar.dart' show AppSnackBar;
+import 'package:bizmate/widgets/app_theme_toggle.dart';
 import 'package:bizmate/widgets/confirm_delete_dialog.dart'
     show showConfirmDialog;
 import 'package:flutter/material.dart';
@@ -409,7 +412,7 @@ class _ProfilePageState extends State<ProfilePage>
     return showDialog<String>(
       context: context,
       barrierDismissible: true,
-      barrierColor: Colors.black.withOpacity(0.6),
+      barrierColor: Colors.black.withValues(alpha: 0.6),
       builder: (context) {
         // Calculate responsive dimensions
         final screenWidth = MediaQuery.of(context).size.width;
@@ -456,10 +459,10 @@ class _ProfilePageState extends State<ProfilePage>
                   borderRadius: BorderRadius.circular(
                     isSmallScreen ? 24.0 : 28.0,
                   ),
-                  color: Colors.white,
+                  color: context.appColors.card,
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.15),
+                      color: Colors.black.withValues(alpha: 0.15),
                       blurRadius: 50,
                       spreadRadius: 5,
                     ),
@@ -495,9 +498,9 @@ class _ProfilePageState extends State<ProfilePage>
                             height: isSmallScreen ? 48.0 : 56.0,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              color: Colors.white.withOpacity(0.2),
+                              color: Colors.white.withValues(alpha: 0.2),
                               border: Border.all(
-                                color: Colors.white.withOpacity(0.3),
+                                color: Colors.white.withValues(alpha: 0.3),
                                 width: 2,
                               ),
                             ),
@@ -526,7 +529,7 @@ class _ProfilePageState extends State<ProfilePage>
                               "Choose your preferred authentication method",
                               style: TextStyle(
                                 fontSize: isSmallScreen ? 13.0 : 14.0,
-                                color: Colors.white.withOpacity(0.9),
+                                color: Colors.white.withValues(alpha: 0.9),
                                 height: 1.4,
                               ),
                               textAlign: TextAlign.center,
@@ -617,14 +620,16 @@ class _ProfilePageState extends State<ProfilePage>
                               borderRadius: BorderRadius.circular(
                                 isSmallScreen ? 12.0 : 14.0,
                               ),
-                              side: const BorderSide(color: Color(0xFFE2E8F0)),
+                              side: BorderSide(
+                                color: context.appColors.divider,
+                              ),
                             ),
                           ),
                           child: Text(
                             "Cancel",
                             style: TextStyle(
                               fontSize: isSmallScreen ? 15.0 : 16.0,
-                              color: const Color(0xFF64748B),
+                              color: context.appColors.text2,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -661,18 +666,18 @@ class _ProfilePageState extends State<ProfilePage>
       child: InkWell(
         onTap: () => Navigator.pop(context, value),
         borderRadius: BorderRadius.circular(18),
-        splashColor: color.withOpacity(0.1),
-        highlightColor: color.withOpacity(0.05),
+        splashColor: color.withValues(alpha: 0.1),
+        highlightColor: color.withValues(alpha: 0.05),
         child: Container(
           padding: EdgeInsets.all(16),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(18),
-            color: Colors.white,
+            color: context.appColors.card,
             border: Border.all(
               color:
                   isRecommended
-                      ? color.withOpacity(0.3)
-                      : const Color(0xFFF1F5F9),
+                      ? color.withValues(alpha: 0.3)
+                      : context.appColors.divider,
               width: isRecommended ? 2 : 1.5,
             ),
             boxShadow: const [
@@ -694,7 +699,10 @@ class _ProfilePageState extends State<ProfilePage>
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors: [color.withOpacity(0.15), color.withOpacity(0.05)],
+                    colors: [
+                      color.withValues(alpha: 0.15),
+                      color.withValues(alpha: 0.05),
+                    ],
                   ),
                 ),
                 child: Center(child: Icon(icon, color: color, size: iconSize)),
@@ -715,7 +723,7 @@ class _ProfilePageState extends State<ProfilePage>
                             style: TextStyle(
                               fontSize: fontSize,
                               fontWeight: FontWeight.bold,
-                              color: const Color(0xFF1E293B),
+                              color: context.appColors.text1,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -730,10 +738,10 @@ class _ProfilePageState extends State<ProfilePage>
                                 vertical: 3,
                               ),
                               decoration: BoxDecoration(
-                                color: color.withOpacity(0.1),
+                                color: color.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(6),
                                 border: Border.all(
-                                  color: color.withOpacity(0.3),
+                                  color: color.withValues(alpha: 0.3),
                                 ),
                               ),
                               child: Text(
@@ -757,7 +765,7 @@ class _ProfilePageState extends State<ProfilePage>
                       description,
                       style: TextStyle(
                         fontSize: descriptionSize,
-                        color: const Color(0xFF64748B),
+                        color: context.appColors.text2,
                         height: 1.4,
                       ),
                       maxLines: 2,
@@ -772,14 +780,14 @@ class _ProfilePageState extends State<ProfilePage>
                             vertical: 3,
                           ),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFF1F5F9),
+                            color: context.appColors.background,
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
                             level,
                             style: TextStyle(
                               fontSize: levelSize,
-                              color: const Color(0xFF475569),
+                              color: context.appColors.text2,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -793,7 +801,7 @@ class _ProfilePageState extends State<ProfilePage>
               // Arrow
               Icon(
                 Icons.chevron_right_rounded,
-                color: const Color(0xFF94A3B8),
+                color: context.appColors.icon,
                 size: 24,
               ),
             ],
@@ -816,7 +824,7 @@ class _ProfilePageState extends State<ProfilePage>
     return showDialog<String>(
       context: context,
       barrierDismissible: false,
-      barrierColor: Colors.black.withOpacity(0.7),
+      barrierColor: Colors.black.withValues(alpha: 0.7),
       builder: (BuildContext context) {
         return StatefulBuilder(
           builder: (context, setState) {
@@ -847,11 +855,11 @@ class _ProfilePageState extends State<ProfilePage>
                   physics: const BouncingScrollPhysics(),
                   child: Container(
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: context.appColors.card,
                       borderRadius: BorderRadius.circular(dialogBorderRadius),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.15),
+                          color: Colors.black.withValues(alpha: 0.15),
                           blurRadius: 50,
                           spreadRadius: 5,
                         ),
@@ -893,7 +901,7 @@ class _ProfilePageState extends State<ProfilePage>
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   fontSize: isSmallScreen ? 13 : 14,
-                                  color: Colors.white.withOpacity(0.9),
+                                  color: Colors.white.withValues(alpha: 0.9),
                                 ),
                               ),
                             ],
@@ -920,12 +928,12 @@ class _ProfilePageState extends State<ProfilePage>
                                   horizontal: isSmallScreen ? 12 : 16,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFFF8FAFC),
+                                  color: context.appColors.inputFill,
                                   borderRadius: BorderRadius.circular(
                                     isSmallScreen ? 14 : 16,
                                   ),
                                   border: Border.all(
-                                    color: const Color(0xFFE2E8F0),
+                                    color: context.appColors.inputBorder,
                                     width: 1.5,
                                   ),
                                 ),
@@ -982,7 +990,7 @@ class _ProfilePageState extends State<ProfilePage>
                                           isObscured
                                               ? Icons.visibility_off_rounded
                                               : Icons.visibility_rounded,
-                                          color: const Color(0xFF64748B),
+                                          color: context.appColors.icon,
                                         ),
                                         onPressed:
                                             () => setState(
@@ -1019,7 +1027,7 @@ class _ProfilePageState extends State<ProfilePage>
                               Container(
                                 height: 3,
                                 decoration: BoxDecoration(
-                                  color: Colors.grey[200],
+                                  color: context.appColors.divider,
                                   borderRadius: BorderRadius.circular(2),
                                 ),
                                 child: FractionallySizedBox(
@@ -1076,7 +1084,7 @@ class _ProfilePageState extends State<ProfilePage>
                                                   : passcodeType == "pin6"
                                                   ? const Color(0xFF10B981)
                                                   : const Color(0xFF8B5CF6))
-                                              .withOpacity(0.35),
+                                              .withValues(alpha: 0.35),
                                           blurRadius: 8,
                                           spreadRadius: 1,
                                         ),
@@ -1106,7 +1114,7 @@ class _ProfilePageState extends State<ProfilePage>
                                               12,
                                             ),
                                             border: Border.all(
-                                              color: Colors.grey[300]!,
+                                              color: context.appColors.divider,
                                               width: 1.5,
                                             ),
                                           ),
@@ -1127,7 +1135,9 @@ class _ProfilePageState extends State<ProfilePage>
                                                                 .bottomRight,
                                                         colors: [
                                                           Colors.white
-                                                              .withOpacity(0.1),
+                                                              .withValues(
+                                                                alpha: 0.1,
+                                                              ),
                                                           Colors.transparent,
                                                         ],
                                                       ),
@@ -1149,7 +1159,9 @@ class _ProfilePageState extends State<ProfilePage>
                                                         shape: BoxShape.circle,
                                                         border: Border.all(
                                                           color:
-                                                              Colors.grey[600]!,
+                                                              context
+                                                                  .appColors
+                                                                  .text2,
                                                           width: 1.5,
                                                         ),
                                                       ),
@@ -1157,13 +1169,16 @@ class _ProfilePageState extends State<ProfilePage>
                                                         child: Container(
                                                           width: 8,
                                                           height: 8,
-                                                          decoration: BoxDecoration(
-                                                            shape:
-                                                                BoxShape.circle,
-                                                            color:
-                                                                Colors
-                                                                    .grey[600]!,
-                                                          ),
+                                                          decoration:
+                                                              BoxDecoration(
+                                                                shape:
+                                                                    BoxShape
+                                                                        .circle,
+                                                                color:
+                                                                    context
+                                                                        .appColors
+                                                                        .text2,
+                                                              ),
                                                         ),
                                                       ),
                                                     ),
@@ -1175,7 +1190,9 @@ class _ProfilePageState extends State<ProfilePage>
                                                         fontWeight:
                                                             FontWeight.w600,
                                                         color:
-                                                            Colors.grey[800]!,
+                                                            context
+                                                                .appColors
+                                                                .text1,
                                                         letterSpacing: -0.2,
                                                       ),
                                                     ),
@@ -1275,7 +1292,9 @@ class _ProfilePageState extends State<ProfilePage>
                                                             : const Color(
                                                               0xFF8B5CF6,
                                                             ))
-                                                        .withOpacity(0.35),
+                                                        .withValues(
+                                                          alpha: 0.35,
+                                                        ),
                                                     blurRadius: 14,
                                                     offset: const Offset(0, 5),
                                                   ),
@@ -1283,7 +1302,7 @@ class _ProfilePageState extends State<ProfilePage>
                                                 : [
                                                   BoxShadow(
                                                     color: Colors.grey
-                                                        .withOpacity(0.1),
+                                                        .withValues(alpha: 0.1),
                                                     blurRadius: 8,
                                                     offset: const Offset(0, 2),
                                                   ),
@@ -1327,8 +1346,9 @@ class _ProfilePageState extends State<ProfilePage>
                                                                         .bottomCenter,
                                                                 colors: [
                                                                   Colors.white
-                                                                      .withOpacity(
-                                                                        0.28,
+                                                                      .withValues(
+                                                                        alpha:
+                                                                            0.28,
                                                                       ),
                                                                   Colors
                                                                       .transparent,
@@ -1457,7 +1477,7 @@ class _ProfilePageState extends State<ProfilePage>
                             BoxShadow(
                               color: _getPrimaryColorForPasscodeType(
                                 passcodeType,
-                              ).withOpacity(0.3),
+                              ).withValues(alpha: 0.3),
                               blurRadius: 8,
                               spreadRadius: 2,
                             ),
@@ -1475,9 +1495,9 @@ class _ProfilePageState extends State<ProfilePage>
               vertical: isSmallScreen ? 10.0 : 12.0,
             ),
             decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFC),
+              color: context.appColors.inputFill,
               borderRadius: BorderRadius.circular(isSmallScreen ? 10.0 : 12.0),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
+              border: Border.all(color: context.appColors.inputBorder),
             ),
             child: Text(
               text.isEmpty ? "Enter your passcode" : "•" * text.length,
@@ -1486,8 +1506,8 @@ class _ProfilePageState extends State<ProfilePage>
                 fontWeight: FontWeight.w500,
                 color:
                     text.isEmpty
-                        ? const Color(0xFF94A3B8)
-                        : const Color(0xFF1E293B),
+                        ? context.appColors.text2
+                        : context.appColors.text1,
                 fontFamily: 'monospace',
                 letterSpacing: isSmallScreen ? 3.0 : 4.0,
               ),
@@ -1548,9 +1568,9 @@ class _ProfilePageState extends State<ProfilePage>
       margin: EdgeInsets.only(top: isSmallScreen ? 8.0 : 12.0),
       padding: EdgeInsets.all(isSmallScreen ? 10.0 : 12.0),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
+        color: context.appColors.inputFill,
         borderRadius: BorderRadius.circular(isSmallScreen ? 10.0 : 12.0),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: context.appColors.inputBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1560,7 +1580,7 @@ class _ProfilePageState extends State<ProfilePage>
             style: TextStyle(
               fontSize: requirementsFontSize,
               fontWeight: FontWeight.bold,
-              color: const Color(0xFF475569),
+              color: context.appColors.text1,
             ),
           ),
           SizedBox(height: isSmallScreen ? 6.0 : 8.0),
@@ -1577,7 +1597,7 @@ class _ProfilePageState extends State<ProfilePage>
                     color:
                         req["met"]
                             ? const Color(0xFF10B981)
-                            : const Color(0xFF94A3B8),
+                            : context.appColors.icon,
                   ),
                   SizedBox(width: isSmallScreen ? 6.0 : 8.0),
                   Expanded(
@@ -1588,7 +1608,7 @@ class _ProfilePageState extends State<ProfilePage>
                         color:
                             req["met"]
                                 ? const Color(0xFF10B981)
-                                : const Color(0xFF64748B),
+                                : context.appColors.text2,
                       ),
                     ),
                   ),
@@ -1941,19 +1961,25 @@ class _ProfilePageState extends State<ProfilePage>
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(40),
-              color: Colors.white.withOpacity(0.65),
+              color:
+                  context.isDark
+                      ? const Color(0xFF1E293B).withValues(alpha: 0.85)
+                      : Colors.white.withValues(alpha: 0.65),
               border: Border.all(
-                color: Colors.black.withOpacity(0.25),
+                color:
+                    context.isDark
+                        ? Colors.white.withValues(alpha: 0.15)
+                        : Colors.black.withValues(alpha: 0.25),
                 width: 1.2,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.18),
+                  color: Colors.black.withValues(alpha: 0.18),
                   blurRadius: 30,
                   offset: const Offset(0, 16),
                 ),
                 BoxShadow(
-                  color: Colors.white.withOpacity(0.5),
+                  color: Colors.white.withValues(alpha: 0.5),
                   blurRadius: 12,
                   offset: const Offset(-4, -4),
                 ),
@@ -1964,7 +1990,7 @@ class _ProfilePageState extends State<ProfilePage>
               color: Colors.transparent,
               child: InkWell(
                 borderRadius: BorderRadius.circular(32),
-                splashColor: Colors.blue.withOpacity(0.12),
+                splashColor: Colors.blue.withValues(alpha: 0.12),
                 highlightColor: Colors.transparent,
                 onTap: () {
                   Navigator.pop(context);
@@ -1978,15 +2004,18 @@ class _ProfilePageState extends State<ProfilePage>
                       height: 25 * scale,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: Colors.white.withOpacity(0.9),
+                        color:
+                            context.isDark
+                                ? const Color(0xFF334155)
+                                : Colors.white.withValues(alpha: 0.9),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.18),
+                            color: Colors.black.withValues(alpha: 0.18),
                             blurRadius: 10,
                             offset: const Offset(4, 4),
                           ),
                           BoxShadow(
-                            color: Colors.white.withOpacity(0.9),
+                            color: Colors.white.withValues(alpha: 0.9),
                             blurRadius: 10,
                             offset: const Offset(-4, -4),
                           ),
@@ -2008,7 +2037,7 @@ class _ProfilePageState extends State<ProfilePage>
                         style: TextStyle(
                           fontSize: 12 * scale,
                           fontWeight: FontWeight.w700,
-                          color: Color(0xFF0F172A),
+                          color: context.appColors.text1,
                           letterSpacing: 0.3,
                         ),
                       ),
@@ -2023,7 +2052,9 @@ class _ProfilePageState extends State<ProfilePage>
                         color: const Color(0xFF22C55E),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF22C55E).withOpacity(0.6),
+                            color: const Color(
+                              0xFF22C55E,
+                            ).withValues(alpha: 0.6),
                             blurRadius: 6,
                           ),
                         ],
@@ -2102,7 +2133,7 @@ class _ProfilePageState extends State<ProfilePage>
     final isSmallScreen = screenWidth < 600;
 
     return Scaffold(
-      backgroundColor: Color(0xFFF8FAFC),
+      backgroundColor: context.appColors.background,
       body: AbsorbPointer(
         absorbing: _isLoggingOut,
         child: AnimatedBuilder(
@@ -2114,7 +2145,18 @@ class _ProfilePageState extends State<ProfilePage>
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [Colors.white, Color(0xFFF8FAFC), Color(0xFFF1F5F9)],
+                  colors:
+                      context.isDark
+                          ? [
+                            context.appColors.background,
+                            context.appColors.background,
+                            context.appColors.surface,
+                          ]
+                          : [
+                            Colors.white,
+                            const Color(0xFFF8FAFC),
+                            const Color(0xFFF1F5F9),
+                          ],
                 ),
               ),
               child: Stack(
@@ -2130,7 +2172,7 @@ class _ProfilePageState extends State<ProfilePage>
                         shape: BoxShape.circle,
                         gradient: RadialGradient(
                           colors: [
-                            Color(0xFF3B82F6).withOpacity(0.05),
+                            Color(0xFF3B82F6).withValues(alpha: 0.05),
                             Colors.transparent,
                           ],
                         ),
@@ -2147,7 +2189,7 @@ class _ProfilePageState extends State<ProfilePage>
                         shape: BoxShape.circle,
                         gradient: RadialGradient(
                           colors: [
-                            Color(0xFF10B981).withOpacity(0.05),
+                            Color(0xFF10B981).withValues(alpha: 0.05),
                             Colors.transparent,
                           ],
                         ),
@@ -2179,10 +2221,18 @@ class _ProfilePageState extends State<ProfilePage>
                                 // Personal Info Section
                                 _buildPersonalInfoSection(isSmallScreen),
 
+                                // Appearance & Theme Section
+                                if (!_isEditing) ...[
+                                  SizedBox(height: 10 * scale),
+                                  _buildThemeSection(isSmallScreen),
+                                ],
+
                                 // Security Section (for all users)
                                 if (!_isEditing) ...[
                                   SizedBox(height: 10 * scale),
                                   _buildSecuritySection(isSmallScreen),
+                                  SizedBox(height: 10 * scale),
+                                  _buildDataBackupSection(isSmallScreen),
                                 ],
 
                                 // Rental Section (for photographers only)
@@ -2227,16 +2277,28 @@ class _ProfilePageState extends State<ProfilePage>
               width: 4,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(4),
-                gradient: const LinearGradient(
-                  colors: [
-                    Color(0xFF2563EB),
-                    Color(0xFF1E40AF),
-                    Color(0xFF020617),
-                  ],
-                  stops: [0.0, 0.6, 1.0],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                ),
+                gradient:
+                    context.isDark
+                        ? const LinearGradient(
+                          colors: [
+                            Color(0xFF38BDF8),
+                            Color(0xFF60A5FA),
+                            Color(0xFFBAE6FD),
+                          ],
+                          stops: [0.0, 0.6, 1.0],
+                          begin: Alignment.bottomRight,
+                          end: Alignment.topLeft,
+                        )
+                        : const LinearGradient(
+                          colors: [
+                            Color(0xFF2563EB),
+                            Color(0xFF1E40AF),
+                            Color(0xFF020617),
+                          ],
+                          stops: [0.0, 0.6, 1.0],
+                          begin: Alignment.bottomRight,
+                          end: Alignment.topLeft,
+                        ),
               ),
             ),
           ),
@@ -2257,7 +2319,7 @@ class _ProfilePageState extends State<ProfilePage>
                         fontSize: 10 * scale,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 1.0,
-                        color: Colors.black,
+                        color: context.appColors.text1,
                       ),
                     ),
                     GestureDetector(
@@ -2267,7 +2329,7 @@ class _ProfilePageState extends State<ProfilePage>
                       child: Icon(
                         Icons.more_vert_rounded,
                         size: 20 * scale,
-                        color: Color(0xFF020617),
+                        color: context.appColors.text1,
                       ),
                     ),
                   ],
@@ -2290,16 +2352,28 @@ class _ProfilePageState extends State<ProfilePage>
                             height: 56 * scale,
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(16),
-                              gradient: const LinearGradient(
-                                colors: [
-                                  Color(0xFF2563EB),
-                                  Color(0xFF1E40AF),
-                                  Color(0xFF020617),
-                                ],
-                                stops: [0.0, 0.6, 1.0],
-                                begin: Alignment.bottomRight,
-                                end: Alignment.topLeft,
-                              ),
+                              gradient:
+                                  context.isDark
+                                      ? const LinearGradient(
+                                        colors: [
+                                          Color(0xFF38BDF8),
+                                          Color(0xFF60A5FA),
+                                          Color(0xFFBAE6FD),
+                                        ],
+                                        stops: [0.0, 0.6, 1.0],
+                                        begin: Alignment.bottomRight,
+                                        end: Alignment.topLeft,
+                                      )
+                                      : const LinearGradient(
+                                        colors: [
+                                          Color(0xFF2563EB),
+                                          Color(0xFF1E40AF),
+                                          Color(0xFF020617),
+                                        ],
+                                        stops: [0.0, 0.6, 1.0],
+                                        begin: Alignment.bottomRight,
+                                        end: Alignment.topLeft,
+                                      ),
                             ),
                             padding: EdgeInsets.all(2.5 * scale),
                             child: ClipRRect(
@@ -2338,23 +2412,38 @@ class _ProfilePageState extends State<ProfilePage>
                             right: -4,
                             child: Container(
                               padding: const EdgeInsets.all(5),
-                              decoration: const BoxDecoration(
+                              decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                gradient: LinearGradient(
-                                  colors: [
-                                    Color(0xFF2563EB),
-                                    Color(0xFF1E40AF),
-                                    Color(0xFF020617),
-                                  ],
-                                  stops: [0.0, 0.6, 1.0],
-                                  begin: Alignment.bottomRight,
-                                  end: Alignment.topLeft,
-                                ),
+                                gradient:
+                                    context.isDark
+                                        ? const LinearGradient(
+                                          colors: [
+                                            Color(0xFF38BDF8),
+                                            Color(0xFF60A5FA),
+                                            Color(0xFFBAE6FD),
+                                          ],
+                                          stops: [0.0, 0.6, 1.0],
+                                          begin: Alignment.bottomRight,
+                                          end: Alignment.topLeft,
+                                        )
+                                        : const LinearGradient(
+                                          colors: [
+                                            Color(0xFF2563EB),
+                                            Color(0xFF1E40AF),
+                                            Color(0xFF020617),
+                                          ],
+                                          stops: [0.0, 0.6, 1.0],
+                                          begin: Alignment.bottomRight,
+                                          end: Alignment.topLeft,
+                                        ),
                               ),
                               child: HugeIcon(
                                 icon: HugeIcons.strokeRoundedCameraAdd01,
                                 size: 10 * scale,
-                                color: Colors.white,
+                                color:
+                                    context.isDark
+                                        ? Colors.black87
+                                        : Colors.white,
                               ),
                             ),
                           ),
@@ -2381,7 +2470,7 @@ class _ProfilePageState extends State<ProfilePage>
                                 style: TextStyle(
                                   fontSize: 22 * scale,
                                   fontWeight: FontWeight.w900,
-                                  color: const Color(0xFF020617),
+                                  color: context.appColors.text1,
                                 ),
                                 decoration: const InputDecoration(
                                   border: InputBorder.none,
@@ -2394,7 +2483,7 @@ class _ProfilePageState extends State<ProfilePage>
                                 style: TextStyle(
                                   fontSize: 18 * scale,
                                   fontWeight: FontWeight.w900,
-                                  color: const Color(0xFF020617),
+                                  color: context.appColors.text1,
                                 ),
                               ),
 
@@ -2404,7 +2493,7 @@ class _ProfilePageState extends State<ProfilePage>
                                 role,
                                 style: TextStyle(
                                   fontSize: 12 * scale,
-                                  color: const Color(0xFF64748B),
+                                  color: context.appColors.text2,
                                 ),
                               ),
                         ],
@@ -2425,8 +2514,8 @@ class _ProfilePageState extends State<ProfilePage>
                             padding: EdgeInsets.symmetric(vertical: 12 * scale),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10),
-                              side: const BorderSide(
-                                color: Colors.black,
+                              side: BorderSide(
+                                color: context.appColors.divider,
                                 width: 1.2,
                               ),
                             ),
@@ -2436,7 +2525,7 @@ class _ProfilePageState extends State<ProfilePage>
                             style: TextStyle(
                               fontSize: 12 * scale,
                               fontWeight: FontWeight.w600,
-                              color: Colors.black,
+                              color: context.appColors.text1,
                             ),
                           ),
                         ),
@@ -2447,7 +2536,7 @@ class _ProfilePageState extends State<ProfilePage>
                           onPressed: _saveProfile,
                           style: ElevatedButton.styleFrom(
                             elevation: 0,
-                            backgroundColor: const Color(0xFF020617),
+                            backgroundColor: context.appColors.primary,
                             padding: EdgeInsets.symmetric(vertical: 12 * scale),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10),
@@ -2478,21 +2567,24 @@ class _ProfilePageState extends State<ProfilePage>
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 14 * scale),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.appColors.card,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Color(0xFFE2E8F0)),
+        border: Border.all(color: context.appColors.divider),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+          ),
         ],
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           value: role,
-          dropdownColor: Colors.white,
-          icon: Icon(Icons.arrow_drop_down, color: Color(0xFF64748B)),
+          dropdownColor: context.appColors.card,
+          icon: Icon(Icons.arrow_drop_down, color: context.appColors.text2),
           style: TextStyle(
             fontSize: 12 * scale,
-            color: Color(0xFF1E293B),
+            color: context.appColors.text1,
             fontWeight: FontWeight.w600,
           ),
           onChanged: (String? newValue) async {
@@ -2519,7 +2611,7 @@ class _ProfilePageState extends State<ProfilePage>
                   value: value,
                   child: Text(
                     value,
-                    style: TextStyle(color: Color(0xFF1E293B)),
+                    style: TextStyle(color: context.appColors.text1),
                   ),
                 );
               }).toList(),
@@ -2531,17 +2623,17 @@ class _ProfilePageState extends State<ProfilePage>
   Widget _buildPersonalInfoSection(bool isSmallScreen) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.appColors.card,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 20,
             spreadRadius: 2,
             offset: Offset(0, 5),
           ),
         ],
-        border: Border.all(color: Color(0xFFF1F5F9), width: 1),
+        border: Border.all(color: context.appColors.divider, width: 1),
       ),
       child: Padding(
         padding: EdgeInsets.all(12 * scale),
@@ -2595,17 +2687,20 @@ class _ProfilePageState extends State<ProfilePage>
         ? Container(
           padding: EdgeInsets.symmetric(horizontal: 10 * scale),
           decoration: BoxDecoration(
-            color: Color(0xFFF8FAFC),
+            color: context.appColors.inputFill,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Color(0xFFE2E8F0)),
+            border: Border.all(color: context.appColors.inputBorder),
           ),
           child: TextField(
             controller: controller,
-            style: TextStyle(fontSize: 16 * scale, color: Color(0xFF1E293B)),
+            style: TextStyle(
+              fontSize: 16 * scale,
+              color: context.appColors.text1,
+            ),
             decoration: InputDecoration(
-              prefixIcon: Icon(icon, color: Color(0xFF64748B)),
+              prefixIcon: Icon(icon, color: context.appColors.primary),
               hintText: value.isEmpty ? 'Enter $label' : value,
-              hintStyle: TextStyle(color: Color(0xFF94A3B8)),
+              hintStyle: TextStyle(color: context.appColors.text2),
               border: InputBorder.none,
             ),
           ),
@@ -2616,13 +2711,13 @@ class _ProfilePageState extends State<ProfilePage>
             vertical: 10 * scale,
           ),
           decoration: BoxDecoration(
-            color: Color(0xFFF8FAFC),
+            color: context.appColors.inputFill,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Color(0xFFE2E8F0)),
+            border: Border.all(color: context.appColors.inputBorder),
           ),
           child: Row(
             children: [
-              Icon(icon, color: Color(0xFF64748B), size: 16 * scale),
+              Icon(icon, color: context.appColors.primary, size: 16 * scale),
               SizedBox(width: 10 * scale),
               Expanded(
                 child: Column(
@@ -2631,7 +2726,7 @@ class _ProfilePageState extends State<ProfilePage>
                     Text(
                       label,
                       style: TextStyle(
-                        color: Color(0xFF64748B),
+                        color: context.appColors.text2,
                         fontSize: 10 * scale,
                         fontWeight: FontWeight.w500,
                       ),
@@ -2642,7 +2737,7 @@ class _ProfilePageState extends State<ProfilePage>
                           ? (label == "Phone" ? "+91 $value" : value)
                           : "No $label",
                       style: TextStyle(
-                        color: Color(0xFF1E293B),
+                        color: context.appColors.text1,
                         fontSize: 12 * scale,
                         fontWeight: FontWeight.w500,
                       ),
@@ -2655,20 +2750,47 @@ class _ProfilePageState extends State<ProfilePage>
         );
   }
 
-  Widget _buildSecuritySection(bool isSmallScreen) {
+  Widget _buildThemeSection(bool isSmallScreen) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardBg = isDark ? const Color(0xFF1E293B) : Colors.white;
+    final borderColor =
+        isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9);
+
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cardBg,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.05),
+            blurRadius: 30,
+            spreadRadius: 5,
+            offset: const Offset(0, 10),
+          ),
+        ],
+        border: Border.all(color: borderColor, width: 1),
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(16 * scale),
+        child: const AppThemeSegmentedToggle(),
+      ),
+    );
+  }
+
+  Widget _buildSecuritySection(bool isSmallScreen) {
+    return Container(
+      decoration: BoxDecoration(
+        color: context.appColors.card,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 30,
             spreadRadius: 5,
             offset: Offset(0, 10),
           ),
         ],
-        border: Border.all(color: Color(0xFFF1F5F9), width: 1),
+        border: Border.all(color: context.appColors.divider, width: 1),
       ),
       child: Padding(
         padding: EdgeInsets.all(16 * scale),
@@ -2696,7 +2818,7 @@ class _ProfilePageState extends State<ProfilePage>
                       style: TextStyle(
                         fontSize: 10 * scale,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF475569),
+                        color: context.appColors.text2,
                         letterSpacing: 2,
                       ),
                     ),
@@ -2710,14 +2832,14 @@ class _ProfilePageState extends State<ProfilePage>
                   decoration: BoxDecoration(
                     color:
                         _isPasscodeEnabled
-                            ? Color(0xFF10B981).withOpacity(0.1)
-                            : Color(0xFFEF4444).withOpacity(0.1),
+                            ? Color(0xFF10B981).withValues(alpha: 0.1)
+                            : Color(0xFFEF4444).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
                       color:
                           _isPasscodeEnabled
-                              ? Color(0xFF10B981).withOpacity(0.3)
-                              : Color(0xFFEF4444).withOpacity(0.3),
+                              ? Color(0xFF10B981).withValues(alpha: 0.3)
+                              : Color(0xFFEF4444).withValues(alpha: 0.3),
                     ),
                   ),
                   child: Row(
@@ -2758,7 +2880,7 @@ class _ProfilePageState extends State<ProfilePage>
               style: TextStyle(
                 fontSize: 16 * scale,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF1E293B),
+                color: context.appColors.text1,
                 letterSpacing: 0.5,
               ),
             ),
@@ -2767,7 +2889,10 @@ class _ProfilePageState extends State<ProfilePage>
 
             Text(
               'Secure your app with a 4-digit passcode',
-              style: TextStyle(color: Color(0xFF64748B), fontSize: 10 * scale),
+              style: TextStyle(
+                color: context.appColors.text2,
+                fontSize: 10 * scale,
+              ),
             ),
 
             SizedBox(height: 24),
@@ -2778,9 +2903,9 @@ class _ProfilePageState extends State<ProfilePage>
                 vertical: 6 * scale,
               ),
               decoration: BoxDecoration(
-                color: Color(0xFFF8FAFC),
+                color: context.appColors.inputFill,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Color(0xFFE2E8F0)),
+                border: Border.all(color: context.appColors.inputBorder),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -2792,7 +2917,7 @@ class _ProfilePageState extends State<ProfilePage>
                         'STATUS',
                         style: TextStyle(
                           fontSize: 8 * scale,
-                          color: Color(0xFF64748B),
+                          color: context.appColors.text2,
                           fontWeight: FontWeight.w600,
                           letterSpacing: 1.5,
                         ),
@@ -2803,7 +2928,7 @@ class _ProfilePageState extends State<ProfilePage>
                         style: TextStyle(
                           fontSize: 16 * scale,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF1E293B),
+                          color: context.appColors.text1,
                         ),
                       ),
                     ],
@@ -2879,8 +3004,103 @@ class _ProfilePageState extends State<ProfilePage>
                         ? 'Your app is secured with a passcode'
                         : 'Enable passcode protection for added security',
                     style: TextStyle(
-                      color: Color(0xFF64748B),
+                      color: context.appColors.text2,
                       fontSize: 10 * scale,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDataBackupSection(bool isSmallScreen) {
+    return Container(
+      decoration: BoxDecoration(
+        color: context.appColors.card,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 30,
+            spreadRadius: 5,
+            offset: const Offset(0, 10),
+          ),
+        ],
+        border: Border.all(color: context.appColors.divider, width: 1),
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(16 * scale),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 6 * scale,
+                  height: 6 * scale,
+                  margin: const EdgeInsets.only(right: 8),
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: LinearGradient(
+                      colors: [Color(0xFF2563EB), Color(0xFF1D4ED8)],
+                    ),
+                  ),
+                ),
+                Text(
+                  'DATA BACKUP & REPORTS',
+                  style: TextStyle(
+                    fontSize: 10 * scale,
+                    fontWeight: FontWeight.bold,
+                    color: context.appColors.text2,
+                    letterSpacing: 2,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed:
+                        () => BackupService.exportBackupToJson(context, email),
+                    icon: Icon(Icons.upload_file_rounded, size: 16 * scale),
+                    label: Text(
+                      "Export Backup",
+                      style: TextStyle(fontSize: 12 * scale),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF2563EB),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed:
+                        () =>
+                            BackupService.importBackupFromJson(context, email),
+                    icon: Icon(Icons.download_rounded, size: 16 * scale),
+                    label: Text(
+                      "Restore Data",
+                      style: TextStyle(fontSize: 12 * scale),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: context.appColors.primary,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      side: BorderSide(color: context.appColors.primary),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                     ),
                   ),
                 ),
@@ -2895,17 +3115,17 @@ class _ProfilePageState extends State<ProfilePage>
   Widget _buildRentalSection(bool isSmallScreen) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.appColors.card,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 30,
             spreadRadius: 5,
             offset: Offset(0, 10),
           ),
         ],
-        border: Border.all(color: Color(0xFFF1F5F9), width: 1),
+        border: Border.all(color: context.appColors.divider, width: 1),
       ),
       child: Padding(
         padding: EdgeInsets.all(16 * scale),
@@ -2933,7 +3153,7 @@ class _ProfilePageState extends State<ProfilePage>
                       style: TextStyle(
                         fontSize: 10 * scale,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF475569),
+                        color: context.appColors.text2,
                         letterSpacing: 2,
                       ),
                     ),
@@ -2947,14 +3167,14 @@ class _ProfilePageState extends State<ProfilePage>
                   decoration: BoxDecoration(
                     color:
                         _isRentalEnabled
-                            ? Color(0xFF10B981).withOpacity(0.1)
-                            : Color(0xFFEF4444).withOpacity(0.1),
+                            ? Color(0xFF10B981).withValues(alpha: 0.1)
+                            : Color(0xFFEF4444).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
                       color:
                           _isRentalEnabled
-                              ? Color(0xFF10B981).withOpacity(0.3)
-                              : Color(0xFFEF4444).withOpacity(0.3),
+                              ? Color(0xFF10B981).withValues(alpha: 0.3)
+                              : Color(0xFFEF4444).withValues(alpha: 0.3),
                     ),
                   ),
                   child: Row(
@@ -2995,7 +3215,7 @@ class _ProfilePageState extends State<ProfilePage>
               style: TextStyle(
                 fontSize: 16 * scale,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF1E293B),
+                color: context.appColors.text1,
                 letterSpacing: 0.5,
               ),
             ),
@@ -3004,7 +3224,10 @@ class _ProfilePageState extends State<ProfilePage>
 
             Text(
               'Control rental page visibility for users',
-              style: TextStyle(color: Color(0xFF64748B), fontSize: 10 * scale),
+              style: TextStyle(
+                color: context.appColors.text2,
+                fontSize: 10 * scale,
+              ),
             ),
 
             SizedBox(height: 24),
@@ -3015,9 +3238,9 @@ class _ProfilePageState extends State<ProfilePage>
                 vertical: 6 * scale,
               ),
               decoration: BoxDecoration(
-                color: Color(0xFFF8FAFC),
+                color: context.appColors.inputFill,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Color(0xFFE2E8F0)),
+                border: Border.all(color: context.appColors.inputBorder),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -3029,7 +3252,7 @@ class _ProfilePageState extends State<ProfilePage>
                         'STATUS',
                         style: TextStyle(
                           fontSize: 8 * scale,
-                          color: Color(0xFF64748B),
+                          color: context.appColors.text2,
                           fontWeight: FontWeight.w600,
                           letterSpacing: 1.5,
                         ),
@@ -3040,7 +3263,7 @@ class _ProfilePageState extends State<ProfilePage>
                         style: TextStyle(
                           fontSize: 16 * scale,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF1E293B),
+                          color: context.appColors.text1,
                         ),
                       ),
                     ],
@@ -3083,7 +3306,7 @@ class _ProfilePageState extends State<ProfilePage>
                         ? 'Rental page is visible in Home Page'
                         : 'Rental page is hidden from Home Page',
                     style: TextStyle(
-                      color: Color(0xFF64748B),
+                      color: context.appColors.text2,
                       fontSize: 10 * scale,
                     ),
                   ),
@@ -3115,12 +3338,12 @@ class _ProfilePageState extends State<ProfilePage>
                 height: buttonHeight,
                 child: DecoratedBox(
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: context.appColors.card,
                     borderRadius: BorderRadius.circular(radius),
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                    border: Border.all(color: context.appColors.divider),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.06),
+                        color: Colors.black.withValues(alpha: 0.06),
                         blurRadius: 12,
                         offset: const Offset(0, 4),
                       ),
@@ -3131,21 +3354,21 @@ class _ProfilePageState extends State<ProfilePage>
                     borderRadius: BorderRadius.circular(radius),
                     child: InkWell(
                       borderRadius: BorderRadius.circular(radius),
-                      onTap: _logout, // ✅ unchanged
+                      onTap: _logout,
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(
                             Icons.logout_rounded,
                             size: iconSize,
-                            color: const Color(0xFF64748B),
+                            color: context.appColors.text2,
                           ),
                           SizedBox(width: 8 * buttonScale),
                           Text(
                             'Logout',
                             style: TextStyle(
                               fontSize: textSize,
-                              color: const Color(0xFF64748B),
+                              color: context.appColors.text2,
                               fontWeight: FontWeight.w700,
                             ),
                           ),
@@ -3173,7 +3396,7 @@ class _ProfilePageState extends State<ProfilePage>
                     borderRadius: BorderRadius.circular(radius),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFFEF4444).withOpacity(0.35),
+                        color: const Color(0xFFEF4444).withValues(alpha: 0.35),
                         blurRadius: 14,
                         offset: const Offset(0, 5),
                       ),

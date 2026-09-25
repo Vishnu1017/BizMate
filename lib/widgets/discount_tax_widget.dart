@@ -12,7 +12,7 @@ class DiscountTaxWidget extends StatelessWidget {
   final List<String> taxRateOptions;
 
   final Function(String?) onTaxRateChanged;
-  final Function(String?) onTaxTypeChanged; // ✅ ADD THIS
+  final Function(String?) onTaxTypeChanged;
 
   final double taxAmount;
   final double parsedTaxRate;
@@ -28,7 +28,7 @@ class DiscountTaxWidget extends StatelessWidget {
     required this.selectedTaxType,
     required this.taxRateOptions,
     required this.onTaxRateChanged,
-    required this.onTaxTypeChanged, // ✅ REQUIRED
+    required this.onTaxTypeChanged,
     required this.taxAmount,
     required this.parsedTaxRate,
   });
@@ -43,7 +43,7 @@ class DiscountTaxWidget extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _summaryRow("Subtotal", subtotal),
+        _summaryRow(context, "Subtotal", subtotal),
         const SizedBox(height: 20),
 
         // ---------------- DISCOUNT ----------------
@@ -51,6 +51,7 @@ class DiscountTaxWidget extends StatelessWidget {
           children: [
             Expanded(
               child: _glassTextField(
+                context: context,
                 label: "Discount %",
                 icon: Icons.percent,
                 controller: discountPercentController,
@@ -61,6 +62,7 @@ class DiscountTaxWidget extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: _glassTextField(
+                context: context,
                 label: "Discount ₹",
                 icon: Icons.currency_rupee,
                 controller: discountAmountController,
@@ -78,10 +80,11 @@ class DiscountTaxWidget extends StatelessWidget {
           children: [
             Expanded(
               child: _glassDropdown(
+                context: context,
                 label: "Tax Type",
                 value: selectedTaxType,
                 options: const ["With Tax", "Without Tax"],
-                onChanged: onTaxTypeChanged, // ✅ FIXED
+                onChanged: onTaxTypeChanged,
               ),
             ),
             SizedBox(width: 12 * scale),
@@ -92,6 +95,7 @@ class DiscountTaxWidget extends StatelessWidget {
                   duration: const Duration(milliseconds: 250),
                   opacity: isTaxRateEnabled ? 1.0 : 0.4,
                   child: _glassDropdown(
+                    context: context,
                     label: "Tax Rate",
                     value: selectedTaxRate,
                     options: taxRateOptions,
@@ -110,6 +114,7 @@ class DiscountTaxWidget extends StatelessWidget {
             children: [
               Expanded(
                 child: _infoCard(
+                  context,
                   "Tax Rate",
                   "${parsedTaxRate.toStringAsFixed(2)}%",
                 ),
@@ -117,6 +122,7 @@ class DiscountTaxWidget extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: _infoCard(
+                  context,
                   "Tax Amount",
                   "₹ ${taxAmount.toStringAsFixed(2)}",
                 ),
@@ -130,23 +136,27 @@ class DiscountTaxWidget extends StatelessWidget {
 
   // ---------------- UI HELPERS ----------------
 
-  Widget _summaryRow(String label, double value) {
+  Widget _summaryRow(BuildContext context, String label, double value) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final text1 = isDark ? const Color(0xFFF1F5F9) : const Color(0xFF1A1A1A);
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
           label,
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: text1),
         ),
         Text(
           "₹ ${value.toStringAsFixed(2)}",
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: text1),
         ),
       ],
     );
   }
 
   Widget _glassTextField({
+    required BuildContext context,
     required String label,
     required IconData icon,
     required TextEditingController controller,
@@ -154,6 +164,12 @@ class DiscountTaxWidget extends StatelessWidget {
     String? suffixText,
     VoidCallback? onTap,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final inputBg = isDark ? const Color(0xFF1E293B) : const Color(0xFFF5F7FA);
+    final borderColor = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
+    final text1 = isDark ? const Color(0xFFF1F5F9) : const Color(0xFF1A1A1A);
+    final text2 = isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final double localScale = (constraints.maxWidth / 390).clamp(0.95, 1.1);
@@ -165,8 +181,8 @@ class DiscountTaxWidget extends StatelessWidget {
           margin: EdgeInsets.symmetric(vertical: 6 * localScale),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12 * localScale),
-            color: Colors.grey.shade200.withOpacity(0.3),
-            border: Border.all(color: Colors.grey.shade400, width: 1),
+            color: inputBg,
+            border: Border.all(color: borderColor, width: 1),
           ),
           child: TextFormField(
             controller: controller,
@@ -175,7 +191,7 @@ class DiscountTaxWidget extends StatelessWidget {
             style: TextStyle(
               fontSize: 14 * localScale,
               fontWeight: FontWeight.w500,
-              color: Colors.black87,
+              color: text1,
             ),
             decoration: InputDecoration(
               isDense: true,
@@ -183,7 +199,7 @@ class DiscountTaxWidget extends StatelessWidget {
               labelText: label,
               labelStyle: TextStyle(
                 fontSize: 13 * localScale,
-                color: Colors.black54,
+                color: text2,
                 fontWeight: FontWeight.w500,
               ),
 
@@ -191,16 +207,14 @@ class DiscountTaxWidget extends StatelessWidget {
               prefixIcon: Icon(
                 icon,
                 size: 18 * localScale,
-                color: Colors.grey.shade700,
+                color: text2,
               ),
 
-              // 🔥 Better icon alignment
               prefixIconConstraints: BoxConstraints(
                 minWidth: isCompact ? 32 * localScale : 40 * localScale,
                 minHeight: 36 * localScale,
               ),
 
-              // 🔥 Clean compact padding
               contentPadding: EdgeInsets.fromLTRB(
                 isCompact ? 6 * localScale : 12 * localScale,
                 12 * localScale,
@@ -211,14 +225,14 @@ class DiscountTaxWidget extends StatelessWidget {
               prefixText: prefixText,
               prefixStyle: TextStyle(
                 fontSize: 13 * localScale,
-                color: Colors.black87,
+                color: text1,
                 fontWeight: FontWeight.w500,
               ),
 
               suffixText: suffixText,
               suffixStyle: TextStyle(
                 fontSize: 13 * localScale,
-                color: Colors.black87,
+                color: text1,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -229,35 +243,41 @@ class DiscountTaxWidget extends StatelessWidget {
   }
 
   Widget _glassDropdown({
+    required BuildContext context,
     required String label,
     required String? value,
     required List<String> options,
     required Function(String?) onChanged,
-    double fontSize = 12, // ✅ Add this
+    double fontSize = 12,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final inputBg = isDark ? const Color(0xFF1E293B) : const Color(0xFFF5F7FA);
+    final borderColor = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
+    final text1 = isDark ? const Color(0xFFF1F5F9) : const Color(0xFF1A1A1A);
+    final text2 = isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
-        color: Colors.grey.shade200.withOpacity(0.3),
-        border: Border.all(color: Colors.grey.shade400),
+        color: inputBg,
+        border: Border.all(color: borderColor),
       ),
       child: DropdownButtonFormField<String>(
-        value: value,
+        initialValue: value,
         decoration: InputDecoration(
           labelText: label,
           border: InputBorder.none,
           labelStyle: TextStyle(
-            // ✅ LABEL FONT SIZE
             fontSize: fontSize * scale,
+            color: text2,
           ),
         ),
         style: TextStyle(
-          // ✅ SELECTED VALUE FONT SIZE
           fontSize: fontSize * scale,
-          color: Colors.black,
+          color: text1,
         ),
-        dropdownColor: Colors.white,
+        dropdownColor: inputBg,
         items:
             options
                 .map(
@@ -265,7 +285,7 @@ class DiscountTaxWidget extends StatelessWidget {
                     value: e,
                     child: Text(
                       e,
-                      style: TextStyle(fontSize: fontSize * scale),
+                      style: TextStyle(fontSize: fontSize * scale, color: text1),
                     ),
                   ),
                 )
@@ -275,24 +295,30 @@ class DiscountTaxWidget extends StatelessWidget {
     );
   }
 
-  Widget _infoCard(String label, String value) {
+  Widget _infoCard(BuildContext context, String label, String value) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardBg = isDark ? const Color(0xFF1E293B) : const Color(0xFFF5F7FA);
+    final borderColor = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
+    final text1 = isDark ? const Color(0xFFF1F5F9) : const Color(0xFF1A1A1A);
+    final text2 = isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.grey.shade200.withOpacity(0.5),
+        color: cardBg,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade400),
+        border: Border.all(color: borderColor),
       ),
       child: Column(
         children: [
           Text(
             label,
-            style: const TextStyle(fontSize: 12, color: Colors.black54),
+            style: TextStyle(fontSize: 12, color: text2),
           ),
           const SizedBox(height: 4),
           Text(
             value,
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: text1),
           ),
         ],
       ),

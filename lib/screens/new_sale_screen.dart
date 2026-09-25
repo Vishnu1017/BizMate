@@ -3,9 +3,11 @@ import 'dart:ui';
 import 'package:bizmate/models/payment.dart';
 import 'package:bizmate/widgets/ModernCalendar.dart' show ModernCalendar;
 import 'package:bizmate/widgets/app_snackbar.dart' show AppSnackBar;
+import 'package:bizmate/widgets/app_theme_toggle.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../models/sale.dart';
+import '../utils/app_theme.dart';
 import 'select_items_screen.dart';
 
 class NewSaleScreen extends StatefulWidget {
@@ -180,6 +182,7 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
   }
 
   void _showEventCalendar(BuildContext context) {
+    final isDark = context.isDark;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -189,11 +192,15 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
           padding: EdgeInsets.only(
             bottom: MediaQuery.of(context).viewInsets.bottom,
           ),
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E293B) : Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           ),
           child: ModernCalendar(
+            selectedDate:
+                selectedEventDates.isNotEmpty
+                    ? selectedEventDates.last
+                    : selectedDate,
             onDateSelected: (DateTime date) {
               setState(() {
                 final exists = selectedEventDates.any(
@@ -232,6 +239,7 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
   }
 
   void _showCustomCalendar(BuildContext context) {
+    final isDark = context.isDark;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -241,16 +249,17 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
           padding: EdgeInsets.only(
             bottom: MediaQuery.of(context).viewInsets.bottom,
           ),
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E293B) : Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           ),
           child: ModernCalendar(
+            selectedDate: selectedDate,
             onDateSelected: (DateTime date) {
               setState(() {
                 selectedDate = date;
               });
-              Navigator.pop(context); // close bottom sheet
+              Navigator.pop(context);
             },
           ),
         );
@@ -259,6 +268,7 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
   }
 
   Widget buildItemCard(int index, Map<String, dynamic> item) {
+    final isDark = context.isDark;
     final qty = double.tryParse(item['qty']?.toString() ?? '1') ?? 1.0;
     final rate = double.tryParse(item['rate']?.toString() ?? '0') ?? 0.0;
     final discountPercent =
@@ -274,15 +284,18 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Colors.white, Color(0xFFF8FAFF)],
+        gradient: LinearGradient(
+          colors:
+              isDark
+                  ? [const Color(0xFF1E293B), const Color(0xFF0F172A)]
+                  : [Colors.white, const Color(0xFFF8FAFF)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
@@ -301,16 +314,28 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                   width: 24 * scale,
                   height: 24 * scale,
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [
-                        Color(0xFF2563EB),
-                        Color(0xFF1E40AF),
-                        Color(0xFF020617),
-                      ],
-                      stops: [0.0, 0.6, 1.0],
-                      begin: Alignment.bottomRight,
-                      end: Alignment.topLeft,
-                    ),
+                    gradient:
+                        context.isDark
+                            ? const LinearGradient(
+                              colors: [
+                                Color(0xFF38BDF8),
+                                Color(0xFF60A5FA),
+                                Color(0xFFBAE6FD),
+                              ],
+                              stops: [0.0, 0.6, 1.0],
+                              begin: Alignment.bottomRight,
+                              end: Alignment.topLeft,
+                            )
+                            : const LinearGradient(
+                              colors: [
+                                Color(0xFF2563EB),
+                                Color(0xFF1E40AF),
+                                Color(0xFF020617),
+                              ],
+                              stops: [0.0, 0.6, 1.0],
+                              begin: Alignment.bottomRight,
+                              end: Alignment.topLeft,
+                            ),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   alignment: Alignment.center,
@@ -334,14 +359,18 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                         style: TextStyle(
                           fontWeight: FontWeight.w600,
                           fontSize: 10 * scale,
-                          color: Color(0xFF333333),
+                          color:
+                              isDark ? Colors.white : const Color(0xFF333333),
                         ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         "${qty.toStringAsFixed(1)} × ₹${rate.toStringAsFixed(2)}",
                         style: TextStyle(
-                          color: Colors.grey.shade600,
+                          color:
+                              isDark
+                                  ? Colors.grey.shade400
+                                  : Colors.grey.shade600,
                           fontSize: 8 * scale,
                         ),
                       ),
@@ -359,7 +388,8 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 12 * scale,
-                          color: Color(0xFF333333),
+                          color:
+                              isDark ? Colors.white : const Color(0xFF333333),
                         ),
                       ),
                       const SizedBox(height: 6),
@@ -369,13 +399,18 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                           vertical: 2,
                         ),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF1E40AF).withOpacity(0.1),
+                          color: const Color(
+                            0xFF1E40AF,
+                          ).withValues(alpha: isDark ? 0.3 : 0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
                           "Save ₹${discountAmount.toStringAsFixed(2)}",
                           style: TextStyle(
-                            color: Color(0xFF1E40AF),
+                            color:
+                                isDark
+                                    ? Colors.lightBlueAccent
+                                    : const Color(0xFF1E40AF),
                             fontSize: 8 * scale,
                             fontWeight: FontWeight.w500,
                           ),
@@ -392,7 +427,7 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                     width: 30 * scale,
                     height: 30 * scale,
                     decoration: BoxDecoration(
-                      color: Colors.red.withOpacity(0.1),
+                      color: Colors.red.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: const Icon(
@@ -408,9 +443,12 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: isDark ? const Color(0xFF0F172A) : Colors.white,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.grey.shade200),
+                border: Border.all(
+                  color:
+                      isDark ? const Color(0xFF334155) : Colors.grey.shade200,
+                ),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -418,15 +456,25 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                   _buildDetailItem(
                     "Subtotal",
                     "₹${subtotalItem.toStringAsFixed(2)}",
-                    const Color(0xFF666666),
+                    isDark ? Colors.grey.shade300 : const Color(0xFF666666),
                   ),
-                  Container(width: 1, height: 20, color: Colors.grey.shade300),
+                  Container(
+                    width: 1,
+                    height: 20,
+                    color:
+                        isDark ? const Color(0xFF334155) : Colors.grey.shade300,
+                  ),
                   _buildDetailItem(
                     "Discount",
                     "${discountPercent.toStringAsFixed(1)}%",
                     const Color(0xFFFF6B6B),
                   ),
-                  Container(width: 1, height: 20, color: Colors.grey.shade300),
+                  Container(
+                    width: 1,
+                    height: 20,
+                    color:
+                        isDark ? const Color(0xFF334155) : Colors.grey.shade300,
+                  ),
                   if (taxPercent > 0)
                     _buildDetailItem(
                       "Tax",
@@ -443,11 +491,15 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
   }
 
   Widget _buildDetailItem(String label, String value, Color color) {
+    final isDark = context.isDark;
     return Column(
       children: [
         Text(
           label,
-          style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+          style: TextStyle(
+            fontSize: 11,
+            color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+          ),
         ),
         const SizedBox(height: 2),
         Text(
@@ -500,9 +552,11 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
           filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
           child: Container(
             height: height * 0.75,
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+            decoration: BoxDecoration(
+              color: context.isDark ? const Color(0xFF1E293B) : Colors.white,
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(28),
+              ),
             ),
             child: Column(
               children: [
@@ -512,18 +566,30 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                     horizontal: rs(20),
                     vertical: rs(16),
                   ),
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        Color(0xFF2563EB),
-                        Color(0xFF1E40AF),
-                        Color(0xFF020617),
-                      ],
-                      stops: [0.0, 0.6, 1.0],
-                      begin: Alignment.bottomRight,
-                      end: Alignment.topLeft,
-                    ),
-                    borderRadius: BorderRadius.vertical(
+                  decoration: BoxDecoration(
+                    gradient:
+                        context.isDark
+                            ? const LinearGradient(
+                              colors: [
+                                Color(0xFF38BDF8),
+                                Color(0xFF60A5FA),
+                                Color(0xFFBAE6FD),
+                              ],
+                              stops: [0.0, 0.6, 1.0],
+                              begin: Alignment.bottomRight,
+                              end: Alignment.topLeft,
+                            )
+                            : const LinearGradient(
+                              colors: [
+                                Color(0xFF2563EB),
+                                Color(0xFF1E40AF),
+                                Color(0xFF020617),
+                              ],
+                              stops: [0.0, 0.6, 1.0],
+                              begin: Alignment.bottomRight,
+                              end: Alignment.topLeft,
+                            ),
+                    borderRadius: const BorderRadius.vertical(
                       top: Radius.circular(28),
                     ),
                   ),
@@ -622,20 +688,32 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                             },
                             child: Container(
                               decoration: BoxDecoration(
-                                gradient: const LinearGradient(
-                                  colors: [
-                                    Color(0xFF2563EB),
-                                    Color(0xFF1E40AF),
-                                    Color(0xFF020617),
-                                  ],
-                                  stops: [0.0, 0.6, 1.0],
-                                  begin: Alignment.bottomRight,
-                                  end: Alignment.topLeft,
-                                ),
+                                gradient:
+                                    context.isDark
+                                        ? const LinearGradient(
+                                          colors: [
+                                            Color(0xFF38BDF8),
+                                            Color(0xFF60A5FA),
+                                            Color(0xFFBAE6FD),
+                                          ],
+                                          stops: [0.0, 0.6, 1.0],
+                                          begin: Alignment.bottomRight,
+                                          end: Alignment.topLeft,
+                                        )
+                                        : const LinearGradient(
+                                          colors: [
+                                            Color(0xFF2563EB),
+                                            Color(0xFF1E40AF),
+                                            Color(0xFF020617),
+                                          ],
+                                          stops: [0.0, 0.6, 1.0],
+                                          begin: Alignment.bottomRight,
+                                          end: Alignment.topLeft,
+                                        ),
                                 borderRadius: BorderRadius.circular(rs(16)),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.1),
+                                    color: Colors.black.withValues(alpha: 0.1),
                                     blurRadius: rs(8),
                                     offset: Offset(0, rs(4)),
                                   ),
@@ -810,35 +888,53 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
     if (mounted) Navigator.pop(context);
   }
 
-  InputDecoration customInput(String label, IconData icon) {
+  InputDecoration customInput(
+    String label,
+    IconData icon,
+    BuildContext context,
+  ) {
+    final isDark = context.isDark;
     return InputDecoration(
       labelText: label,
-      labelStyle: const TextStyle(
-        color: Color(0xFF1E40AF),
+      labelStyle: TextStyle(
+        color: isDark ? const Color(0xFF60A5FA) : const Color(0xFF1E40AF),
         fontWeight: FontWeight.w500,
         fontSize: 15,
       ),
       hintText: "Enter $label",
-      hintStyle: TextStyle(color: Colors.grey.shade400),
+      hintStyle: TextStyle(
+        color: isDark ? Colors.grey.shade500 : Colors.grey.shade400,
+      ),
       prefixIcon: SizedBox(
         width: 56,
-        child: Icon(icon, color: const Color(0xFF1E40AF), size: 22),
+        child: Icon(
+          icon,
+          color: isDark ? const Color(0xFF60A5FA) : const Color(0xFF1E40AF),
+          size: 22,
+        ),
       ),
       filled: true,
-      fillColor: Colors.white,
+      fillColor: isDark ? const Color(0xFF0F172A) : Colors.white,
       contentPadding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: BorderSide.none,
+        borderSide: BorderSide(
+          color: isDark ? const Color(0xFF334155) : Colors.transparent,
+        ),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: BorderSide.none,
+        borderSide: BorderSide(
+          color: isDark ? const Color(0xFF334155) : Colors.transparent,
+        ),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
         borderSide: BorderSide(
-          color: const Color(0xFF1E40AF).withOpacity(0.5),
+          color:
+              isDark
+                  ? const Color(0xFF60A5FA)
+                  : const Color(0xFF1E40AF).withValues(alpha: 0.5),
           width: 2,
         ),
       ),
@@ -870,6 +966,7 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
   }
 
   Widget _leftColumn(BuildContext context, BoxConstraints constraints) {
+    final isDark = context.isDark;
     final scale = _scaleForWidth(constraints);
     final padding = _responsivePadding(constraints);
     final screenWidth = MediaQuery.of(context).size.width;
@@ -887,7 +984,7 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
               ),
-              color: Colors.white,
+              color: isDark ? const Color(0xFF1E293B) : Colors.white,
               child: Padding(
                 padding: const EdgeInsets.all(20),
                 child: Column(
@@ -898,21 +995,28 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                       style: TextStyle(
                         fontSize: 18 * scale,
                         fontWeight: FontWeight.bold,
-                        color: const Color(0xFF333333),
+                        color: isDark ? Colors.white : const Color(0xFF333333),
                       ),
                     ),
                     const SizedBox(height: 20),
                     TextFormField(
                       controller: customerController,
                       onTap: showCustomerPicker,
+                      style: TextStyle(
+                        color: isDark ? Colors.white : const Color(0xFF1E293B),
+                      ),
                       decoration: customInput(
                         "Customer Name",
                         Icons.person,
+                        context,
                       ).copyWith(
                         suffixIcon: IconButton(
-                          icon: const Icon(
+                          icon: Icon(
                             Icons.arrow_drop_down,
-                            color: Color(0xFF1E40AF),
+                            color:
+                                isDark
+                                    ? const Color(0xFF60A5FA)
+                                    : const Color(0xFF1E40AF),
                           ),
                           onPressed: showCustomerPicker,
                         ),
@@ -959,7 +1063,14 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                     TextFormField(
                       controller: phoneController,
                       keyboardType: TextInputType.phone,
-                      decoration: customInput("Phone Number", Icons.phone),
+                      style: TextStyle(
+                        color: isDark ? Colors.white : const Color(0xFF1E293B),
+                      ),
+                      decoration: customInput(
+                        "Phone Number",
+                        Icons.phone,
+                        context,
+                      ),
                       validator: (val) {
                         if (val == null || val.trim().isEmpty) {
                           return 'Enter phone number';
@@ -997,7 +1108,7 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
               ),
-              color: Colors.white,
+              color: isDark ? const Color(0xFF1E293B) : Colors.white,
               child: Padding(
                 padding: const EdgeInsets.all(15),
                 child: Column(
@@ -1008,7 +1119,7 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                       style: TextStyle(
                         fontSize: 16 * scale,
                         fontWeight: FontWeight.bold,
-                        color: const Color(0xFF333333),
+                        color: isDark ? Colors.white : const Color(0xFF333333),
                       ),
                     ),
 
@@ -1026,14 +1137,21 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: [
-                              const Color(0xFF2563EB).withOpacity(0.1),
-                              const Color(0xFF1E40AF).withOpacity(0.1),
-                              const Color(0xFF020617).withOpacity(0.1),
+                              const Color(0xFF2563EB).withValues(alpha: 0.1),
+                              const Color(0xFF1E40AF).withValues(alpha: 0.1),
+                              const Color(0xFF020617).withValues(alpha: 0.1),
                             ],
                           ),
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
-                            color: const Color(0xFF1E40AF).withOpacity(0.3),
+                            color:
+                                isDark
+                                    ? const Color(
+                                      0xFF38BDF8,
+                                    ).withValues(alpha: 0.4)
+                                    : const Color(
+                                      0xFF1E40AF,
+                                    ).withValues(alpha: 0.3),
                             width: 1.5,
                           ),
                         ),
@@ -1043,13 +1161,28 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                               width: 40,
                               height: 40,
                               decoration: BoxDecoration(
-                                gradient: const LinearGradient(
-                                  colors: [
-                                    Color(0xFF2563EB),
-                                    Color(0xFF1E40AF),
-                                    Color(0xFF020617),
-                                  ],
-                                ),
+                                gradient:
+                                    context.isDark
+                                        ? const LinearGradient(
+                                          colors: [
+                                            Color(0xFF38BDF8),
+                                            Color(0xFF60A5FA),
+                                            Color(0xFFBAE6FD),
+                                          ],
+                                          stops: [0.0, 0.6, 1.0],
+                                          begin: Alignment.bottomRight,
+                                          end: Alignment.topLeft,
+                                        )
+                                        : const LinearGradient(
+                                          colors: [
+                                            Color(0xFF2563EB),
+                                            Color(0xFF1E40AF),
+                                            Color(0xFF020617),
+                                          ],
+                                          stops: [0.0, 0.6, 1.0],
+                                          begin: Alignment.bottomRight,
+                                          end: Alignment.topLeft,
+                                        ),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: const Icon(
@@ -1067,7 +1200,10 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                                     "Booking Date",
                                     style: TextStyle(
                                       fontSize: 12 * scale,
-                                      color: Colors.grey.shade600,
+                                      color:
+                                          isDark
+                                              ? Colors.grey.shade400
+                                              : Colors.grey.shade600,
                                     ),
                                   ),
                                   const SizedBox(height: 2),
@@ -1076,17 +1212,23 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                                     style: TextStyle(
                                       fontSize: 14 * scale,
                                       fontWeight: FontWeight.bold,
-                                      color: const Color(0xFF333333),
+                                      color:
+                                          isDark
+                                              ? Colors.white
+                                              : const Color(0xFF333333),
                                     ),
                                   ),
                                 ],
                               ),
                             ),
 
-                            const Icon(
+                            Icon(
                               Icons.arrow_forward_ios,
                               size: 16,
-                              color: Color(0xFF1E40AF),
+                              color:
+                                  isDark
+                                      ? const Color(0xFF60A5FA)
+                                      : const Color(0xFF1E40AF),
                             ),
                           ],
                         ),
@@ -1107,14 +1249,21 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: [
-                              const Color(0xFF2563EB).withOpacity(0.1),
-                              const Color(0xFF1E40AF).withOpacity(0.1),
-                              const Color(0xFF020617).withOpacity(0.1),
+                              const Color(0xFF2563EB).withValues(alpha: 0.1),
+                              const Color(0xFF1E40AF).withValues(alpha: 0.1),
+                              const Color(0xFF020617).withValues(alpha: 0.1),
                             ],
                           ),
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
-                            color: const Color(0xFF1E40AF).withOpacity(0.3),
+                            color:
+                                isDark
+                                    ? const Color(
+                                      0xFF38BDF8,
+                                    ).withValues(alpha: 0.4)
+                                    : const Color(
+                                      0xFF1E40AF,
+                                    ).withValues(alpha: 0.3),
                             width: 1.5,
                           ),
                         ),
@@ -1124,13 +1273,28 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                               width: 40,
                               height: 40,
                               decoration: BoxDecoration(
-                                gradient: const LinearGradient(
-                                  colors: [
-                                    Color(0xFF2563EB),
-                                    Color(0xFF1E40AF),
-                                    Color(0xFF020617),
-                                  ],
-                                ),
+                                gradient:
+                                    context.isDark
+                                        ? const LinearGradient(
+                                          colors: [
+                                            Color(0xFF38BDF8),
+                                            Color(0xFF60A5FA),
+                                            Color(0xFFBAE6FD),
+                                          ],
+                                          stops: [0.0, 0.6, 1.0],
+                                          begin: Alignment.bottomRight,
+                                          end: Alignment.topLeft,
+                                        )
+                                        : const LinearGradient(
+                                          colors: [
+                                            Color(0xFF2563EB),
+                                            Color(0xFF1E40AF),
+                                            Color(0xFF020617),
+                                          ],
+                                          stops: [0.0, 0.6, 1.0],
+                                          begin: Alignment.bottomRight,
+                                          end: Alignment.topLeft,
+                                        ),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: const Icon(
@@ -1148,7 +1312,10 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                                     "Photography Event Dates",
                                     style: TextStyle(
                                       fontSize: 12 * scale,
-                                      color: Colors.grey.shade600,
+                                      color:
+                                          isDark
+                                              ? Colors.grey.shade400
+                                              : Colors.grey.shade600,
                                     ),
                                   ),
                                   const SizedBox(height: 2),
@@ -1159,17 +1326,23 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                                     style: TextStyle(
                                       fontSize: 14 * scale,
                                       fontWeight: FontWeight.bold,
-                                      color: const Color(0xFF333333),
+                                      color:
+                                          isDark
+                                              ? Colors.white
+                                              : const Color(0xFF333333),
                                     ),
                                   ),
                                 ],
                               ),
                             ),
 
-                            const Icon(
+                            Icon(
                               Icons.arrow_forward_ios,
                               size: 16,
-                              color: Color(0xFF1E40AF),
+                              color:
+                                  isDark
+                                      ? const Color(0xFF60A5FA)
+                                      : const Color(0xFF1E40AF),
                             ),
                           ],
                         ),
@@ -1185,11 +1358,25 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                         children:
                             selectedEventDates.map((date) {
                               return Chip(
-                                backgroundColor: const Color(0xFFEEF4FF),
+                                backgroundColor:
+                                    isDark
+                                        ? const Color(0xFF334155)
+                                        : const Color(0xFFEEF4FF),
                                 label: Text(
                                   "${date.day}/${date.month}/${date.year}",
+                                  style: TextStyle(
+                                    color:
+                                        isDark ? Colors.white : Colors.black87,
+                                  ),
                                 ),
-                                deleteIcon: const Icon(Icons.close, size: 18),
+                                deleteIcon: Icon(
+                                  Icons.close,
+                                  size: 18,
+                                  color:
+                                      isDark
+                                          ? Colors.grey.shade300
+                                          : Colors.black54,
+                                ),
                                 onDeleted: () {
                                   setState(() {
                                     selectedEventDates.remove(date);
@@ -1210,7 +1397,7 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
               ),
-              color: Colors.white,
+              color: isDark ? const Color(0xFF1E293B) : Colors.white,
               child: Padding(
                 padding: EdgeInsets.symmetric(
                   horizontal: 20 * scale,
@@ -1227,27 +1414,40 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                           style: TextStyle(
                             fontSize: (screenWidth > 900 ? 20 : 18) * scale,
                             fontWeight: FontWeight.w700,
-                            color: const Color(0xFF2A2A2A),
+                            color:
+                                isDark ? Colors.white : const Color(0xFF2A2A2A),
                           ),
                         ),
                         Container(
                           decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [
-                                Color(0xFF2563EB),
-                                Color(0xFF1E40AF),
-                                Color(0xFF020617),
-                              ],
-                              stops: [0.0, 0.6, 1.0],
-                              begin: Alignment.bottomRight,
-                              end: Alignment.topLeft,
-                            ),
+                            gradient:
+                                context.isDark
+                                    ? const LinearGradient(
+                                      colors: [
+                                        Color(0xFF38BDF8),
+                                        Color(0xFF60A5FA),
+                                        Color(0xFFBAE6FD),
+                                      ],
+                                      stops: [0.0, 0.6, 1.0],
+                                      begin: Alignment.bottomRight,
+                                      end: Alignment.topLeft,
+                                    )
+                                    : const LinearGradient(
+                                      colors: [
+                                        Color(0xFF2563EB),
+                                        Color(0xFF1E40AF),
+                                        Color(0xFF020617),
+                                      ],
+                                      stops: [0.0, 0.6, 1.0],
+                                      begin: Alignment.bottomRight,
+                                      end: Alignment.topLeft,
+                                    ),
                             borderRadius: BorderRadius.circular(14 * scale),
                             boxShadow: [
                               BoxShadow(
                                 color: const Color(
                                   0xFF1E40AF,
-                                ).withOpacity(0.28),
+                                ).withValues(alpha: 0.28),
                                 blurRadius: 10 * scale,
                                 offset: Offset(0, 4 * scale),
                               ),
@@ -1298,10 +1498,16 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                           vertical: 40 * scale,
                         ),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF8FAFF),
+                          color:
+                              isDark
+                                  ? const Color(0xFF0F172A)
+                                  : const Color(0xFFF8FAFF),
                           borderRadius: BorderRadius.circular(18 * scale),
                           border: Border.all(
-                            color: Colors.grey.shade300,
+                            color:
+                                isDark
+                                    ? const Color(0xFF334155)
+                                    : Colors.grey.shade300,
                             width: 1.4,
                           ),
                         ),
@@ -1311,7 +1517,10 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                             Icon(
                               Icons.shopping_basket_outlined,
                               size: (screenWidth > 900 ? 70 : 60) * scale,
-                              color: Colors.grey.shade400,
+                              color:
+                                  isDark
+                                      ? Colors.grey.shade600
+                                      : Colors.grey.shade400,
                             ),
                             SizedBox(height: 16 * scale),
                             Text(
@@ -1319,7 +1528,10 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                               style: TextStyle(
                                 fontSize: (screenWidth > 900 ? 18 : 16) * scale,
                                 fontWeight: FontWeight.w600,
-                                color: Colors.grey.shade600,
+                                color:
+                                    isDark
+                                        ? Colors.grey.shade300
+                                        : Colors.grey.shade600,
                               ),
                             ),
                             SizedBox(height: 8 * scale),
@@ -1327,7 +1539,10 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                               "Tap 'Add Items' to start",
                               style: TextStyle(
                                 fontSize: (screenWidth > 900 ? 15 : 14) * scale,
-                                color: Colors.grey.shade500,
+                                color:
+                                    isDark
+                                        ? Colors.grey.shade400
+                                        : Colors.grey.shade500,
                               ),
                             ),
                           ],
@@ -1358,7 +1573,7 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20),
                 ),
-                color: Colors.white,
+                color: isDark ? const Color(0xFF1E293B) : Colors.white,
                 child: Padding(
                   padding: const EdgeInsets.all(20),
                   child: Column(
@@ -1369,7 +1584,8 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                         style: TextStyle(
                           fontSize: 16 * scale,
                           fontWeight: FontWeight.bold,
-                          color: const Color(0xFF333333),
+                          color:
+                              isDark ? Colors.white : const Color(0xFF333333),
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -1405,9 +1621,9 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
                               colors: [
-                                Color(0xFF2563EB).withOpacity(0.1),
-                                Color(0xFF1E40AF).withOpacity(0.1),
-                                Color(0xFF020617).withOpacity(0.1),
+                                Color(0xFF2563EB).withValues(alpha: 0.1),
+                                Color(0xFF1E40AF).withValues(alpha: 0.1),
+                                Color(0xFF020617).withValues(alpha: 0.1),
                               ],
                               stops: [0.0, 0.6, 1.0],
                               begin: Alignment.bottomRight,
@@ -1423,7 +1639,10 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                                 style: TextStyle(
                                   fontSize: 14 * scale,
                                   fontWeight: FontWeight.bold,
-                                  color: const Color(0xFF333333),
+                                  color:
+                                      isDark
+                                          ? Colors.white
+                                          : const Color(0xFF333333),
                                 ),
                               ),
                               Text(
@@ -1431,7 +1650,10 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                                 style: TextStyle(
                                   fontSize: 18 * scale,
                                   fontWeight: FontWeight.bold,
-                                  color: const Color(0xFF1E40AF),
+                                  color:
+                                      isDark
+                                          ? const Color(0xFF60A5FA)
+                                          : const Color(0xFF1E40AF),
                                 ),
                               ),
                             ],
@@ -1456,20 +1678,32 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                   width: 280 * scale,
                   height: 50 * scale,
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [
-                        Color(0xFF2563EB),
-                        Color(0xFF1E40AF),
-                        Color(0xFF020617),
-                      ],
-                      stops: [0.0, 0.6, 1.0],
-                      begin: Alignment.bottomRight,
-                      end: Alignment.topLeft,
-                    ),
+                    gradient:
+                        context.isDark
+                            ? const LinearGradient(
+                              colors: [
+                                Color(0xFF38BDF8),
+                                Color(0xFF60A5FA),
+                                Color(0xFFBAE6FD),
+                              ],
+                              stops: [0.0, 0.6, 1.0],
+                              begin: Alignment.bottomRight,
+                              end: Alignment.topLeft,
+                            )
+                            : const LinearGradient(
+                              colors: [
+                                Color(0xFF2563EB),
+                                Color(0xFF1E40AF),
+                                Color(0xFF020617),
+                              ],
+                              stops: [0.0, 0.6, 1.0],
+                              begin: Alignment.bottomRight,
+                              end: Alignment.topLeft,
+                            ),
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFF1E40AF).withOpacity(0.4),
+                        color: const Color(0xFF1E40AF).withValues(alpha: 0.4),
                         blurRadius: 20,
                         offset: const Offset(0, 10),
                       ),
@@ -1548,6 +1782,7 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
     Color? color,
     double scale = 1.0,
   }) {
+    final isDark = context.isDark;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
@@ -1555,12 +1790,15 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
         children: [
           Text(
             label,
-            style: TextStyle(color: Colors.grey.shade600, fontSize: 12 * scale),
+            style: TextStyle(
+              color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+              fontSize: 12 * scale,
+            ),
           ),
           Text(
             value,
             style: TextStyle(
-              color: color ?? const Color(0xFF333333),
+              color: color ?? (isDark ? Colors.white : const Color(0xFF333333)),
               fontSize: 14 * scale,
               fontWeight: FontWeight.w600,
             ),
@@ -1578,7 +1816,7 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
         return WillPopScope(
           onWillPop: () async => !_isSaving,
           child: Scaffold(
-            backgroundColor: const Color(0xFFF8FAFF),
+            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
             appBar: AppBar(
               iconTheme: const IconThemeData(color: Colors.white),
               title: const Text(
@@ -1587,18 +1825,36 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
               ),
               centerTitle: true,
               elevation: 0,
+              actions: const [
+                Padding(
+                  padding: EdgeInsets.only(right: 16),
+                  child: AppThemeToggle(),
+                ),
+              ],
               flexibleSpace: Container(
-                decoration: const BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [
-                      Color(0xFF2563EB),
-                      Color(0xFF1E40AF),
-                      Color(0xFF020617),
-                    ],
-                    stops: [0.0, 0.6, 1.0],
-                    begin: Alignment.bottomRight,
-                    end: Alignment.topLeft,
-                  ),
+                decoration: BoxDecoration(
+                  gradient:
+                      context.isDark
+                          ? const LinearGradient(
+                            colors: [
+                              Color(0xFF38BDF8),
+                              Color(0xFF60A5FA),
+                              Color(0xFFBAE6FD),
+                            ],
+                            stops: [0.0, 0.6, 1.0],
+                            begin: Alignment.bottomRight,
+                            end: Alignment.topLeft,
+                          )
+                          : const LinearGradient(
+                            colors: [
+                              Color(0xFF2563EB),
+                              Color(0xFF1E40AF),
+                              Color(0xFF020617),
+                            ],
+                            stops: [0.0, 0.6, 1.0],
+                            begin: Alignment.bottomRight,
+                            end: Alignment.topLeft,
+                          ),
                 ),
               ),
             ),

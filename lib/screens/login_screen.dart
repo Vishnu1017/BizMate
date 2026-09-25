@@ -826,7 +826,7 @@ class _LoginScreenState extends State<LoginScreen>
                                               boxShadow: [
                                                 BoxShadow(
                                                   color: Colors.blue
-                                                      .withOpacity(0.3),
+                                                      .withValues(alpha: 0.3),
                                                   blurRadius: 10,
                                                   offset: const Offset(0, 4),
                                                 ),
@@ -1333,7 +1333,7 @@ class _LoginScreenState extends State<LoginScreen>
           ),
           if (_isProcessing)
             Container(
-              color: Colors.black.withOpacity(0.2),
+              color: Colors.black.withValues(alpha: 0.2),
               child: const Center(child: CircularProgressIndicator()),
             ),
         ],

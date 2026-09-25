@@ -1,8 +1,10 @@
+import 'package:bizmate/utils/app_theme.dart';
 import 'package:bizmate/widgets/app_snackbar.dart' show AppSnackBar;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:bizmate/models/user_model.dart';
 import 'package:bizmate/screens/nav_bar_page.dart';
+import 'package:bizmate/services/biometric_service.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 final _storage = FlutterSecureStorage(
@@ -116,7 +118,9 @@ class AuthGateScreen extends StatelessWidget {
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF1E40AF).withOpacity(0.3),
+                            color: const Color(
+                              0xFF1E40AF,
+                            ).withValues(alpha: 0.3),
                             blurRadius: 25,
                             spreadRadius: 2,
                             offset: const Offset(0, 10),
@@ -313,13 +317,15 @@ class _PasscodeCreationScreenState extends State<PasscodeCreationScreen> {
                         BoxShadow(
                           color:
                               isFilled
-                                  ? const Color(0xFF1E40AF).withOpacity(0.3)
-                                  : Colors.grey.withOpacity(0.2),
+                                  ? const Color(
+                                    0xFF1E40AF,
+                                  ).withValues(alpha: 0.3)
+                                  : Colors.grey.withValues(alpha: 0.2),
                           blurRadius: 10,
                           offset: const Offset(0, 5),
                         ),
                         BoxShadow(
-                          color: Colors.white.withOpacity(0.8),
+                          color: Colors.white.withValues(alpha: 0.8),
                           blurRadius: 10,
                           offset: const Offset(-5, -5),
                         ),
@@ -340,7 +346,7 @@ class _PasscodeCreationScreenState extends State<PasscodeCreationScreen> {
                         color:
                             isFilled
                                 ? Colors.transparent
-                                : Colors.grey.withOpacity(0.3),
+                                : Colors.grey.withValues(alpha: 0.3),
                         width: 1,
                       ),
                     ),
@@ -409,12 +415,12 @@ class _PasscodeCreationScreenState extends State<PasscodeCreationScreen> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
         ],
-        border: Border.all(color: Colors.grey.withOpacity(0.1)),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.1)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -533,7 +539,7 @@ class _PasscodeCreationScreenState extends State<PasscodeCreationScreen> {
               isSelected
                   ? [
                     BoxShadow(
-                      color: const Color(0xFF1E40AF).withOpacity(0.2),
+                      color: const Color(0xFF1E40AF).withValues(alpha: 0.2),
                       blurRadius: 10,
                       offset: const Offset(0, 5),
                     ),
@@ -597,7 +603,7 @@ class _PasscodeCreationScreenState extends State<PasscodeCreationScreen> {
                         height: min(80, screenWidth * 0.18),
                         decoration: const BoxDecoration(
                           shape: BoxShape.circle,
-                          gradient: const LinearGradient(
+                          gradient: LinearGradient(
                             colors: [
                               Color(0xFF2563EB),
                               Color(0xFF1E40AF),
@@ -702,7 +708,7 @@ class _PasscodeCreationScreenState extends State<PasscodeCreationScreen> {
                             elevation: 0,
                             shadowColor: const Color(
                               0xFF1E40AF,
-                            ).withOpacity(0.3),
+                            ).withValues(alpha: 0.3),
                           ),
                           child: const Text(
                             "Save Passcode",
@@ -759,6 +765,32 @@ class _EnterPasscodeScreenState extends State<EnterPasscodeScreen> {
     super.initState();
     _pinFocusNodes = List.generate(6, (_) => FocusNode());
     _loadPasscodeType();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkBiometricUnlock();
+    });
+  }
+
+  Future<void> _checkBiometricUnlock() async {
+    final canAuth = await BiometricService.canAuthenticate();
+    if (!canAuth) return;
+
+    final authenticated = await BiometricService.authenticate(
+      reason: 'Unlock BizMate using Face ID / Fingerprint',
+    );
+
+    if (authenticated && mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder:
+              (_) => NavBarPage(
+                user: widget.user,
+                userPhone: widget.user.phone,
+                userEmail: widget.user.email,
+              ),
+        ),
+      );
+    }
   }
 
   @override
@@ -870,13 +902,15 @@ class _EnterPasscodeScreenState extends State<EnterPasscodeScreen> {
                         BoxShadow(
                           color:
                               isFilled
-                                  ? const Color(0xFF1E40AF).withOpacity(0.3)
-                                  : Colors.grey.withOpacity(0.2),
+                                  ? const Color(
+                                    0xFF1E40AF,
+                                  ).withValues(alpha: 0.3)
+                                  : Colors.grey.withValues(alpha: 0.2),
                           blurRadius: 10,
                           offset: const Offset(0, 5),
                         ),
                         BoxShadow(
-                          color: Colors.white.withOpacity(0.8),
+                          color: Colors.white.withValues(alpha: 0.8),
                           blurRadius: 10,
                           offset: const Offset(-5, -5),
                         ),
@@ -897,7 +931,7 @@ class _EnterPasscodeScreenState extends State<EnterPasscodeScreen> {
                         color:
                             isFilled
                                 ? Colors.transparent
-                                : Colors.grey.withOpacity(0.3),
+                                : Colors.grey.withValues(alpha: 0.3),
                         width: 1,
                       ),
                     ),
@@ -1102,7 +1136,7 @@ class _EnterPasscodeScreenState extends State<EnterPasscodeScreen> {
                         height: min(80, screenWidth * 0.18),
                         decoration: const BoxDecoration(
                           shape: BoxShape.circle,
-                          gradient: const LinearGradient(
+                          gradient: LinearGradient(
                             colors: [
                               Color(0xFF2563EB),
                               Color(0xFF1E40AF),
@@ -1239,22 +1273,34 @@ class _EnterPasscodeScreenState extends State<EnterPasscodeScreen> {
                               horizontal: 40,
                             ),
                             decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [
-                                  Color(0xFF2563EB),
-                                  Color(0xFF1E40AF),
-                                  Color(0xFF020617),
-                                ],
-                                stops: [0.0, 0.6, 1.0],
-                                begin: Alignment.bottomRight,
-                                end: Alignment.topLeft,
-                              ),
+                              gradient:
+                                  context.isDark
+                                      ? const LinearGradient(
+                                        colors: [
+                                          Color(0xFF38BDF8),
+                                          Color(0xFF60A5FA),
+                                          Color(0xFFBAE6FD),
+                                        ],
+                                        stops: [0.0, 0.6, 1.0],
+                                        begin: Alignment.bottomRight,
+                                        end: Alignment.topLeft,
+                                      )
+                                      : const LinearGradient(
+                                        colors: [
+                                          Color(0xFF2563EB),
+                                          Color(0xFF1E40AF),
+                                          Color(0xFF020617),
+                                        ],
+                                        stops: [0.0, 0.6, 1.0],
+                                        begin: Alignment.bottomRight,
+                                        end: Alignment.topLeft,
+                                      ),
                               borderRadius: BorderRadius.circular(20),
                               boxShadow: [
                                 BoxShadow(
                                   color: const Color(
                                     0xFF1E40AF,
-                                  ).withOpacity(0.4),
+                                  ).withValues(alpha: 0.4),
                                   blurRadius: 30,
                                   offset: const Offset(0, 20),
                                 ),

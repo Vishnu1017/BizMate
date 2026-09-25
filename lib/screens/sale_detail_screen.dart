@@ -2,11 +2,13 @@
 import 'package:bizmate/models/payment.dart';
 import 'package:bizmate/widgets/ModernCalendar.dart';
 import 'package:bizmate/widgets/app_snackbar.dart' show AppSnackBar;
+import 'package:bizmate/widgets/app_theme_toggle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hive/hive.dart';
 import 'package:intl/intl.dart';
 import '../models/sale.dart';
+import '../utils/app_theme.dart';
 
 class SaleDetailScreen extends StatefulWidget {
   final Sale sale;
@@ -43,18 +45,22 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
   List<DateTime> selectedEventDates = [];
 
   Future<void> _selectMultipleDates() async {
+    final isDark = context.isDark;
     final result = await showModalBottomSheet<List<DateTime>>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) {
         return Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E293B) : Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           ),
           child: ModernCalendar(
-            selectedDates: selectedEventDates,
+            selectedDate:
+                selectedEventDates.isNotEmpty
+                    ? selectedEventDates.last
+                    : DateTime.now(),
             onDateSelected: (DateTime date) {
               setState(() {
                 final exists = selectedEventDates.any(
@@ -308,18 +314,23 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
         final partiallyCompleted =
             completedCount > 0 && completedCount < totalCount;
 
+        final isDark = context.isDark;
+        final c = context.appColors;
         return AbsorbPointer(
           absorbing: _isSaving,
           child: Scaffold(
-            backgroundColor: const Color(0xFFF8FAFC),
+            backgroundColor: c.background,
             appBar: AppBar(
               elevation: 0,
-              backgroundColor: Colors.white,
-              foregroundColor: const Color(0xFF1E40AF),
+              backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+              foregroundColor:
+                  isDark ? const Color(0xFF38BDF8) : const Color(0xFF1E40AF),
               title: Text(
                 "Edit Sale Details",
                 style: TextStyle(
-                  color: const Color(0xFF1E40AF),
+                  color: isDark
+                      ? const Color(0xFFF1F5F9)
+                      : const Color(0xFF1E40AF),
                   fontWeight: FontWeight.w600,
                   fontSize: 18 * scale,
                 ),
@@ -330,6 +341,8 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                 onPressed: () => Navigator.pop(context),
               ),
               actions: [
+                const AppThemeToggle(size: 32),
+                const SizedBox(width: 8),
                 IconButton(
                   icon: const Icon(Icons.save_rounded),
                   onPressed: _isSaving ? null : saveChanges,
@@ -356,11 +369,16 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                             width: double.infinity,
                             padding: EdgeInsets.all(cardPadding),
                             decoration: BoxDecoration(
-                              color: Colors.white,
+                              color:
+                                  context.isDark
+                                      ? const Color(0xFF1E293B)
+                                      : Colors.white,
                               borderRadius: BorderRadius.circular(16),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.05),
+                                  color: Colors.black.withValues(
+                                    alpha: context.isDark ? 0.2 : 0.05,
+                                  ),
                                   blurRadius: 16,
                                   offset: const Offset(0, 4),
                                 ),
@@ -374,12 +392,18 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                     Container(
                                       padding: EdgeInsets.all(6 * scale),
                                       decoration: BoxDecoration(
-                                        color: const Color(0xFFEFF6FF),
+                                        color:
+                                            context.isDark
+                                                ? const Color(0xFF1E3A8A)
+                                                : const Color(0xFFEFF6FF),
                                         borderRadius: BorderRadius.circular(12),
                                       ),
                                       child: Icon(
                                         Icons.receipt_long_rounded,
-                                        color: Color(0xFF1E40AF),
+                                        color:
+                                            context.isDark
+                                                ? Colors.lightBlueAccent
+                                                : const Color(0xFF1E40AF),
                                         size: 20 * scale,
                                       ),
                                     ),
@@ -394,7 +418,10 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                             style: TextStyle(
                                               fontSize: titleSize,
                                               fontWeight: FontWeight.w600,
-                                              color: const Color(0xFF1E40AF),
+                                              color:
+                                                  context.isDark
+                                                      ? Colors.white
+                                                      : const Color(0xFF1E40AF),
                                             ),
                                           ),
                                           const SizedBox(height: 4),
@@ -402,7 +429,10 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                             formatted,
                                             style: TextStyle(
                                               fontSize: subtitleSize,
-                                              color: Colors.grey.shade600,
+                                              color:
+                                                  context.isDark
+                                                      ? Colors.grey.shade400
+                                                      : Colors.grey.shade600,
                                             ),
                                           ),
                                         ],
@@ -414,7 +444,9 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                         vertical: 6,
                                       ),
                                       decoration: BoxDecoration(
-                                        color: statusColor.withOpacity(0.1),
+                                        color: statusColor.withValues(
+                                          alpha: 0.1,
+                                        ),
                                         borderRadius: BorderRadius.circular(20),
                                       ),
                                       child: Row(
@@ -450,7 +482,9 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                       "Total Amount",
                                       "₹${total.toStringAsFixed(2)}",
                                       Icons.currency_rupee_rounded,
-                                      const Color(0xFF1E40AF),
+                                      context.isDark
+                                          ? Colors.lightBlueAccent
+                                          : const Color(0xFF1E40AF),
                                     ),
                                     _buildAmountItem(
                                       "Balance",
@@ -475,11 +509,16 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                             width: double.infinity,
                             padding: EdgeInsets.all(cardPadding),
                             decoration: BoxDecoration(
-                              color: Colors.white,
+                              color:
+                                  context.isDark
+                                      ? const Color(0xFF1E293B)
+                                      : Colors.white,
                               borderRadius: BorderRadius.circular(16),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.05),
+                                  color: Colors.black.withValues(
+                                    alpha: context.isDark ? 0.2 : 0.05,
+                                  ),
                                   blurRadius: 16,
                                   offset: const Offset(0, 4),
                                 ),
@@ -493,7 +532,10 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                   style: TextStyle(
                                     fontSize: 14 * scale,
                                     fontWeight: FontWeight.w600,
-                                    color: Color(0xFF1E40AF),
+                                    color:
+                                        context.isDark
+                                            ? Colors.lightBlueAccent
+                                            : const Color(0xFF1E40AF),
                                   ),
                                 ),
                                 SizedBox(height: 12 * scale),
@@ -535,12 +577,23 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                               gradient: LinearGradient(
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
-                                colors: [Colors.white, const Color(0xFFF8FAFC)],
+                                colors:
+                                    context.isDark
+                                        ? [
+                                          const Color(0xFF1E293B),
+                                          const Color(0xFF0F172A),
+                                        ]
+                                        : [
+                                          Colors.white,
+                                          const Color(0xFFF8FAFC),
+                                        ],
                               ),
                               borderRadius: BorderRadius.circular(24),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.04),
+                                  color: Colors.black.withValues(
+                                    alpha: context.isDark ? 0.2 : 0.04,
+                                  ),
                                   blurRadius: 30,
                                   spreadRadius: 1,
                                   offset: const Offset(0, 10),
@@ -550,17 +603,20 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                       allCompleted
                                           ? const Color(
                                             0xFF10B981,
-                                          ).withOpacity(0.08)
+                                          ).withValues(alpha: 0.08)
                                           : const Color(
                                             0xFFEF4444,
-                                          ).withOpacity(0.08),
+                                          ).withValues(alpha: 0.08),
                                   blurRadius: 40,
                                   spreadRadius: -5,
                                   offset: const Offset(0, 15),
                                 ),
                               ],
                               border: Border.all(
-                                color: Colors.grey.shade200,
+                                color:
+                                    context.isDark
+                                        ? const Color(0xFF334155)
+                                        : Colors.grey.shade200,
                                 width: 1,
                               ),
                             ),
@@ -597,10 +653,10 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                                 allCompleted
                                                     ? const Color(
                                                       0xFF10B981,
-                                                    ).withOpacity(0.3)
+                                                    ).withValues(alpha: 0.3)
                                                     : const Color(
                                                       0xFFEF4444,
-                                                    ).withOpacity(0.3),
+                                                    ).withValues(alpha: 0.3),
                                             blurRadius: 12,
                                             spreadRadius: 0,
                                           ),
@@ -627,9 +683,12 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                                 style: TextStyle(
                                                   fontSize: 13 * scale,
                                                   fontWeight: FontWeight.w700,
-                                                  color: const Color(
-                                                    0xFF0F172A,
-                                                  ),
+                                                  color:
+                                                      context.isDark
+                                                          ? Colors.white
+                                                          : const Color(
+                                                            0xFF0F172A,
+                                                          ),
                                                   letterSpacing: -0.5,
                                                 ),
                                               ),
@@ -661,15 +720,19 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                                           allCompleted
                                                               ? const Color(
                                                                 0xFF10B981,
-                                                              ).withOpacity(0.5)
+                                                              ).withValues(
+                                                                alpha: 0.5,
+                                                              )
                                                               : partiallyCompleted
                                                               ? const Color(
                                                                 0xFFF59E0B,
-                                                              ).withOpacity(0.5)
+                                                              ).withValues(
+                                                                alpha: 0.5,
+                                                              )
                                                               : const Color(
                                                                 0xFFEF4444,
-                                                              ).withOpacity(
-                                                                0.5,
+                                                              ).withValues(
+                                                                alpha: 0.5,
                                                               ),
                                                       blurRadius: 8,
                                                       spreadRadius: 0,
@@ -726,7 +789,10 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                             style: TextStyle(
                                               fontSize: 8 * scale,
                                               fontWeight: FontWeight.w800,
-                                              color: const Color(0xFF0F172A),
+                                              color:
+                                                  context.isDark
+                                                      ? Colors.white
+                                                      : const Color(0xFF0F172A),
                                             ),
                                           ),
                                         ],
@@ -747,7 +813,10 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                     Container(
                                       width: 1,
                                       height: 30,
-                                      color: Colors.grey.shade200,
+                                      color:
+                                          context.isDark
+                                              ? const Color(0xFF334155)
+                                              : Colors.grey.shade200,
                                     ),
                                     _buildModernStat(
                                       label: "Pending",
@@ -758,7 +827,10 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                     Container(
                                       width: 1,
                                       height: 30,
-                                      color: Colors.grey.shade200,
+                                      color:
+                                          context.isDark
+                                              ? const Color(0xFF334155)
+                                              : Colors.grey.shade200,
                                     ),
                                     _buildModernStat(
                                       label: "Total",
@@ -781,18 +853,18 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                                 ? [
                                                   const Color(
                                                     0xFF10B981,
-                                                  ).withOpacity(0.08),
+                                                  ).withValues(alpha: 0.08),
                                                   const Color(
                                                     0xFF34D399,
-                                                  ).withOpacity(0.04),
+                                                  ).withValues(alpha: 0.04),
                                                 ]
                                                 : [
                                                   const Color(
                                                     0xFFEF4444,
-                                                  ).withOpacity(0.08),
+                                                  ).withValues(alpha: 0.08),
                                                   const Color(
                                                     0xFFF87171,
-                                                  ).withOpacity(0.04),
+                                                  ).withValues(alpha: 0.04),
                                                 ],
                                       ),
                                       borderRadius: BorderRadius.circular(
@@ -803,10 +875,10 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                             allCompleted
                                                 ? const Color(
                                                   0xFF10B981,
-                                                ).withOpacity(0.15)
+                                                ).withValues(alpha: 0.15)
                                                 : const Color(
                                                   0xFFEF4444,
-                                                ).withOpacity(0.15),
+                                                ).withValues(alpha: 0.15),
                                         width: 1.2,
                                       ),
                                     ),
@@ -819,10 +891,10 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                                 allCompleted
                                                     ? const Color(
                                                       0xFF10B981,
-                                                    ).withOpacity(0.12)
+                                                    ).withValues(alpha: 0.12)
                                                     : const Color(
                                                       0xFFEF4444,
-                                                    ).withOpacity(0.12),
+                                                    ).withValues(alpha: 0.12),
                                             borderRadius: BorderRadius.circular(
                                               10 * scale,
                                             ),
@@ -847,7 +919,10 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                             style: TextStyle(
                                               fontWeight: FontWeight.w600,
                                               fontSize: 10 * scale,
-                                              color: const Color(0xFF0F172A),
+                                              color:
+                                                  context.isDark
+                                                      ? Colors.white
+                                                      : const Color(0xFF0F172A),
                                             ),
                                           ),
                                         ),
@@ -861,10 +936,10 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                                 allCompleted
                                                     ? const Color(
                                                       0xFF10B981,
-                                                    ).withOpacity(0.1)
+                                                    ).withValues(alpha: 0.1)
                                                     : const Color(
                                                       0xFFEF4444,
-                                                    ).withOpacity(0.1),
+                                                    ).withValues(alpha: 0.1),
                                             borderRadius: BorderRadius.circular(
                                               10 * scale,
                                             ),
@@ -967,15 +1042,19 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                                           isCompleted
                                                               ? const Color(
                                                                 0xFF10B981,
-                                                              ).withOpacity(0.3)
+                                                              ).withValues(
+                                                                alpha: 0.3,
+                                                              )
                                                               : isToday
                                                               ? const Color(
                                                                 0xFFF59E0B,
-                                                              ).withOpacity(0.3)
+                                                              ).withValues(
+                                                                alpha: 0.3,
+                                                              )
                                                               : const Color(
                                                                 0xFFEF4444,
-                                                              ).withOpacity(
-                                                                0.3,
+                                                              ).withValues(
+                                                                alpha: 0.3,
                                                               ),
                                                       blurRadius: 6,
                                                       spreadRadius: 0,
@@ -998,15 +1077,15 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                                     isCompleted
                                                         ? const Color(
                                                           0xFF10B981,
-                                                        ).withOpacity(0.3)
+                                                        ).withValues(alpha: 0.3)
                                                         : isToday
                                                         ? const Color(
                                                           0xFFF59E0B,
-                                                        ).withOpacity(0.3)
+                                                        ).withValues(alpha: 0.3)
                                                         : const Color(
                                                           0xFFEF4444,
-                                                        ).withOpacity(
-                                                          0.2,
+                                                        ).withValues(
+                                                          alpha: 0.2,
                                                         ), // Red border for pending
                                                 width: 1.5,
                                               ),
@@ -1015,14 +1094,14 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                                   isCompleted
                                                       ? const Color(
                                                         0xFF10B981,
-                                                      ).withOpacity(0.1)
+                                                      ).withValues(alpha: 0.1)
                                                       : isToday
                                                       ? const Color(
                                                         0xFFF59E0B,
-                                                      ).withOpacity(0.1)
+                                                      ).withValues(alpha: 0.1)
                                                       : const Color(
                                                         0xFFEF4444,
-                                                      ).withOpacity(0.1),
+                                                      ).withValues(alpha: 0.1),
                                               label: Row(
                                                 mainAxisSize: MainAxisSize.min,
                                                 children: [
@@ -1052,7 +1131,9 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                                       decoration: BoxDecoration(
                                                         color: const Color(
                                                           0xFF10B981,
-                                                        ).withOpacity(0.1),
+                                                        ).withValues(
+                                                          alpha: 0.1,
+                                                        ),
                                                         borderRadius:
                                                             BorderRadius.circular(
                                                               4,
@@ -1060,7 +1141,9 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                                         border: Border.all(
                                                           color: const Color(
                                                             0xFF10B981,
-                                                          ).withOpacity(0.15),
+                                                          ).withValues(
+                                                            alpha: 0.15,
+                                                          ),
                                                           width: 0.5,
                                                         ),
                                                       ),
@@ -1091,7 +1174,9 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                                       decoration: BoxDecoration(
                                                         color: const Color(
                                                           0xFFF59E0B,
-                                                        ).withOpacity(0.1),
+                                                        ).withValues(
+                                                          alpha: 0.1,
+                                                        ),
                                                         borderRadius:
                                                             BorderRadius.circular(
                                                               4,
@@ -1099,7 +1184,9 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                                         border: Border.all(
                                                           color: const Color(
                                                             0xFFF59E0B,
-                                                          ).withOpacity(0.15),
+                                                          ).withValues(
+                                                            alpha: 0.15,
+                                                          ),
                                                           width: 0.5,
                                                         ),
                                                       ),
@@ -1129,7 +1216,9 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                                       decoration: BoxDecoration(
                                                         color: const Color(
                                                           0xFFEF4444,
-                                                        ).withOpacity(0.1),
+                                                        ).withValues(
+                                                          alpha: 0.1,
+                                                        ),
                                                         borderRadius:
                                                             BorderRadius.circular(
                                                               4,
@@ -1137,7 +1226,9 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                                         border: Border.all(
                                                           color: const Color(
                                                             0xFFEF4444,
-                                                          ).withOpacity(0.15),
+                                                          ).withValues(
+                                                            alpha: 0.15,
+                                                          ),
                                                           width: 0.5,
                                                         ),
                                                       ),
@@ -1201,17 +1292,17 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                           colors: [
                                             const Color(
                                               0xFFEF4444,
-                                            ).withOpacity(0.04),
+                                            ).withValues(alpha: 0.04),
                                             const Color(
                                               0xFFF87171,
-                                            ).withOpacity(0.02),
+                                            ).withValues(alpha: 0.02),
                                           ],
                                         ),
                                         borderRadius: BorderRadius.circular(16),
                                         border: Border.all(
                                           color: const Color(
                                             0xFFEF4444,
-                                          ).withOpacity(0.08),
+                                          ).withValues(alpha: 0.08),
                                           width: 1,
                                           style: BorderStyle.solid,
                                         ),
@@ -1222,7 +1313,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                             Icons.photo_camera_outlined,
                                             color: const Color(
                                               0xFFEF4444,
-                                            ).withOpacity(0.2),
+                                            ).withValues(alpha: 0.2),
                                             size: 24 * scale,
                                           ),
                                           SizedBox(height: 10 * scale),
@@ -1261,7 +1352,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                               borderRadius: BorderRadius.circular(16),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.05),
+                                  color: Colors.black.withValues(alpha: 0.05),
                                   blurRadius: 16,
                                   offset: const Offset(0, 4),
                                 ),
@@ -1299,7 +1390,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                         isFullyPaid
                                             ? const Color(
                                               0xFF10B981,
-                                            ).withOpacity(0.1)
+                                            ).withValues(alpha: 0.1)
                                             : Colors.grey.shade50,
                                     borderRadius: BorderRadius.circular(12),
                                     border: Border.all(
@@ -1307,7 +1398,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                           isFullyPaid
                                               ? const Color(
                                                 0xFF10B981,
-                                              ).withOpacity(0.3)
+                                              ).withValues(alpha: 0.3)
                                               : Colors.grey.shade200,
                                     ),
                                   ),
@@ -1383,7 +1474,9 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                                       hintStyle: TextStyle(
                                                         color: const Color(
                                                           0xFF10B981,
-                                                        ).withOpacity(0.5),
+                                                        ).withValues(
+                                                          alpha: 0.5,
+                                                        ),
                                                       ),
                                                       border: InputBorder.none,
                                                       contentPadding:
@@ -1604,7 +1697,10 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
               title,
               style: TextStyle(
                 fontSize: 10 * scale,
-                color: Colors.grey.shade600,
+                color:
+                    context.isDark
+                        ? Colors.grey.shade400
+                        : Colors.grey.shade600,
               ),
             ),
           ],
@@ -1633,7 +1729,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
         Container(
           padding: EdgeInsets.all(6 * scale),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(10),
           ),
           child: Icon(icon, size: 16 * scale, color: color),
@@ -1645,7 +1741,8 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
             style: TextStyle(
               fontSize: 12 * scale,
               fontWeight: FontWeight.w500,
-              color: Colors.grey.shade700,
+              color:
+                  context.isDark ? Colors.grey.shade300 : Colors.grey.shade700,
             ),
           ),
         ),
@@ -1669,12 +1766,19 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
     bool enabled = true,
     TextInputType? keyboardType,
   }) {
+    final isDark = context.isDark;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            Text(label, style: TextStyle(fontSize: 12 * scale)),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12 * scale,
+                color: isDark ? Colors.grey.shade300 : Colors.black87,
+              ),
+            ),
             if (isRequired)
               Text(" *", style: TextStyle(color: Colors.red.shade400)),
           ],
@@ -1684,9 +1788,19 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: enabled ? Colors.grey.shade300 : Colors.grey.shade200,
+              color:
+                  enabled
+                      ? (isDark
+                          ? const Color(0xFF334155)
+                          : Colors.grey.shade300)
+                      : (isDark
+                          ? const Color(0xFF1E293B)
+                          : Colors.grey.shade200),
             ),
-            color: enabled ? Colors.white : Colors.grey.shade50,
+            color:
+                enabled
+                    ? (isDark ? const Color(0xFF0F172A) : Colors.white)
+                    : (isDark ? const Color(0xFF1E293B) : Colors.grey.shade50),
           ),
           child: Row(
             children: [
@@ -1696,7 +1810,11 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                   icon,
                   size: 16 * scale,
                   color:
-                      enabled ? const Color(0xFF1E40AF) : Colors.grey.shade400,
+                      enabled
+                          ? (isDark
+                              ? Colors.lightBlueAccent
+                              : const Color(0xFF1E40AF))
+                          : Colors.grey.shade400,
                 ),
               ),
               Expanded(
@@ -1707,7 +1825,10 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                     enabled: enabled,
                     keyboardType: keyboardType,
                     style: TextStyle(
-                      color: enabled ? Colors.black : Colors.grey.shade600,
+                      color:
+                          enabled
+                              ? (isDark ? Colors.white : Colors.black)
+                              : Colors.grey.shade400,
                       fontSize: 12 * scale,
                       fontWeight: FontWeight.w500,
                     ),
@@ -1718,7 +1839,12 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                         vertical: 12 * scale,
                       ),
                       hintText: enabled ? "Enter $label" : label,
-                      hintStyle: TextStyle(color: Colors.grey.shade500),
+                      hintStyle: TextStyle(
+                        color:
+                            isDark
+                                ? Colors.grey.shade500
+                                : Colors.grey.shade500,
+                      ),
                     ),
                     validator: (value) {
                       if (isRequired) {
@@ -1767,7 +1893,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, size: 10 * scale, color: color.withOpacity(0.6)),
+              Icon(icon, size: 10 * scale, color: color.withValues(alpha: 0.6)),
               const SizedBox(width: 4),
               Text(
                 value,
@@ -1785,7 +1911,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
             label,
             style: TextStyle(
               fontSize: 8 * scale,
-              color: Colors.black54,
+              color: context.isDark ? Colors.grey.shade400 : Colors.black54,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.3,
             ),
@@ -1816,11 +1942,13 @@ class GradientCircularProgressPainter extends CustomPainter {
   final double value;
   final double strokeWidth;
   final LinearGradient gradient;
+  final bool isDark;
 
   GradientCircularProgressPainter({
     required this.value,
     required this.strokeWidth,
     required this.gradient,
+    this.isDark = false,
   });
 
   @override
@@ -1831,7 +1959,7 @@ class GradientCircularProgressPainter extends CustomPainter {
     // Draw background
     final backgroundPaint =
         Paint()
-          ..color = Colors.grey.shade100
+          ..color = isDark ? const Color(0xFF334155) : Colors.grey.shade100
           ..strokeWidth = strokeWidth
           ..style = PaintingStyle.stroke
           ..strokeCap = StrokeCap.round;

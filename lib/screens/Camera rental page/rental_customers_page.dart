@@ -1,5 +1,6 @@
 // ignore_for_file: use_build_context_synchronously
 import 'package:bizmate/models/rental_sale_model.dart' show RentalSaleModel;
+import 'package:bizmate/utils/app_theme.dart';
 import 'package:bizmate/widgets/advanced_search_bar.dart'
     show AdvancedSearchBar;
 import 'package:bizmate/widgets/app_snackbar.dart' show AppSnackBar;
@@ -375,21 +376,73 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
             ? 1.15
             : 1.30;
 
-    final blueShades = [
-      [Color(0xFF3B82F6), Color(0xFF2563EB)],
-      [Color(0xFF60A5FA), Color(0xFF3B82F6)],
-      [Color(0xFF1E40AF), Color(0xFF1E3A8A)],
-      [Color(0xFF38BDF8), Color(0xFF0EA5E9)],
-      [Color(0xFF0EA5E9), Color(0xFF0284C7)],
-      [Color(0xFF1E3A8A), Color(0xFF3730A3)],
+    final isDark = context.isDark;
+
+    // ---------------------------------------------------------------------------
+    // 🎨 LIGHT THEME CARD COLORS
+    // ---------------------------------------------------------------------------
+    final lightThemeGradients = [
+      [const Color(0xFF3B82F6), const Color(0xFF2563EB)],
+      [const Color(0xFF60A5FA), const Color(0xFF3B82F6)],
+      [const Color(0xFF1E40AF), const Color(0xFF1E3A8A)],
+      [const Color(0xFF38BDF8), const Color(0xFF0EA5E9)],
+      [const Color(0xFF0EA5E9), const Color(0xFF0284C7)],
+      [const Color(0xFF1E3A8A), const Color(0xFF3730A3)],
     ];
 
-    final colorPair = blueShades[index % blueShades.length];
+    // ---------------------------------------------------------------------------
+    // 🌙 DARK THEME → LIGHT CARD COLORS
+    // ---------------------------------------------------------------------------
+    final darkThemeLightGradients = [
+      [const Color(0xFF93C5FD), const Color(0xFF60A5FA)],
+      [const Color(0xFFA5CFFF), const Color(0xFF6EACFF)],
+      [const Color(0xFF86C5FF), const Color(0xFF5B9FF5)],
+      [const Color(0xFFB3D7FF), const Color(0xFF78B4FA)],
+      [const Color(0xFF9FCBFF), const Color(0xFF6AA9F8)],
+      [const Color(0xFFA8D0FF), const Color(0xFF70ACF7)],
+    ];
 
+    final gradients = isDark ? darkThemeLightGradients : lightThemeGradients;
+
+    final colorPair = gradients[index % gradients.length];
+
+    // ---------------------------------------------------------------------------
+    // 👤 INITIALS
+    // ---------------------------------------------------------------------------
     final initials =
         customer.name.isNotEmpty
-            ? customer.name.split(' ').map((e) => e[0]).join().toUpperCase()
+            ? customer.name
+                .split(' ')
+                .where((e) => e.trim().isNotEmpty)
+                .map((e) => e[0])
+                .join()
+                .toUpperCase()
             : "?";
+
+    // ---------------------------------------------------------------------------
+    // 🎨 TEXT COLORS
+    // ---------------------------------------------------------------------------
+    final titleColor = isDark ? const Color(0xFF0F172A) : Colors.white;
+
+    final subtitleColor = isDark ? const Color(0xFF334155) : Colors.white70;
+
+    final avatarBackground =
+        isDark ? Colors.white.withValues(alpha: 0.85) : Colors.white;
+
+    final avatarTextColor =
+        isDark ? const Color(0xFF1D4ED8) : const Color(0xFF1A237E);
+
+    final iconColor = isDark ? const Color(0xFF0F172A) : Colors.white;
+
+    final decorativeColor =
+        isDark
+            ? Colors.white.withValues(alpha: 0.35)
+            : Colors.white.withValues(alpha: 0.08);
+
+    final shadowColor =
+        isDark
+            ? colorPair[0].withValues(alpha: 0.30)
+            : colorPair[0].withValues(alpha: 0.35);
 
     return Container(
       padding: EdgeInsets.symmetric(
@@ -401,8 +454,14 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
           '${customer.name}_${customer.phone}_${customer.createdAt.millisecondsSinceEpoch}',
         ),
         direction: DismissDirection.endToStart,
+
         confirmDismiss: (_) async => await _confirmDelete(customer),
+
         onDismissed: (_) => _deleteCustomer(index),
+
+        // -----------------------------------------------------------------------
+        // 🗑 DELETE BACKGROUND
+        // -----------------------------------------------------------------------
         background: Container(
           alignment: Alignment.centerRight,
           padding: EdgeInsets.symmetric(horizontal: 20 * scale),
@@ -412,24 +471,34 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
           ),
           child: Icon(Icons.delete, color: Colors.white, size: 30 * scale),
         ),
+
         child: Container(
           decoration: BoxDecoration(
+            // -------------------------------------------------------------------
+            // 🎨 THEME-AWARE GRADIENT
+            // -------------------------------------------------------------------
             gradient: LinearGradient(
               colors: colorPair,
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
+
             borderRadius: BorderRadius.circular(12 * scale),
+
             boxShadow: [
               BoxShadow(
-                color: colorPair[0].withOpacity(0.35),
+                color: shadowColor,
                 blurRadius: 10 * scale,
                 offset: Offset(0, 4 * scale),
               ),
             ],
           ),
+
           child: Stack(
             children: [
+              // -----------------------------------------------------------------
+              // ✨ DECORATIVE CIRCLE
+              // -----------------------------------------------------------------
               Positioned(
                 right: -20,
                 top: -20,
@@ -438,10 +507,14 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
                   height: 100 * scale,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Colors.white.withOpacity(0.08),
+                    color: decorativeColor,
                   ),
                 ),
               ),
+
+              // -----------------------------------------------------------------
+              // 👤 CUSTOMER CONTENT
+              // -----------------------------------------------------------------
               ListTile(
                 contentPadding: EdgeInsets.fromLTRB(
                   16 * scale,
@@ -449,49 +522,72 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
                   1 * scale,
                   8 * scale,
                 ),
+
+                // -----------------------------------------------------------------
+                // 👤 AVATAR
+                // -----------------------------------------------------------------
                 leading: CircleAvatar(
                   radius: 22 * scale,
-                  backgroundColor: Colors.white,
+                  backgroundColor: avatarBackground,
                   child: Text(
                     initials,
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 16 * scale,
-                      color: const Color(0xFF1A237E),
+                      color: avatarTextColor,
                     ),
                   ),
                 ),
+
+                // -----------------------------------------------------------------
+                // 👤 NAME
+                // -----------------------------------------------------------------
                 title: Text(
                   customer.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontSize: 15 * scale,
-                    color: Colors.white,
+                    color: titleColor,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
+
+                // -----------------------------------------------------------------
+                // 📞 PHONE
+                // -----------------------------------------------------------------
                 subtitle: Text(
                   customer.phone,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    color: Colors.white70,
+                    color: subtitleColor,
                     fontSize: 12.5 * scale,
                   ),
                 ),
+
+                // -----------------------------------------------------------------
+                // 📱 ACTION BUTTONS
+                // -----------------------------------------------------------------
                 trailing: Wrap(
                   runSpacing: 2 * scale,
                   children: [
                     IconButton(
+                      tooltip: 'Call',
                       icon: Icon(
                         Icons.phone,
                         size: 20 * scale,
-                        color: Colors.white,
+                        color: iconColor,
                       ),
                       onPressed: () => _makePhoneCall(customer.phone),
                     ),
+
                     PopupMenuButton<String>(
+                      tooltip: 'WhatsApp',
                       icon: FaIcon(
                         FontAwesomeIcons.whatsapp,
                         size: 20 * scale,
-                        color: Colors.white,
+                        color: iconColor,
                       ),
                       onSelected: (value) {
                         _openWhatsApp(
@@ -568,21 +664,21 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
           Icon(
             Icons.search_off_rounded,
             size: 60 * scale,
-            color: Colors.grey.shade500,
+            color: context.textSecondary.withValues(alpha: 0.5),
           ),
           const SizedBox(height: 16),
           Text(
             "No matching results",
             style: TextStyle(
               fontSize: 18,
-              color: Colors.grey.shade700,
+              color: context.textPrimary,
               fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: 6),
           Text(
             "Nothing found for \"$query\"",
-            style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+            style: TextStyle(fontSize: 14, color: context.textSecondary),
           ),
         ],
       ),
@@ -708,10 +804,13 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
                                 maxWidth: 45 * scale,
                               ),
                               decoration: BoxDecoration(
-                                color: Colors.white,
+                                color:
+                                    Theme.of(
+                                      context,
+                                    ).colorScheme.surfaceContainerHigh,
                                 borderRadius: BorderRadius.circular(20 * scale),
                                 border: Border.all(
-                                  color: Colors.grey,
+                                  color: context.borderColor,
                                   width: 1.2 * scale,
                                 ),
                               ),
@@ -721,7 +820,7 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
                                   Icon(
                                     Icons.people_alt_rounded,
                                     size: 12 * scale,
-                                    color: Colors.black87,
+                                    color: context.textPrimary,
                                   ),
                                   SizedBox(width: 4 * scale),
                                   Text(

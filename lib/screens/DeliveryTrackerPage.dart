@@ -8,7 +8,9 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:hive/hive.dart';
 import 'package:bizmate/widgets/app_snackbar.dart' show AppSnackBar;
+import 'package:bizmate/widgets/app_theme_toggle.dart';
 import 'package:bizmate/models/sale.dart';
+import 'package:bizmate/utils/app_theme.dart';
 
 /// DeliveryTrackerPage - fully responsive, polished and production-ready.
 /// Combines responsive helper functions, an iOS-style large title header,
@@ -503,7 +505,7 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
+            color: Colors.black.withValues(alpha: 0.06),
             blurRadius: 40,
             spreadRadius: 8,
           ),
@@ -530,16 +532,28 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
                   Container(
                     padding: EdgeInsets.all(10 * scale),
                     decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [
-                          Color(0xFF2563EB),
-                          Color(0xFF1E40AF),
-                          Color(0xFF020617),
-                        ],
-                        stops: [0.0, 0.6, 1.0],
-                        begin: Alignment.bottomRight,
-                        end: Alignment.topLeft,
-                      ),
+                      gradient:
+                          context.isDark
+                              ? const LinearGradient(
+                                colors: [
+                                  Color(0xFF38BDF8),
+                                  Color(0xFF60A5FA),
+                                  Color(0xFFBAE6FD),
+                                ],
+                                stops: [0.0, 0.6, 1.0],
+                                begin: Alignment.bottomRight,
+                                end: Alignment.topLeft,
+                              )
+                              : const LinearGradient(
+                                colors: [
+                                  Color(0xFF2563EB),
+                                  Color(0xFF1E40AF),
+                                  Color(0xFF020617),
+                                ],
+                                stops: [0.0, 0.6, 1.0],
+                                begin: Alignment.bottomRight,
+                                end: Alignment.topLeft,
+                              ),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
@@ -596,7 +610,7 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
                           vertical: 8,
                         ),
                         itemCount: deliveryStatusHistory.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 12),
+                        separatorBuilder: (_, _) => const SizedBox(height: 12),
                         itemBuilder:
                             (context, index) => _buildTimelineItem(
                               deliveryStatusHistory[index],
@@ -616,7 +630,9 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),
                     ),
-                    side: BorderSide(color: Colors.black.withOpacity(0.5)),
+                    side: BorderSide(
+                      color: Colors.black.withValues(alpha: 0.5),
+                    ),
                   ),
                   child: const Text(
                     'Close Timeline',
@@ -650,14 +666,17 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
         color: isCurrent ? Colors.white : Colors.grey[50],
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: isCurrent ? Colors.grey.withOpacity(0.12) : Colors.grey[200]!,
+          color:
+              isCurrent
+                  ? Colors.grey.withValues(alpha: 0.12)
+                  : Colors.grey[200]!,
           width: isCurrent ? 1.4 : 1,
         ),
         boxShadow:
             isCurrent
                 ? [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.04),
+                    color: Colors.black.withValues(alpha: 0.04),
                     blurRadius: 14,
                     spreadRadius: 1,
                   ),
@@ -816,7 +835,7 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
     final isSmall = width < 600;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: ScaleTransition(
           scale: _scaleAnimation,
@@ -879,7 +898,7 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
         borderRadius: BorderRadius.circular(r.sp(16)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: r.sp(18),
             spreadRadius: 1,
           ),
@@ -905,7 +924,7 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFF1E40AF).withOpacity(0.22),
+                  color: const Color(0xFF1E40AF).withValues(alpha: 0.22),
                   blurRadius: r.sp(12),
                   spreadRadius: 1,
                 ),
@@ -1019,7 +1038,7 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
         borderRadius: BorderRadius.circular(r.sp(14)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: r.sp(16),
             spreadRadius: 1,
           ),
@@ -1046,7 +1065,10 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
                 ),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [currentColor, currentColor.withOpacity(0.85)],
+                    colors: [
+                      currentColor,
+                      currentColor.withValues(alpha: 0.85),
+                    ],
                   ),
                   borderRadius: BorderRadius.circular(r.sp(12)),
                 ),
@@ -1079,20 +1101,34 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
                     width: w,
                     height: double.infinity,
                     decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [
-                          Color(0xFF2563EB),
-                          Color(0xFF1E40AF),
-                          Color(0xFF020617),
-                        ],
-                        stops: [0.0, 0.6, 1.0],
-                        begin: Alignment.bottomRight,
-                        end: Alignment.topLeft,
-                      ),
+                      gradient:
+                          context.isDark
+                              ? const LinearGradient(
+                                colors: [
+                                  Color(0xFF38BDF8),
+                                  Color(0xFF60A5FA),
+                                  Color(0xFFBAE6FD),
+                                ],
+                                stops: [0.0, 0.6, 1.0],
+                                begin: Alignment.bottomRight,
+                                end: Alignment.topLeft,
+                              )
+                              : const LinearGradient(
+                                colors: [
+                                  Color(0xFF2563EB),
+                                  Color(0xFF1E40AF),
+                                  Color(0xFF020617),
+                                ],
+                                stops: [0.0, 0.6, 1.0],
+                                begin: Alignment.bottomRight,
+                                end: Alignment.topLeft,
+                              ),
                       borderRadius: BorderRadius.circular(r.sp(8)),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFF1E40AF).withOpacity(0.18),
+                          color: const Color(
+                            0xFF1E40AF,
+                          ).withValues(alpha: 0.18),
                           blurRadius: r.sp(10),
                           spreadRadius: 1,
                         ),
@@ -1145,7 +1181,7 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
         borderRadius: BorderRadius.circular(r.sp(14)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: r.sp(16),
             spreadRadius: 1,
           ),
@@ -1195,14 +1231,14 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
                         isSelected
                             ? [
                               BoxShadow(
-                                color: color.withOpacity(0.18),
+                                color: color.withValues(alpha: 0.18),
                                 blurRadius: r.sp(14),
                                 spreadRadius: 1,
                               ),
                             ]
                             : [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.02),
+                                color: Colors.black.withValues(alpha: 0.02),
                                 blurRadius: r.sp(8),
                                 spreadRadius: 1,
                               ),
@@ -1251,7 +1287,7 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
         borderRadius: BorderRadius.circular(r.sp(14)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: r.sp(16),
             spreadRadius: 1,
           ),
@@ -1335,7 +1371,7 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
         borderRadius: BorderRadius.circular(r.sp(14)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: r.sp(16),
             spreadRadius: 1,
           ),
@@ -1515,13 +1551,29 @@ class _LargeTitleDelegate extends SliverPersistentHeaderDelegate {
     final double paddingTop = lerpDouble(40, 10, t)!;
 
     return Container(
-      decoration: const BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF2563EB), Color(0xFF1E40AF), Color(0xFF020617)],
-          stops: [0.0, 0.6, 1.0],
-          begin: Alignment.bottomRight,
-          end: Alignment.topLeft,
-        ),
+      decoration:  BoxDecoration(
+        gradient:
+            context.isDark
+                ? const LinearGradient(
+                  colors: [
+                    Color(0xFF38BDF8),
+                    Color(0xFF60A5FA),
+                    Color(0xFFBAE6FD),
+                  ],
+                  stops: [0.0, 0.6, 1.0],
+                  begin: Alignment.bottomRight,
+                  end: Alignment.topLeft,
+                )
+                : const LinearGradient(
+                  colors: [
+                    Color(0xFF2563EB),
+                    Color(0xFF1E40AF),
+                    Color(0xFF020617),
+                  ],
+                  stops: [0.0, 0.6, 1.0],
+                  begin: Alignment.bottomRight,
+                  end: Alignment.topLeft,
+                ),
       ),
       child: Stack(
         children: [
@@ -1548,7 +1600,7 @@ class _LargeTitleDelegate extends SliverPersistentHeaderDelegate {
                       style: TextStyle(
                         fontSize: subtitleSize,
                         fontWeight: FontWeight.w500,
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                       ),
                     ),
                   ),
@@ -1570,17 +1622,24 @@ class _LargeTitleDelegate extends SliverPersistentHeaderDelegate {
             ),
           ),
 
-          // ---------- RIGHT: HISTORY BUTTON ----------
+          // ---------- RIGHT: HISTORY BUTTON & THEME TOGGLE ----------
           Positioned(
             right: 12,
             top: 12,
-            child: _circleButton(
-              icon: HugeIcon(
-                icon: HugeIcons.strokeRoundedTransactionHistory,
-                color: Colors.black87,
-                size: 20 * scale,
-              ),
-              onTap: onHistory,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const AppThemeToggle(size: 30),
+                const SizedBox(width: 8),
+                _circleButton(
+                  icon: HugeIcon(
+                    icon: HugeIcons.strokeRoundedTransactionHistory,
+                    color: Colors.black87,
+                    size: 20 * scale,
+                  ),
+                  onTap: onHistory,
+                ),
+              ],
             ),
           ),
         ],
@@ -1595,8 +1654,8 @@ class _LargeTitleDelegate extends SliverPersistentHeaderDelegate {
       child: InkWell(
         customBorder: const CircleBorder(),
         onTap: onTap,
-        splashColor: Colors.black.withOpacity(0.08),
-        highlightColor: Colors.black.withOpacity(0.05),
+        splashColor: Colors.black.withValues(alpha: 0.08),
+        highlightColor: Colors.black.withValues(alpha: 0.05),
         child: Container(
           width: 30 * scale,
           height: 30 * scale,
@@ -1605,12 +1664,15 @@ class _LargeTitleDelegate extends SliverPersistentHeaderDelegate {
             color: Colors.white,
 
             // ✅ SUBTLE BORDER (clean & visible)
-            border: Border.all(color: Colors.black.withOpacity(0.08), width: 1),
+            border: Border.all(
+              color: Colors.black.withValues(alpha: 0.08),
+              width: 1,
+            ),
 
             // ✅ SOFT ELEVATION
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.12),
+                color: Colors.black.withValues(alpha: 0.12),
                 blurRadius: 10,
                 offset: const Offset(0, 4),
               ),

@@ -51,5 +51,5 @@ class RentalBooking {
 
   RentalBooking({required this.from, required this.to});
 
-  get itemName => null;
+  Null get itemName => null;
 }

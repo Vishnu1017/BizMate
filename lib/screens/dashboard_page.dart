@@ -3,11 +3,13 @@
 // NOTE: I did NOT change any functions/logic — only UI/layout values for responsiveness.
 
 import 'package:bizmate/screens/SalesReportPage.dart';
+import 'package:bizmate/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:hive/hive.dart';
+import 'package:bizmate/services/notification_service.dart';
 import '../models/sale.dart';
 import '../models/rental_sale_model.dart';
 
@@ -50,6 +52,10 @@ class _DashboardPageState extends State<DashboardPage> {
     await _loadSalesData();
     await _loadRentalSalesData();
     fetchSaleOverview(_selectedRange);
+
+    if (rentalSales.isNotEmpty) {
+      NotificationService.checkOverdueRentals(rentalSales);
+    }
 
     if (mounted) {
       setState(() {
@@ -261,6 +267,8 @@ class _DashboardPageState extends State<DashboardPage> {
             : screenWidth < 1100
             ? 1.12
             : 1.25;
+    // ── theme-aware colours ──────────────────────────────────────────
+    final c = context.appColors;
 
     // While data is being prepared, show a subtle loader (keeps original behaviour)
     if (_isLoading) {
@@ -309,11 +317,11 @@ class _DashboardPageState extends State<DashboardPage> {
                   vertical: cardPaddingV,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: c.card,
                   borderRadius: BorderRadius.circular(16.0 * scale),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black12,
+                      color: c.shadowColor,
                       blurRadius: 8.0 * scale,
                       offset: Offset(0, 3.0 * scale),
                     ),
@@ -336,7 +344,7 @@ class _DashboardPageState extends State<DashboardPage> {
                               "Your Sale Overview (${monthLabels.isNotEmpty ? _selectedRange : '-'})",
                               style: TextStyle(
                                 fontSize: titleFont,
-                                color: Colors.grey[800],
+                                color: c.text1,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -348,7 +356,7 @@ class _DashboardPageState extends State<DashboardPage> {
                             onSelected: _onRangeSelected,
                             icon: Container(
                               decoration: BoxDecoration(
-                                color: Colors.blue.withOpacity(0.08),
+                                color: Colors.blue.withValues(alpha: 0.08),
                                 borderRadius: BorderRadius.circular(
                                   12.0 * scale,
                                 ),
@@ -477,7 +485,7 @@ class _DashboardPageState extends State<DashboardPage> {
                           "In $currentMonthName compared to previous ${previousMonthsCount > 1 ? '$previousMonthsCount months' : 'month'} average",
                           style: TextStyle(
                             fontSize: 12.0 * scale,
-                            color: Colors.grey[600],
+                            color: c.text2,
                           ),
                           textAlign: TextAlign.center,
                         ),
@@ -559,16 +567,28 @@ class _DashboardPageState extends State<DashboardPage> {
                                         spots: salesData,
                                         isCurved: true,
                                         curveSmoothness: 0.35,
-                                        gradient: const LinearGradient(
-                                          colors: [
-                                            Color(0xFF2563EB),
-                                            Color(0xFF1E40AF),
-                                            Color(0xFF020617),
-                                          ],
-                                          stops: [0.0, 0.6, 1.0],
-                                          begin: Alignment.bottomRight,
-                                          end: Alignment.topLeft,
-                                        ),
+                                        gradient:
+                                            context.isDark
+                                                ? const LinearGradient(
+                                                  colors: [
+                                                    Color(0xFF38BDF8),
+                                                    Color(0xFF60A5FA),
+                                                    Color(0xFFBAE6FD),
+                                                  ],
+                                                  stops: [0.0, 0.6, 1.0],
+                                                  begin: Alignment.bottomRight,
+                                                  end: Alignment.topLeft,
+                                                )
+                                                : const LinearGradient(
+                                                  colors: [
+                                                    Color(0xFF2563EB),
+                                                    Color(0xFF1E40AF),
+                                                    Color(0xFF020617),
+                                                  ],
+                                                  stops: [0.0, 0.6, 1.0],
+                                                  begin: Alignment.bottomRight,
+                                                  end: Alignment.topLeft,
+                                                ),
                                         barWidth: 3.0 * scale,
                                         dotData: FlDotData(
                                           show: true,
@@ -580,9 +600,13 @@ class _DashboardPageState extends State<DashboardPage> {
                                           ) {
                                             return FlDotCirclePainter(
                                               radius: 4 * scale,
-                                              color: const Color(0xFF1E40AF),
+                                              color: context.isDark
+                                                  ? const Color(0xFF38BDF8)
+                                                  : const Color(0xFF1E40AF),
                                               strokeWidth: 2,
-                                              strokeColor: Colors.white,
+                                              strokeColor: context.isDark
+                                                  ? const Color(0xFF0F172A)
+                                                  : Colors.white,
                                             );
                                           },
                                         ),
@@ -607,7 +631,7 @@ class _DashboardPageState extends State<DashboardPage> {
                                                   monthLabels[index],
                                                   style: TextStyle(
                                                     fontSize: 12.0 * scale,
-                                                    color: Colors.grey[600],
+                                                    color: c.text2,
                                                   ),
                                                 ),
                                               );
@@ -636,9 +660,7 @@ class _DashboardPageState extends State<DashboardPage> {
                                     borderData: FlBorderData(
                                       show: true,
                                       border: Border(
-                                        bottom: BorderSide(
-                                          color: Colors.grey.shade300,
-                                        ),
+                                        bottom: BorderSide(color: c.divider),
                                       ),
                                     ),
                                   ),
@@ -665,20 +687,37 @@ class _DashboardPageState extends State<DashboardPage> {
                   height: 50.0 * scale,
                   child: DecoratedBox(
                     decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [
-                          Color(0xFF2563EB),
-                          Color(0xFF1E40AF),
-                          Color(0xFF020617),
-                        ],
-                        stops: [0.0, 0.6, 1.0],
-                        begin: Alignment.bottomRight,
-                        end: Alignment.topLeft,
-                      ),
+                      gradient:
+                          context.isDark
+                              ? const LinearGradient(
+                                colors: [
+                                  Color(0xFF38BDF8),
+                                  Color(0xFF60A5FA),
+                                  Color(0xFFBAE6FD),
+                                ],
+                                stops: [0.0, 0.6, 1.0],
+                                begin: Alignment.bottomRight,
+                                end: Alignment.topLeft,
+                              )
+                              : const LinearGradient(
+                                colors: [
+                                  Color(0xFF2563EB),
+                                  Color(0xFF1E40AF),
+                                  Color(0xFF020617),
+                                ],
+                                stops: [0.0, 0.6, 1.0],
+                                begin: Alignment.bottomRight,
+                                end: Alignment.topLeft,
+                              ),
                       borderRadius: BorderRadius.circular(30.0 * scale),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.25),
+                          color:
+                              context.isDark
+                                  ? const Color(
+                                    0xFF38BDF8,
+                                  ).withValues(alpha: 0.25)
+                                  : Colors.black.withValues(alpha: 0.25),
                           blurRadius: 8.0 * scale,
                           offset: Offset(0, 4.0 * scale),
                         ),
@@ -688,7 +727,10 @@ class _DashboardPageState extends State<DashboardPage> {
                       onPressed: _navigateToSalesReport,
                       icon: Icon(
                         Icons.bar_chart_rounded,
-                        color: Colors.white,
+                        color:
+                            context.isDark
+                                ? const Color(0xFF0F172A)
+                                : Colors.white,
                         size: 22.0 * scale,
                       ),
                       label: Text(
@@ -696,7 +738,10 @@ class _DashboardPageState extends State<DashboardPage> {
                         style: TextStyle(
                           fontSize: 14.0 * scale,
                           fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                          color:
+                              context.isDark
+                                  ? const Color(0xFF0F172A)
+                                  : Colors.white,
                         ),
                       ),
                       style: ElevatedButton.styleFrom(
@@ -731,7 +776,7 @@ class _DashboardPageState extends State<DashboardPage> {
         children: [
           Container(
             decoration: BoxDecoration(
-              color: color.withOpacity(0.2),
+              color: color.withValues(alpha: 0.2),
               shape: BoxShape.circle,
             ),
             padding: EdgeInsets.all(6.0 * scale),
@@ -743,7 +788,7 @@ class _DashboardPageState extends State<DashboardPage> {
             style: TextStyle(
               fontSize: 14.0 * scale,
               fontWeight: FontWeight.w500,
-              color: Colors.grey.shade800,
+              color: context.appColors.text1,
             ),
           ),
         ],

@@ -4,9 +4,11 @@ import 'package:bizmate/screens/Camera%20rental%20page/camera_rental.dart';
 import 'package:bizmate/screens/Camera%20rental%20page/rental_cart_preview_page.dart';
 import 'package:bizmate/screens/Camera%20rental%20page/rental_items.dart';
 import 'package:bizmate/services/rental_cart.dart';
+import 'package:bizmate/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart' show HugeIcon, HugeIcons;
 import 'package:unicons/unicons.dart';
+import 'package:bizmate/widgets/app_theme_toggle.dart';
 import 'rental_orders_page.dart';
 import 'add_rental_item_page.dart';
 import 'rental_customers_page.dart';
@@ -37,17 +39,29 @@ class CameraRentalNavBar extends StatefulWidget {
 class _CameraRentalNavBarState extends State<CameraRentalNavBar> {
   int _currentIndex = 0;
   final ValueNotifier<int> _cartCount = ValueNotifier<int>(0);
-  // Modern color palette (matching NavBarPage)
-  final Color _primaryColor = const Color(0xFF1A237E);
-  final Color _secondaryColor = const Color(0xFF3949AB);
-  final Color _accentColor = const Color(0xFF00BCD4);
-  final Color _surfaceColor = const Color(0xFFFFFFFF);
-  final Color _backgroundColor = const Color(0xFFF5F7FA);
-  final Color _textPrimary = const Color(0xFF1A1A1A);
-  final Color _textSecondary = const Color.fromARGB(255, 72, 72, 72);
-  final Color _dividerColor = const Color(0xFFE0E0E0);
   double scale = 1.0;
-  bool _isLoading = false;
+  final bool _isLoading = false;
+
+  Color get _surfaceColor =>
+      Theme.of(context).brightness == Brightness.dark
+          ? const Color(0xFF1E293B)
+          : const Color(0xFFFFFFFF);
+  Color get _backgroundColor =>
+      Theme.of(context).brightness == Brightness.dark
+          ? const Color(0xFF0F172A)
+          : const Color(0xFFF5F7FA);
+  Color get _textPrimary =>
+      Theme.of(context).brightness == Brightness.dark
+          ? const Color(0xFFF1F5F9)
+          : const Color(0xFF1A1A1A);
+  Color get _textSecondary =>
+      Theme.of(context).brightness == Brightness.dark
+          ? const Color(0xFF94A3B8)
+          : const Color(0xFF484848);
+  Color get _dividerColor =>
+      Theme.of(context).brightness == Brightness.dark
+          ? const Color(0xFF334155)
+          : const Color(0xFFE0E0E0);
 
   final List<String> _titles = [
     "Camera Rental Sales",
@@ -126,14 +140,21 @@ class _CameraRentalNavBarState extends State<CameraRentalNavBar> {
 
   Widget _buildCleanAppBar(double screenWidth) {
     final padding = _pagePadding(screenWidth);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final surfaceColor =
+        isDark ? const Color(0xFF1E293B) : const Color(0xFFFFFFFF);
+    final dividerColor =
+        isDark ? const Color(0xFF334155) : const Color(0xFFE0E0E0);
+    final textPrimary =
+        isDark ? const Color(0xFFF1F5F9) : const Color(0xFF1A1A1A);
 
     return Container(
       decoration: BoxDecoration(
-        color: _surfaceColor,
-        border: Border(bottom: BorderSide(color: _dividerColor, width: 1)),
+        color: surfaceColor,
+        border: Border(bottom: BorderSide(color: dividerColor, width: 1)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.03),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -151,7 +172,10 @@ class _CameraRentalNavBarState extends State<CameraRentalNavBar> {
                 // 🔝 TOP ROW
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [_buildBackButton(screenWidth)],
+                  children: [
+                    _buildBackButton(screenWidth),
+                    const AppThemeToggle(),
+                  ],
                 ),
 
                 SizedBox(height: _scaleForWidth(screenWidth, 18)),
@@ -165,7 +189,7 @@ class _CameraRentalNavBarState extends State<CameraRentalNavBar> {
                       _titles[_currentIndex],
                       style: TextStyle(
                         fontSize: _scaleForWidth(screenWidth, 24 * scale),
-                        color: _textPrimary,
+                        color: textPrimary,
                         fontWeight: FontWeight.w800,
                         letterSpacing: -0.4,
                       ),
@@ -195,20 +219,29 @@ class _CameraRentalNavBarState extends State<CameraRentalNavBar> {
                               vertical: _scaleForWidth(screenWidth, 6),
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.grey.shade100,
+                              color:
+                                  Theme.of(
+                                    context,
+                                  ).colorScheme.surfaceContainerHigh,
                               borderRadius: BorderRadius.circular(30),
                               border: Border.all(
-                                color: const Color(0xFF1E40AF),
+                                color:
+                                    context.isDark
+                                        ? Color(0xFF38BDF8)
+                                        : const Color(0xFF1E40AF),
                                 width: 1.2,
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.white,
+                                  color:
+                                      isDark
+                                          ? Colors.black.withValues(alpha: 0.3)
+                                          : Colors.white,
                                   offset: const Offset(-4, -4),
                                   blurRadius: 8,
                                 ),
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.25),
+                                  color: Colors.black.withValues(alpha: 0.25),
                                   offset: const Offset(1, 3),
                                   blurRadius: 8,
                                 ),
@@ -217,7 +250,10 @@ class _CameraRentalNavBarState extends State<CameraRentalNavBar> {
                             child: Icon(
                               UniconsLine.shopping_cart,
                               size: 16 * scale,
-                              color: const Color(0xFF1E40AF),
+                              color:
+                                  context.isDark
+                                      ? Color(0xFF38BDF8)
+                                      : const Color(0xFF1E40AF),
                             ),
                           ),
 
@@ -227,9 +263,10 @@ class _CameraRentalNavBarState extends State<CameraRentalNavBar> {
                             right: -6,
                             child: ValueListenableBuilder<List<RentalCartItem>>(
                               valueListenable: RentalCart.notifier,
-                              builder: (_, items, __) {
-                                if (items.isEmpty)
+                              builder: (_, items, _) {
+                                if (items.isEmpty) {
                                   return const SizedBox.shrink();
+                                }
 
                                 return Container(
                                   padding: const EdgeInsets.all(6),
@@ -262,16 +299,28 @@ class _CameraRentalNavBarState extends State<CameraRentalNavBar> {
                   height: _scaleForWidth(screenWidth, 3),
                   width: _scaleForWidth(screenWidth, 60),
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [
-                        Color(0xFF2563EB),
-                        Color(0xFF1E40AF),
-                        Color(0xFF020617),
-                      ],
-                      stops: [0.0, 0.6, 1.0],
-                      begin: Alignment.bottomRight,
-                      end: Alignment.topLeft,
-                    ),
+                    gradient:
+                        context.isDark
+                            ? const LinearGradient(
+                              colors: [
+                                Color(0xFF38BDF8),
+                                Color(0xFF60A5FA),
+                                Color(0xFFBAE6FD),
+                              ],
+                              stops: [0.0, 0.6, 1.0],
+                              begin: Alignment.bottomRight,
+                              end: Alignment.topLeft,
+                            )
+                            : const LinearGradient(
+                              colors: [
+                                Color(0xFF2563EB),
+                                Color(0xFF1E40AF),
+                                Color(0xFF020617),
+                              ],
+                              stops: [0.0, 0.6, 1.0],
+                              begin: Alignment.bottomRight,
+                              end: Alignment.topLeft,
+                            ),
                     borderRadius: BorderRadius.circular(1.5),
                   ),
                 ),
@@ -299,14 +348,11 @@ class _CameraRentalNavBarState extends State<CameraRentalNavBar> {
             height: size,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: Colors.white.withOpacity(0.8),
-              border: Border.all(
-                color: Colors.black.withOpacity(0.5),
-                width: 1.2,
-              ),
+              color: _surfaceColor.withValues(alpha: 0.9),
+              border: Border.all(color: _dividerColor, width: 1.2),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.3),
+                  color: Colors.black.withValues(alpha: 0.15),
                   blurRadius: 10,
                   offset: const Offset(0, 0),
                 ),
@@ -314,7 +360,7 @@ class _CameraRentalNavBarState extends State<CameraRentalNavBar> {
             ),
             child: Icon(
               Icons.arrow_back,
-              color: Colors.black,
+              color: _textPrimary,
               size: _scaleForWidth(screenWidth, 20),
             ),
           ),
@@ -351,7 +397,7 @@ class _CameraRentalNavBarState extends State<CameraRentalNavBar> {
               border: Border.all(color: _dividerColor),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.04),
+                  color: Colors.black.withValues(alpha: 0.04),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
                 ),
@@ -373,9 +419,9 @@ class _CameraRentalNavBarState extends State<CameraRentalNavBar> {
                   height: _scaleForWidth(screenWidth, 44),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: const Color(0xFF4CAF50).withOpacity(0.1),
+                    color: const Color(0xFF4CAF50).withValues(alpha: 0.1),
                     border: Border.all(
-                      color: const Color(0xFF4CAF50).withOpacity(0.2),
+                      color: const Color(0xFF4CAF50).withValues(alpha: 0.2),
                     ),
                   ),
                   child: HugeIcon(
@@ -442,7 +488,7 @@ class _CameraRentalNavBarState extends State<CameraRentalNavBar> {
         border: Border.all(color: _dividerColor),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
+            color: Colors.black.withValues(alpha: 0.06),
             blurRadius: 22,
             offset: const Offset(0, 8),
           ),
@@ -510,8 +556,18 @@ class _CameraRentalNavBarState extends State<CameraRentalNavBar> {
 
                   // 🔥 GRADIENT WHEN SELECTED
                   gradient:
-                      isSelected
+                      context.isDark
                           ? const LinearGradient(
+                            colors: [
+                              Color(0xFF38BDF8),
+                              Color(0xFF60A5FA),
+                              Color(0xFFBAE6FD),
+                            ],
+                            stops: [0.0, 0.6, 1.0],
+                            begin: Alignment.bottomRight,
+                            end: Alignment.topLeft,
+                          )
+                          : const LinearGradient(
                             colors: [
                               Color(0xFF2563EB),
                               Color(0xFF1E40AF),
@@ -520,8 +576,7 @@ class _CameraRentalNavBarState extends State<CameraRentalNavBar> {
                             stops: [0.0, 0.6, 1.0],
                             begin: Alignment.bottomRight,
                             end: Alignment.topLeft,
-                          )
-                          : null,
+                          ),
 
                   color: isSelected ? null : Colors.transparent,
 
@@ -529,7 +584,9 @@ class _CameraRentalNavBarState extends State<CameraRentalNavBar> {
                       isSelected
                           ? [
                             BoxShadow(
-                              color: const Color(0xFF1E40AF).withOpacity(0.35),
+                              color: const Color(
+                                0xFF1E40AF,
+                              ).withValues(alpha: 0.35),
                               blurRadius: 22,
                               offset: const Offset(0, 6),
                             ),
@@ -601,7 +658,7 @@ class _CameraRentalNavBarState extends State<CameraRentalNavBar> {
                           border: Border.all(color: _dividerColor),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.03),
+                              color: Colors.black.withValues(alpha: 0.03),
                               blurRadius: 16,
                               offset: const Offset(0, 4),
                             ),

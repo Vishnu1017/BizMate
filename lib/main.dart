@@ -14,18 +14,23 @@ import 'package:bizmate/screens/login_screen.dart';
 import 'package:bizmate/screens/nav_bar_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:bizmate/services/database_maintenance.dart';
+import 'package:bizmate/services/notification_service.dart';
+import 'package:bizmate/utils/app_theme.dart';
 import 'utils/responsive.dart';
 
 /// ----------------------------------------------------------------
 /// ENTRY POINT
 /// ----------------------------------------------------------------
 Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+  FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
 
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
 
@@ -172,10 +177,18 @@ class MyApp extends StatelessWidget {
           Responsive.init(context);
         });
 
-        return const MaterialApp(
-          title: 'BizMate',
-          debugShowCheckedModeBanner: false,
-          home: CustomSplashScreen(),
+        return ValueListenableBuilder<ThemeMode>(
+          valueListenable: AppTheme.themeModeNotifier,
+          builder: (context, currentThemeMode, _) {
+            return MaterialApp(
+              title: 'BizMate',
+              debugShowCheckedModeBanner: false,
+              theme: AppTheme.lightTheme,
+              darkTheme: AppTheme.darkTheme,
+              themeMode: currentThemeMode,
+              home: const CustomSplashScreen(),
+            );
+          },
         );
       },
     );
@@ -226,6 +239,14 @@ class _CustomSplashScreenState extends State<CustomSplashScreen>
       ),
     );
 
+    // Start animation immediately
+    _controller.forward();
+
+    // Remove native splash screen as soon as Flutter renders the first frame
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      FlutterNativeSplash.remove();
+    });
+
     _loadAppVersion();
     _initializeApp();
   }
@@ -247,11 +268,28 @@ class _CustomSplashScreenState extends State<CustomSplashScreen>
   }
 
   Future<void> _initializeApp() async {
-    await _initializeHive();
-    await _initializeDefaultProfileImage();
+    // Run background Hive init concurrently with minimum splash display timer
+    final initTask = _initializeAppTasks();
+    final delayTask = Future.delayed(const Duration(seconds: 3));
 
-    _controller.forward();
-    _navTimer = Timer(const Duration(seconds: 3), _checkAndNavigate);
+    await Future.wait([initTask, delayTask]);
+
+    if (mounted) {
+      _checkAndNavigate();
+    }
+  }
+
+  Future<void> _initializeAppTasks() async {
+    try {
+      await _initializeHive();
+      await _initializeDefaultProfileImage();
+      await AppTheme.loadThemeMode();
+      await NotificationService.init();
+      DatabaseMaintenance.initLifecycleListener();
+      await DatabaseMaintenance.performCompaction();
+    } catch (e) {
+      debugPrint("Startup init error: $e");
+    }
   }
 
   Future<void> _checkAndNavigate() async {
@@ -295,6 +333,7 @@ class _CustomSplashScreenState extends State<CustomSplashScreen>
       }
 
       if (user == null) {
+        if (!mounted) return;
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (_) => const LoginScreen()),
@@ -373,7 +412,7 @@ class _CustomSplashScreenState extends State<CustomSplashScreen>
             center: Alignment.center,
             radius: 1.5,
             colors: [
-              Color(0xFF0F73B8).withOpacity(0.95),
+              Color(0xFF0F73B8).withValues(alpha: 0.95),
               Color(0xFF1FB5D0),
               Color(0xFF3EE4D8),
             ],
@@ -423,7 +462,7 @@ class _CustomSplashScreenState extends State<CustomSplashScreen>
                                     center: Alignment.center,
                                     radius: 0.8,
                                     colors: [
-                                      Colors.white.withOpacity(0.15),
+                                      Colors.white.withValues(alpha: 0.15),
                                       Colors.transparent,
                                     ],
                                   ),
@@ -491,7 +530,7 @@ class _CustomSplashScreenState extends State<CustomSplashScreen>
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w300,
-                        color: Colors.white.withOpacity(0.8),
+                        color: Colors.white.withValues(alpha: 0.8),
                         letterSpacing: 3.0,
                       ),
                     ),
@@ -504,7 +543,7 @@ class _CustomSplashScreenState extends State<CustomSplashScreen>
                       height: 4,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(2),
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withValues(alpha: 0.2),
                       ),
                       child: AnimatedBuilder(
                         animation: _controller,
@@ -520,7 +559,7 @@ class _CustomSplashScreenState extends State<CustomSplashScreen>
                                   gradient: LinearGradient(
                                     colors: [
                                       Colors.transparent,
-                                      Colors.white.withOpacity(0.3),
+                                      Colors.white.withValues(alpha: 0.3),
                                       Colors.transparent,
                                     ],
                                   ),
@@ -546,7 +585,7 @@ class _CustomSplashScreenState extends State<CustomSplashScreen>
                                       BoxShadow(
                                         color: Color(
                                           0xFF3EE4D8,
-                                        ).withOpacity(0.6),
+                                        ).withValues(alpha: 0.6),
                                         blurRadius: 8,
                                         spreadRadius: 1,
                                       ),
@@ -573,7 +612,7 @@ class _CustomSplashScreenState extends State<CustomSplashScreen>
                                       BoxShadow(
                                         color: Color(
                                           0xFF3EE4D8,
-                                        ).withOpacity(0.8),
+                                        ).withValues(alpha: 0.8),
                                         blurRadius: 10,
                                         spreadRadius: 2,
                                       ),
@@ -608,7 +647,7 @@ class _CustomSplashScreenState extends State<CustomSplashScreen>
                                 style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
-                                  color: Colors.white.withOpacity(0.9),
+                                  color: Colors.white.withValues(alpha: 0.9),
                                   letterSpacing: 2.0,
                                 ),
                               ),
@@ -640,7 +679,7 @@ class _CustomSplashScreenState extends State<CustomSplashScreen>
                   _appVersion.isEmpty ? "Loading version..." : _appVersion,
                   style: TextStyle(
                     fontSize: 12,
-                    color: Colors.white.withOpacity(0.85),
+                    color: Colors.white.withValues(alpha: 0.85),
                     fontWeight: FontWeight.w500,
                     letterSpacing: 1.2,
                   ),
@@ -677,11 +716,11 @@ class _ModernShapesPainter extends CustomPainter {
       // Draw different shapes
       if (i % 3 == 0) {
         // Circle
-        paint.color = Colors.white.withOpacity(opacity);
+        paint.color = Colors.white.withValues(alpha: opacity);
         canvas.drawCircle(Offset(x, y), shapeSize, paint);
       } else if (i % 3 == 1) {
         // Square
-        paint.color = Color(0xFF3EE4D8).withOpacity(opacity);
+        paint.color = Color(0xFF3EE4D8).withValues(alpha: opacity);
         final rect = Rect.fromCenter(
           center: Offset(x, y),
           width: shapeSize * 2,
@@ -690,7 +729,7 @@ class _ModernShapesPainter extends CustomPainter {
         canvas.drawRect(rect, paint);
       } else {
         // Triangle
-        paint.color = Color(0xFF1FB5D0).withOpacity(opacity);
+        paint.color = Color(0xFF1FB5D0).withValues(alpha: opacity);
         final path =
             Path()
               ..moveTo(x, y - shapeSize)
@@ -702,7 +741,7 @@ class _ModernShapesPainter extends CustomPainter {
     }
 
     // Draw connecting lines
-    paint.color = Colors.white.withOpacity(0.05);
+    paint.color = Colors.white.withValues(alpha: 0.05);
     paint.strokeWidth = 1.0;
     paint.style = PaintingStyle.stroke;
 
@@ -747,7 +786,7 @@ class _LogoRingsPainter extends CustomPainter {
       final sweepAngle = pi * 1.5;
       final startAngle = -pi / 2 + animationValue * pi * 0.5;
 
-      paint.color = Colors.white.withOpacity(opacity);
+      paint.color = Colors.white.withValues(alpha: opacity);
       paint.strokeCap = StrokeCap.round;
 
       final rect = Rect.fromCircle(center: center, radius: radius);

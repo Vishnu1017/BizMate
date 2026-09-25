@@ -2,6 +2,7 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first, unused_field
 
 import 'package:bizmate/screens/Camera%20rental%20page/camera_rental_nav_bar.dart';
+import 'package:bizmate/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:bizmate/models/user_model.dart';
 import 'package:bizmate/screens/CalendarPage.dart';
@@ -49,15 +50,30 @@ class _NavBarPageState extends State<NavBarPage>
   late ValueNotifier<String> _nameNotifier;
   bool _isNavigating = false;
 
-  // Modern color palette
+  // Color palette — resolved at build time via AppColors ThemeExtension
   final Color _primaryColor = const Color(0xFF1A237E);
-  final Color _secondaryColor = const Color(0xFF3949AB);
   final Color _accentColor = const Color(0xFF00BCD4);
-  final Color _surfaceColor = const Color(0xFFFFFFFF);
-  final Color _backgroundColor = const Color(0xFFF5F7FA);
-  final Color _textPrimary = const Color(0xFF1A1A1A);
-  final Color _textSecondary = const Color.fromARGB(255, 72, 72, 72);
-  final Color _dividerColor = const Color(0xFFE0E0E0);
+
+  Color get _surfaceColor =>
+      Theme.of(context).brightness == Brightness.dark
+          ? const Color(0xFF1E293B)
+          : const Color(0xFFFFFFFF);
+  Color get _backgroundColor =>
+      Theme.of(context).brightness == Brightness.dark
+          ? const Color(0xFF0F172A)
+          : const Color(0xFFF5F7FA);
+  Color get _textPrimary =>
+      Theme.of(context).brightness == Brightness.dark
+          ? const Color(0xFFF1F5F9)
+          : const Color(0xFF1A1A1A);
+  Color get _textSecondary =>
+      Theme.of(context).brightness == Brightness.dark
+          ? const Color(0xFF94A3B8)
+          : const Color(0xFF484848);
+  Color get _dividerColor =>
+      Theme.of(context).brightness == Brightness.dark
+          ? const Color(0xFF334155)
+          : const Color(0xFFE0E0E0);
 
   final List<String> _titles = [
     "Home",
@@ -210,13 +226,22 @@ class _NavBarPageState extends State<NavBarPage>
     final isSmallScreen = screenWidth < _kLargePhoneMax;
     final padding = _pagePadding(screenWidth);
 
+    // ── Theme-aware surface colors ──────────────────────────────────
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final barSurface = isDark ? const Color(0xFF1E293B) : _surfaceColor;
+    final barDivider = isDark ? const Color(0xFF334155) : _dividerColor;
+    final barBg = isDark ? const Color(0xFF0F172A) : _backgroundColor;
+    final barText1 = isDark ? const Color(0xFFF1F5F9) : _textPrimary;
+    final barText2 = isDark ? const Color(0xFF94A3B8) : _textSecondary;
+    // ────────────────────────────────────────────────────────────────
+
     return Container(
       decoration: BoxDecoration(
-        color: _surfaceColor,
-        border: Border(bottom: BorderSide(color: _dividerColor, width: 1)),
+        color: barSurface,
+        border: Border(bottom: BorderSide(color: barDivider, width: 1)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.03),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -246,16 +271,28 @@ class _NavBarPageState extends State<NavBarPage>
                         height: _scaleForWidth(screenWidth, 44 * scale),
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          gradient: const LinearGradient(
-                            colors: [
-                              Color(0xFF2563EB),
-                              Color(0xFF1E40AF),
-                              Color(0xFF020617),
-                            ],
-                            stops: [0.0, 0.6, 1.0],
-                            begin: Alignment.bottomRight,
-                            end: Alignment.topLeft,
-                          ),
+                          gradient:
+                              context.isDark
+                                  ? const LinearGradient(
+                                    colors: [
+                                      Color(0xFF38BDF8),
+                                      Color(0xFF60A5FA),
+                                      Color(0xFFBAE6FD),
+                                    ],
+                                    stops: [0.0, 0.6, 1.0],
+                                    begin: Alignment.bottomRight,
+                                    end: Alignment.topLeft,
+                                  )
+                                  : const LinearGradient(
+                                    colors: [
+                                      Color(0xFF2563EB),
+                                      Color(0xFF1E40AF),
+                                      Color(0xFF020617),
+                                    ],
+                                    stops: [0.0, 0.6, 1.0],
+                                    begin: Alignment.bottomRight,
+                                    end: Alignment.topLeft,
+                                  ),
                         ),
                         child: Center(
                           child: ValueListenableBuilder<String>(
@@ -290,7 +327,7 @@ class _NavBarPageState extends State<NavBarPage>
                             welcomeMessage.split('\n').first,
                             style: TextStyle(
                               fontSize: _scaleForWidth(screenWidth, 12),
-                              color: _textSecondary,
+                              color: barText2,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -306,7 +343,7 @@ class _NavBarPageState extends State<NavBarPage>
                                     screenWidth,
                                     16 * scale,
                                   ),
-                                  color: _textPrimary,
+                                  color: barText1,
                                   fontWeight: FontWeight.w700,
                                 ),
                               );
@@ -326,6 +363,9 @@ class _NavBarPageState extends State<NavBarPage>
                           screenWidth: screenWidth,
                           icon: Icons.calendar_today_outlined,
                           tooltip: 'Calendar',
+                          barBg: barBg,
+                          barDivider: barDivider,
+                          barText2: barText2,
                           onTap: () {
                             Navigator.push(
                               context,
@@ -336,6 +376,18 @@ class _NavBarPageState extends State<NavBarPage>
                           },
                         ),
 
+                        // ── THEME TOGGLE ─────────────────────────────
+                        SizedBox(
+                          width: _scaleForWidth(screenWidth, 10 * scale),
+                        ),
+                        _buildThemeToggleButton(
+                          screenWidth,
+                          isDark,
+                          barBg,
+                          barDivider,
+                        ),
+
+                        // ─────────────────────────────────────────────
                         if (isPhotographer && _isRentalEnabled)
                           SizedBox(
                             width: _scaleForWidth(screenWidth, 10 * scale),
@@ -343,7 +395,12 @@ class _NavBarPageState extends State<NavBarPage>
 
                         // Camera rental button
                         if (isPhotographer && _isRentalEnabled)
-                          _buildCameraRentalCleanButton(screenWidth),
+                          _buildCameraRentalCleanButton(
+                            screenWidth,
+                            barBg: barBg,
+                            barDivider: barDivider,
+                            barText2: barText2,
+                          ),
                       ],
                     ),
                   ],
@@ -358,7 +415,7 @@ class _NavBarPageState extends State<NavBarPage>
                       _titles[_currentIndex],
                       style: TextStyle(
                         fontSize: _scaleForWidth(screenWidth, 24 * scale),
-                        color: _textPrimary,
+                        color: barText1,
                         fontWeight: FontWeight.w800,
                         letterSpacing: -0.4 * scale,
                       ),
@@ -373,16 +430,28 @@ class _NavBarPageState extends State<NavBarPage>
                   height: _scaleForWidth(screenWidth, 2.5 * scale),
                   width: _scaleForWidth(screenWidth, 50 * scale),
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [
-                        Color(0xFF2563EB),
-                        Color(0xFF1E40AF),
-                        Color(0xFF020617),
-                      ],
-                      stops: [0.0, 0.6, 1.0],
-                      begin: Alignment.bottomRight,
-                      end: Alignment.topLeft,
-                    ),
+                    gradient:
+                        context.isDark
+                            ? const LinearGradient(
+                              colors: [
+                                Color(0xFF38BDF8),
+                                Color(0xFF60A5FA),
+                                Color(0xFFBAE6FD),
+                              ],
+                              stops: [0.0, 0.6, 1.0],
+                              begin: Alignment.bottomRight,
+                              end: Alignment.topLeft,
+                            )
+                            : const LinearGradient(
+                              colors: [
+                                Color(0xFF2563EB),
+                                Color(0xFF1E40AF),
+                                Color(0xFF020617),
+                              ],
+                              stops: [0.0, 0.6, 1.0],
+                              begin: Alignment.bottomRight,
+                              end: Alignment.topLeft,
+                            ),
                     borderRadius: BorderRadius.circular(1.5),
                   ),
                 ),
@@ -399,7 +468,13 @@ class _NavBarPageState extends State<NavBarPage>
     required IconData icon,
     required String tooltip,
     required VoidCallback onTap,
+    Color? barBg,
+    Color? barDivider,
+    Color? barText2,
   }) {
+    final bg = barBg ?? _backgroundColor;
+    final border = barDivider ?? _dividerColor;
+    final iconColor = barText2 ?? _textSecondary;
     return Tooltip(
       message: tooltip,
       child: Material(
@@ -412,13 +487,13 @@ class _NavBarPageState extends State<NavBarPage>
             width: _scaleForWidth(screenWidth, 36 * scale),
             height: _scaleForWidth(screenWidth, 36 * scale),
             decoration: BoxDecoration(
-              color: _backgroundColor,
+              color: bg,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: _dividerColor),
+              border: Border.all(color: border),
             ),
             child: Icon(
               icon,
-              color: _textSecondary,
+              color: iconColor,
               size: _scaleForWidth(screenWidth, 20 * scale),
             ),
           ),
@@ -427,7 +502,84 @@ class _NavBarPageState extends State<NavBarPage>
     );
   }
 
-  Widget _buildCameraRentalCleanButton(double screenWidth) {
+  /// ── THEME TOGGLE BUTTON ────────────────────────────────────────────
+  Widget _buildThemeToggleButton(
+    double screenWidth,
+    bool isDark,
+    Color barBg,
+    Color barDivider,
+  ) {
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: AppTheme.themeModeNotifier,
+      builder: (context, mode, _) {
+        final dark =
+            mode == ThemeMode.dark ||
+            (mode == ThemeMode.system &&
+                MediaQuery.platformBrightnessOf(context) == Brightness.dark);
+        return Tooltip(
+          message: dark ? 'Switch to Light Mode' : 'Switch to Dark Mode',
+          child: Material(
+            color: Colors.transparent,
+            borderRadius: BorderRadius.circular(12),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(12),
+              onTap: () {
+                AppTheme.setThemeMode(dark ? ThemeMode.light : ThemeMode.dark);
+              },
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+                width: _scaleForWidth(screenWidth, 36 * scale),
+                height: _scaleForWidth(screenWidth, 36 * scale),
+                decoration: BoxDecoration(
+                  color:
+                      dark ? const Color(0xFF1E293B) : const Color(0xFFFFF8E1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color:
+                        dark
+                            ? const Color(0xFF334155)
+                            : const Color(0xFFFFCC02),
+                    width: 1,
+                  ),
+                ),
+                child: Center(
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 300),
+                    transitionBuilder:
+                        (child, anim) => RotationTransition(
+                          turns: anim,
+                          child: FadeTransition(opacity: anim, child: child),
+                        ),
+                    child: Icon(
+                      dark ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
+                      key: ValueKey(dark),
+                      color:
+                          dark
+                              ? const Color(0xFF94A3B8)
+                              : const Color(0xFFFF8F00),
+                      size: _scaleForWidth(screenWidth, 20 * scale),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+  // ──────────────────────────────────────────────────────────────────
+
+  Widget _buildCameraRentalCleanButton(
+    double screenWidth, {
+    Color? barBg,
+    Color? barDivider,
+    Color? barText2,
+  }) {
+    final bg = barBg ?? _backgroundColor;
+    final border = barDivider ?? _dividerColor;
+    final iconColor = barText2 ?? _textSecondary;
     return Tooltip(
       message: 'Camera Rental',
       child: Material(
@@ -452,16 +604,16 @@ class _NavBarPageState extends State<NavBarPage>
             width: _scaleForWidth(screenWidth, 36 * scale),
             height: _scaleForWidth(screenWidth, 36 * scale),
             decoration: BoxDecoration(
-              color: _backgroundColor,
+              color: bg,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: _dividerColor),
+              border: Border.all(color: border),
             ),
             child: Stack(
               alignment: Alignment.center,
               children: [
                 HugeIcon(
                   icon: HugeIcons.strokeRoundedCameraAdd01,
-                  color: _textSecondary,
+                  color: iconColor,
                   size: _scaleForWidth(screenWidth, 22 * scale),
                 ),
                 Positioned(
@@ -508,6 +660,7 @@ class _NavBarPageState extends State<NavBarPage>
             ? "Quick Sale"
             : "New Customer Sale";
 
+    final c = context.appColors;
     return Container(
       child: Material(
         color: Colors.transparent,
@@ -530,12 +683,12 @@ class _NavBarPageState extends State<NavBarPage>
             width: double.infinity,
             padding: EdgeInsets.all(_scaleForWidth(screenWidth, 18)),
             decoration: BoxDecoration(
-              color: _surfaceColor,
+              color: c.surface,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: _dividerColor),
+              border: Border.all(color: c.divider),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.04),
+                  color: c.shadowColor,
                   blurRadius: 12,
                   offset: const Offset(0, 4),
                 ),
@@ -546,23 +699,23 @@ class _NavBarPageState extends State<NavBarPage>
                 Container(
                   padding: EdgeInsets.all(
                     MediaQuery.of(context).size.width < 350
-                        ? 3 // very small phones
+                        ? 3
                         : MediaQuery.of(context).size.width < 500
-                        ? 5 // normal phones
+                        ? 5
                         : MediaQuery.of(context).size.width < 900
-                        ? 7 // tablets
-                        : 9, // desktops
+                        ? 7
+                        : 9,
                   ),
                   width: _scaleForWidth(screenWidth, 44),
                   height: _scaleForWidth(screenWidth, 44),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: _primaryColor.withOpacity(0.1),
-                    border: Border.all(color: _primaryColor.withOpacity(0.2)),
+                    color: c.primary.withValues(alpha: 0.1),
+                    border: Border.all(color: c.primary.withValues(alpha: 0.2)),
                   ),
                   child: HugeIcon(
                     icon: HugeIcons.strokeRoundedAdd02,
-                    color: _primaryColor,
+                    color: c.primary,
                     size: _scaleForWidth(screenWidth, 24),
                   ),
                 ),
@@ -574,7 +727,7 @@ class _NavBarPageState extends State<NavBarPage>
                       Text(
                         labelText,
                         style: TextStyle(
-                          color: _textPrimary,
+                          color: c.text1,
                           fontSize: _scaleForWidth(screenWidth, 16),
                           fontWeight: FontWeight.w600,
                         ),
@@ -583,7 +736,7 @@ class _NavBarPageState extends State<NavBarPage>
                       Text(
                         'Start a new sales transaction',
                         style: TextStyle(
-                          color: _textSecondary,
+                          color: c.text2,
                           fontSize: _scaleForWidth(screenWidth, 12),
                         ),
                       ),
@@ -592,7 +745,7 @@ class _NavBarPageState extends State<NavBarPage>
                 ),
                 Icon(
                   Icons.arrow_forward_ios,
-                  color: _textSecondary,
+                  color: c.text2,
                   size: _scaleForWidth(screenWidth, 16),
                 ),
               ],
@@ -606,6 +759,7 @@ class _NavBarPageState extends State<NavBarPage>
   Widget _buildAddItemButton(double screenWidth) {
     if (_currentIndex != 3) return const SizedBox.shrink();
 
+    final c2 = context.appColors;
     return Container(
       child: Material(
         color: Colors.transparent,
@@ -639,12 +793,12 @@ class _NavBarPageState extends State<NavBarPage>
             width: double.infinity,
             padding: EdgeInsets.all(_scaleForWidth(screenWidth, 18)),
             decoration: BoxDecoration(
-              color: _surfaceColor,
+              color: c2.surface,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: _dividerColor),
+              border: Border.all(color: c2.divider),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.04),
+                  color: c2.shadowColor,
                   blurRadius: 12,
                   offset: const Offset(0, 4),
                 ),
@@ -655,20 +809,20 @@ class _NavBarPageState extends State<NavBarPage>
                 Container(
                   padding: EdgeInsets.all(
                     MediaQuery.of(context).size.width < 350
-                        ? 3 // very small phones
+                        ? 3
                         : MediaQuery.of(context).size.width < 500
-                        ? 5 // normal phones
+                        ? 5
                         : MediaQuery.of(context).size.width < 900
-                        ? 7 // tablets
-                        : 9, // desktops
+                        ? 7
+                        : 9,
                   ),
                   width: _scaleForWidth(screenWidth, 44),
                   height: _scaleForWidth(screenWidth, 44),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: const Color(0xFF4CAF50).withOpacity(0.1),
+                    color: const Color(0xFF4CAF50).withValues(alpha: 0.1),
                     border: Border.all(
-                      color: const Color(0xFF4CAF50).withOpacity(0.2),
+                      color: const Color(0xFF4CAF50).withValues(alpha: 0.2),
                     ),
                   ),
                   child: HugeIcon(
@@ -685,7 +839,7 @@ class _NavBarPageState extends State<NavBarPage>
                       Text(
                         'Add New Package',
                         style: TextStyle(
-                          color: _textPrimary,
+                          color: c2.text1,
                           fontSize: _scaleForWidth(screenWidth, 16),
                           fontWeight: FontWeight.w600,
                         ),
@@ -694,7 +848,7 @@ class _NavBarPageState extends State<NavBarPage>
                       Text(
                         'Add products to your inventory',
                         style: TextStyle(
-                          color: _textSecondary,
+                          color: c2.text2,
                           fontSize: _scaleForWidth(screenWidth, 12),
                         ),
                       ),
@@ -703,7 +857,7 @@ class _NavBarPageState extends State<NavBarPage>
                 ),
                 Icon(
                   Icons.arrow_forward_ios,
-                  color: _textSecondary,
+                  color: c2.text2,
                   size: _scaleForWidth(screenWidth, 16),
                 ),
               ],
@@ -720,6 +874,7 @@ class _NavBarPageState extends State<NavBarPage>
   Widget _buildCleanNavigation(double screenWidth) {
     final isSmallScreen = screenWidth < _kLargePhoneMax;
     final horizontalMargin = isSmallScreen ? 14.0 : 30.0;
+    final c = context.appColors;
 
     return Container(
       margin: EdgeInsets.symmetric(
@@ -729,12 +884,12 @@ class _NavBarPageState extends State<NavBarPage>
       constraints: const BoxConstraints(maxWidth: 900),
       height: _scaleForWidth(screenWidth, 70),
       decoration: BoxDecoration(
-        color: _surfaceColor,
+        color: c.surface,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: _dividerColor),
+        border: Border.all(color: c.divider),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
+            color: c.shadowColor,
             blurRadius: 22,
             offset: const Offset(0, 8),
           ),
@@ -814,8 +969,18 @@ class _NavBarPageState extends State<NavBarPage>
 
                   // 🔥 GRADIENT WHEN SELECTED
                   gradient:
-                      isSelected
+                      context.isDark
                           ? const LinearGradient(
+                            colors: [
+                              Color(0xFF38BDF8),
+                              Color(0xFF60A5FA),
+                              Color(0xFFBAE6FD),
+                            ],
+                            stops: [0.0, 0.6, 1.0],
+                            begin: Alignment.bottomRight,
+                            end: Alignment.topLeft,
+                          )
+                          : const LinearGradient(
                             colors: [
                               Color(0xFF2563EB),
                               Color(0xFF1E40AF),
@@ -824,8 +989,7 @@ class _NavBarPageState extends State<NavBarPage>
                             stops: [0.0, 0.6, 1.0],
                             begin: Alignment.bottomRight,
                             end: Alignment.topLeft,
-                          )
-                          : null,
+                          ),
 
                   color: isSelected ? null : Colors.transparent,
 
@@ -833,7 +997,9 @@ class _NavBarPageState extends State<NavBarPage>
                       isSelected
                           ? [
                             BoxShadow(
-                              color: const Color(0xFF2563EB).withOpacity(0.35),
+                              color: const Color(
+                                0xFF2563EB,
+                              ).withValues(alpha: 0.35),
                               blurRadius: 22,
                               offset: const Offset(0, 8),
                             ),
@@ -842,7 +1008,7 @@ class _NavBarPageState extends State<NavBarPage>
                 ),
                 child: Icon(
                   isSelected ? filledIcon : outlineIcon,
-                  color: isSelected ? Colors.white : _textSecondary,
+                  color: isSelected ? Colors.white : context.appColors.icon,
                   size:
                       isSelected
                           ? _scaleForWidth(screenWidth, 26)
@@ -910,7 +1076,7 @@ class _NavBarPageState extends State<NavBarPage>
                           border: Border.all(color: _dividerColor),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.03),
+                              color: Colors.black.withValues(alpha: 0.03),
                               blurRadius: 16,
                               offset: const Offset(0, 4),
                             ),

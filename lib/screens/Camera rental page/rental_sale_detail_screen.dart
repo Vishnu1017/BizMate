@@ -2,6 +2,7 @@
 
 import 'package:bizmate/models/payment.dart';
 import 'package:bizmate/widgets/app_snackbar.dart';
+import 'package:bizmate/widgets/app_theme_toggle.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/services.dart';
@@ -253,18 +254,20 @@ class _RentalSaleDetailScreenState extends State<RentalSaleDetailScreen> {
         // ignore: unused_local_variable
         final subtitleSize = isWide ? 14.0 : 13.0;
 
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+
         return Scaffold(
-          backgroundColor: const Color(0xFFF8FAFC),
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           appBar: AppBar(
             elevation: 0,
-            backgroundColor: Colors.white,
-            foregroundColor: const Color(0xFF1E40AF),
+            backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+            foregroundColor: isDark ? const Color(0xFF38BDF8) : const Color(0xFF1E40AF),
             title: Text(
               "Rental Sale Details",
               style: TextStyle(
                 fontSize: titleSize,
                 fontWeight: FontWeight.w600,
-                color: const Color(0xFF1E40AF),
+                color: isDark ? const Color(0xFFF1F5F9) : const Color(0xFF1E40AF),
               ),
             ),
             centerTitle: true,
@@ -273,6 +276,8 @@ class _RentalSaleDetailScreenState extends State<RentalSaleDetailScreen> {
               onPressed: () => Navigator.pop(context),
             ),
             actions: [
+              const AppThemeToggle(size: 32),
+              const SizedBox(width: 8),
               IconButton(
                 icon: const Icon(Icons.save_rounded),
                 onPressed: saveChanges,
@@ -521,7 +526,7 @@ class _RentalSaleDetailScreenState extends State<RentalSaleDetailScreen> {
     borderRadius: BorderRadius.circular(16),
     boxShadow: [
       BoxShadow(
-        color: Colors.black.withOpacity(0.05),
+        color: Colors.black.withValues(alpha: 0.05),
         blurRadius: 16,
         offset: const Offset(0, 4),
       ),
@@ -549,7 +554,7 @@ class _RentalSaleDetailScreenState extends State<RentalSaleDetailScreen> {
   Widget _statusBadge(String txt, Color c, IconData i) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
     decoration: BoxDecoration(
-      color: c.withOpacity(0.1),
+      color: c.withValues(alpha: 0.1),
       borderRadius: BorderRadius.circular(20),
     ),
     child: Row(
@@ -633,7 +638,7 @@ class _RentalSaleDetailScreenState extends State<RentalSaleDetailScreen> {
         Container(
           padding: EdgeInsets.all(6 * scale),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(10),
           ),
           child: Icon(icon, size: 16 * scale, color: color),
@@ -670,13 +675,13 @@ class _RentalSaleDetailScreenState extends State<RentalSaleDetailScreen> {
       decoration: BoxDecoration(
         color:
             isFullyPaid
-                ? const Color(0xFF10B981).withOpacity(0.1)
+                ? const Color(0xFF10B981).withValues(alpha: 0.1)
                 : Colors.grey.shade50,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color:
               isFullyPaid
-                  ? const Color(0xFF10B981).withOpacity(0.3)
+                  ? const Color(0xFF10B981).withValues(alpha: 0.3)
                   : Colors.grey.shade200,
         ),
       ),
@@ -737,7 +742,7 @@ class _RentalSaleDetailScreenState extends State<RentalSaleDetailScreen> {
                         decoration: InputDecoration(
                           hintText: "0.00",
                           hintStyle: TextStyle(
-                            color: const Color(0xFF10B981).withOpacity(0.5),
+                            color: const Color(0xFF10B981).withValues(alpha: 0.5),
                           ),
                           border: InputBorder.none,
                           contentPadding: EdgeInsets.zero,

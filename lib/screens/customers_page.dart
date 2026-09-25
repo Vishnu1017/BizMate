@@ -1,4 +1,5 @@
 // ignore_for_file: deprecated_member_use
+import 'package:bizmate/utils/app_theme.dart';
 
 import 'dart:io';
 import 'package:bizmate/models/user_model.dart';
@@ -501,7 +502,7 @@ class _CustomersPageState extends State<CustomersPage> {
             : 1.30;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F6FA),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: MediaQuery.removePadding(
         removeTop: true,
         context: context,
@@ -524,7 +525,9 @@ class _CustomersPageState extends State<CustomersPage> {
                             Icon(
                               Icons.search_off,
                               size: 80 * scale,
-                              color: Colors.grey[400],
+                              color: context.textSecondary.withValues(
+                                alpha: 0.5,
+                              ),
                             ),
                             SizedBox(height: 16 * scale),
                             Text(
@@ -533,7 +536,7 @@ class _CustomersPageState extends State<CustomersPage> {
                                   : "No matching customers found",
                               style: TextStyle(
                                 fontSize: 18 * scale,
-                                color: Colors.grey[600],
+                                color: context.textSecondary,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -582,140 +585,259 @@ class _CustomersPageState extends State<CustomersPage> {
                             ),
                             child: Container(
                               margin: EdgeInsets.only(bottom: 14 * scale),
+
+                              // -------------------------------------------------------------------------
+                              // 🎨 THEME-AWARE CUSTOMER CARD
+                              // -------------------------------------------------------------------------
                               decoration: BoxDecoration(
-                                gradient: const LinearGradient(
-                                  colors: [
-                                    Color(0xFF00BCD4),
-                                    Color(0xFF1A237E),
-                                  ],
+                                gradient: LinearGradient(
+                                  colors:
+                                      context.isDark
+                                          ? [
+                                            const Color(0xFF93C5FD),
+                                            const Color(0xFF60A5FA),
+                                          ]
+                                          : [
+                                            const Color(0xFF00BCD4),
+                                            const Color(0xFF1A237E),
+                                          ],
                                   begin: Alignment.topLeft,
                                   end: Alignment.bottomRight,
                                 ),
+
                                 borderRadius: BorderRadius.circular(12 * scale),
+
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black12,
-                                    blurRadius: 10 * scale,
+                                    color:
+                                        context.isDark
+                                            ? const Color(
+                                              0xFF8FB8F0,
+                                            ).withValues(alpha: 0.28)
+                                            : Colors.black12,
+                                    blurRadius:
+                                        context.isDark
+                                            ? 14 * scale
+                                            : 10 * scale,
+                                    spreadRadius: context.isDark ? 1 : 0,
                                     offset: Offset(0, 4 * scale),
                                   ),
                                 ],
                               ),
-                              child: ListTile(
-                                contentPadding: EdgeInsets.fromLTRB(
-                                  16 * scale,
-                                  8 * scale,
-                                  1 * scale,
-                                  8 * scale,
-                                ),
-                                leading: CircleAvatar(
-                                  radius: 22 * scale,
-                                  backgroundColor: Colors.white,
-                                  child: Text(
-                                    initials,
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16 * scale,
-                                      color: const Color(0xFF1A237E),
-                                    ),
-                                  ),
-                                ),
-                                title: Text(
-                                  name,
-                                  style: TextStyle(
-                                    fontSize: 15 * scale,
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                subtitle: Text(
-                                  phone,
-                                  style: TextStyle(
-                                    color: Colors.white70,
-                                    fontSize: 12.5 * scale,
-                                  ),
-                                ),
-                                trailing: Wrap(
-                                  runSpacing: 4 * scale,
-                                  children: [
-                                    IconButton(
-                                      icon: Icon(
-                                        Icons.phone,
-                                        size: 20 * scale,
-                                        color: Colors.white,
-                                      ),
-                                      onPressed: () => _makePhoneCall(phone),
-                                    ),
-                                    PopupMenuButton<String>(
-                                      icon: FaIcon(
-                                        FontAwesomeIcons.ellipsisVertical,
-                                        size: 20 * scale,
-                                        color: Colors.white,
-                                      ),
-                                      itemBuilder: (context) {
-                                        final isSmallScreen = w < 400;
-                                        return [
-                                          PopupMenuItem(
-                                            value: 'default',
-                                            child: _buildPopupItem(
-                                              icon: Icons.chat,
-                                              color: Colors.blue,
-                                              text: "General Inquiry",
-                                              isSmallScreen: isSmallScreen,
-                                            ),
-                                          ),
-                                          PopupMenuItem(
-                                            value: 'feedback',
-                                            child: _buildPopupItem(
-                                              icon: Icons.feedback_rounded,
-                                              color: Colors.purple,
-                                              text: "Feedback",
-                                              isSmallScreen: isSmallScreen,
-                                            ),
-                                          ),
-                                          PopupMenuItem(
-                                            value: 'booking_confirmation',
-                                            child: _buildPopupItem(
-                                              icon: Icons.event_available,
-                                              color: Colors.indigo,
-                                              text: "Booking Confirmation",
-                                              isSmallScreen: isSmallScreen,
-                                            ),
-                                          ),
-                                          PopupMenuItem(
-                                            value: 'payment_received',
-                                            child: _buildPopupItem(
-                                              icon: Icons.check_circle,
-                                              color: Colors.green,
-                                              text: "Payment Received",
-                                              isSmallScreen: isSmallScreen,
-                                            ),
-                                          ),
 
-                                          PopupMenuItem(
-                                            value: 'agreement',
-                                            child: _buildPopupItem(
-                                              icon: Icons.picture_as_pdf,
-                                              color: Colors.teal,
-                                              text: "Send Release Agreement",
-                                              isSmallScreen: isSmallScreen,
-                                            ),
-                                          ),
-                                        ];
-                                      },
-                                      onSelected: (p) {
-                                        if (p == 'agreement') {
-                                          generateAndShareAgreementPDF(name);
-                                        } else {
-                                          _openWhatsApp(
-                                            phone,
-                                            name,
-                                            purpose: p,
-                                          );
-                                        }
-                                      },
+                              child: Stack(
+                                children: [
+                                  // -----------------------------------------------------------------------
+                                  // ✨ DECORATIVE BLUE CIRCLE
+                                  // -----------------------------------------------------------------------
+                                  Positioned(
+                                    right: -20,
+                                    top: -20,
+                                    child: Container(
+                                      width: 100 * scale,
+                                      height: 100 * scale,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color:
+                                            context.isDark
+                                                ? Colors.white.withValues(
+                                                  alpha: 0.32,
+                                                )
+                                                : Colors.white.withValues(
+                                                  alpha: 0.08,
+                                                ),
+                                      ),
                                     ),
-                                  ],
-                                ),
+                                  ),
+
+                                  // -----------------------------------------------------------------------
+                                  // ✨ SECOND SUBTLE CIRCLE FOR DARK THEME
+                                  // -----------------------------------------------------------------------
+                                  if (context.isDark)
+                                    Positioned(
+                                      left: -35,
+                                      bottom: -45,
+                                      child: Container(
+                                        width: 110 * scale,
+                                        height: 110 * scale,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: Colors.white.withValues(
+                                            alpha: 0.18,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+
+                                  ListTile(
+                                    contentPadding: EdgeInsets.fromLTRB(
+                                      16 * scale,
+                                      8 * scale,
+                                      1 * scale,
+                                      8 * scale,
+                                    ),
+
+                                    // ---------------------------------------------------------------------
+                                    // 👤 AVATAR
+                                    // ---------------------------------------------------------------------
+                                    leading: CircleAvatar(
+                                      radius: 22 * scale,
+                                      backgroundColor:
+                                          context.isDark
+                                              ? Colors.white.withValues(
+                                                alpha: 0.88,
+                                              )
+                                              : Colors.white,
+                                      child: Text(
+                                        initials,
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16 * scale,
+                                          color:
+                                              context.isDark
+                                                  ? const Color(0xFF1769D1)
+                                                  : const Color(0xFF1A237E),
+                                        ),
+                                      ),
+                                    ),
+
+                                    // ---------------------------------------------------------------------
+                                    // 👤 CUSTOMER NAME
+                                    // ---------------------------------------------------------------------
+                                    title: Text(
+                                      name,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                        fontSize: 15 * scale,
+                                        color:
+                                            context.isDark
+                                                ? const Color(0xFF123A66)
+                                                : Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+
+                                    // ---------------------------------------------------------------------
+                                    // 📞 PHONE
+                                    // ---------------------------------------------------------------------
+                                    subtitle: Text(
+                                      phone,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                        color:
+                                            context.isDark
+                                                ? const Color(0xFF315D89)
+                                                : Colors.white70,
+                                        fontSize: 12.5 * scale,
+                                      ),
+                                    ),
+
+                                    // ---------------------------------------------------------------------
+                                    // 📱 ACTION BUTTONS
+                                    // ---------------------------------------------------------------------
+                                    trailing: Wrap(
+                                      runSpacing: 4 * scale,
+                                      children: [
+                                        IconButton(
+                                          tooltip: 'Call',
+                                          icon: Icon(
+                                            Icons.phone,
+                                            size: 20 * scale,
+                                            color:
+                                                context.isDark
+                                                    ? const Color(0xFF123A66)
+                                                    : Colors.white,
+                                          ),
+                                          onPressed:
+                                              () => _makePhoneCall(phone),
+                                        ),
+
+                                        PopupMenuButton<String>(
+                                          tooltip: 'More actions',
+                                          icon: FaIcon(
+                                            FontAwesomeIcons.ellipsisVertical,
+                                            size: 20 * scale,
+                                            color:
+                                                context.isDark
+                                                    ? const Color(0xFF123A66)
+                                                    : Colors.white,
+                                          ),
+                                          itemBuilder: (context) {
+                                            final isSmallScreen = w < 400;
+
+                                            return [
+                                              PopupMenuItem(
+                                                value: 'default',
+                                                child: _buildPopupItem(
+                                                  icon: Icons.chat,
+                                                  color: Colors.blue,
+                                                  text: "General Inquiry",
+                                                  isSmallScreen: isSmallScreen,
+                                                ),
+                                              ),
+
+                                              PopupMenuItem(
+                                                value: 'feedback',
+                                                child: _buildPopupItem(
+                                                  icon: Icons.feedback_rounded,
+                                                  color: Colors.purple,
+                                                  text: "Feedback",
+                                                  isSmallScreen: isSmallScreen,
+                                                ),
+                                              ),
+
+                                              PopupMenuItem(
+                                                value: 'booking_confirmation',
+                                                child: _buildPopupItem(
+                                                  icon: Icons.event_available,
+                                                  color: Colors.indigo,
+                                                  text: "Booking Confirmation",
+                                                  isSmallScreen: isSmallScreen,
+                                                ),
+                                              ),
+
+                                              PopupMenuItem(
+                                                value: 'payment_received',
+                                                child: _buildPopupItem(
+                                                  icon: Icons.check_circle,
+                                                  color: Colors.green,
+                                                  text: "Payment Received",
+                                                  isSmallScreen: isSmallScreen,
+                                                ),
+                                              ),
+
+                                              PopupMenuItem(
+                                                value: 'agreement',
+                                                child: _buildPopupItem(
+                                                  icon: Icons.picture_as_pdf,
+                                                  color: Colors.teal,
+                                                  text:
+                                                      "Send Release Agreement",
+                                                  isSmallScreen: isSmallScreen,
+                                                ),
+                                              ),
+                                            ];
+                                          },
+                                          onSelected: (p) {
+                                            if (p == 'agreement') {
+                                              generateAndShareAgreementPDF(
+                                                name,
+                                              );
+                                            } else {
+                                              _openWhatsApp(
+                                                phone,
+                                                name,
+                                                purpose: p,
+                                              );
+                                            }
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           );

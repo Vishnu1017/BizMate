@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:bizmate/models/sale.dart';
 import 'package:bizmate/models/rental_sale_model.dart';
+import 'package:bizmate/widgets/app_theme_toggle.dart';
 import 'package:hive/hive.dart';
 import 'package:intl/intl.dart';
 import 'package:unicons/unicons.dart';
@@ -131,8 +132,12 @@ class _CalendarPageState extends State<CalendarPage> {
     final isTablet = media.size.width >= 600;
     final horizontalPadding = isTablet ? 24.0 : 16.0;
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final text1 = isDark ? const Color(0xFFF1F5F9) : const Color(0xFF0F172A);
+    final cardColor = isDark ? const Color(0xFF1E293B) : Colors.white;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF3F4F8),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
 
       // ✅ PROPER APP BAR
       appBar: PreferredSize(
@@ -146,13 +151,19 @@ class _CalendarPageState extends State<CalendarPage> {
           leading: IconButton(
             icon: Icon(
               Icons.arrow_back,
-              color: Color(0xFF0F172A),
+              color: text1,
               size: 20 * scale,
             ),
             onPressed: () {
               Navigator.pop(context);
             },
           ),
+          actions: const [
+            Padding(
+              padding: EdgeInsets.only(right: 16),
+              child: AppThemeToggle(),
+            ),
+          ],
 
           titleSpacing: horizontalPadding,
           title: Row(
@@ -160,11 +171,11 @@ class _CalendarPageState extends State<CalendarPage> {
               Container(
                 padding: EdgeInsets.all(8 * scale),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: cardColor,
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.05),
                       blurRadius: 8,
                       offset: const Offset(0, 4),
                     ),
@@ -186,7 +197,7 @@ class _CalendarPageState extends State<CalendarPage> {
                       style: TextStyle(
                         fontSize: isTablet ? 22 : 18,
                         fontWeight: FontWeight.w700,
-                        color: const Color(0xFF0F172A),
+                        color: text1,
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -198,7 +209,7 @@ class _CalendarPageState extends State<CalendarPage> {
                           ).format(_selectedDay!),
                       style: TextStyle(
                         fontSize: 12,
-                        color: Colors.grey.shade600,
+                        color: isDark ? const Color(0xFF94A3B8) : Colors.grey.shade600,
                       ),
                     ),
                   ],
@@ -303,7 +314,7 @@ class _CalendarPageState extends State<CalendarPage> {
                 calendarStyle: CalendarStyle(
                   outsideDaysVisible: false,
                   todayDecoration: BoxDecoration(
-                    color: const Color(0xFF6366F1).withOpacity(0.15),
+                    color: const Color(0xFF6366F1).withValues(alpha: 0.15),
                     shape: BoxShape.circle,
                   ),
                   selectedDecoration: const BoxDecoration(
@@ -517,6 +528,17 @@ class _CalendarPageState extends State<CalendarPage> {
   // ---------------------------------------------------------------------------
 
   Widget _glassContainer({required Widget child}) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final glassColor1 = isDark
+        ? const Color(0xFF1E293B).withValues(alpha: 0.9)
+        : Colors.white.withValues(alpha: 0.85);
+    final glassColor2 = isDark
+        ? const Color(0xFF0F172A).withValues(alpha: 0.8)
+        : Colors.white.withValues(alpha: 0.65);
+    final borderColor = isDark
+        ? const Color(0xFF334155).withValues(alpha: 0.8)
+        : Colors.white.withValues(alpha: 0.6);
+
     return ClipRRect(
       borderRadius: BorderRadius.circular(24),
       child: BackdropFilter(
@@ -526,12 +548,12 @@ class _CalendarPageState extends State<CalendarPage> {
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                Colors.white.withOpacity(0.85),
-                Colors.white.withOpacity(0.65),
+                glassColor1,
+                glassColor2,
               ],
             ),
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: Colors.white.withOpacity(0.6)),
+            border: Border.all(color: borderColor),
           ),
           child: child,
         ),
@@ -553,7 +575,7 @@ class _CalendarPageState extends State<CalendarPage> {
         child: Row(
           children: [
             CircleAvatar(
-              backgroundColor: color.withOpacity(0.12),
+              backgroundColor: color.withValues(alpha: 0.12),
               child: Icon(icon, color: color, size: 20 * scale),
             ),
             SizedBox(width: 12 * scale),
@@ -611,7 +633,7 @@ class _CalendarPageState extends State<CalendarPage> {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 8 * scale, vertical: 4 * scale),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
+        color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(999),
       ),
       child: Text(

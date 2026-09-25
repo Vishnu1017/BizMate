@@ -3,6 +3,7 @@ import 'package:bizmate/widgets/modern_calendar_range.dart'
     show ModernCalendarRange;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../utils/app_theme.dart';
 
 enum DateRangePreset {
   today,
@@ -327,7 +328,7 @@ class _AdvancedSearchBarState extends State<AdvancedSearchBar>
               child: GestureDetector(
                 onTap: _hideMenu,
                 behavior: HitTestBehavior.translucent,
-                child: Container(color: Colors.black.withOpacity(0.40)),
+                child: Container(color: Colors.black.withValues(alpha: 0.40)),
               ),
             ),
 
@@ -394,6 +395,7 @@ class _AdvancedSearchBarState extends State<AdvancedSearchBar>
   Widget _buildMenuUI(double width) {
     final size = MediaQuery.of(context).size;
     final padding = MediaQuery.of(context).padding;
+    final isDark = context.isDark;
 
     // 🔥 Correct fully responsive width
     final double responsiveWidth =
@@ -413,7 +415,7 @@ class _AdvancedSearchBarState extends State<AdvancedSearchBar>
         margin: const EdgeInsets.only(top: 10), // optional small top spacing
         child: Material(
           elevation: 20,
-          color: Colors.white,
+          color: isDark ? const Color(0xFF1E293B) : Colors.white,
           borderRadius: BorderRadius.circular(14),
           child: ConstrainedBox(
             constraints: BoxConstraints(
@@ -433,17 +435,21 @@ class _AdvancedSearchBarState extends State<AdvancedSearchBar>
                 children: [
                   Text(
                     'Time Filter',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
-                      color: Color(0xFF1F2937),
+                      color: isDark ? Colors.white : const Color(0xFF1F2937),
                     ),
                   ),
                   const SizedBox(height: 6),
 
                   Text(
                     'Filter your results by date range',
-                    style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+                    style: TextStyle(
+                      fontSize: 13,
+                      color:
+                          isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                    ),
                   ),
 
                   const SizedBox(height: 12),
@@ -461,6 +467,7 @@ class _AdvancedSearchBarState extends State<AdvancedSearchBar>
                           _getPresetIcon(preset),
                           _getPresetLabel(preset),
                           _getPresetDescription(preset),
+                          isDark,
                         );
                       },
                     ),
@@ -480,6 +487,7 @@ class _AdvancedSearchBarState extends State<AdvancedSearchBar>
     IconData icon,
     String label,
     String description,
+    bool isDark,
   ) {
     final isSelected = selectedPreset == preset;
 
@@ -494,12 +502,16 @@ class _AdvancedSearchBarState extends State<AdvancedSearchBar>
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
             color:
-                isSelected ? const Color(0xFF1E40AF).withOpacity(0.08) : null,
+                isSelected
+                    ? const Color(0xFF1E40AF).withValues(alpha: 0.15)
+                    : null,
             border: Border.all(
               color:
                   isSelected
-                      ? const Color(0xFF1E40AF).withOpacity(0.28)
-                      : const Color(0xFFF3F4F6),
+                      ? const Color(0xFF1E40AF).withValues(alpha: 0.35)
+                      : (isDark
+                          ? const Color(0xFF334155)
+                          : const Color(0xFFF3F4F6)),
             ),
           ),
           child: Row(
@@ -509,8 +521,18 @@ class _AdvancedSearchBarState extends State<AdvancedSearchBar>
                 height: 40,
                 decoration: BoxDecoration(
                   gradient:
-                      isSelected
+                      context.isDark
                           ? const LinearGradient(
+                            colors: [
+                              Color(0xFF38BDF8),
+                              Color(0xFF60A5FA),
+                              Color(0xFFBAE6FD),
+                            ],
+                            stops: [0.0, 0.6, 1.0],
+                            begin: Alignment.bottomRight,
+                            end: Alignment.topLeft,
+                          )
+                          : const LinearGradient(
                             colors: [
                               Color(0xFF2563EB),
                               Color(0xFF1E40AF),
@@ -519,15 +541,24 @@ class _AdvancedSearchBarState extends State<AdvancedSearchBar>
                             stops: [0.0, 0.6, 1.0],
                             begin: Alignment.bottomRight,
                             end: Alignment.topLeft,
-                          )
-                          : null,
-                  color: isSelected ? null : const Color(0xFFF3F4F6),
+                          ),
+                  color:
+                      isSelected
+                          ? null
+                          : (isDark
+                              ? const Color(0xFF334155)
+                              : const Color(0xFFF3F4F6)),
                   borderRadius: BorderRadius.circular(10),
                 ),
 
                 child: Icon(
                   icon,
-                  color: isSelected ? Colors.white : const Color(0xFF6B7280),
+                  color:
+                      isSelected
+                          ? Colors.white
+                          : (isDark
+                              ? Colors.grey.shade300
+                              : const Color(0xFF6B7280)),
                   size: 20,
                 ),
               ),
@@ -541,7 +572,11 @@ class _AdvancedSearchBarState extends State<AdvancedSearchBar>
                       style: TextStyle(
                         fontWeight: FontWeight.w600,
                         color:
-                            isSelected ? const Color(0xFF1E40AF) : Colors.black,
+                            isSelected
+                                ? (isDark
+                                    ? Colors.lightBlueAccent
+                                    : const Color(0xFF1E40AF))
+                                : (isDark ? Colors.white : Colors.black),
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -551,18 +586,27 @@ class _AdvancedSearchBarState extends State<AdvancedSearchBar>
                         fontSize: 12,
                         color:
                             isSelected
-                                ? const Color(0xFF1E40AF).withOpacity(0.6)
-                                : Colors.grey.shade600,
+                                ? (isDark
+                                    ? Colors.lightBlueAccent.withValues(
+                                      alpha: 0.8,
+                                    )
+                                    : const Color(
+                                      0xFF1E40AF,
+                                    ).withValues(alpha: 0.6))
+                                : (isDark
+                                    ? Colors.grey.shade400
+                                    : Colors.grey.shade600),
                       ),
                     ),
                   ],
                 ),
               ),
               if (isSelected)
-                const Icon(
+                Icon(
                   Icons.check_circle,
                   size: 18,
-                  color: Color(0xFF1E40AF),
+                  color:
+                      isDark ? Colors.lightBlueAccent : const Color(0xFF1E40AF),
                 ),
             ],
           ),
@@ -631,6 +675,7 @@ class _AdvancedSearchBarState extends State<AdvancedSearchBar>
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
+    final isDark = context.isDark;
 
     // Mobile-first scaling (Option A) + keep UI consistent (Option C)
     // Scale factor ranges from 0.9 (very small phones) to 1.0 (normal) to 1.08 (large phones)
@@ -653,13 +698,13 @@ class _AdvancedSearchBarState extends State<AdvancedSearchBar>
         child: Transform.scale(
           scale: scale,
           alignment: Alignment.topCenter,
-          child: _buildSearchBar(scale),
+          child: _buildSearchBar(scale, isDark),
         ),
       ),
     );
   }
 
-  Widget _buildSearchBar(double scale) {
+  Widget _buildSearchBar(double scale, bool isDark) {
     final double iconSize = _baseIconSize * (scale);
     final double height = _baseHeight * (scale);
     final double horizontalPadding = (_basePadding - 2) * (scale);
@@ -671,17 +716,21 @@ class _AdvancedSearchBarState extends State<AdvancedSearchBar>
         vertical: 8 * scale,
       ),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
         borderRadius: BorderRadius.circular(14 * scale),
         border: Border.all(
           color:
               _isSearchFocused
-                  ? const Color(0xFF1E40AF).withOpacity(0.35)
-                  : const Color(0xFFE5E7EB),
+                  ? const Color(0xFF1E40AF).withValues(alpha: 0.5)
+                  : (isDark
+                      ? const Color(0xFF334155)
+                      : const Color(0xFFE5E7EB)),
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(_isSearchFocused ? 0.12 : 0.03),
+            color: Colors.black.withValues(
+              alpha: _isSearchFocused ? 0.2 : 0.08,
+            ),
             blurRadius: _isSearchFocused ? 20 : 10,
             offset: Offset(0, 4 * scale),
           ),
@@ -693,25 +742,25 @@ class _AdvancedSearchBarState extends State<AdvancedSearchBar>
             height: height,
             child: Row(
               children: [
-                _buildSearchIconScaled(iconSize, scale),
+                _buildSearchIconScaled(iconSize, scale, isDark),
                 SizedBox(width: 12 * scale),
-                Expanded(child: _buildSearchInputScaled(scale)),
+                Expanded(child: _buildSearchInputScaled(scale, isDark)),
                 if (_searchController.text.isNotEmpty)
-                  _buildClearButtonScaled(scale),
+                  _buildClearButtonScaled(scale, isDark),
                 if (widget.showDateFilter) ...[
                   SizedBox(width: 12 * scale),
-                  _buildMenuButtonScaled(scale),
+                  _buildMenuButtonScaled(scale, isDark),
                 ],
               ],
             ),
           ),
-          _buildActiveFilterScaled(scale),
+          _buildActiveFilterScaled(scale, isDark),
         ],
       ),
     );
   }
 
-  Widget _buildSearchIconScaled(double iconSize, double scale) {
+  Widget _buildSearchIconScaled(double iconSize, double scale, bool isDark) {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 260),
       width: 42 * scale,
@@ -719,34 +768,34 @@ class _AdvancedSearchBarState extends State<AdvancedSearchBar>
       decoration: BoxDecoration(
         color:
             _isSearchFocused
-                ? const Color(0xFF1E40AF).withOpacity(0.1)
-                : const Color(0xFFF9FAFB),
+                ? const Color(0xFF1E40AF).withValues(alpha: 0.2)
+                : (isDark ? const Color(0xFF334155) : const Color(0xFFF9FAFB)),
         borderRadius: BorderRadius.circular(10 * scale),
       ),
       child: Icon(
         Icons.search_rounded,
         color:
             _isSearchFocused
-                ? const Color(0xFF1E40AF)
-                : const Color(0xFF9CA3AF),
+                ? (isDark ? Colors.lightBlueAccent : const Color(0xFF1E40AF))
+                : (isDark ? Colors.grey.shade400 : const Color(0xFF9CA3AF)),
         size: iconSize,
       ),
     );
   }
 
-  Widget _buildSearchInputScaled(double scale) {
+  Widget _buildSearchInputScaled(double scale, bool isDark) {
     return TextField(
       controller: _searchController,
       focusNode: _searchFocusNode,
       style: TextStyle(
         fontSize: 16 * scale,
         fontWeight: FontWeight.w500,
-        color: const Color(0xFF111827),
+        color: isDark ? Colors.white : const Color(0xFF111827),
       ),
       decoration: InputDecoration(
         hintText: widget.hintText,
         hintStyle: TextStyle(
-          color: const Color(0xFF9CA3AF),
+          color: isDark ? Colors.grey.shade500 : const Color(0xFF9CA3AF),
           fontSize: 16 * scale,
           fontWeight: FontWeight.w400,
         ),
@@ -758,26 +807,26 @@ class _AdvancedSearchBarState extends State<AdvancedSearchBar>
     );
   }
 
-  Widget _buildClearButtonScaled(double scale) {
+  Widget _buildClearButtonScaled(double scale, bool isDark) {
     return GestureDetector(
       onTap: _clearSearch,
       child: Container(
         width: 32 * scale,
         height: 32 * scale,
         decoration: BoxDecoration(
-          color: const Color(0xFFF3F4F6),
+          color: isDark ? const Color(0xFF334155) : const Color(0xFFF3F4F6),
           borderRadius: BorderRadius.circular(8 * scale),
         ),
         child: Icon(
           Icons.close_rounded,
           size: 18 * scale,
-          color: const Color(0xFF6B7280),
+          color: isDark ? Colors.grey.shade300 : const Color(0xFF6B7280),
         ),
       ),
     );
   }
 
-  Widget _buildMenuButtonScaled(double scale) {
+  Widget _buildMenuButtonScaled(double scale, bool isDark) {
     final filtered = selectedRange != null;
     return GestureDetector(
       onTap: _toggleMenu,
@@ -800,18 +849,25 @@ class _AdvancedSearchBarState extends State<AdvancedSearchBar>
                     end: Alignment.topLeft,
                   )
                   : null,
-          color: filtered ? null : const Color(0xFFF9FAFB),
+          color:
+              filtered
+                  ? null
+                  : (isDark
+                      ? const Color(0xFF334155)
+                      : const Color(0xFFF9FAFB)),
           border: Border.all(
             color:
                 filtered
-                    ? const Color(0xFF1E40AF).withOpacity(0.35)
-                    : const Color(0xFFE5E7EB),
+                    ? const Color(0xFF1E40AF).withValues(alpha: 0.35)
+                    : (isDark
+                        ? const Color(0xFF475569)
+                        : const Color(0xFFE5E7EB)),
           ),
           boxShadow:
               filtered
                   ? [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.18),
+                      color: Colors.black.withValues(alpha: 0.18),
                       blurRadius: 6 * scale,
                       offset: Offset(0, 3 * scale),
                     ),
@@ -825,7 +881,10 @@ class _AdvancedSearchBarState extends State<AdvancedSearchBar>
               Icon(
                 filtered ? Icons.filter_alt_rounded : Icons.tune_rounded,
                 size: 20 * scale,
-                color: filtered ? Colors.white : const Color(0xFF6B7280),
+                color:
+                    filtered
+                        ? Colors.white
+                        : (isDark ? Colors.white70 : const Color(0xFF6B7280)),
               ),
               if (filtered) ...[
                 SizedBox(width: 4 * scale),
@@ -864,7 +923,7 @@ class _AdvancedSearchBarState extends State<AdvancedSearchBar>
             shape: BoxShape.circle,
             color: Colors.transparent,
             border: Border.all(
-              color: const Color(0xFFEF4444).withOpacity(0.25),
+              color: const Color(0xFFEF4444).withValues(alpha: 0.25),
               width: 1.4,
             ),
           ),
@@ -878,7 +937,7 @@ class _AdvancedSearchBarState extends State<AdvancedSearchBar>
     );
   }
 
-  Widget _buildActiveFilterScaled(double scale) {
+  Widget _buildActiveFilterScaled(double scale, bool isDark) {
     if (selectedRange == null) return const SizedBox.shrink();
 
     return Padding(
@@ -894,9 +953,12 @@ class _AdvancedSearchBarState extends State<AdvancedSearchBar>
               vertical: 10 * scale,
             ),
             decoration: BoxDecoration(
-              color: const Color(0xFFF5F3FF),
+              color: isDark ? const Color(0xFF1E1B4B) : const Color(0xFFF5F3FF),
               borderRadius: BorderRadius.circular(12 * scale),
-              border: Border.all(color: const Color(0xFFDDD6FE)),
+              border: Border.all(
+                color:
+                    isDark ? const Color(0xFF4C1D95) : const Color(0xFFDDD6FE),
+              ),
             ),
             child: Row(
               children: [
@@ -905,12 +967,18 @@ class _AdvancedSearchBarState extends State<AdvancedSearchBar>
                   height: 34 * scale,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: const Color(0xFF1E40AF).withOpacity(0.10),
+                    color:
+                        isDark
+                            ? Colors.blue.withValues(alpha: 0.2)
+                            : const Color(0xFF1E40AF).withValues(alpha: 0.10),
                   ),
                   child: Icon(
                     _getPresetIcon(selectedPreset!),
                     size: 16 * scale,
-                    color: const Color(0xFF1E40AF),
+                    color:
+                        isDark
+                            ? Colors.lightBlueAccent
+                            : const Color(0xFF1E40AF),
                   ),
                 ),
                 SizedBox(width: 12 * scale),
@@ -923,7 +991,10 @@ class _AdvancedSearchBarState extends State<AdvancedSearchBar>
                         style: TextStyle(
                           fontSize: 12 * scale,
                           fontWeight: FontWeight.w600,
-                          color: const Color(0xFF1E40AF),
+                          color:
+                              isDark
+                                  ? Colors.lightBlueAccent
+                                  : const Color(0xFF1E40AF),
                         ),
                       ),
                       SizedBox(height: 4 * scale),
@@ -932,7 +1003,10 @@ class _AdvancedSearchBarState extends State<AdvancedSearchBar>
                         style: TextStyle(
                           fontSize: 14 * scale,
                           fontWeight: FontWeight.w500,
-                          color: const Color(0xFF374151),
+                          color:
+                              isDark
+                                  ? Colors.grey.shade300
+                                  : const Color(0xFF374151),
                         ),
                       ),
                     ],

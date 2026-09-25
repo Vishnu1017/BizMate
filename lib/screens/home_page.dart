@@ -4,6 +4,7 @@ import 'package:bizmate/models/sale.dart';
 import 'package:bizmate/models/user_model.dart';
 import 'package:bizmate/screens/WhatsAppHelper.dart';
 import 'package:bizmate/screens/sale_detail_screen.dart';
+import 'package:bizmate/utils/app_theme.dart';
 import 'package:bizmate/widgets/advanced_search_bar.dart'
     show AdvancedSearchBar;
 import 'package:bizmate/widgets/sale_options_menu.dart' show SaleOptionsMenu;
@@ -453,18 +454,32 @@ class _HomePageState extends State<HomePage>
                                               isSmallScreen
                                                   ? 32
                                                   : 36, // Reduced from 40:48
-                                          decoration: const BoxDecoration(
+                                          decoration: BoxDecoration(
                                             shape: BoxShape.circle,
-                                            gradient: LinearGradient(
-                                              colors: [
-                                                Color(0xFF2563EB),
-                                                Color(0xFF1E40AF),
-                                                Color(0xFF020617),
-                                              ],
-                                              stops: [0.0, 0.6, 1.0],
-                                              begin: Alignment.bottomRight,
-                                              end: Alignment.topLeft,
-                                            ),
+                                            gradient:
+                                                context.isDark
+                                                    ? const LinearGradient(
+                                                      colors: [
+                                                        Color(0xFF38BDF8),
+                                                        Color(0xFF60A5FA),
+                                                        Color(0xFFBAE6FD),
+                                                      ],
+                                                      stops: [0.0, 0.6, 1.0],
+                                                      begin:
+                                                          Alignment.bottomRight,
+                                                      end: Alignment.topLeft,
+                                                    )
+                                                    : const LinearGradient(
+                                                      colors: [
+                                                        Color(0xFF2563EB),
+                                                        Color(0xFF1E40AF),
+                                                        Color(0xFF020617),
+                                                      ],
+                                                      stops: [0.0, 0.6, 1.0],
+                                                      begin:
+                                                          Alignment.bottomRight,
+                                                      end: Alignment.topLeft,
+                                                    ),
                                           ),
                                           child: Icon(
                                             Icons.person,
@@ -483,7 +498,10 @@ class _HomePageState extends State<HomePage>
                                                 isSmallScreen
                                                     ? 8
                                                     : 10, // Reduced from 10:12
-                                            color: Colors.indigo,
+                                            color:
+                                                context.isDark
+                                                    ? const Color(0xFF38BDF8)
+                                                    : Colors.indigo,
                                           ),
                                         ),
                                         SizedBox(height: 2), // Reduced from 4
@@ -528,19 +546,46 @@ class _HomePageState extends State<HomePage>
                                               Container(
                                                 width: isSmallScreen ? 30 : 38,
                                                 height: isSmallScreen ? 30 : 38,
-                                                decoration: const BoxDecoration(
+                                                decoration: BoxDecoration(
                                                   shape: BoxShape.circle,
-                                                  gradient: LinearGradient(
-                                                    colors: [
-                                                      Color(0xFF2563EB),
-                                                      Color(0xFF1E40AF),
-                                                      Color(0xFF020617),
-                                                    ],
-                                                    stops: [0.0, 0.6, 1.0],
-                                                    begin:
-                                                        Alignment.bottomRight,
-                                                    end: Alignment.topLeft,
-                                                  ),
+                                                  gradient:
+                                                      context.isDark
+                                                          ? const LinearGradient(
+                                                            colors: [
+                                                              Color(0xFF38BDF8),
+                                                              Color(0xFF60A5FA),
+                                                              Color(0xFFBAE6FD),
+                                                            ],
+                                                            stops: [
+                                                              0.0,
+                                                              0.6,
+                                                              1.0,
+                                                            ],
+                                                            begin:
+                                                                Alignment
+                                                                    .bottomRight,
+                                                            end:
+                                                                Alignment
+                                                                    .topLeft,
+                                                          )
+                                                          : const LinearGradient(
+                                                            colors: [
+                                                              Color(0xFF2563EB),
+                                                              Color(0xFF1E40AF),
+                                                              Color(0xFF020617),
+                                                            ],
+                                                            stops: [
+                                                              0.0,
+                                                              0.6,
+                                                              1.0,
+                                                            ],
+                                                            begin:
+                                                                Alignment
+                                                                    .bottomRight,
+                                                            end:
+                                                                Alignment
+                                                                    .topLeft,
+                                                          ),
                                                 ),
                                                 child: Icon(
                                                   Icons.person,
@@ -589,7 +634,10 @@ class _HomePageState extends State<HomePage>
                                                     : isSmallScreen
                                                     ? 13
                                                     : 14,
-                                            color: Colors.black87,
+                                            color:
+                                                context.isDark
+                                                    ? Colors.white
+                                                    : Colors.black87,
                                           ),
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
@@ -603,7 +651,10 @@ class _HomePageState extends State<HomePage>
                                                     : isSmallScreen
                                                     ? 13
                                                     : 14,
-                                            color: Colors.black87,
+                                            color:
+                                                context.isDark
+                                                    ? Colors.white
+                                                    : Colors.black87,
                                           ),
                                         ),
                                         if (sale.safeEventDates.isNotEmpty) ...[
@@ -622,16 +673,16 @@ class _HomePageState extends State<HomePage>
                                                 colors: [
                                                   const Color(
                                                     0xFF4ADE80,
-                                                  ).withOpacity(0.25),
+                                                  ).withValues(alpha: 0.25),
                                                   const Color(
                                                     0xFF22C55E,
-                                                  ).withOpacity(0.21),
+                                                  ).withValues(alpha: 0.21),
                                                   const Color(
                                                     0xFFFB7185,
-                                                  ).withOpacity(0.21),
+                                                  ).withValues(alpha: 0.21),
                                                   const Color(
                                                     0xFFF43F5E,
-                                                  ).withOpacity(0.25),
+                                                  ).withValues(alpha: 0.25),
                                                 ],
                                                 stops: [
                                                   0.0,
@@ -645,8 +696,8 @@ class _HomePageState extends State<HomePage>
                                                     12 * scale,
                                                   ),
                                               border: Border.all(
-                                                color: Colors.white.withOpacity(
-                                                  0.18,
+                                                color: Colors.white.withValues(
+                                                  alpha: 0.18,
                                                 ),
                                                 width: 1.2,
                                               ),
@@ -654,7 +705,7 @@ class _HomePageState extends State<HomePage>
                                                 BoxShadow(
                                                   color: const Color(
                                                     0xFF16A34A,
-                                                  ).withOpacity(0.12),
+                                                  ).withValues(alpha: 0.12),
                                                   blurRadius: 14,
                                                   spreadRadius: 1,
                                                   offset: const Offset(0, 6),
@@ -678,16 +729,24 @@ class _HomePageState extends State<HomePage>
                                                         colors: [
                                                           const Color(
                                                             0xFF34D399,
-                                                          ).withOpacity(0.85),
+                                                          ).withValues(
+                                                            alpha: 0.85,
+                                                          ),
                                                           const Color(
                                                             0xFF16A34A,
-                                                          ).withOpacity(0.85),
+                                                          ).withValues(
+                                                            alpha: 0.85,
+                                                          ),
                                                           const Color(
                                                             0xFFFB7185,
-                                                          ).withOpacity(0.85),
+                                                          ).withValues(
+                                                            alpha: 0.85,
+                                                          ),
                                                           const Color(
                                                             0xFFE11D48,
-                                                          ).withOpacity(0.85),
+                                                          ).withValues(
+                                                            alpha: 0.85,
+                                                          ),
                                                         ],
                                                         stops: [
                                                           0.0,
@@ -702,14 +761,18 @@ class _HomePageState extends State<HomePage>
                                                           ),
                                                       border: Border.all(
                                                         color: Colors.white
-                                                            .withOpacity(0.18),
+                                                            .withValues(
+                                                              alpha: 0.18,
+                                                            ),
                                                         width: 1.2,
                                                       ),
                                                       boxShadow: [
                                                         BoxShadow(
                                                           color: const Color(
                                                             0xFF16A34A,
-                                                          ).withOpacity(0.12),
+                                                          ).withValues(
+                                                            alpha: 0.12,
+                                                          ),
                                                           blurRadius: 14,
                                                           spreadRadius: 1,
                                                           offset: const Offset(
@@ -781,12 +844,14 @@ class _HomePageState extends State<HomePage>
                                                                 gradient: LinearGradient(
                                                                   colors: [
                                                                     Colors.white
-                                                                        .withOpacity(
-                                                                          0.2,
+                                                                        .withValues(
+                                                                          alpha:
+                                                                              0.2,
                                                                         ),
                                                                     Colors.white
-                                                                        .withOpacity(
-                                                                          0.1,
+                                                                        .withValues(
+                                                                          alpha:
+                                                                              0.1,
                                                                         ),
                                                                   ],
                                                                 ),
@@ -797,15 +862,18 @@ class _HomePageState extends State<HomePage>
                                                                 border: Border.all(
                                                                   color:
                                                                       allCompleted
-                                                                          ? Colors.green.withOpacity(
-                                                                            0.9,
+                                                                          ? Colors.green.withValues(
+                                                                            alpha:
+                                                                                0.9,
                                                                           )
                                                                           : partiallyCompleted
-                                                                          ? Colors.orange.withOpacity(
-                                                                            0.9,
+                                                                          ? Colors.orange.withValues(
+                                                                            alpha:
+                                                                                0.9,
                                                                           )
-                                                                          : Colors.red.withOpacity(
-                                                                            0.8,
+                                                                          : Colors.red.withValues(
+                                                                            alpha:
+                                                                                0.8,
                                                                           ),
                                                                   width: 1.2,
                                                                 ),
@@ -813,8 +881,9 @@ class _HomePageState extends State<HomePage>
                                                                   BoxShadow(
                                                                     color: Colors
                                                                         .white
-                                                                        .withOpacity(
-                                                                          0.08,
+                                                                        .withValues(
+                                                                          alpha:
+                                                                              0.08,
                                                                         ),
                                                                     blurRadius:
                                                                         6,
@@ -1134,7 +1203,9 @@ class _HomePageState extends State<HomePage>
                                                       boxShadow: [
                                                         BoxShadow(
                                                           color: badgeColor
-                                                              .withOpacity(0.3),
+                                                              .withValues(
+                                                                alpha: 0.3,
+                                                              ),
                                                           blurRadius: 4,
                                                           offset: Offset(0, 2),
                                                         ),
@@ -1337,8 +1408,8 @@ class _HomePageState extends State<HomePage>
                                                             BoxShadow(
                                                               color: Color(
                                                                 0xFF25D366,
-                                                              ).withOpacity(
-                                                                0.3,
+                                                              ).withValues(
+                                                                alpha: 0.3,
                                                               ),
                                                               blurRadius: 6,
                                                               offset: Offset(
@@ -1387,69 +1458,71 @@ class _HomePageState extends State<HomePage>
                                     ),
                                   ),
                                   if (!isVerySmallScreen) ...[
-                                    // SaleOptionsMenu - ultra compact
-                                    _isUserDataLoaded
-                                        ? SizedBox(
-                                          width:
-                                              24, // Minimal width for 3-dot menu
-                                          child: SaleOptionsMenu(
-                                            sale: sale,
-                                            originalIndex: originalIndex,
-                                            box: box,
-                                            isSmallScreen: isSmallScreen,
-                                            invoiceNumber:
-                                                invoiceNumber.toString(),
-                                            currentUserName: _currentUserName,
-                                            currentUserPhone: _currentUserPhone,
-                                            currentUserEmail: _currentUserEmail,
-                                            parentContext: context,
-                                          ),
-                                        )
-                                        : SizedBox(
-                                          width: 24,
-                                          height: 24,
-                                          child: Center(
-                                            child: SizedBox(
-                                              width: 12,
-                                              height: 12,
-                                              child: CircularProgressIndicator(
-                                                strokeWidth: 2,
+                                    // SaleOptionsMenu with proper user data - reduced width
+                                    SizedBox(
+                                      width:
+                                          28, // Reduced width for the menu icon
+                                      child:
+                                          _isUserDataLoaded
+                                              ? SaleOptionsMenu(
+                                                sale: sale,
+                                                originalIndex: originalIndex,
+                                                box: box,
+                                                isSmallScreen: isSmallScreen,
+                                                invoiceNumber:
+                                                    invoiceNumber.toString(),
+                                                currentUserName:
+                                                    _currentUserName,
+                                                currentUserPhone:
+                                                    _currentUserPhone,
+                                                currentUserEmail:
+                                                    _currentUserEmail,
+                                                parentContext: context,
+                                              )
+                                              : Center(
+                                                child: SizedBox(
+                                                  width: 16,
+                                                  height: 16,
+                                                  child:
+                                                      CircularProgressIndicator(
+                                                        strokeWidth: 2,
+                                                      ),
+                                                ),
                                               ),
-                                            ),
-                                          ),
-                                        ),
+                                    ),
                                   ] else ...[
-                                    // For very small screens - even more compact
-                                    _isUserDataLoaded
-                                        ? SizedBox(
-                                          width:
-                                              16, // Ultra minimal for small screens
-                                          child: SaleOptionsMenu(
-                                            sale: sale,
-                                            originalIndex: originalIndex,
-                                            box: box,
-                                            isSmallScreen: true,
-                                            invoiceNumber:
-                                                invoiceNumber.toString(),
-                                            currentUserName: _currentUserName,
-                                            currentUserPhone: _currentUserPhone,
-                                            currentUserEmail: _currentUserEmail,
-                                            parentContext: context,
-                                          ),
-                                        )
-                                        : SizedBox(
-                                          width: 20,
-                                          height: 20,
-                                          child: Center(
-                                            child: SizedBox(
-                                              width: 10,
-                                              height: 10,
-                                              child: CircularProgressIndicator(
-                                                strokeWidth: 1.5,
+                                    // For very small screens - even smaller width
+                                    SizedBox(
+                                      width:
+                                          28, // Even smaller for very small screens
+                                      child:
+                                          _isUserDataLoaded
+                                              ? SaleOptionsMenu(
+                                                sale: sale,
+                                                originalIndex: originalIndex,
+                                                box: box,
+                                                isSmallScreen: true,
+                                                invoiceNumber:
+                                                    invoiceNumber.toString(),
+                                                currentUserName:
+                                                    _currentUserName,
+                                                currentUserPhone:
+                                                    _currentUserPhone,
+                                                currentUserEmail:
+                                                    _currentUserEmail,
+                                                parentContext: context,
+                                              )
+                                              : Center(
+                                                child: SizedBox(
+                                                  width: 12,
+                                                  height: 12,
+                                                  child:
+                                                      CircularProgressIndicator(
+                                                        strokeWidth: 1.5,
+                                                      ),
+                                                ),
                                               ),
-                                            ),
-                                          ),
-                                        ),
+                                    ),
                                   ],
                                 ],
                               ),
@@ -1470,7 +1543,7 @@ class _HomePageState extends State<HomePage>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Stack(
         children: [
           // 🔥 BLOCK TOUCHES WHEN SENDING
@@ -1479,7 +1552,7 @@ class _HomePageState extends State<HomePage>
           // 🔥 OPTIONAL LOADING OVERLAY
           if (_isSendingReminder)
             Container(
-              color: Colors.black.withOpacity(0.15),
+              color: Colors.black.withValues(alpha: 0.15),
               child: const Center(child: CircularProgressIndicator()),
             ),
         ],

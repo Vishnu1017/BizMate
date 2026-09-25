@@ -4,6 +4,7 @@ import 'package:flutter_pdfview/flutter_pdfview.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../../models/rental_sale_model.dart';
 import '../../widgets/app_snackbar.dart';
+import '../../widgets/app_theme_toggle.dart';
 
 class RentalPdfPreviewScreen extends StatelessWidget {
   final String filePath;
@@ -53,6 +54,12 @@ class RentalPdfPreviewScreen extends StatelessWidget {
             style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
           ),
           centerTitle: true,
+          actions: const [
+            Padding(
+              padding: EdgeInsets.only(right: 16),
+              child: AppThemeToggle(),
+            ),
+          ],
         ),
       ),
 

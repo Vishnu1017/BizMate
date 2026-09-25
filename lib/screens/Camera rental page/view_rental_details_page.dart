@@ -9,6 +9,7 @@ import 'package:bizmate/screens/Camera%20rental%20page/rental_cart_preview_page.
 import 'package:bizmate/services/rental_cart.dart';
 import 'package:bizmate/widgets/ModernCalendar.dart' show ModernCalendar;
 import 'package:bizmate/widgets/app_snackbar.dart' show AppSnackBar;
+import 'package:bizmate/widgets/app_theme_toggle.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:intl/intl.dart';
@@ -145,7 +146,7 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.orange.withOpacity(0.5),
+                    color: Colors.orange.withValues(alpha: 0.5),
                     blurRadius: 12,
                   ),
                 ],
@@ -296,22 +297,39 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
             borderRadius: BorderRadius.circular(20),
           ),
           child: ModernCalendar(
-            selectedDate: isFrom ? fromDate : toDate,
-            startDate: isFrom ? null : fromDate,
-            endDate: isFrom ? toDate : null,
+            selectedDate:
+                isFrom
+                    ? (fromDate ?? DateTime.now())
+                    : (toDate ?? fromDate ?? DateTime.now()),
+
             onDateSelected: (date) {
-              setState(() {
-                if (isFrom) {
+              if (isFrom) {
+                setState(() {
                   fromDate = date;
+
+                  // Clear To Date if it is before the new From Date.
                   if (toDate != null && toDate!.isBefore(fromDate!)) {
                     toDate = null;
+                    selectedToTime = null;
                   }
-                } else {
-                  toDate = date;
+                });
+              } else {
+                // Prevent selecting a To Date before From Date.
+                if (fromDate != null && date.isBefore(fromDate!)) {
+                  AppSnackBar.showWarning(
+                    context,
+                    message: "To Date cannot be before From Date",
+                    duration: const Duration(seconds: 2),
+                  );
+                  return;
                 }
-                calculateTotal();
-              });
 
+                setState(() {
+                  toDate = date;
+                });
+              }
+
+              calculateTotal();
               Navigator.pop(context);
             },
           ),
@@ -739,7 +757,7 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
                           borderRadius: BorderRadius.circular(radius),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.blue.withOpacity(0.3),
+                              color: Colors.blue.withValues(alpha: 0.3),
                               blurRadius: 10,
                               offset: const Offset(0, 4),
                             ),
@@ -826,7 +844,7 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.orange.withOpacity(0.18),
+                              color: Colors.orange.withValues(alpha: 0.18),
                               blurRadius: 8,
                               offset: const Offset(0, 3),
                             ),
@@ -913,7 +931,7 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.08),
+                            color: Colors.black.withValues(alpha: 0.08),
                             blurRadius: 8,
                             offset: const Offset(0, 3),
                           ),
@@ -977,15 +995,24 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
     final bool isWide = size.width >= 900;
 
     return Scaffold(
-      backgroundColor: Colors.grey.shade100,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
             expandedHeight: isTablet ? 340 : 300,
             floating: false,
             pinned: true,
-            backgroundColor: Colors.white,
+            backgroundColor:
+                Theme.of(context).brightness == Brightness.dark
+                    ? const Color(0xFF1E293B)
+                    : Colors.white,
             elevation: 0,
+            actions: const [
+              Padding(
+                padding: EdgeInsets.only(right: 16),
+                child: AppThemeToggle(),
+              ),
+            ],
             leading: IconButton(
               onPressed: () => Navigator.pop(context),
               icon: Container(
@@ -996,7 +1023,7 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
                   color: Colors.white,
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
+                      color: Colors.black.withValues(alpha: 0.1),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
@@ -1046,7 +1073,7 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
                         begin: Alignment.bottomCenter,
                         end: Alignment.topCenter,
                         colors: [
-                          Colors.black.withOpacity(0.6),
+                          Colors.black.withValues(alpha: 0.6),
                           Colors.transparent,
                         ],
                       ),
@@ -1142,8 +1169,8 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
                                             blurRadius: 8,
                                           ),
                                           BoxShadow(
-                                            color: Colors.black.withOpacity(
-                                              0.30,
+                                            color: Colors.black.withValues(
+                                              alpha: 0.30,
                                             ),
                                             offset: const Offset(1, 3),
                                             blurRadius: 8,
@@ -1168,9 +1195,10 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
                                       right: -6,
                                       child: ValueListenableBuilder<int>(
                                         valueListenable: _cartCount,
-                                        builder: (_, count, __) {
-                                          if (count == 0)
+                                        builder: (_, count, _) {
+                                          if (count == 0) {
                                             return const SizedBox.shrink();
+                                          }
 
                                           return Container(
                                             padding: const EdgeInsets.all(6),

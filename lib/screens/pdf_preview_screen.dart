@@ -1,4 +1,5 @@
 import 'package:bizmate/widgets/app_snackbar.dart' show AppSnackBar;
+import 'package:bizmate/widgets/app_theme_toggle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_pdfview/flutter_pdfview.dart';
@@ -63,6 +64,12 @@ class PdfPreviewScreen extends StatelessWidget {
             ),
           ),
           centerTitle: true,
+          actions: const [
+            Padding(
+              padding: EdgeInsets.only(right: 16),
+              child: AppThemeToggle(),
+            ),
+          ],
         ),
       ),
 

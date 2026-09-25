@@ -1,22 +1,16 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'package:intl/intl.dart';
 
 class ModernCalendar extends StatefulWidget {
-  final DateTime? selectedDate;
-  final Function(DateTime) onDateSelected;
-  final DateTime? startDate;
-  final DateTime? endDate;
-  final List<DateTime> selectedDates;
+  final DateTime selectedDate;
+  final ValueChanged<DateTime> onDateSelected;
 
   const ModernCalendar({
     super.key,
-    this.selectedDate,
-    this.selectedDates = const [],
+    required this.selectedDate,
     required this.onDateSelected,
-    this.startDate,
-    this.endDate,
   });
 
   @override
@@ -24,32 +18,30 @@ class ModernCalendar extends StatefulWidget {
 }
 
 class _ModernCalendarState extends State<ModernCalendar>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late DateTime _currentMonth;
   late DateTime _selectedDate;
-  double scale = 1.0;
+
+  double _dragOffset = 0.0;
   bool _hasUserSelectedDate = false;
 
   late AnimationController _swipeController;
   late Animation<Offset> _slideAnimation;
   late Animation<double> _fadeAnimation;
-  late Animation<double> _scaleAnimation;
 
-  double _dragOffset = 0.0;
-  bool _isDragging = false;
-  int _swipeDirection = 0;
+  final List<String> _weekdays = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
-  final List<String> _weekdays = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
+  double get scale => 1.0;
 
   @override
   void initState() {
     super.initState();
-    _selectedDate = widget.selectedDate ?? DateTime.now();
+    _selectedDate = widget.selectedDate;
     _currentMonth = DateTime(_selectedDate.year, _selectedDate.month);
 
     _swipeController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 400),
+      duration: const Duration(milliseconds: 300),
     );
 
     _slideAnimation = Tween<Offset>(
@@ -59,12 +51,8 @@ class _ModernCalendarState extends State<ModernCalendar>
       CurvedAnimation(parent: _swipeController, curve: Curves.easeOutCubic),
     );
 
-    _fadeAnimation = Tween<double>(begin: 1.0, end: 1.0).animate(
-      CurvedAnimation(parent: _swipeController, curve: Curves.easeOutCubic),
-    );
-
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 1.0).animate(
-      CurvedAnimation(parent: _swipeController, curve: Curves.easeOutCubic),
+    _fadeAnimation = Tween<double>(begin: 1.0, end: 0.0).animate(
+      CurvedAnimation(parent: _swipeController, curve: Curves.easeOut),
     );
   }
 
@@ -75,114 +63,87 @@ class _ModernCalendarState extends State<ModernCalendar>
   }
 
   void _previousMonth() {
-    setState(() {
-      _swipeDirection = -1;
-      _currentMonth = DateTime(_currentMonth.year, _currentMonth.month - 1);
-      _triggerSwipeAnimation();
-    });
+    _animateMonthChange(isNext: false);
   }
 
   void _nextMonth() {
-    setState(() {
-      _swipeDirection = 1;
-      _currentMonth = DateTime(_currentMonth.year, _currentMonth.month + 1);
-      _triggerSwipeAnimation();
-    });
+    _animateMonthChange(isNext: true);
   }
 
-  void _triggerSwipeAnimation() {
-    _swipeController.reset();
-
-    final offsetX = _swipeDirection * 0.4;
+  void _animateMonthChange({required bool isNext}) {
     _slideAnimation = Tween<Offset>(
-      begin: Offset(offsetX, 0),
-      end: Offset.zero,
+      begin: Offset.zero,
+      end: Offset(isNext ? -1.0 : 1.0, 0.0),
     ).animate(
       CurvedAnimation(parent: _swipeController, curve: Curves.easeOutCubic),
     );
 
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _swipeController, curve: Curves.easeOutCubic),
-    );
+    _swipeController.forward().then((_) {
+      setState(() {
+        _currentMonth = DateTime(
+          _currentMonth.year,
+          isNext ? _currentMonth.month + 1 : _currentMonth.month - 1,
+        );
+      });
 
-    _scaleAnimation = Tween<double>(begin: 0.92, end: 1.0).animate(
-      CurvedAnimation(parent: _swipeController, curve: Curves.easeOutCubic),
-    );
+      _slideAnimation = Tween<Offset>(
+        begin: Offset(isNext ? 1.0 : -1.0, 0.0),
+        end: Offset.zero,
+      ).animate(
+        CurvedAnimation(parent: _swipeController, curve: Curves.easeOutCubic),
+      );
 
-    _swipeController.forward();
+      _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+        CurvedAnimation(parent: _swipeController, curve: Curves.easeIn),
+      );
+
+      _swipeController.reverse();
+    });
   }
 
-  List<DateTime> _getDaysInMonth() {
-    final first = DateTime(_currentMonth.year, _currentMonth.month, 1);
-    final last = DateTime(_currentMonth.year, _currentMonth.month + 1, 0);
-
-    final days = <DateTime>[];
-
-    int startingWeekday = first.weekday;
-
-    for (int i = 1; i < startingWeekday; i++) {
-      days.add(first.subtract(Duration(days: startingWeekday - i)));
-    }
-
-    for (int i = 0; i < last.day; i++) {
-      days.add(DateTime(_currentMonth.year, _currentMonth.month, i + 1));
-    }
-
-    while (days.length % 7 != 0) {
-      days.add(days.last.add(const Duration(days: 1)));
-    }
-
-    return days;
+  bool _isSameDay(DateTime a, DateTime b) {
+    return a.year == b.year && a.month == b.month && a.day == b.day;
   }
 
-  bool _isToday(DateTime d) =>
-      d.year == DateTime.now().year &&
-      d.month == DateTime.now().month &&
-      d.day == DateTime.now().day;
+  bool _isSelected(DateTime date) {
+    return _isSameDay(_selectedDate, date);
+  }
 
-  bool _isSelected(DateTime d) =>
-      d.year == _selectedDate.year &&
-      d.month == _selectedDate.month &&
-      d.day == _selectedDate.day;
+  bool _isCurrentMonth(DateTime date) {
+    return date.month == _currentMonth.month && date.year == _currentMonth.year;
+  }
 
-  bool _isCurrentMonth(DateTime d) =>
-      d.month == _currentMonth.month && d.year == _currentMonth.year;
+  List<DateTime> _getDaysForMonth() {
+    final firstDayOfMonth = DateTime(
+      _currentMonth.year,
+      _currentMonth.month,
+      1,
+    );
+    final daysBefore = firstDayOfMonth.weekday % 7;
 
-  bool _isInRange(DateTime d) {
-    if (widget.startDate == null || widget.endDate == null) return false;
+    final startDate = firstDayOfMonth.subtract(Duration(days: daysBefore));
 
-    return (d.isAfter(widget.startDate!) ||
-            d.isAtSameMomentAs(widget.startDate!)) &&
-        (d.isBefore(widget.endDate!) || d.isAtSameMomentAs(widget.endDate!));
+    return List.generate(42, (index) => startDate.add(Duration(days: index)));
   }
 
   @override
   Widget build(BuildContext context) {
-    final days = _getDaysInMonth();
     final width = MediaQuery.of(context).size.width;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardBg = isDark ? const Color(0xFF1E293B) : Colors.white;
+    final borderColor = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
 
     return GestureDetector(
-      onHorizontalDragStart: (details) {
-        _isDragging = true;
-        _dragOffset = 0.0;
-      },
       onHorizontalDragUpdate: (details) {
-        if (!_isDragging) return;
-        _dragOffset += details.delta.dx;
-        setState(() {});
+        setState(() {
+          _dragOffset += details.primaryDelta!;
+        });
       },
       onHorizontalDragEnd: (details) {
-        _isDragging = false;
-        if (_dragOffset.abs() > 50) {
-          if (_dragOffset > 0) {
-            _previousMonth();
-          } else {
-            _nextMonth();
-          }
-        } else {
-          setState(() {
-            _dragOffset = 0.0;
-          });
+        if (_dragOffset > 50) {
+          _previousMonth();
+        } else if (_dragOffset < -50) {
+          _nextMonth();
         }
         _dragOffset = 0.0;
       },
@@ -193,11 +154,14 @@ class _ModernCalendarState extends State<ModernCalendar>
           child: Container(
             width: width * 0.9,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.85),
+              color: isDark
+                  ? const Color(0xFF1E293B).withValues(alpha: 0.95)
+                  : Colors.white.withValues(alpha: 0.9),
               borderRadius: BorderRadius.circular(22),
+              border: Border.all(color: borderColor, width: 1),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.07),
+                  color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.07),
                   blurRadius: 20,
                   offset: const Offset(0, 6),
                 ),
@@ -206,8 +170,8 @@ class _ModernCalendarState extends State<ModernCalendar>
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                _buildHeader(width),
-                _buildWeekdays(width),
+                _buildHeader(context, width),
+                _buildWeekdays(context, width),
                 AnimatedBuilder(
                   animation: _swipeController,
                   builder: (context, child) {
@@ -218,112 +182,79 @@ class _ModernCalendarState extends State<ModernCalendar>
                     if (_swipeController.isAnimating) {
                       offsetX = _slideAnimation.value.dx;
                       opacity = _fadeAnimation.value;
-                      scaleValue = _scaleAnimation.value;
-                    } else if (_isDragging) {
-                      offsetX = (_dragOffset / 300).clamp(-0.5, 0.5);
-                      opacity = 1.0 - (offsetX.abs() * 0.3);
-                      scaleValue = 1.0 - (offsetX.abs() * 0.05);
+                      scaleValue = 0.95 + (0.05 * opacity);
                     }
 
-                    // Clamp values to safe ranges
-                    offsetX = offsetX.clamp(-0.5, 0.5);
-                    opacity = opacity.clamp(0.0, 1.0);
-                    scaleValue = scaleValue.clamp(0.5, 1.0);
-
                     return Transform.translate(
-                      offset: Offset(offsetX * width, 0),
-                      child: Opacity(
-                        opacity: opacity,
-                        child: Transform.scale(scale: scaleValue, child: child),
+                      offset: Offset(offsetX * 50, 0),
+                      child: Transform.scale(
+                        scale: scaleValue,
+                        child: Opacity(
+                          opacity: opacity.clamp(0.0, 1.0),
+                          child: _buildGrid(context, _getDaysForMonth()),
+                        ),
                       ),
                     );
                   },
-                  child: _buildGrid(days),
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 16,
                     vertical: 14,
                   ),
-                  child: Column(
-                    children: [
-                      Text(
-                        "Selected: ${DateFormat('MMM dd, yyyy').format(_selectedDate)}",
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          color: Colors.grey.shade700,
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 250),
+                    transitionBuilder: (child, animation) {
+                      final curved = CurvedAnimation(
+                        parent: animation,
+                        curve: Curves.easeOutCubic,
+                      );
+                      return ScaleTransition(
+                        scale: Tween<double>(begin: 0.5, end: 1.0).animate(curved),
+                        child: FadeTransition(
+                          opacity: Tween<double>(begin: 0.0, end: 1.0).animate(curved),
+                          child: child,
                         ),
-                      ),
-                      const SizedBox(height: 14),
-                      AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 300),
-                        switchInCurve: Curves.easeOutCubic,
-                        switchOutCurve: Curves.easeInCubic,
-                        transitionBuilder: (child, animation) {
-                          final curved = CurvedAnimation(
-                            parent: animation,
-                            curve: Curves.easeOutCubic,
-                          );
-
-                          final scale = Tween<double>(
-                            begin: 0.5,
-                            end: 1.0,
-                          ).animate(curved);
-
-                          final fade = Tween<double>(
-                            begin: 0.0,
-                            end: 1.0,
-                          ).animate(curved);
-
-                          return ScaleTransition(
-                            scale: scale,
-                            child: FadeTransition(opacity: fade, child: child),
-                          );
-                        },
-                        child:
-                            _hasUserSelectedDate
-                                ? SizedBox(
-                                  key: const ValueKey("save_btn"),
-                                  width: double.infinity,
-                                  height: 48,
-                                  child: ElevatedButton(
-                                    onPressed: () {
-                                      widget.onDateSelected(_selectedDate);
-                                    },
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.blue.shade600,
-                                      foregroundColor: Colors.white,
-                                      elevation: 0,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                    ),
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: const [
-                                        HugeIcon(
-                                          icon:
-                                              HugeIcons
-                                                  .strokeRoundedTickDouble03,
-                                          size: 18,
-                                          color: Colors.white,
-                                        ),
-                                        SizedBox(width: 6),
-                                        Text(
-                                          "Save Date",
-                                          style: TextStyle(
-                                            fontSize: 15,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                      ],
+                      );
+                    },
+                    child: _hasUserSelectedDate
+                        ? SizedBox(
+                            key: const ValueKey("save_btn"),
+                            width: double.infinity,
+                            height: 48,
+                            child: ElevatedButton(
+                              onPressed: () {
+                                widget.onDateSelected(_selectedDate);
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.blue.shade600,
+                                foregroundColor: Colors.white,
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: const [
+                                  HugeIcon(
+                                    icon: HugeIcons.strokeRoundedTickDouble03,
+                                    size: 18,
+                                    color: Colors.white,
+                                  ),
+                                  SizedBox(width: 6),
+                                  Text(
+                                    "Save Date",
+                                    style: TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w600,
                                     ),
                                   ),
-                                )
-                                : const SizedBox.shrink(),
-                      ),
-                    ],
+                                ],
+                              ),
+                            ),
+                          )
+                        : const SizedBox.shrink(),
                   ),
                 ),
               ],
@@ -334,19 +265,17 @@ class _ModernCalendarState extends State<ModernCalendar>
     );
   }
 
-  Widget _buildHeader(double width) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.blue.shade200, Colors.purple.shade200],
-        ),
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(22)),
-      ),
+  Widget _buildHeader(BuildContext context, double width) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final titleColor = isDark ? const Color(0xFFF1F5F9) : const Color(0xFF1A1A1A);
+    final subtitleColor = isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          _navButton(Icons.chevron_left_rounded, _previousMonth),
+          _navButton(context, Icons.chevron_left_rounded, _previousMonth),
           Column(
             children: [
               Text(
@@ -354,6 +283,7 @@ class _ModernCalendarState extends State<ModernCalendar>
                 style: TextStyle(
                   fontSize: width * 0.045,
                   fontWeight: FontWeight.bold,
+                  color: titleColor,
                 ),
               ),
               const SizedBox(height: 2),
@@ -361,42 +291,45 @@ class _ModernCalendarState extends State<ModernCalendar>
                 "Select a date",
                 style: TextStyle(
                   fontSize: width * 0.03,
-                  color: Colors.black.withOpacity(0.6),
+                  color: subtitleColor,
                 ),
               ),
             ],
           ),
-          _navButton(Icons.chevron_right_rounded, _nextMonth),
+          _navButton(context, Icons.chevron_right_rounded, _nextMonth),
         ],
       ),
     );
   }
 
-  Widget _buildWeekdays(double width) {
+  Widget _buildWeekdays(BuildContext context, double width) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final weekdayColor = isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       child: Row(
-        children:
-            _weekdays
-                .map(
-                  (day) => Expanded(
-                    child: Center(
-                      child: Text(
-                        day,
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: width * 0.03,
-                        ),
-                      ),
+        children: _weekdays
+            .map(
+              (day) => Expanded(
+                child: Center(
+                  child: Text(
+                    day,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: width * 0.03,
+                      color: weekdayColor,
                     ),
                   ),
-                )
-                .toList(),
+                ),
+              ),
+            )
+            .toList(),
       ),
     );
   }
 
-  Widget _buildGrid(List<DateTime> days) {
+  Widget _buildGrid(BuildContext context, List<DateTime> days) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12),
       child: GridView.builder(
@@ -414,39 +347,36 @@ class _ModernCalendarState extends State<ModernCalendar>
 
           return InkWell(
             borderRadius: BorderRadius.circular(12),
-            onTap:
-                isCurrentMonth
-                    ? () {
-                      setState(() {
-                        _selectedDate = date;
-                        _hasUserSelectedDate = true;
-                      });
-                    }
-                    : null,
+            onTap: isCurrentMonth
+                ? () {
+                    setState(() {
+                      _selectedDate = date;
+                      _hasUserSelectedDate = true;
+                    });
+                  }
+                : null,
             child: Container(
               margin: EdgeInsets.all(2 * scale),
               decoration: BoxDecoration(
-                color: _getDateColor(date, isCurrentMonth),
+                color: _getDateColor(context, date, isCurrentMonth),
                 borderRadius: BorderRadius.circular(10),
-                gradient:
-                    isSelected
-                        ? LinearGradient(
-                          colors: [
-                            Colors.blue.shade600,
-                            Colors.purple.shade600,
-                          ],
-                        )
-                        : null,
-                boxShadow:
-                    isSelected
-                        ? [
-                          BoxShadow(
-                            color: Colors.blue.shade300.withOpacity(0.3),
-                            blurRadius: 6.0,
-                            offset: const Offset(0, 2),
-                          ),
-                        ]
-                        : null,
+                gradient: isSelected
+                    ? LinearGradient(
+                        colors: [
+                          Colors.blue.shade600,
+                          Colors.purple.shade600,
+                        ],
+                      )
+                    : null,
+                boxShadow: isSelected
+                    ? [
+                        BoxShadow(
+                          color: Colors.blue.shade300.withValues(alpha: 0.3),
+                          blurRadius: 6.0,
+                          offset: const Offset(0, 2),
+                        ),
+                      ]
+                    : null,
               ),
               child: Center(
                 child: AnimatedDefaultTextStyle(
@@ -455,7 +385,7 @@ class _ModernCalendarState extends State<ModernCalendar>
                   style: TextStyle(
                     fontSize: 14 * scale,
                     fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                    color: _getTextColor(date, isCurrentMonth),
+                    color: _getTextColor(context, date, isCurrentMonth),
                   ),
                   child: Text(date.day.toString()),
                 ),
@@ -467,37 +397,42 @@ class _ModernCalendarState extends State<ModernCalendar>
     );
   }
 
-  Color? _getDateColor(DateTime date, bool isCurrentMonth) {
+  Color? _getDateColor(BuildContext context, DateTime date, bool isCurrentMonth) {
     if (_isSelected(date)) return null;
-    if (_isInRange(date)) return Colors.blue.shade100.withOpacity(0.5);
-    if (!isCurrentMonth) return Colors.grey.shade50;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    if (!isCurrentMonth) return isDark ? const Color(0xFF0F172A).withValues(alpha: 0.4) : Colors.grey.shade50;
     return null;
   }
 
-  Color _getTextColor(DateTime date, bool isCurrentMonth) {
+  Color _getTextColor(BuildContext context, DateTime date, bool isCurrentMonth) {
     if (_isSelected(date)) return Colors.white;
-    if (!isCurrentMonth) return Colors.grey.shade400;
-    return Colors.black87;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    if (!isCurrentMonth) return isDark ? const Color(0xFF475569) : Colors.grey.shade400;
+    return isDark ? const Color(0xFFF1F5F9) : Colors.black87;
   }
 
-  Widget _navButton(IconData icon, VoidCallback onTap) {
+  Widget _navButton(BuildContext context, IconData icon, VoidCallback onTap) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final btnBg = isDark ? const Color(0xFF334155) : Colors.white;
+    final iconColor = isDark ? const Color(0xFFF1F5F9) : Colors.black87;
+
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
       child: Container(
         padding: const EdgeInsets.all(6),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: btnBg,
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.1),
               blurRadius: 6.0,
               offset: const Offset(0, 2),
             ),
           ],
         ),
-        child: Icon(icon, size: 20),
+        child: Icon(icon, size: 20, color: iconColor),
       ),
     );
   }

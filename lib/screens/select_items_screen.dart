@@ -1,6 +1,7 @@
 // lib/screens/select_items_screen.dart
 import 'dart:ui';
 import 'package:bizmate/models/product.dart';
+import 'package:bizmate/utils/app_theme.dart';
 import 'package:bizmate/widgets/app_snackbar.dart' show AppSnackBar;
 import 'package:bizmate/widgets/discount_tax_widget.dart';
 import 'package:flutter/material.dart';
@@ -341,7 +342,7 @@ class _SelectItemsScreenState extends State<SelectItemsScreen> {
               filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
               child: Container(
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: context.appColors.card,
                   borderRadius: const BorderRadius.vertical(
                     top: Radius.circular(26),
                   ),
@@ -354,18 +355,30 @@ class _SelectItemsScreenState extends State<SelectItemsScreen> {
                         horizontal: rs(20),
                         vertical: rs(16),
                       ),
-                      decoration: const BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [
-                            Color(0xFF2563EB),
-                            Color(0xFF1E40AF),
-                            Color(0xFF020617),
-                          ],
-                          stops: [0.0, 0.6, 1.0],
-                          begin: Alignment.bottomRight,
-                          end: Alignment.topLeft,
-                        ),
-                        borderRadius: BorderRadius.vertical(
+                      decoration: BoxDecoration(
+                        gradient:
+                            context.isDark
+                                ? const LinearGradient(
+                                  colors: [
+                                    Color(0xFF38BDF8),
+                                    Color(0xFF60A5FA),
+                                    Color(0xFFBAE6FD),
+                                  ],
+                                  stops: [0.0, 0.6, 1.0],
+                                  begin: Alignment.bottomRight,
+                                  end: Alignment.topLeft,
+                                )
+                                : const LinearGradient(
+                                  colors: [
+                                    Color(0xFF2563EB),
+                                    Color(0xFF1E40AF),
+                                    Color(0xFF020617),
+                                  ],
+                                  stops: [0.0, 0.6, 1.0],
+                                  begin: Alignment.bottomRight,
+                                  end: Alignment.topLeft,
+                                ),
+                        borderRadius: const BorderRadius.vertical(
                           top: Radius.circular(26),
                         ),
                       ),
@@ -435,20 +448,34 @@ class _SelectItemsScreenState extends State<SelectItemsScreen> {
                               },
                               child: Container(
                                 decoration: BoxDecoration(
-                                  gradient: const LinearGradient(
-                                    colors: [
-                                      Color(0xFF2563EB),
-                                      Color(0xFF1E40AF),
-                                      Color(0xFF020617),
-                                    ],
-                                    stops: [0.0, 0.6, 1.0],
-                                    begin: Alignment.bottomRight,
-                                    end: Alignment.topLeft,
-                                  ),
+                                  gradient:
+                                      context.isDark
+                                          ? const LinearGradient(
+                                            colors: [
+                                              Color(0xFF38BDF8),
+                                              Color(0xFF60A5FA),
+                                              Color(0xFFBAE6FD),
+                                            ],
+                                            stops: [0.0, 0.6, 1.0],
+                                            begin: Alignment.bottomRight,
+                                            end: Alignment.topLeft,
+                                          )
+                                          : const LinearGradient(
+                                            colors: [
+                                              Color(0xFF2563EB),
+                                              Color(0xFF1E40AF),
+                                              Color(0xFF020617),
+                                            ],
+                                            stops: [0.0, 0.6, 1.0],
+                                            begin: Alignment.bottomRight,
+                                            end: Alignment.topLeft,
+                                          ),
                                   borderRadius: BorderRadius.circular(rs(14)),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withOpacity(0.09),
+                                      color: Colors.black.withValues(
+                                        alpha: 0.09,
+                                      ),
                                       blurRadius: rs(8),
                                       offset: Offset(0, rs(4)),
                                     ),
@@ -530,7 +557,7 @@ class _SelectItemsScreenState extends State<SelectItemsScreen> {
                       padding: EdgeInsets.all(rs(16)),
                       decoration: BoxDecoration(
                         border: Border(
-                          top: BorderSide(color: Colors.grey.shade300),
+                          top: BorderSide(color: context.appColors.divider),
                         ),
                       ),
                       child: SizedBox(
@@ -544,7 +571,7 @@ class _SelectItemsScreenState extends State<SelectItemsScreen> {
                             "Add New Product",
                             style: TextStyle(
                               fontSize: rs(14),
-                              color: Color(0xFF1E40AF),
+                              color: context.appColors.primary,
                             ),
                           ),
                           style: OutlinedButton.styleFrom(
@@ -574,14 +601,18 @@ class _SelectItemsScreenState extends State<SelectItemsScreen> {
     return InputDecoration(
       labelText: label,
       labelStyle: TextStyle(
-        color: Color(0xFF1E40AF),
+        color: context.appColors.primary,
         fontWeight: FontWeight.w500,
       ),
       hintText: "Enter $label",
-      hintStyle: TextStyle(color: Colors.grey.shade400),
-      prefixIcon: Icon(icon, color: Color(0xFF1E40AF), size: 20 * scale),
+      hintStyle: TextStyle(color: context.appColors.text2),
+      prefixIcon: Icon(
+        icon,
+        color: context.appColors.primary,
+        size: 20 * scale,
+      ),
       filled: true,
-      fillColor: Colors.white,
+      fillColor: context.appColors.inputFill,
       contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
@@ -593,7 +624,7 @@ class _SelectItemsScreenState extends State<SelectItemsScreen> {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Color(0xFF1E40AF), width: 2),
+        borderSide: BorderSide(color: context.appColors.primary, width: 2),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
@@ -611,9 +642,9 @@ class _SelectItemsScreenState extends State<SelectItemsScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.grey.shade50,
+        color: context.appColors.background,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(color: context.appColors.divider),
       ),
       child: Row(
         children: [
@@ -621,16 +652,16 @@ class _SelectItemsScreenState extends State<SelectItemsScreen> {
             width: 28 * scale,
             height: 28 * scale,
             decoration: BoxDecoration(
-              color: Color(0xFF1E40AF),
+              color: context.appColors.primary,
               shape: BoxShape.circle,
             ),
             child: Center(
               child: Text(
                 number.toString(),
-                style: TextStyle(
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
-                  fontSize: 12 * scale,
+                  fontSize: 12,
                 ),
               ),
             ),
@@ -645,14 +676,14 @@ class _SelectItemsScreenState extends State<SelectItemsScreen> {
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
                     fontSize: 12 * scale,
-                    color: Color(0xFF333333),
+                    color: context.appColors.text1,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   subtitle,
                   style: TextStyle(
-                    color: Colors.grey.shade600,
+                    color: context.appColors.text2,
                     fontSize: 10 * scale,
                   ),
                 ),
@@ -672,7 +703,10 @@ class _SelectItemsScreenState extends State<SelectItemsScreen> {
         children: [
           Text(
             label,
-            style: TextStyle(fontSize: 14 * scale, color: Colors.grey.shade600),
+            style: TextStyle(
+              fontSize: 14 * scale,
+              color: context.appColors.text2,
+            ),
           ),
           Text(
             value >= 0
@@ -681,7 +715,7 @@ class _SelectItemsScreenState extends State<SelectItemsScreen> {
             style: TextStyle(
               fontSize: 16 * scale,
               fontWeight: FontWeight.w600,
-              color: color ?? const Color(0xFF333333),
+              color: color ?? context.appColors.text1,
             ),
           ),
         ],
@@ -732,7 +766,7 @@ class _SelectItemsScreenState extends State<SelectItemsScreen> {
         return BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
           child: Dialog(
-            backgroundColor: Colors.white,
+            backgroundColor: context.appColors.card,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(24),
             ),
@@ -824,7 +858,7 @@ class _SelectItemsScreenState extends State<SelectItemsScreen> {
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
                         border: Border(
-                          top: BorderSide(color: Colors.grey.shade200),
+                          top: BorderSide(color: context.appColors.divider),
                         ),
                       ),
                       child: Row(
@@ -833,7 +867,7 @@ class _SelectItemsScreenState extends State<SelectItemsScreen> {
                           ElevatedButton(
                             onPressed: () => Navigator.pop(context),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Color(0xFF1E40AF),
+                              backgroundColor: context.appColors.primary,
                               padding: EdgeInsets.symmetric(
                                 horizontal: 20 * scale,
                                 vertical: 10 * scale,
@@ -881,7 +915,7 @@ class _SelectItemsScreenState extends State<SelectItemsScreen> {
         child: Stack(
           children: [
             Scaffold(
-              backgroundColor: const Color(0xFFF8FAFF),
+              backgroundColor: context.appColors.background,
               appBar: AppBar(
                 iconTheme: const IconThemeData(
                   color: Colors.white, // ← makes the back arrow white
@@ -898,16 +932,28 @@ class _SelectItemsScreenState extends State<SelectItemsScreen> {
                 toolbarHeight: 56 * scale,
                 flexibleSpace: Container(
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [
-                        Color(0xFF2563EB),
-                        Color(0xFF1E40AF),
-                        Color(0xFF020617),
-                      ],
-                      stops: [0.0, 0.6, 1.0],
-                      begin: Alignment.bottomRight,
-                      end: Alignment.topLeft,
-                    ),
+                    gradient:
+                        context.isDark
+                            ? const LinearGradient(
+                              colors: [
+                                Color(0xFF38BDF8),
+                                Color(0xFF60A5FA),
+                                Color(0xFFBAE6FD),
+                              ],
+                              stops: [0.0, 0.6, 1.0],
+                              begin: Alignment.bottomRight,
+                              end: Alignment.topLeft,
+                            )
+                            : const LinearGradient(
+                              colors: [
+                                Color(0xFF2563EB),
+                                Color(0xFF1E40AF),
+                                Color(0xFF020617),
+                              ],
+                              stops: [0.0, 0.6, 1.0],
+                              begin: Alignment.bottomRight,
+                              end: Alignment.topLeft,
+                            ),
                   ),
                 ),
                 actions: [
@@ -945,7 +991,7 @@ class _SelectItemsScreenState extends State<SelectItemsScreen> {
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(16),
                                 ),
-                                color: Colors.white,
+                                color: context.appColors.card,
                                 child: Padding(
                                   padding: EdgeInsets.all(16 * scale),
                                   child: Column(
@@ -958,16 +1004,32 @@ class _SelectItemsScreenState extends State<SelectItemsScreen> {
                                             width: 32 * scale,
                                             height: 32 * scale,
                                             decoration: BoxDecoration(
-                                              gradient: const LinearGradient(
-                                                colors: [
-                                                  Color(0xFF2563EB),
-                                                  Color(0xFF1E40AF),
-                                                  Color(0xFF020617),
-                                                ],
-                                                stops: [0.0, 0.6, 1.0],
-                                                begin: Alignment.bottomRight,
-                                                end: Alignment.topLeft,
-                                              ),
+                                              gradient:
+                                                  context.isDark
+                                                      ? const LinearGradient(
+                                                        colors: [
+                                                          Color(0xFF38BDF8),
+                                                          Color(0xFF60A5FA),
+                                                          Color(0xFFBAE6FD),
+                                                        ],
+                                                        stops: [0.0, 0.6, 1.0],
+                                                        begin:
+                                                            Alignment
+                                                                .bottomRight,
+                                                        end: Alignment.topLeft,
+                                                      )
+                                                      : const LinearGradient(
+                                                        colors: [
+                                                          Color(0xFF2563EB),
+                                                          Color(0xFF1E40AF),
+                                                          Color(0xFF020617),
+                                                        ],
+                                                        stops: [0.0, 0.6, 1.0],
+                                                        begin:
+                                                            Alignment
+                                                                .bottomRight,
+                                                        end: Alignment.topLeft,
+                                                      ),
                                               borderRadius:
                                                   BorderRadius.circular(12),
                                             ),
@@ -986,7 +1048,7 @@ class _SelectItemsScreenState extends State<SelectItemsScreen> {
                                               ).textTheme.titleLarge?.copyWith(
                                                 fontWeight: FontWeight.bold,
                                                 fontSize: 16 * scale,
-                                                color: const Color(0xFF333333),
+                                                color: context.appColors.text1,
                                               ),
                                             ),
                                           ),
@@ -1018,7 +1080,10 @@ class _SelectItemsScreenState extends State<SelectItemsScreen> {
                                                     )
                                                     : Icon(
                                                       Icons.arrow_drop_down,
-                                                      color: Color(0xFF1E40AF),
+                                                      color:
+                                                          context
+                                                              .appColors
+                                                              .primary,
                                                     ),
                                             onPressed: showItemPicker,
                                           ),
@@ -1391,10 +1456,10 @@ class _SelectItemsScreenState extends State<SelectItemsScreen> {
                                             gradient: LinearGradient(
                                               colors: [
                                                 Theme.of(context).primaryColor
-                                                    .withOpacity(0.08),
+                                                    .withValues(alpha: 0.08),
                                                 Theme.of(context)
                                                     .primaryColorDark
-                                                    .withOpacity(0.08),
+                                                    .withValues(alpha: 0.08),
                                               ],
                                               begin: Alignment.topLeft,
                                               end: Alignment.bottomRight,
@@ -1496,10 +1561,10 @@ class _SelectItemsScreenState extends State<SelectItemsScreen> {
                                   width: double.infinity,
                                   padding: const EdgeInsets.all(32),
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFFF8FAFF),
+                                    color: context.appColors.background,
                                     borderRadius: BorderRadius.circular(16),
                                     border: Border.all(
-                                      color: Colors.grey.shade300,
+                                      color: context.appColors.divider,
                                       width: 2,
                                     ),
                                   ),
@@ -1508,14 +1573,14 @@ class _SelectItemsScreenState extends State<SelectItemsScreen> {
                                       Icon(
                                         Icons.add_circle_outline,
                                         size: 55 * scale,
-                                        color: Colors.grey.shade400,
+                                        color: context.appColors.icon,
                                       ),
                                       const SizedBox(height: 16),
                                       Text(
                                         "Enter item details to see calculations",
                                         style: TextStyle(
                                           fontSize: 14 * scale,
-                                          color: Colors.grey.shade600,
+                                          color: context.appColors.text2,
                                         ),
                                         textAlign: TextAlign.center,
                                       ),
@@ -1524,7 +1589,7 @@ class _SelectItemsScreenState extends State<SelectItemsScreen> {
                                         "Discount, tax and total will appear here",
                                         style: TextStyle(
                                           fontSize: 12 * scale,
-                                          color: Colors.grey.shade500,
+                                          color: context.appColors.text2,
                                         ),
                                         textAlign: TextAlign.center,
                                       ),
@@ -1543,11 +1608,13 @@ class _SelectItemsScreenState extends State<SelectItemsScreen> {
               // Bottom Buttons
               bottomNavigationBar: Container(
                 decoration: BoxDecoration(
-                  color: Colors.white,
-                  border: Border(top: BorderSide(color: Colors.grey.shade200)),
+                  color: context.appColors.card,
+                  border: Border(
+                    top: BorderSide(color: context.appColors.divider),
+                  ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
+                      color: Colors.black.withValues(alpha: 0.1),
                       blurRadius: 10,
                       offset: const Offset(0, -5),
                     ),
@@ -1570,21 +1637,23 @@ class _SelectItemsScreenState extends State<SelectItemsScreen> {
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              side: BorderSide(color: Color(0xFF1E40AF)),
+                              side: BorderSide(
+                                color: context.appColors.primary,
+                              ),
                             ),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Icon(
                                   Icons.add_circle_outline,
-                                  color: Color(0xFF1E40AF),
+                                  color: context.appColors.primary,
                                   size: 20 * scale,
                                 ),
                                 const SizedBox(width: 8),
                                 Text(
                                   "Save & New",
                                   style: TextStyle(
-                                    color: Color(0xFF1E40AF),
+                                    color: context.appColors.primary,
                                     fontWeight: FontWeight.w600,
                                     fontSize: 14 * scale,
                                   ),
@@ -1628,7 +1697,7 @@ class _SelectItemsScreenState extends State<SelectItemsScreen> {
                               });
                             },
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Color(0xFF1E40AF),
+                              backgroundColor: context.appColors.primary,
                               padding: EdgeInsets.symmetric(
                                 vertical: 14 * scale,
                               ),
@@ -1666,7 +1735,7 @@ class _SelectItemsScreenState extends State<SelectItemsScreen> {
             ),
             if (_isLoadingProducts)
               Container(
-                color: Colors.black.withOpacity(0.15),
+                color: Colors.black.withValues(alpha: 0.15),
                 child: const Center(child: CircularProgressIndicator()),
               ),
           ],

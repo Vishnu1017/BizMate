@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:bizmate/models/sale.dart';
 import 'package:bizmate/models/user_model.dart';
 import 'package:bizmate/widgets/app_snackbar.dart' show AppSnackBar;
+import 'package:bizmate/utils/app_theme.dart';
+import 'package:bizmate/widgets/app_theme_toggle.dart';
 import 'package:bizmate/widgets/modern_calendar_range.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -111,7 +113,7 @@ class _SalesReportPageState extends State<SalesReportPage> {
           children: [
             HugeIcon(
               icon: HugeIcons.strokeRoundedDownload01,
-              color: Colors.black87,
+              color: context.appColors.text1,
               size: 12 * scale,
             ),
             SizedBox(width: 6 * scale),
@@ -120,6 +122,7 @@ class _SalesReportPageState extends State<SalesReportPage> {
               style: TextStyle(
                 fontSize: 11 * scale,
                 fontWeight: FontWeight.w500,
+                color: context.appColors.text1,
               ),
             ),
           ],
@@ -207,11 +210,11 @@ class _SalesReportPageState extends State<SalesReportPage> {
                     child: Container(
                       width: overlayWidth,
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: context.appColors.card,
                         borderRadius: BorderRadius.circular(14),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.12),
+                            color: Colors.black.withValues(alpha: 0.12),
                             blurRadius: 20,
                             offset: const Offset(0, 10),
                           ),
@@ -245,11 +248,11 @@ class _SalesReportPageState extends State<SalesReportPage> {
                 child: Container(
                   width: overlayWidth,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: context.appColors.card,
                     borderRadius: BorderRadius.circular(14),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.12),
+                        color: Colors.black.withValues(alpha: 0.12),
                         blurRadius: 20,
                         offset: const Offset(0, 10),
                       ),
@@ -295,7 +298,9 @@ class _SalesReportPageState extends State<SalesReportPage> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           decoration: BoxDecoration(
-            color: isSelected ? Colors.blue.shade50 : Colors.white,
+            color: isSelected
+                ? context.appColors.primary.withAlpha(context.isDark ? 50 : 25)
+                : context.appColors.card,
             borderRadius: BorderRadius.circular(12),
           ),
           child: Row(
@@ -304,13 +309,13 @@ class _SalesReportPageState extends State<SalesReportPage> {
                 width: 36,
                 height: 36,
                 decoration: BoxDecoration(
-                  color: isSelected ? Colors.blue.shade600 : Colors.grey[200],
+                  color: isSelected ? context.appColors.primary : context.appColors.divider,
                   shape: BoxShape.circle,
                 ),
                 child: Center(
                   child: Icon(
                     _getPresetIcon(preset),
-                    color: isSelected ? Colors.white : Colors.grey[700],
+                    color: isSelected ? Colors.white : context.appColors.text2,
                     size: 18,
                   ),
                 ),
@@ -325,22 +330,21 @@ class _SalesReportPageState extends State<SalesReportPage> {
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color:
-                            isSelected
-                                ? Colors.blue.shade800
-                                : Colors.grey[800],
+                        color: isSelected
+                            ? context.appColors.primary
+                            : context.appColors.text1,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       _getPresetDescription(preset),
-                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                      style: TextStyle(fontSize: 12, color: context.appColors.text2),
                     ),
                   ],
                 ),
               ),
               if (isSelected)
-                Icon(Icons.check_circle, color: Colors.blue.shade600, size: 20),
+                Icon(Icons.check_circle, color: context.appColors.primary, size: 20),
             ],
           ),
         ),
@@ -1027,30 +1031,37 @@ class _SalesReportPageState extends State<SalesReportPage> {
               Positioned(
                 top: MediaQuery.of(context).padding.top + 8,
                 right: 14,
-                child: Builder(
-                  builder: (btnContext) {
-                    final isLoading = _isLoadingPdf || _isLoadingCsv;
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const AppThemeToggle(size: 34),
+                    const SizedBox(width: 8),
+                    Builder(
+                      builder: (btnContext) {
+                        final isLoading = _isLoadingPdf || _isLoadingCsv;
 
-                    return LayoutBuilder(
-                      builder: (context, constraints) {
-                        _downloadButtonWidth =
-                            constraints.maxWidth; // 👈 capture width
+                        return LayoutBuilder(
+                          builder: (context, constraints) {
+                            _downloadButtonWidth =
+                                constraints.maxWidth; // 👈 capture width
 
-                        return _modernActionButton(
-                          loading: isLoading,
-                          onTap:
-                              isLoading
-                                  ? null
-                                  : () => _showDownloadMenu(btnContext),
-                          customChild: HugeIcon(
-                            icon: HugeIcons.strokeRoundedDownload01,
-                            color: Colors.white,
-                            size: 20 * scale,
-                          ),
+                            return _modernActionButton(
+                              loading: isLoading,
+                              onTap:
+                                  isLoading
+                                      ? null
+                                      : () => _showDownloadMenu(btnContext),
+                              customChild: HugeIcon(
+                                icon: HugeIcons.strokeRoundedDownload01,
+                                color: Colors.white,
+                                size: 20 * scale,
+                              ),
+                            );
+                          },
                         );
                       },
-                    );
-                  },
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -1072,7 +1083,7 @@ class _SalesReportPageState extends State<SalesReportPage> {
       child: Container(
         padding: EdgeInsets.all(12 * scale),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: context.appColors.card,
           borderRadius: BorderRadius.only(
             bottomLeft: Radius.circular(18 * scale),
             bottomRight: Radius.circular(18 * scale),
@@ -1097,7 +1108,7 @@ class _SalesReportPageState extends State<SalesReportPage> {
                       vertical: 6 * scale,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.blue[50],
+                      color: context.appColors.primary.withAlpha(context.isDark ? 50 : 25),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Row(
@@ -1105,13 +1116,13 @@ class _SalesReportPageState extends State<SalesReportPage> {
                         Icon(
                           Icons.calendar_today,
                           size: 12 * scale,
-                          color: Colors.blue[800],
+                          color: context.appColors.primary,
                         ),
                         SizedBox(width: 4 * scale),
                         Text(
                           getFormattedRange(),
                           style: TextStyle(
-                            color: Colors.blue[800],
+                            color: context.appColors.primary,
                             fontSize: 8 * scale,
                           ),
                         ),
@@ -1130,21 +1141,21 @@ class _SalesReportPageState extends State<SalesReportPage> {
                       vertical: 6 * scale,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.blue[50],
+                      color: context.appColors.primary.withAlpha(context.isDark ? 50 : 25),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Row(
                       children: [
                         Icon(
                           Icons.tune_rounded,
-                          color: Colors.blue[800],
+                          color: context.appColors.primary,
                           size: 12 * scale,
                         ),
                         Icon(
                           _isDropdownOpen
                               ? Icons.arrow_drop_up
                               : Icons.arrow_drop_down,
-                          color: Colors.blue[800],
+                          color: context.appColors.primary,
                           size: 12 * scale,
                         ),
                       ],
@@ -1204,7 +1215,7 @@ class _SalesReportPageState extends State<SalesReportPage> {
             Text(
               'CUSTOMER TRANSACTIONS',
               style: TextStyle(
-                color: Colors.grey[600],
+                color: context.appColors.text2,
                 fontSize: 10 * scale,
                 fontWeight: FontWeight.bold,
                 letterSpacing: 0.5,
@@ -1213,7 +1224,7 @@ class _SalesReportPageState extends State<SalesReportPage> {
             const Spacer(),
             Text(
               '${customerMap.length} records',
-              style: TextStyle(color: Colors.grey[500], fontSize: 10 * scale),
+              style: TextStyle(color: context.appColors.text2, fontSize: 10 * scale),
             ),
           ],
         ),
@@ -1244,21 +1255,22 @@ class _SalesReportPageState extends State<SalesReportPage> {
       ),
       child: Material(
         borderRadius: BorderRadius.circular(16),
+        color: context.appColors.card,
         elevation: 2,
         child: Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.grey[200]!, width: 1),
+            border: Border.all(color: context.appColors.divider, width: 1),
           ),
           child: Column(
             children: [
               ListTile(
                 leading: CircleAvatar(
-                  radius: 16 * scale, // 👈 controls background size
-                  backgroundColor: Colors.blue[50],
+                  radius: 16 * scale,
+                  backgroundColor: context.appColors.primary.withAlpha(context.isDark ? 50 : 25),
                   child: Icon(
                     Icons.person,
-                    color: Colors.blue[800],
+                    color: context.appColors.primary,
                     size: 14 * scale,
                   ),
                 ),
@@ -1267,6 +1279,7 @@ class _SalesReportPageState extends State<SalesReportPage> {
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 14 * scale,
+                    color: context.appColors.text1,
                   ),
                 ),
                 subtitle: Column(
@@ -1275,7 +1288,7 @@ class _SalesReportPageState extends State<SalesReportPage> {
                     Text(
                       '${transactions.length} transactions',
                       style: TextStyle(
-                        color: Colors.grey[600],
+                        color: context.appColors.text2,
                         fontSize: 10 * scale,
                       ),
                     ),
@@ -1283,7 +1296,7 @@ class _SalesReportPageState extends State<SalesReportPage> {
                       Text(
                         phoneNumber,
                         style: TextStyle(
-                          color: Colors.grey[600],
+                          color: context.appColors.text2,
                           fontSize: 10 * scale,
                         ),
                       ),
@@ -1324,14 +1337,14 @@ class _SalesReportPageState extends State<SalesReportPage> {
                     Text(
                       '$paidPercentage% Paid',
                       style: TextStyle(
-                        color: Colors.grey[600],
+                        color: context.appColors.text2,
                         fontSize: 10 * scale,
                       ),
                     ),
                     Text(
                       DateFormat('dd MMM, yy').format(sale.dateTime),
                       style: TextStyle(
-                        color: Colors.grey[600],
+                        color: context.appColors.text2,
                         fontSize: 10 * scale,
                       ),
                     ),
@@ -1350,7 +1363,7 @@ class _SalesReportPageState extends State<SalesReportPage> {
                           Text(
                             'TOTAL AMOUNT',
                             style: TextStyle(
-                              color: Colors.grey[500],
+                              color: context.appColors.text2,
                               fontSize: 8 * scale,
                             ),
                           ),
@@ -1360,6 +1373,7 @@ class _SalesReportPageState extends State<SalesReportPage> {
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 14 * scale,
+                              color: context.appColors.text1,
                             ),
                           ),
                         ],
@@ -1372,7 +1386,7 @@ class _SalesReportPageState extends State<SalesReportPage> {
                           Text(
                             'LAST PAYMENT',
                             style: TextStyle(
-                              color: Colors.grey[500],
+                              color: context.appColors.text2,
                               fontSize: 8 * scale,
                             ),
                           ),
@@ -1409,7 +1423,7 @@ class _SalesReportPageState extends State<SalesReportPage> {
       child: Container(
         padding: EdgeInsets.all(8 * scale),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: context.appColors.card,
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
@@ -1428,7 +1442,7 @@ class _SalesReportPageState extends State<SalesReportPage> {
                 Container(
                   padding: EdgeInsets.all(4 * scale),
                   decoration: BoxDecoration(
-                    color: color.withOpacity(0.2),
+                    color: color.withValues(alpha: 0.2),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(icon, size: 12 * scale, color: color),
@@ -1448,7 +1462,7 @@ class _SalesReportPageState extends State<SalesReportPage> {
             const SizedBox(height: 4),
             Text(
               label,
-              style: TextStyle(color: Colors.grey[800], fontSize: 6 * scale),
+              style: TextStyle(color: context.appColors.text2, fontSize: 6 * scale),
             ),
           ],
         ),
@@ -1487,6 +1501,7 @@ class _SalesReportPageState extends State<SalesReportPage> {
       child: Stack(
         children: [
           Scaffold(
+            backgroundColor: context.appColors.background,
             body: CustomScrollView(
               controller: _scrollController,
               slivers: [
@@ -1511,7 +1526,7 @@ class _SalesReportPageState extends State<SalesReportPage> {
           ),
           if (_isGenerating)
             Container(
-              color: Colors.black.withOpacity(0.15),
+              color: Colors.black.withValues(alpha: 0.15),
               child: const Center(child: CircularProgressIndicator()),
             ),
         ],
@@ -1530,22 +1545,21 @@ class _SalesReportPageState extends State<SalesReportPage> {
       child: InkWell(
         customBorder: const CircleBorder(),
         onTap: onTap,
-        splashColor: Colors.black.withOpacity(0.08),
-        highlightColor: Colors.black.withOpacity(0.05),
+        splashColor: Colors.black.withValues(alpha: 0.08),
+        highlightColor: Colors.black.withValues(alpha: 0.05),
         child: Container(
           width: 30 * scale,
           height: 30 * scale,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: Colors.white,
+            color: context.appColors.card,
 
-            // ✅ subtle border (same as your reference)
-            border: Border.all(color: Colors.black.withOpacity(0.08), width: 1),
+            border: Border.all(color: context.appColors.divider, width: 1),
 
             // ✅ soft elevation
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.12),
+                color: Colors.black.withValues(alpha: 0.12),
                 blurRadius: 10,
                 offset: const Offset(0, 4),
               ),
@@ -1553,7 +1567,7 @@ class _SalesReportPageState extends State<SalesReportPage> {
           ),
           child: Center(
             child:
-                customIcon ?? Icon(icon, color: Colors.black, size: 20 * scale),
+                customIcon ?? Icon(icon, color: context.appColors.text1, size: 20 * scale),
           ),
         ),
       ),
@@ -1573,12 +1587,12 @@ class _SalesReportPageState extends State<SalesReportPage> {
         height: 30 * scale,
         padding: EdgeInsets.symmetric(horizontal: 6 * scale),
         decoration: BoxDecoration(
-          color: background.withOpacity(0.26),
+          color: background.withValues(alpha: 0.26),
           borderRadius: BorderRadius.circular(8),
           border: Border.all(color: Colors.white54, width: 1),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.15),
+              color: Colors.black.withValues(alpha: 0.15),
               blurRadius: 6,
               offset: const Offset(0, 2),
             ),
@@ -1616,7 +1630,7 @@ class _SalesReportPageState extends State<SalesReportPage> {
       child: Stack(
         children: [
           // Background
-          Container(height: 6, width: double.infinity, color: Colors.grey[200]),
+          Container(height: 6, width: double.infinity, color: context.appColors.divider),
 
           // Gradient progress
           LayoutBuilder(

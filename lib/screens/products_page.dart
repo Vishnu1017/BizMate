@@ -5,6 +5,7 @@ import 'package:bizmate/widgets/confirm_delete_dialog.dart'
     show showConfirmDialog;
 import 'package:bizmate/widgets/advanced_search_bar.dart'
     show AdvancedSearchBar;
+import 'package:bizmate/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:bizmate/models/product.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -118,7 +119,7 @@ class _ProductsPageState extends State<ProductsPage> {
             : 1.25;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F6FA),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: MediaQuery.removePadding(
         removeTop: true,
         context: context,
@@ -179,7 +180,7 @@ class _ProductsPageState extends State<ProductsPage> {
                                 ? Icons.inventory_2
                                 : Icons.search_off,
                             size: 80 * scale,
-                            color: Colors.grey[400],
+                            color: context.textSecondary.withValues(alpha: 0.5),
                           ),
                           SizedBox(height: 16 * scale),
                           Text(
@@ -188,7 +189,7 @@ class _ProductsPageState extends State<ProductsPage> {
                                 : "No matching packages found",
                             style: TextStyle(
                               fontSize: 18 * scale,
-                              color: Colors.grey[600],
+                              color: context.textSecondary,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -231,55 +232,146 @@ class _ProductsPageState extends State<ProductsPage> {
                         ),
                         child: Container(
                           margin: EdgeInsets.only(bottom: 14 * scale),
+
                           decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Color(0xFF00BCD4), Color(0xFF1A237E)],
+                            // -----------------------------------------------------------------------
+                            // 🎨 THEME-AWARE BLUE GRADIENT
+                            // -----------------------------------------------------------------------
+                            gradient: LinearGradient(
+                              colors:
+                                  context.isDark
+                                      ? [
+                                        const Color(0xFF93C5FD),
+                                        const Color(0xFF60A5FA),
+                                      ]
+                                      : [
+                                        const Color(0xFF00BCD4),
+                                        const Color(0xFF1A237E),
+                                      ],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                             ),
+
                             borderRadius: BorderRadius.circular(12 * scale),
+
+                            // -----------------------------------------------------------------------
+                            // ✨ THEME-AWARE SHADOW
+                            // -----------------------------------------------------------------------
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.10),
-                                blurRadius: 10 * scale,
+                                color:
+                                    context.isDark
+                                        ? const Color(
+                                          0xFF60A5FA,
+                                        ).withValues(alpha: 0.25)
+                                        : Colors.black.withValues(alpha: 0.10),
+                                blurRadius:
+                                    context.isDark ? 14 * scale : 10 * scale,
+                                spreadRadius: context.isDark ? 1 : 0,
                                 offset: Offset(0, 4 * scale),
                               ),
                             ],
                           ),
-                          child: ListTile(
-                            contentPadding: EdgeInsets.symmetric(
-                              horizontal: 20 * scale,
-                              vertical: 8 * scale,
-                            ),
-                            leading: CircleAvatar(
-                              radius: 20 * scale,
-                              backgroundColor: Colors.white,
-                              child: HugeIcon(
-                                icon: HugeIcons.strokeRoundedShoppingBasket01,
-                                color: const Color(0xFF1A237E),
-                                size: 20 * scale,
+
+                          child: Stack(
+                            children: [
+                              // ---------------------------------------------------------------------
+                              // ✨ DECORATIVE CIRCLE
+                              // ---------------------------------------------------------------------
+                              Positioned(
+                                right: -20,
+                                top: -20,
+                                child: Container(
+                                  width: 100 * scale,
+                                  height: 100 * scale,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color:
+                                        context.isDark
+                                            ? Colors.white.withValues(
+                                              alpha: 0.20,
+                                            )
+                                            : Colors.white.withValues(
+                                              alpha: 0.08,
+                                            ),
+                                  ),
+                                ),
                               ),
-                            ),
-                            title: Text(
-                              product.name,
-                              style: TextStyle(
-                                fontSize: 16 * scale,
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
+
+                              // ---------------------------------------------------------------------
+                              // 🛍 PRODUCT CONTENT
+                              // ---------------------------------------------------------------------
+                              ListTile(
+                                contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 20 * scale,
+                                  vertical: 8 * scale,
+                                ),
+
+                                // -------------------------------------------------------------------
+                                // 🛒 PRODUCT ICON
+                                // -------------------------------------------------------------------
+                                leading: CircleAvatar(
+                                  radius: 20 * scale,
+                                  backgroundColor:
+                                      context.isDark
+                                          ? Colors.white.withValues(alpha: 0.90)
+                                          : Colors.white,
+
+                                  child: HugeIcon(
+                                    icon:
+                                        HugeIcons.strokeRoundedShoppingBasket01,
+                                    color:
+                                        context.isDark
+                                            ? const Color(0xFF2563EB)
+                                            : const Color(0xFF1A237E),
+                                    size: 20 * scale,
+                                  ),
+                                ),
+
+                                // -------------------------------------------------------------------
+                                // 📦 PRODUCT NAME
+                                // -------------------------------------------------------------------
+                                title: Text(
+                                  product.name,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 16 * scale,
+                                    color:
+                                        context.isDark
+                                            ? const Color(0xFF123A66)
+                                            : Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+
+                                // -------------------------------------------------------------------
+                                // 💰 PRODUCT RATE
+                                // -------------------------------------------------------------------
+                                subtitle: Text(
+                                  "Rate: ₹${product.rate.toStringAsFixed(2)}",
+                                  style: TextStyle(
+                                    fontSize: 13 * scale,
+                                    color:
+                                        context.isDark
+                                            ? const Color(0xFF315D89)
+                                            : Colors.white70,
+                                  ),
+                                ),
+
+                                // -------------------------------------------------------------------
+                                // ↕ DRAG HANDLE
+                                // -------------------------------------------------------------------
+                                trailing: Icon(
+                                  Icons.drag_handle,
+                                  color:
+                                      context.isDark
+                                          ? const Color(0xFF315D89)
+                                          : Colors.white70,
+                                  size: 20 * scale,
+                                ),
                               ),
-                            ),
-                            subtitle: Text(
-                              "Rate: ₹${product.rate.toStringAsFixed(2)}",
-                              style: TextStyle(
-                                fontSize: 13 * scale,
-                                color: Colors.white70,
-                              ),
-                            ),
-                            trailing: Icon(
-                              Icons.drag_handle,
-                              color: Colors.white70,
-                              size: 20 * scale,
-                            ),
+                            ],
                           ),
                         ),
                       );

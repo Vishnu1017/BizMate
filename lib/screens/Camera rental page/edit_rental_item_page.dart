@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:bizmate/widgets/app_snackbar.dart' show AppSnackBar;
+import 'package:bizmate/widgets/app_theme_toggle.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import '../../models/rental_item.dart';
@@ -136,29 +137,38 @@ class _EditRentalItemPageState extends State<EditRentalItemPage> {
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final text1 = isDark ? const Color(0xFFF1F5F9) : Colors.black87;
+
     return Scaffold(
-      backgroundColor: Color(0xFFF8FAFD),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'Edit Item',
           style: TextStyle(
             fontWeight: FontWeight.w700,
             fontSize: 20,
-            color: Colors.black87,
+            color: text1,
           ),
         ),
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
-        foregroundColor: Colors.black87,
+        foregroundColor: text1,
+        actions: const [
+          Padding(
+            padding: EdgeInsets.only(right: 16),
+            child: AppThemeToggle(),
+          ),
+        ],
         leading: Container(
           margin: const EdgeInsets.all(8),
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: Colors.white,
+            color: isDark ? const Color(0xFF1E293B) : Colors.white,
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.1),
+                color: Colors.black.withValues(alpha: 0.1),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -185,7 +195,7 @@ class _EditRentalItemPageState extends State<EditRentalItemPage> {
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.15),
+                      color: Colors.black.withValues(alpha: 0.15),
                       blurRadius: 20,
                       offset: const Offset(0, 8),
                     ),
@@ -209,7 +219,7 @@ class _EditRentalItemPageState extends State<EditRentalItemPage> {
                             end: Alignment.bottomCenter,
                             colors: [
                               Colors.transparent,
-                              Colors.black.withOpacity(0.3),
+                              Colors.black.withValues(alpha: 0.3),
                             ],
                           ),
                         ),
@@ -227,7 +237,7 @@ class _EditRentalItemPageState extends State<EditRentalItemPage> {
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.08),
+                      color: Colors.black.withValues(alpha: 0.08),
                       blurRadius: 16,
                       offset: const Offset(0, 6),
                     ),
@@ -295,7 +305,7 @@ class _EditRentalItemPageState extends State<EditRentalItemPage> {
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.blue.withOpacity(0.4),
+                      color: Colors.blue.withValues(alpha: 0.4),
                       blurRadius: 15,
                       offset: const Offset(0, 6),
                     ),
@@ -337,7 +347,7 @@ class _EditRentalItemPageState extends State<EditRentalItemPage> {
                   border: Border.all(color: Color(0xFFE5E7EB)),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: Colors.black.withValues(alpha: 0.05),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),

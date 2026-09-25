@@ -2,6 +2,8 @@ import 'dart:io';
 import 'dart:ui';
 import 'package:bizmate/screens/Camera%20rental%20page/rental_add_customer_page.dart';
 import 'package:bizmate/services/rental_cart.dart';
+import 'package:bizmate/utils/app_theme.dart';
+import 'package:bizmate/widgets/app_theme_toggle.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:unicons/unicons.dart';
@@ -40,7 +42,7 @@ class _RentalCartPreviewPageState extends State<RentalCartPreviewPage> {
             : 16;
 
     return Scaffold(
-      backgroundColor: Colors.grey.shade100,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
 
       // ================= APP BAR =================
       appBar: AppBar(
@@ -54,10 +56,10 @@ class _RentalCartPreviewPageState extends State<RentalCartPreviewPage> {
             height: 30 * scale,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha: 0.2),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
+                  color: Colors.black.withValues(alpha: 0.1),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
@@ -79,8 +81,10 @@ class _RentalCartPreviewPageState extends State<RentalCartPreviewPage> {
           ),
         ),
 
-        // 🔥 CLEAR CART BUTTON
+        // 🔥 CLEAR CART BUTTON & THEME TOGGLE
         actions: [
+          const AppThemeToggle(size: 32),
+          const SizedBox(width: 8),
           if (items.isNotEmpty)
             IconButton(
               tooltip: "Clear Cart",
@@ -104,10 +108,10 @@ class _RentalCartPreviewPageState extends State<RentalCartPreviewPage> {
                             width: MediaQuery.of(ctx).size.width * 0.85,
                             padding: EdgeInsets.all(20 * scale),
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.15),
+                              color: Colors.white.withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(24),
                               border: Border.all(
-                                color: Colors.white.withOpacity(0.3),
+                                color: Colors.white.withValues(alpha: 0.3),
                               ),
                             ),
                             child: Material(
@@ -195,13 +199,29 @@ class _RentalCartPreviewPageState extends State<RentalCartPreviewPage> {
         ],
 
         flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Color(0xFF2563EB), Color(0xFF1E40AF), Color(0xFF020617)],
-              stops: [0.0, 0.6, 1.0],
-              begin: Alignment.bottomRight,
-              end: Alignment.topLeft,
-            ),
+          decoration: BoxDecoration(
+            gradient:
+                context.isDark
+                    ? const LinearGradient(
+                      colors: [
+                        Color(0xFF38BDF8),
+                        Color(0xFF60A5FA),
+                        Color(0xFFBAE6FD),
+                      ],
+                      stops: [0.0, 0.6, 1.0],
+                      begin: Alignment.bottomRight,
+                      end: Alignment.topLeft,
+                    )
+                    : const LinearGradient(
+                      colors: [
+                        Color(0xFF2563EB),
+                        Color(0xFF1E40AF),
+                        Color(0xFF020617),
+                      ],
+                      stops: [0.0, 0.6, 1.0],
+                      begin: Alignment.bottomRight,
+                      end: Alignment.topLeft,
+                    ),
           ),
         ),
       ),
@@ -252,7 +272,7 @@ class _RentalCartPreviewPageState extends State<RentalCartPreviewPage> {
                               borderRadius: BorderRadius.circular(20),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.08),
+                                  color: Colors.black.withValues(alpha: 0.08),
                                   blurRadius: 12,
                                   offset: const Offset(0, 6),
                                 ),
@@ -272,7 +292,9 @@ class _RentalCartPreviewPageState extends State<RentalCartPreviewPage> {
                                       color: Colors.grey.shade200,
                                       boxShadow: [
                                         BoxShadow(
-                                          color: Colors.black.withOpacity(0.08),
+                                          color: Colors.black.withValues(
+                                            alpha: 0.08,
+                                          ),
                                           blurRadius: 6,
                                           offset: const Offset(0, 3),
                                         ),
@@ -417,7 +439,7 @@ class _RentalCartPreviewPageState extends State<RentalCartPreviewPage> {
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.15),
+                            color: Colors.black.withValues(alpha: 0.15),
                             blurRadius: 18,
                             offset: const Offset(0, -6),
                           ),
@@ -453,20 +475,32 @@ class _RentalCartPreviewPageState extends State<RentalCartPreviewPage> {
                             width: double.infinity,
                             child: DecoratedBox(
                               decoration: BoxDecoration(
-                                gradient: const LinearGradient(
-                                  colors: [
-                                    Color(0xFF2563EB),
-                                    Color(0xFF1E40AF),
-                                    Color(0xFF020617),
-                                  ],
-                                  stops: [0.0, 0.6, 1.0],
-                                  begin: Alignment.bottomRight,
-                                  end: Alignment.topLeft,
-                                ),
+                                gradient:
+                                    context.isDark
+                                        ? const LinearGradient(
+                                          colors: [
+                                            Color(0xFF38BDF8),
+                                            Color(0xFF60A5FA),
+                                            Color(0xFFBAE6FD),
+                                          ],
+                                          stops: [0.0, 0.6, 1.0],
+                                          begin: Alignment.bottomRight,
+                                          end: Alignment.topLeft,
+                                        )
+                                        : const LinearGradient(
+                                          colors: [
+                                            Color(0xFF2563EB),
+                                            Color(0xFF1E40AF),
+                                            Color(0xFF020617),
+                                          ],
+                                          stops: [0.0, 0.6, 1.0],
+                                          begin: Alignment.bottomRight,
+                                          end: Alignment.topLeft,
+                                        ),
                                 borderRadius: BorderRadius.circular(16 * scale),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.blue.withOpacity(0.4),
+                                    color: Colors.blue.withValues(alpha: 0.4),
                                     blurRadius: 14,
                                     offset: const Offset(0, 6),
                                   ),
