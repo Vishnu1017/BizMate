@@ -478,7 +478,7 @@ class _LoginScreenState extends State<LoginScreen>
                             child: IconButton(
                               icon: Icon(
                                 Icons.close,
-                                color: Colors.white,
+                                color: const Color(0xFF072A4A),
                                 size: 20 * scale,
                               ),
                               onPressed: () => Navigator.pop(dialogContext),
@@ -487,10 +487,10 @@ class _LoginScreenState extends State<LoginScreen>
 
                           SizedBox(height: 8 * scale),
 
-                          Icon(
+                          const Icon(
                             Icons.lock_reset,
-                            size: 50 * scale,
-                            color: Colors.white,
+                            size: 50,
+                            color: Color(0xFF072A4A),
                           ),
 
                           SizedBox(height: 18 * scale),
@@ -498,9 +498,9 @@ class _LoginScreenState extends State<LoginScreen>
                           Text(
                             "Reset Password",
                             style: TextStyle(
-                              color: Colors.white,
+                              color: const Color(0xFF072A4A),
                               fontSize: 18 * scale,
-                              fontWeight: FontWeight.w600,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
 
@@ -509,25 +509,34 @@ class _LoginScreenState extends State<LoginScreen>
                           TextField(
                             controller: resetEmailController,
                             keyboardType: TextInputType.emailAddress,
-                            style: const TextStyle(color: Colors.white),
-                            cursorColor: Colors.white,
+                            style: const TextStyle(color: Color(0xFF072A4A), fontWeight: FontWeight.w600),
+                            cursorColor: const Color(0xFF072A4A),
                             decoration: InputDecoration(
+                              filled: true,
+                              fillColor: Colors.white.withValues(alpha: 0.3),
+                              prefixIcon: const Icon(
+                                Icons.email_outlined,
+                                color: Color(0xFF072A4A),
+                              ),
                               labelText: "Enter your email",
                               labelStyle: const TextStyle(
-                                color: Colors.white70,
+                                color: Color(0xFF072A4A),
+                                fontWeight: FontWeight.w600,
                               ),
                               errorText:
                                   _isResetEmailValid ? null : "Invalid email",
                               enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
-                                borderSide: const BorderSide(
-                                  color: Colors.white38,
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(
+                                  color: const Color(0xFF072A4A).withValues(alpha: 0.4),
+                                  width: 1.5,
                                 ),
                               ),
                               focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
+                                borderRadius: BorderRadius.circular(12),
                                 borderSide: const BorderSide(
-                                  color: Colors.white,
+                                  color: Color(0xFF072A4A),
+                                  width: 2,
                                 ),
                               ),
                             ),
@@ -974,7 +983,7 @@ class _LoginScreenState extends State<LoginScreen>
             child: Container(
               width: double.infinity,
               height: double.infinity,
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
                     Color(0xFF3EE4D8),
@@ -989,30 +998,70 @@ class _LoginScreenState extends State<LoginScreen>
                 child: SingleChildScrollView(
                   padding: EdgeInsets.symmetric(
                     horizontal: w * 0.08,
-                    vertical: h * 0.05,
+                    vertical: h * 0.04,
                   ),
                   child: Column(
                     children: [
-                      SizedBox(height: h * 0.05),
+                      SizedBox(height: h * 0.015),
+                      // 🌟 BizMate Brand Logo
+                      Container(
+                        width: 90,
+                        height: 90,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(22),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.18),
+                              blurRadius: 18,
+                              offset: const Offset(0, 8),
+                            ),
+                          ],
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(22),
+                          child: Image.asset(
+                            'assets/images/bizmate_logo.JPG',
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: h * 0.025),
                       Text(
                         isCreating ? "Join Us!" : "Welcome Back",
                         style: TextStyle(
                           fontSize: h * 0.035,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
+                          letterSpacing: 0.5,
+                          shadows: [
+                            Shadow(
+                              color: Colors.black.withValues(alpha: 0.25),
+                              offset: const Offset(0, 2),
+                              blurRadius: 6,
+                            ),
+                          ],
                         ),
                       ),
-                      SizedBox(height: h * 0.015),
+                      SizedBox(height: h * 0.012),
                       Text(
                         isCreating
                             ? "Create your account"
                             : "Login to continue",
                         style: TextStyle(
-                          color: Colors.white70,
-                          fontSize: h * 0.018,
+                          color: Colors.white,
+                          fontSize: h * 0.019,
+                          fontWeight: FontWeight.w500,
+                          shadows: [
+                            Shadow(
+                              color: Colors.black.withValues(alpha: 0.2),
+                              offset: const Offset(0, 1),
+                              blurRadius: 4,
+                            ),
+                          ],
                         ),
                       ),
-                      SizedBox(height: h * 0.05),
+                      SizedBox(height: h * 0.035),
 
                       AnimatedSize(
                         duration: const Duration(milliseconds: 300),
@@ -1021,86 +1070,104 @@ class _LoginScreenState extends State<LoginScreen>
                             if (isCreating)
                               TextField(
                                 controller: fullNameController,
-                                style: const TextStyle(color: Colors.white),
-                                cursorColor: Colors.white,
+                                style: const TextStyle(
+                                  color: Color(0xFF1E293B),
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                cursorColor: const Color(0xFF0F73B8),
                                 decoration: InputDecoration(
-                                  labelText: "Full Name",
-                                  labelStyle: const TextStyle(
-                                    color: Colors.white70,
+                                  filled: true,
+                                  fillColor: Colors.white,
+                                  prefixIcon: const Icon(
+                                    Icons.person_outline,
+                                    color: Color(0xFF0F73B8),
+                                  ),
+                                  hintText: "Full Name",
+                                  hintStyle: const TextStyle(
+                                    color: Color(0xFF64748B),
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w500,
                                   ),
                                   enabledBorder: OutlineInputBorder(
-                                    borderSide: const BorderSide(
-                                      color: Colors.white54,
+                                    borderSide: BorderSide(
+                                      color: Colors.white.withValues(alpha: 0.9),
+                                      width: 1,
                                     ),
-                                    borderRadius: BorderRadius.circular(10),
+                                    borderRadius: BorderRadius.circular(14),
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderSide: const BorderSide(
-                                      color: Colors.white,
+                                      color: Color(0xFF0F73B8),
+                                      width: 2,
                                     ),
-                                    borderRadius: BorderRadius.circular(10),
+                                    borderRadius: BorderRadius.circular(14),
                                   ),
                                   errorText:
                                       _isFullNameValid
                                           ? null
                                           : "Name must be at least 2 characters",
-                                  errorStyle: TextStyle(
-                                    color:
-                                        Colors
-                                            .redAccent, // 👈 Change color here
+                                  errorStyle: const TextStyle(
+                                    color: Colors.redAccent,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
                               ),
 
-                            if (isCreating) SizedBox(height: h * 0.025),
+                            if (isCreating) SizedBox(height: h * 0.02),
 
                             if (isCreating)
                               DropdownButtonFormField<String>(
                                 initialValue: selectedRole,
-                                dropdownColor: Colors.blue.shade900,
+                                dropdownColor: Colors.white,
                                 icon: const Icon(
                                   Icons.arrow_drop_down,
-                                  color: Colors.white,
+                                  color: Color(0xFF0F73B8),
                                 ),
-                                style: const TextStyle(color: Colors.white),
+                                style: const TextStyle(
+                                  color: Color(0xFF1E293B),
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
                                 decoration: InputDecoration(
-                                  labelText: "Your Profession",
-                                  labelStyle: const TextStyle(
-                                    color: Colors.white70,
+                                  filled: true,
+                                  fillColor: Colors.white,
+                                  prefixIcon: const Icon(
+                                    Icons.work_outline,
+                                    color: Color(0xFF0F73B8),
                                   ),
-
-                                  // Normal state
+                                  hintText: "Your Profession",
+                                  hintStyle: const TextStyle(
+                                    color: Color(0xFF64748B),
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w500,
+                                  ),
                                   enabledBorder: OutlineInputBorder(
-                                    borderSide: const BorderSide(
-                                      color: Colors.white54,
+                                    borderSide: BorderSide(
+                                      color: Colors.white.withValues(alpha: 0.9),
+                                      width: 1,
                                     ),
-                                    borderRadius: BorderRadius.circular(10),
+                                    borderRadius: BorderRadius.circular(14),
                                   ),
-
-                                  // 🔥 WHEN CLICKED / FOCUSED
                                   focusedBorder: OutlineInputBorder(
                                     borderSide: const BorderSide(
-                                      color:
-                                          Colors.white, // ✅ FULL WHITE BORDER
+                                      color: Color(0xFF0F73B8),
+                                      width: 2,
                                     ),
-                                    borderRadius: BorderRadius.circular(10),
+                                    borderRadius: BorderRadius.circular(14),
                                   ),
-
-                                  // Optional (when error)
                                   errorBorder: OutlineInputBorder(
                                     borderSide: const BorderSide(
                                       color: Colors.redAccent,
                                     ),
-                                    borderRadius: BorderRadius.circular(10),
+                                    borderRadius: BorderRadius.circular(14),
                                   ),
-
                                   focusedErrorBorder: OutlineInputBorder(
                                     borderSide: const BorderSide(
                                       color: Colors.redAccent,
                                       width: 2,
                                     ),
-                                    borderRadius: BorderRadius.circular(10),
+                                    borderRadius: BorderRadius.circular(14),
                                   ),
                                 ),
                                 items:
@@ -1108,7 +1175,14 @@ class _LoginScreenState extends State<LoginScreen>
                                         .map(
                                           (r) => DropdownMenuItem(
                                             value: r,
-                                            child: Text(r),
+                                            child: Text(
+                                              r,
+                                              style: const TextStyle(
+                                                color: Color(0xFF1E293B),
+                                                fontSize: 15,
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
                                           ),
                                         )
                                         .toList(),
@@ -1117,68 +1191,94 @@ class _LoginScreenState extends State<LoginScreen>
                                         setState(() => selectedRole = val!),
                               ),
 
-                            if (isCreating) SizedBox(height: h * 0.025),
+                            if (isCreating) SizedBox(height: h * 0.02),
 
                             if (isCreating)
                               TextField(
                                 controller: phoneController,
                                 keyboardType: TextInputType.phone,
-                                style: const TextStyle(color: Colors.white),
-                                cursorColor: Colors.white,
+                                style: const TextStyle(
+                                  color: Color(0xFF1E293B),
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                cursorColor: const Color(0xFF0F73B8),
                                 decoration: InputDecoration(
-                                  labelText: "Phone Number",
-                                  labelStyle: const TextStyle(
-                                    color: Colors.white70,
+                                  filled: true,
+                                  fillColor: Colors.white,
+                                  prefixIcon: const Icon(
+                                    Icons.phone_outlined,
+                                    color: Color(0xFF0F73B8),
+                                  ),
+                                  hintText: "Phone Number",
+                                  hintStyle: const TextStyle(
+                                    color: Color(0xFF64748B),
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w500,
                                   ),
                                   enabledBorder: OutlineInputBorder(
-                                    borderSide: const BorderSide(
-                                      color: Colors.white54,
+                                    borderSide: BorderSide(
+                                      color: Colors.white.withValues(alpha: 0.9),
+                                      width: 1,
                                     ),
-                                    borderRadius: BorderRadius.circular(10),
+                                    borderRadius: BorderRadius.circular(14),
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderSide: const BorderSide(
-                                      color: Colors.white,
+                                      color: Color(0xFF0F73B8),
+                                      width: 2,
                                     ),
-                                    borderRadius: BorderRadius.circular(10),
+                                    borderRadius: BorderRadius.circular(14),
                                   ),
                                   errorText:
                                       _isPhoneValid
                                           ? null
                                           : "Enter a valid 10-digit phone number",
-                                  errorStyle: TextStyle(
-                                    color:
-                                        Colors
-                                            .redAccent, // 👈 Change color here
+                                  errorStyle: const TextStyle(
+                                    color: Colors.redAccent,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
                               ),
 
-                            if (isCreating) SizedBox(height: h * 0.025),
+                            if (isCreating) SizedBox(height: h * 0.02),
 
                             TextField(
                               controller: emailController,
                               keyboardType: TextInputType.emailAddress,
-                              style: const TextStyle(color: Colors.white),
-                              cursorColor: Colors.white,
+                              style: const TextStyle(
+                                color: Color(0xFF1E293B),
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              cursorColor: const Color(0xFF0F73B8),
                               decoration: InputDecoration(
-                                labelText:
+                                filled: true,
+                                fillColor: Colors.white,
+                                prefixIcon: const Icon(
+                                  Icons.email_outlined,
+                                  color: Color(0xFF0F73B8),
+                                ),
+                                hintText:
                                     isCreating ? "Email" : "Email or Phone",
-                                labelStyle: const TextStyle(
-                                  color: Colors.white70,
+                                hintStyle: const TextStyle(
+                                  color: Color(0xFF64748B),
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w500,
                                 ),
                                 enabledBorder: OutlineInputBorder(
-                                  borderSide: const BorderSide(
-                                    color: Colors.white54,
+                                  borderSide: BorderSide(
+                                    color: Colors.white.withValues(alpha: 0.9),
+                                    width: 1,
                                   ),
-                                  borderRadius: BorderRadius.circular(10),
+                                  borderRadius: BorderRadius.circular(14),
                                 ),
                                 focusedBorder: OutlineInputBorder(
                                   borderSide: const BorderSide(
-                                    color: Colors.white,
+                                    color: Color(0xFF0F73B8),
+                                    width: 2,
                                   ),
-                                  borderRadius: BorderRadius.circular(10),
+                                  borderRadius: BorderRadius.circular(14),
                                 ),
                                 errorText:
                                     _isEmailValid
@@ -1186,36 +1286,37 @@ class _LoginScreenState extends State<LoginScreen>
                                         : isCreating
                                         ? "Enter a valid email"
                                         : "Enter valid email / phone",
-                                errorStyle: TextStyle(
-                                  color:
-                                      Colors.redAccent, // 👈 Change color here
+                                errorStyle: const TextStyle(
+                                  color: Colors.redAccent,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
                             ),
 
-                            SizedBox(height: h * 0.025),
+                            SizedBox(height: h * 0.02),
 
                             TextField(
                               controller: passwordController,
                               obscureText: _obscurePassword,
-                              style: const TextStyle(color: Colors.white),
-                              cursorColor: Colors.white,
+                              style: const TextStyle(
+                                color: Color(0xFF1E293B),
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              cursorColor: const Color(0xFF0F73B8),
                               decoration: InputDecoration(
-                                labelText: "Password",
-                                labelStyle: const TextStyle(
-                                  color: Colors.white70,
-                                ),
+                                filled: true,
+                                fillColor: Colors.white,
                                 prefixIcon: const Icon(
-                                  Icons.lock,
-                                  color: Colors.white70,
+                                  Icons.lock_outline,
+                                  color: Color(0xFF0F73B8),
                                 ),
                                 suffixIcon: IconButton(
                                   icon: Icon(
                                     _obscurePassword
                                         ? Icons.visibility
                                         : Icons.visibility_off,
-                                    color: Colors.white70,
+                                    color: const Color(0xFF0F73B8),
                                   ),
                                   onPressed:
                                       () => setState(
@@ -1224,25 +1325,32 @@ class _LoginScreenState extends State<LoginScreen>
                                                 !_obscurePassword,
                                       ),
                                 ),
+                                hintText: "Password",
+                                hintStyle: const TextStyle(
+                                  color: Color(0xFF64748B),
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w500,
+                                ),
                                 enabledBorder: OutlineInputBorder(
-                                  borderSide: const BorderSide(
-                                    color: Colors.white54,
+                                  borderSide: BorderSide(
+                                    color: Colors.white.withValues(alpha: 0.9),
+                                    width: 1,
                                   ),
-                                  borderRadius: BorderRadius.circular(10),
+                                  borderRadius: BorderRadius.circular(14),
                                 ),
                                 focusedBorder: OutlineInputBorder(
                                   borderSide: const BorderSide(
-                                    color: Colors.white,
+                                    color: Color(0xFF0F73B8),
+                                    width: 2,
                                   ),
-                                  borderRadius: BorderRadius.circular(10),
+                                  borderRadius: BorderRadius.circular(14),
                                 ),
                                 errorText:
                                     _isPasswordValid
                                         ? null
                                         : "Password must be at least 6 characters",
-                                errorStyle: TextStyle(
-                                  color:
-                                      Colors.redAccent, // 👈 Change color here
+                                errorStyle: const TextStyle(
+                                  color: Colors.redAccent,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -1262,18 +1370,30 @@ class _LoginScreenState extends State<LoginScreen>
                             alignment: Alignment.centerRight,
                             child: TextButton(
                               onPressed: _showResetPasswordDialog,
+                              style: TextButton.styleFrom(
+                                foregroundColor: Colors.white,
+                                padding: EdgeInsets.zero,
+                              ),
                               child: Text(
                                 "Forgot Password?",
                                 style: TextStyle(
-                                  color: Colors.white70,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
                                   fontSize: 14 * scale,
+                                  shadows: [
+                                    Shadow(
+                                      color: Colors.black.withValues(alpha: 0.35),
+                                      offset: const Offset(0, 1),
+                                      blurRadius: 4,
+                                    ),
+                                  ],
                                 ),
                               ),
                             ),
                           ),
                         ),
 
-                      SizedBox(height: h * 0.04),
+                      SizedBox(height: h * 0.035),
 
                       // Login / Signup button
                       SizedBox(
@@ -1282,10 +1402,12 @@ class _LoginScreenState extends State<LoginScreen>
                           onPressed: isCreating ? createAccount : login,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.white,
-                            foregroundColor: Colors.blue.shade700,
+                            foregroundColor: const Color(0xFF0F73B8),
+                            elevation: 6,
+                            shadowColor: Colors.black.withValues(alpha: 0.3),
                             padding: EdgeInsets.symmetric(vertical: h * 0.02),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
+                              borderRadius: BorderRadius.circular(14),
                             ),
                           ),
                           child: Text(
@@ -1293,15 +1415,20 @@ class _LoginScreenState extends State<LoginScreen>
                             style: TextStyle(
                               fontSize: h * 0.02,
                               fontWeight: FontWeight.bold,
+                              letterSpacing: 1.2,
+                              color: const Color(0xFF0F73B8),
                             ),
                           ),
                         ),
                       ),
 
-                      SizedBox(height: h * 0.03),
+                      SizedBox(height: h * 0.025),
 
                       TextButton(
                         onPressed: toggleMode,
+                        style: TextButton.styleFrom(
+                          foregroundColor: Colors.white,
+                        ),
                         child: RichText(
                           text: TextSpan(
                             text:
@@ -1309,16 +1436,26 @@ class _LoginScreenState extends State<LoginScreen>
                                     ? "Already have an account? "
                                     : "Don’t have an account? ",
                             style: TextStyle(
-                              color: Colors.white70,
-                              fontSize: h * 0.016,
+                              color: Colors.white,
+                              fontSize: h * 0.017,
+                              fontWeight: FontWeight.w500,
+                              shadows: [
+                                Shadow(
+                                  color: Colors.black.withValues(alpha: 0.3),
+                                  offset: const Offset(0, 1),
+                                  blurRadius: 4,
+                                ),
+                              ],
                             ),
                             children: [
                               TextSpan(
                                 text: isCreating ? "Login" : "Sign up",
-                                style: TextStyle(
+                                style: const TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,
-                                  fontSize: h * 0.02,
+                                  fontSize: 16,
+                                  decoration: TextDecoration.underline,
+                                  decorationColor: Colors.white,
                                 ),
                               ),
                             ],
