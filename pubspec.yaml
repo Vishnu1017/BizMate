@@ -124,11 +124,7 @@ flutter:
   assets:
     - assets/images/
     - assets/icons/
-    - assets/screenshots/
     - assets/fonts/Roboto-Regular.ttf
-    - assets/icons/Gpay.png
-    - assets/icons/Paytm.png
-    - assets/icons/Phonepe.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
