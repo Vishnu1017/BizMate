@@ -14,7 +14,6 @@ import 'package:bizmate/screens/login_screen.dart';
 import 'package:bizmate/screens/nav_bar_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -31,8 +30,6 @@ import 'utils/responsive.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Immediately remove any native splash screen so CustomSplashScreen displays right away
-  FlutterNativeSplash.remove();
 
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
 
@@ -244,8 +241,6 @@ class _CustomSplashScreenState extends State<CustomSplashScreen>
     // Start animation immediately
     _controller.forward();
 
-    // Ensure native splash is dismissed immediately so CustomSplashScreen is visible right away
-    FlutterNativeSplash.remove();
 
     _loadAppVersion();
     _initializeApp();
