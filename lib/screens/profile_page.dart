@@ -28,6 +28,7 @@ class ProfilePage extends StatefulWidget {
   final Future<void> Function()? onRentalStatusChanged;
   final ValueChanged<String>? onNameChanged;
   final void Function(String updatedName)? onProfileUpdated;
+  final VoidCallback? onImageUpdated;
 
   const ProfilePage({
     super.key,
@@ -35,6 +36,7 @@ class ProfilePage extends StatefulWidget {
     required this.userEmail,
     this.onRentalStatusChanged,
     this.onProfileUpdated,
+    this.onImageUpdated,
     this.onNameChanged, // ✅ ADD THIS
   });
 
@@ -53,6 +55,7 @@ class _ProfilePageState extends State<ProfilePage>
   late String upiId;
   String location = 'India';
   File? _profileImage;
+  int _imageVersion = 0;
   final picker = ImagePicker();
   bool _isImageLoading = false;
   bool _isImageSaved = false;
@@ -1769,6 +1772,11 @@ class _ProfilePageState extends State<ProfilePage>
 
       final newImage = await fileToSave.copy(filePath);
 
+      // Invalidate Flutter image cache so updated image displays immediately
+      await FileImage(newImage).evict();
+      PaintingBinding.instance.imageCache.clear();
+      PaintingBinding.instance.imageCache.clearLiveImages();
+
       // Save path
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(
@@ -1780,9 +1788,12 @@ class _ProfilePageState extends State<ProfilePage>
 
       setState(() {
         _profileImage = newImage;
+        _imageVersion = DateTime.now().millisecondsSinceEpoch;
         _isImageSaved = true;
         _isImageLoading = false;
       });
+
+      widget.onImageUpdated?.call();
 
       AppSnackBar.showSuccess(
         context,
@@ -2389,6 +2400,7 @@ class _ProfilePageState extends State<ProfilePage>
                                       : _profileImage != null && _isImageSaved
                                       ? Image.file(
                                         _profileImage!,
+                                        key: ValueKey(_imageVersion),
                                         fit: BoxFit.cover,
                                       )
                                       : Center(

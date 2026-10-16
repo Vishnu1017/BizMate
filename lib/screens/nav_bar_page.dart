@@ -1,6 +1,8 @@
 // lib/screens/nav_bar_page.dart
 // ignore_for_file: public_member_api_docs, sort_constructors_first, unused_field
 
+import 'dart:io';
+
 import 'package:bizmate/screens/Camera%20rental%20page/camera_rental_nav_bar.dart';
 import 'package:bizmate/utils/app_theme.dart';
 import 'package:flutter/material.dart';
@@ -47,6 +49,8 @@ class _NavBarPageState extends State<NavBarPage>
   bool _isRentalEnabled = false;
   String welcomeMessage = "";
   double scale = 1.0;
+  File? _profileImage;
+  int _imageVersion = 0;
   late ValueNotifier<String> _nameNotifier;
   bool _isNavigating = false;
 
@@ -87,8 +91,37 @@ class _NavBarPageState extends State<NavBarPage>
   void initState() {
     super.initState();
     _nameNotifier = ValueNotifier(widget.user.name);
+    _loadProfileImage();
     _loadRentalStatus();
     fetchWelcomeMessage();
+  }
+
+  Future<void> _loadProfileImage() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final path = prefs.getString('${widget.user.email}_profileImagePath');
+      if (path != null && path.isNotEmpty) {
+        final file = File(path);
+        if (await file.exists()) {
+          await FileImage(file).evict();
+          PaintingBinding.instance.imageCache.clear();
+          PaintingBinding.instance.imageCache.clearLiveImages();
+          if (!mounted) return;
+          setState(() {
+            _profileImage = file;
+            _imageVersion = DateTime.now().millisecondsSinceEpoch;
+          });
+          return;
+        }
+      }
+      if (!mounted) return;
+      setState(() {
+        _profileImage = null;
+        _imageVersion = DateTime.now().millisecondsSinceEpoch;
+      });
+    } catch (e) {
+      debugPrint('Error loading profile image in NavBarPage: $e');
+    }
   }
 
   Future<void> _loadRentalStatus() async {
@@ -102,6 +135,7 @@ class _NavBarPageState extends State<NavBarPage>
 
   Future<void> _reloadRentalStatus() async {
     await _loadRentalStatus();
+    await _loadProfileImage();
     if (!mounted) return;
     setState(() {});
   }
@@ -177,6 +211,9 @@ class _NavBarPageState extends State<NavBarPage>
 
         // optional: refresh welcome message
         fetchWelcomeMessage();
+      },
+      onImageUpdated: () {
+        _loadProfileImage();
       },
     ),
   ];
@@ -294,23 +331,64 @@ class _NavBarPageState extends State<NavBarPage>
                                     end: Alignment.topLeft,
                                   ),
                         ),
-                        child: Center(
-                          child: ValueListenableBuilder<String>(
-                            valueListenable: _nameNotifier,
-                            builder: (context, name, _) {
-                              return Text(
-                                name.isNotEmpty ? name[0].toUpperCase() : 'U',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: _scaleForWidth(
-                                    screenWidth,
-                                    18 * scale,
+                        child: ClipOval(
+                          child:
+                              _profileImage != null
+                                  ? Image.file(
+                                    _profileImage!,
+                                    key: ValueKey(_imageVersion),
+                                    fit: BoxFit.cover,
+                                    width: _scaleForWidth(
+                                      screenWidth,
+                                      44 * scale,
+                                    ),
+                                    height: _scaleForWidth(
+                                      screenWidth,
+                                      44 * scale,
+                                    ),
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return Center(
+                                        child: ValueListenableBuilder<String>(
+                                          valueListenable: _nameNotifier,
+                                          builder: (context, name, _) {
+                                            return Text(
+                                              name.isNotEmpty
+                                                  ? name[0].toUpperCase()
+                                                  : 'U',
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.w600,
+                                                fontSize: _scaleForWidth(
+                                                  screenWidth,
+                                                  18 * scale,
+                                                ),
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                      );
+                                    },
+                                  )
+                                  : Center(
+                                    child: ValueListenableBuilder<String>(
+                                      valueListenable: _nameNotifier,
+                                      builder: (context, name, _) {
+                                        return Text(
+                                          name.isNotEmpty
+                                              ? name[0].toUpperCase()
+                                              : 'U',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: _scaleForWidth(
+                                              screenWidth,
+                                              18 * scale,
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    ),
                                   ),
-                                ),
-                              );
-                            },
-                          ),
                         ),
                       ),
                     ),
