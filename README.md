@@ -18,7 +18,7 @@
   <a href="https://github.com/Vishnu1017/BizMate/blob/main/LICENSE">
     <img src="https://img.shields.io/github/license/Vishnu1017/BizMate" alt="License"/>
   </a>
-  <img src="https://img.shields.io/badge/version-1.0.34-blue" alt="Version"/>
+  <img src="https://img.shields.io/badge/version-1.1.0-blue" alt="Version"/>
   <img src="https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter" alt="Flutter"/>
   <img src="https://img.shields.io/badge/Dart-3.x-0175C2?logo=dart" alt="Dart"/>
 </p>
@@ -41,10 +41,13 @@ Built with **Hive** for lightning-fast local storage, BizMate works entirely off
 - Session management with **auto-login**
 - Role-based signup: **Photographer, Sales, Manager**, and more
 - Secure passcode setup, change, and removal from profile
+- **Theme toggle on login & signup screen** — switch dark/light before logging in
 
 ### 🏠 Dashboard & Home
 - Animated stats summary (Total Sales, Revenue, Outstanding Dues)
-- Recent sales list with customer info, status chips, and payment progress
+- Recent sales list with customer info, status badges, and payment progress
+- **Payment status filter chips** — instantly filter by **All / PAID / PARTIAL / DUE**
+- Filter chips stack with search and date range filters simultaneously
 - Quick action buttons for adding sales and viewing reports
 - Dark / Light theme toggle with persistent preference
 
@@ -105,10 +108,34 @@ Built with **Hive** for lightning-fast local storage, BizMate works entirely off
 - **Rental Orders**: View and manage all rental orders with status
 - Rental sale detail with full edit, payment tracking, and PDF generation
 
+### 👤 Profile
+- **Profile photo** — pick, crop, and persist your avatar across the entire app
+- Avatar displayed in the NavBar header and profile page in real-time
+- First-letter initial shown when no photo is set (with role-aware gradient)
+- Edit name, phone, email, and business role inline
+- Passcode management (setup / change / remove)
+- Rental visibility toggle for the camera rental module
+
 ### 🌗 Dark & Light Theme
 - Full **dark mode and light mode** support across all screens
-- Theme-aware gradients, chip colors, card surfaces, and shadows
+- **Custom animated theme toggle** on every page — smooth `RotationTransition` + `FadeTransition` with `AnimatedContainer` colour switching
+  - 🌙 Dark mode: slate icon `#94A3B8`, dark background `#1E293B`, slate border
+  - ☀️ Light mode: orange sun icon `#FF8F00`, warm cream background `#FFF8E1`, golden border `#FFCC02`
+- Theme toggle available on: **NavBar, Camera Rental NavBar, Login screen, Profile page**, and all inner pages via `AppThemeToggle`
 - Persistent theme preference stored locally
+
+---
+
+## 🆕 What's New in v1.1.0
+
+| Feature | Description |
+|---------|-------------|
+| **Profile Photo** | Pick & persist avatar from gallery; shown in NavBar header and profile page in real time |
+| **Animated Theme Toggle** | `RotationTransition` + `FadeTransition` design applied uniformly across all pages |
+| **Login Page Theme Toggle** | Theme can now be switched from the login/signup screen |
+| **Camera Rental Navbar Toggle** | Inline animated toggle matching the unified design |
+| **Sales Filter Chips** | All / PAID / PARTIAL / DUE filter row below search bar on home page |
+| **`AppThemeToggle` Widget** | Shared widget updated with the new animation design — one change, app-wide effect |
 
 ---
 
@@ -126,9 +153,9 @@ bizmate/
 │   │   └── rental_sale_model.dart
 │   ├── screens/                        # All app screens
 │   │   ├── auth_gate_screen.dart       # Login / Signup / Passcode
-│   │   ├── login_screen.dart
-│   │   ├── nav_bar_page.dart           # Main bottom navigation
-│   │   ├── home_page.dart              # Sales dashboard / home
+│   │   ├── login_screen.dart           # Login & signup UI (with theme toggle)
+│   │   ├── nav_bar_page.dart           # Main bottom navigation + profile avatar
+│   │   ├── home_page.dart              # Sales dashboard / home (with filter chips)
 │   │   ├── dashboard_page.dart         # Stats and analytics overview
 │   │   ├── new_sale_screen.dart        # Create / edit a sale
 │   │   ├── sale_detail_screen.dart     # Sale detail + payment management
@@ -139,11 +166,11 @@ bizmate/
 │   │   ├── CalendarPage.dart
 │   │   ├── DeliveryTrackerPage.dart
 │   │   ├── SalesReportPage.dart
-│   │   ├── profile_page.dart           # Profile, passcode, theme toggle
+│   │   ├── profile_page.dart           # Profile photo, passcode, theme, settings
 │   │   ├── pdf_preview_screen.dart
 │   │   ├── rental_pdf_preview_screen.dart
 │   │   └── Camera rental page/
-│   │       ├── camera_rental_nav_bar.dart
+│   │       ├── camera_rental_nav_bar.dart  # Rental navbar (with animated theme toggle)
 │   │       ├── camera_rental.dart
 │   │       ├── rental_items.dart
 │   │       ├── rental_customers_page.dart
@@ -155,6 +182,9 @@ bizmate/
 │   │       ├── rental_sale_detail_screen.dart
 │   │       └── view_rental_details_page.dart
 │   ├── widgets/                        # Reusable UI components
+│   │   ├── app_theme_toggle.dart       # Unified animated theme toggle widget
+│   │   ├── advanced_search_bar.dart    # Search + date filter bar
+│   │   └── ...
 │   └── utils/
 │       └── app_theme.dart              # AppColors, ThemeExtension, isDark helpers
 ├── assets/
@@ -183,7 +213,7 @@ bizmate/
 | **qr_flutter + barcode** | UPI QR code generation |
 | **local_auth** | Biometric fingerprint / Face ID |
 | **flutter_secure_storage** | Secure passcode storage |
-| **image_picker + image_cropper** | Profile and rental item photos |
+| **image_picker + image_cropper** | Profile photo and rental item photos |
 | **flutter_image_compress** | Image optimization |
 | **share_plus** | Share PDFs via WhatsApp, email, etc. |
 | **url_launcher** | Phone calls and WhatsApp deep links |
@@ -194,7 +224,7 @@ bizmate/
 | **lottie** | Lottie animation support |
 | **csv** | Sales report CSV export |
 | **intl** | Date/time formatting |
-| **shared_preferences** | Theme and session persistence |
+| **shared_preferences** | Theme, session, and profile photo persistence |
 | **file_picker / file_saver** | File import/export |
 
 ---
@@ -504,6 +534,10 @@ flutter pub run build_runner build --delete-conflicting-outputs
 ## 📈 Roadmap
 
 - [x] Dark & Light theme with instant toggle
+- [x] Animated theme toggle (`RotationTransition` + `FadeTransition`) on all pages
+- [x] Theme toggle available on login/signup screen
+- [x] Profile photo — pick, crop, and persist avatar across the app
+- [x] Payment status filter chips (All / PAID / PARTIAL / DUE) on home page
 - [x] Camera rental module for photographers
 - [x] WhatsApp integration with message templates
 - [x] Release Agreement PDF generation
@@ -513,7 +547,7 @@ flutter pub run build_runner build --delete-conflicting-outputs
 - [x] Delivery tracker
 - [ ] Cloud sync and backup (Firebase / Supabase)
 - [ ] Multi-device support
-- [ ] Notifications for upcoming bookings and overdue payments
+- [ ] Push notifications for upcoming bookings and overdue payments
 - [ ] Custom invoice branding (logo, colors, header)
 - [ ] Expense tracking module
 - [ ] Multi-language / localization support
