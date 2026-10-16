@@ -2933,92 +2933,55 @@ class _ProfilePageState extends State<ProfilePage>
                       ),
                     ],
                   ),
-                  Tooltip(
-                    message: _isPasscodeEnabled
-                        ? 'Tap to disable passcode'
-                        : 'Tap to enable passcode',
-                    child: Material(
-                      color: Colors.transparent,
-                      borderRadius: BorderRadius.circular(12),
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(12),
-                        onTap: () async {
-                          final prefs = await SharedPreferences.getInstance();
-                          if (!mounted) return;
-                          if (!_isPasscodeEnabled) {
-                            final success = await _setupPasscode();
-                            if (!mounted) return;
-                            if (!success) {
-                              setState(() => _isPasscodeEnabled = false);
-                              return;
-                            }
-                            await prefs.setBool(
-                              '${widget.user.email}_passcodeEnabled',
-                              true,
-                            );
-                            if (!mounted) return;
-                            setState(() => _isPasscodeEnabled = true);
-                            AppSnackBar.showSuccess(
-                              context,
-                              message: "Passcode enabled",
-                              duration: const Duration(seconds: 2),
-                            );
-                          } else {
-                            await prefs.setBool(
-                              '${widget.user.email}_passcodeEnabled',
-                              false,
-                            );
+                  Transform.scale(
+                    scale: 0.8 * scale,
+                    child: Switch(
+                      value: _isPasscodeEnabled,
+                      activeThumbColor: Colors.white,
+                      activeTrackColor: Color(0xFF10B981),
+                      inactiveThumbColor: Colors.white,
+                      inactiveTrackColor: Color(0xFFEF4444),
+                      onChanged: (value) async {
+                        final prefs = await SharedPreferences.getInstance();
+
+                        if (value) {
+                          final success = await _setupPasscode();
+
+                          if (!success) {
                             if (!mounted) return;
                             setState(() => _isPasscodeEnabled = false);
-                            AppSnackBar.showWarning(
-                              context,
-                              message: "Passcode disabled",
-                              duration: const Duration(seconds: 2),
-                            );
+                            return;
                           }
-                        },
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 300),
-                          curve: Curves.easeInOut,
-                          width: 40 * scale,
-                          height: 40 * scale,
-                          decoration: BoxDecoration(
-                            color: _isPasscodeEnabled
-                                ? const Color(0xFF10B981).withValues(alpha: 0.12)
-                                : const Color(0xFFEF4444).withValues(alpha: 0.10),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: _isPasscodeEnabled
-                                  ? const Color(0xFF10B981)
-                                  : const Color(0xFFEF4444),
-                              width: 1,
-                            ),
-                          ),
-                          child: Center(
-                            child: AnimatedSwitcher(
-                              duration: const Duration(milliseconds: 300),
-                              transitionBuilder: (child, anim) =>
-                                  RotationTransition(
-                                    turns: anim,
-                                    child: FadeTransition(
-                                      opacity: anim,
-                                      child: child,
-                                    ),
-                                  ),
-                              child: Icon(
-                                _isPasscodeEnabled
-                                    ? Icons.shield_rounded
-                                    : Icons.shield_outlined,
-                                key: ValueKey(_isPasscodeEnabled),
-                                color: _isPasscodeEnabled
-                                    ? const Color(0xFF10B981)
-                                    : const Color(0xFFEF4444),
-                                size: 20 * scale,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
+
+                          await prefs.setBool(
+                            '${widget.user.email}_passcodeEnabled',
+                            true,
+                          );
+
+                          if (!mounted) return;
+                          setState(() => _isPasscodeEnabled = true);
+
+                          AppSnackBar.showSuccess(
+                            context,
+                            message: "Passcode enabled",
+                            duration: const Duration(seconds: 2),
+                          );
+                        } else {
+                          await prefs.setBool(
+                            '${widget.user.email}_passcodeEnabled',
+                            false,
+                          );
+
+                          if (!mounted) return;
+                          setState(() => _isPasscodeEnabled = false);
+
+                          AppSnackBar.showWarning(
+                            context,
+                            message: "Passcode disabled",
+                            duration: const Duration(seconds: 2),
+                          );
+                        }
+                      },
                     ),
                   ),
                 ],
@@ -3308,64 +3271,21 @@ class _ProfilePageState extends State<ProfilePage>
                       ),
                     ],
                   ),
-                  Tooltip(
-                    message: _isRentalEnabled
-                        ? 'Tap to disable rental page'
-                        : 'Tap to enable rental page',
-                    child: Material(
-                      color: Colors.transparent,
-                      borderRadius: BorderRadius.circular(12),
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(12),
-                        onTap: () {
-                          if (_isRentalEnabled) {
-                            _disableRental();
-                          } else {
-                            _enableRental();
-                          }
-                        },
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 300),
-                          curve: Curves.easeInOut,
-                          width: 40 * scale,
-                          height: 40 * scale,
-                          decoration: BoxDecoration(
-                            color: _isRentalEnabled
-                                ? const Color(0xFF10B981).withValues(alpha: 0.12)
-                                : const Color(0xFFEF4444).withValues(alpha: 0.10),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: _isRentalEnabled
-                                  ? const Color(0xFF10B981)
-                                  : const Color(0xFFEF4444),
-                              width: 1,
-                            ),
-                          ),
-                          child: Center(
-                            child: AnimatedSwitcher(
-                              duration: const Duration(milliseconds: 300),
-                              transitionBuilder: (child, anim) =>
-                                  RotationTransition(
-                                    turns: anim,
-                                    child: FadeTransition(
-                                      opacity: anim,
-                                      child: child,
-                                    ),
-                                  ),
-                              child: Icon(
-                                _isRentalEnabled
-                                    ? Icons.visibility_rounded
-                                    : Icons.visibility_off_rounded,
-                                key: ValueKey(_isRentalEnabled),
-                                color: _isRentalEnabled
-                                    ? const Color(0xFF10B981)
-                                    : const Color(0xFFEF4444),
-                                size: 20 * scale,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
+                  Transform.scale(
+                    scale: 0.8 * scale,
+                    child: Switch(
+                      value: _isRentalEnabled,
+                      activeThumbColor: Colors.white,
+                      activeTrackColor: Color(0xFF10B981),
+                      inactiveThumbColor: Colors.white,
+                      inactiveTrackColor: Color(0xFFEF4444),
+                      onChanged: (value) {
+                        if (value) {
+                          _enableRental();
+                        } else {
+                          _disableRental();
+                        }
+                      },
                     ),
                   ),
                 ],

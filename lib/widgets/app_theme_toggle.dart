@@ -11,11 +11,7 @@ class AppThemeToggle extends StatelessWidget {
   final double size;
   final EdgeInsetsGeometry? margin;
 
-  const AppThemeToggle({
-    super.key,
-    this.size = 36.0,
-    this.margin,
-  });
+  const AppThemeToggle({super.key, this.size = 36.0, this.margin});
 
   @override
   Widget build(BuildContext context) {
@@ -47,32 +43,36 @@ class AppThemeToggle extends StatelessWidget {
                   width: size,
                   height: size,
                   decoration: BoxDecoration(
-                    color: isDark
-                        ? const Color(0xFF1E293B)
-                        : const Color(0xFFFFF8E1),
+                    color:
+                        isDark
+                            ? const Color(0xFF1E293B)
+                            : const Color(0xFFFFF8E1),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: isDark
-                          ? const Color(0xFF334155)
-                          : const Color(0xFFFFCC02),
+                      color:
+                          isDark
+                              ? const Color(0xFF334155)
+                              : const Color(0xFFFFCC02),
                       width: 1,
                     ),
                   ),
                   child: Center(
                     child: AnimatedSwitcher(
                       duration: const Duration(milliseconds: 300),
-                      transitionBuilder: (child, anim) => RotationTransition(
-                        turns: anim,
-                        child: FadeTransition(opacity: anim, child: child),
-                      ),
+                      transitionBuilder:
+                          (child, anim) => RotationTransition(
+                            turns: anim,
+                            child: FadeTransition(opacity: anim, child: child),
+                          ),
                       child: Icon(
                         isDark
                             ? Icons.dark_mode_rounded
                             : Icons.light_mode_rounded,
                         key: ValueKey(isDark),
-                        color: isDark
-                            ? const Color(0xFF94A3B8)
-                            : const Color(0xFFFF8F00),
+                        color:
+                            isDark
+                                ? const Color(0xFF94A3B8)
+                                : const Color(0xFFFF8F00),
                         size: size * 0.556, // ~20 / 36
                       ),
                     ),
@@ -86,7 +86,6 @@ class AppThemeToggle extends StatelessWidget {
     );
   }
 }
-
 
 /// ─────────────────────────────────────────────────────────────────────────────
 /// SEGMENTED APP THEME TOGGLE (For Profile & Settings Page)
@@ -102,8 +101,10 @@ class AppThemeSegmentedToggle extends StatelessWidget {
       builder: (context, currentMode, _) {
         final isDark = Theme.of(context).brightness == Brightness.dark;
         final cardBg = isDark ? const Color(0xFF1E293B) : Colors.white;
-        final text1 = isDark ? const Color(0xFFF1F5F9) : const Color(0xFF1A1A1A);
-        final text2 = isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+        final text1 =
+            isDark ? const Color(0xFFF1F5F9) : const Color(0xFF1A1A1A);
+        final text2 =
+            isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
         final activeColor = const Color(0xFF2563EB);
 
         return Column(
@@ -120,10 +121,7 @@ class AppThemeSegmentedToggle extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               'Choose your preferred visual appearance across all pages',
-              style: TextStyle(
-                fontSize: 13,
-                color: text2,
-              ),
+              style: TextStyle(fontSize: 13, color: text2),
             ),
             const SizedBox(height: 16),
             Row(
@@ -132,13 +130,13 @@ class AppThemeSegmentedToggle extends StatelessWidget {
                   child: _buildOptionTile(
                     context: context,
                     title: 'Light',
-                    icon: Icons.wb_sunny_rounded,
+                    icon: Icons.light_mode_rounded,
                     iconColor: const Color(0xFFF59E0B),
                     isSelected: currentMode == ThemeMode.light,
                     onTap: () => AppTheme.setThemeMode(ThemeMode.light),
                     cardBg: cardBg,
                     text1: text1,
-                    activeColor: activeColor,
+                    activeColor: const Color(0xFFF59E0B),
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -146,7 +144,7 @@ class AppThemeSegmentedToggle extends StatelessWidget {
                   child: _buildOptionTile(
                     context: context,
                     title: 'Dark',
-                    icon: Icons.nightlight_round_rounded,
+                    icon: Icons.dark_mode_rounded,
                     iconColor: const Color(0xFF38BDF8),
                     isSelected: currentMode == ThemeMode.dark,
                     onTap: () => AppTheme.setThemeMode(ThemeMode.dark),
@@ -160,13 +158,13 @@ class AppThemeSegmentedToggle extends StatelessWidget {
                   child: _buildOptionTile(
                     context: context,
                     title: 'System',
-                    icon: Icons.settings_brightness_rounded,
+                    icon: Icons.brightness_6_rounded,
                     iconColor: const Color(0xFF8B5CF6),
                     isSelected: currentMode == ThemeMode.system,
                     onTap: () => AppTheme.setThemeMode(ThemeMode.system),
                     cardBg: cardBg,
                     text1: text1,
-                    activeColor: activeColor,
+                    activeColor: const Color(0xFF8B5CF6),
                   ),
                 ),
               ],
@@ -198,36 +196,32 @@ class AppThemeSegmentedToggle extends StatelessWidget {
           duration: const Duration(milliseconds: 250),
           padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
           decoration: BoxDecoration(
-            color: isSelected
-                ? activeColor.withValues(alpha: 0.12)
-                : cardBg,
+            color: isSelected ? activeColor.withValues(alpha: 0.12) : cardBg,
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
-              color: isSelected
-                  ? activeColor
-                  : (Theme.of(context).brightness == Brightness.dark
-                      ? const Color(0xFF334155)
-                      : const Color(0xFFE2E8F0)),
+              color:
+                  isSelected
+                      ? activeColor
+                      : (Theme.of(context).brightness == Brightness.dark
+                          ? const Color(0xFF334155)
+                          : const Color(0xFFE2E8F0)),
               width: isSelected ? 2.0 : 1.0,
             ),
-            boxShadow: isSelected
-                ? [
-                    BoxShadow(
-                      color: activeColor.withValues(alpha: 0.15),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ]
-                : [],
+            boxShadow:
+                isSelected
+                    ? [
+                      BoxShadow(
+                        color: activeColor.withValues(alpha: 0.15),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ]
+                    : [],
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                icon,
-                color: isSelected ? activeColor : iconColor,
-                size: 24,
-              ),
+              Icon(icon, color: isSelected ? activeColor : iconColor, size: 24),
               const SizedBox(height: 8),
               Text(
                 title,
