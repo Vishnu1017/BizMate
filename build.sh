@@ -11,7 +11,7 @@ flutter clean
 flutter pub get
 
 echo "⚡ Building optimized split APKs (--split-per-abi, --obfuscate)..."
-flutter build apk --split-per-abi --obfuscate --split-debug-info=build/debug-info
+flutter build apk --release --obfuscate --split-debug-info=build/debug-info
 
 echo ""
 echo "=============================================="
