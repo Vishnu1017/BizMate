@@ -174,7 +174,77 @@ class _CameraRentalNavBarState extends State<CameraRentalNavBar> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     _buildBackButton(screenWidth),
-                    const AppThemeToggle(),
+                    ValueListenableBuilder<ThemeMode>(
+                      valueListenable: AppTheme.themeModeNotifier,
+                      builder: (context, mode, _) {
+                        final dark =
+                            mode == ThemeMode.dark ||
+                            (mode == ThemeMode.system &&
+                                MediaQuery.platformBrightnessOf(context) ==
+                                    Brightness.dark);
+                        return Tooltip(
+                          message: dark
+                              ? 'Switch to Light Mode'
+                              : 'Switch to Dark Mode',
+                          child: Material(
+                            color: Colors.transparent,
+                            borderRadius: BorderRadius.circular(12),
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(12),
+                              onTap: () {
+                                AppTheme.setThemeMode(
+                                  dark ? ThemeMode.light : ThemeMode.dark,
+                                );
+                              },
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 300),
+                                curve: Curves.easeInOut,
+                                width: _scaleForWidth(screenWidth, 36 * scale),
+                                height: _scaleForWidth(screenWidth, 36 * scale),
+                                decoration: BoxDecoration(
+                                  color: dark
+                                      ? const Color(0xFF1E293B)
+                                      : const Color(0xFFFFF8E1),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: dark
+                                        ? const Color(0xFF334155)
+                                        : const Color(0xFFFFCC02),
+                                    width: 1,
+                                  ),
+                                ),
+                                child: Center(
+                                  child: AnimatedSwitcher(
+                                    duration: const Duration(milliseconds: 300),
+                                    transitionBuilder: (child, anim) =>
+                                        RotationTransition(
+                                          turns: anim,
+                                          child: FadeTransition(
+                                            opacity: anim,
+                                            child: child,
+                                          ),
+                                        ),
+                                    child: Icon(
+                                      dark
+                                          ? Icons.dark_mode_rounded
+                                          : Icons.light_mode_rounded,
+                                      key: ValueKey(dark),
+                                      color: dark
+                                          ? const Color(0xFF94A3B8)
+                                          : const Color(0xFFFF8F00),
+                                      size: _scaleForWidth(
+                                        screenWidth,
+                                        20 * scale,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
                   ],
                 ),
 

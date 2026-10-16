@@ -44,6 +44,7 @@ class _HomePageState extends State<HomePage>
   int _previousSalesCount = 0;
   bool _isSendingReminder = false;
   double scale = 1.0;
+  String _statusFilter = 'All'; // 'All' | 'PAID' | 'PARTIAL' | 'DUE'
 
   Future<void> _loadCurrentUserData() async {
     final user = await _getCurrentUserName();
@@ -199,6 +200,121 @@ class _HomePageState extends State<HomePage>
     });
   }
 
+  // ── Status filter chips ────────────────────────────────────────────────────
+  static const _filters = ['All', 'PAID', 'PARTIAL', 'DUE'];
+
+  static const _filterColors = {
+    'All': Color(0xFF2563EB),
+    'PAID': Color(0xFF16A34A),
+    'PARTIAL': Color(0xFF0284C7),
+    'DUE': Color(0xFFEA580C),
+  };
+
+  static const _filterIcons = {
+    'All': Icons.list_alt_rounded,
+    'PAID': Icons.check_circle_rounded,
+    'PARTIAL': Icons.pending_rounded,
+    'DUE': Icons.warning_amber_rounded,
+  };
+
+  Widget _buildStatusFilterChips() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 0, 12, 4),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children:
+              _filters.map((label) {
+                final isSelected = _statusFilter == label;
+                final color = _filterColors[label]!;
+                final icon = _filterIcons[label]!;
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: GestureDetector(
+                    onTap: () => setState(() => _statusFilter = label),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 220),
+                      curve: Curves.easeInOut,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 7,
+                      ),
+                      decoration: BoxDecoration(
+                        color:
+                            isSelected
+                                ? color.withValues(alpha: isDark ? 0.22 : 0.13)
+                                : (isDark
+                                    ? const Color(0xFF1E293B)
+                                    : Colors.white),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color:
+                              isSelected
+                                  ? color
+                                  : (isDark
+                                      ? const Color(0xFF334155)
+                                      : const Color(0xFFE2E8F0)),
+                          width: isSelected ? 1.5 : 1,
+                        ),
+                        boxShadow:
+                            isSelected
+                                ? [
+                                  BoxShadow(
+                                    color: color.withValues(alpha: 0.18),
+                                    blurRadius: 6,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ]
+                                : [],
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 200),
+                            child: Icon(
+                              icon,
+                              key: ValueKey('$label-$isSelected'),
+                              size: 14,
+                              color:
+                                  isSelected
+                                      ? color
+                                      : (isDark
+                                          ? const Color(0xFF94A3B8)
+                                          : const Color(0xFF64748B)),
+                            ),
+                          ),
+                          const SizedBox(width: 5),
+                          AnimatedDefaultTextStyle(
+                            duration: const Duration(milliseconds: 200),
+                            style: TextStyle(
+                              fontSize: 12.5,
+                              fontWeight:
+                                  isSelected
+                                      ? FontWeight.w700
+                                      : FontWeight.w500,
+                              color:
+                                  isSelected
+                                      ? color
+                                      : (isDark
+                                          ? const Color(0xFF94A3B8)
+                                          : const Color(0xFF64748B)),
+                              letterSpacing: 0.2,
+                            ),
+                            child: Text(label),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+        ),
+      ),
+    );
+  }
+
   Widget buildSalesList() {
     if (userBox == null) {
       return Center(child: CircularProgressIndicator());
@@ -279,6 +395,21 @@ class _HomePageState extends State<HomePage>
               }).toList();
         }
 
+        // ── Status filter ────────────────────────────────────────────
+        if (_statusFilter != 'All') {
+          sales =
+              sales.where((sale) {
+                final bool isFullyPaid = sale.amount >= sale.totalAmount;
+                final bool isPartiallyPaid =
+                    sale.amount > 0 && sale.amount < sale.totalAmount;
+                final bool isUnpaid = sale.amount == 0;
+                if (_statusFilter == 'PAID') return isFullyPaid;
+                if (_statusFilter == 'PARTIAL') return isPartiallyPaid;
+                if (_statusFilter == 'DUE') return isUnpaid;
+                return true;
+              }).toList();
+        }
+
         return LayoutBuilder(
           builder: (context, constraints) {
             final bool isSmallScreen = constraints.maxWidth < 600;
@@ -298,9 +429,13 @@ class _HomePageState extends State<HomePage>
                   onDateRangeChanged: _handleDateRangeChanged,
                   showDateFilter: true,
                 ),
+
+                // ── Status Filter Chips ──────────────────────────────
+                _buildStatusFilterChips(),
                 if (sales.isEmpty &&
                     _searchQuery.isEmpty &&
-                    selectedRange == null)
+                    selectedRange == null &&
+                    _statusFilter == 'All')
                   Padding(
                     padding: const EdgeInsets.only(top: 100),
                     child: Center(
@@ -320,27 +455,44 @@ class _HomePageState extends State<HomePage>
                     ),
                   ),
                 if (sales.isEmpty &&
-                    (_searchQuery.isNotEmpty || selectedRange != null))
+                    (_searchQuery.isNotEmpty ||
+                        selectedRange != null ||
+                        _statusFilter != 'All'))
                   Padding(
-                    padding: const EdgeInsets.only(top: 100),
+                    padding: const EdgeInsets.only(top: 80),
                     child: Center(
-                      child: Text(
-                        _searchQuery.isNotEmpty && selectedRange != null
-                            ? "No results found for '$_searchQuery' in selected date range"
-                            : _searchQuery.isNotEmpty
-                            ? "No results found for '$_searchQuery'"
-                            : "No sales found from ${DateFormat('dd MMM').format(selectedRange!.start)}\n"
-                                "to ${DateFormat('dd MMM').format(selectedRange!.end)}",
-                        style: TextStyle(
-                          fontSize:
-                              isVerySmallScreen
-                                  ? 12
-                                  : isSmallScreen
-                                  ? 14
-                                  : 16,
-                          color: Colors.grey,
-                        ),
-                        textAlign: TextAlign.center,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.filter_list_off_rounded,
+                            size: 48,
+                            color: Colors.grey.shade400,
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            _statusFilter != 'All' &&
+                                    _searchQuery.isEmpty &&
+                                    selectedRange == null
+                                ? 'No $_statusFilter sales found'
+                                : _searchQuery.isNotEmpty &&
+                                    selectedRange != null
+                                ? "No results for '\$_searchQuery' in selected range"
+                                : _searchQuery.isNotEmpty
+                                ? "No results found for '\$_searchQuery'"
+                                : "No sales found in selected date range",
+                            style: TextStyle(
+                              fontSize:
+                                  isVerySmallScreen
+                                      ? 12
+                                      : isSmallScreen
+                                      ? 14
+                                      : 16,
+                              color: Colors.grey,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
                       ),
                     ),
                   ),

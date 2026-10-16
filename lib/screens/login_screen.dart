@@ -1,6 +1,7 @@
 // ignore_for_file: library_private_types_in_public_api
 
 import 'package:bizmate/screens/nav_bar_page.dart' show NavBarPage;
+import 'package:bizmate/utils/app_theme.dart';
 import 'package:bizmate/widgets/app_snackbar.dart' show AppSnackBar;
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart'
@@ -978,6 +979,85 @@ class _LoginScreenState extends State<LoginScreen>
     return Scaffold(
       body: Stack(
         children: [
+          // ── Theme Toggle (top-right) ──────────────────────────────────
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 12,
+            right: 16,
+            child: ValueListenableBuilder<ThemeMode>(
+              valueListenable: AppTheme.themeModeNotifier,
+              builder: (context, mode, _) {
+                final dark =
+                    mode == ThemeMode.dark ||
+                    (mode == ThemeMode.system &&
+                        MediaQuery.platformBrightnessOf(context) ==
+                            Brightness.dark);
+                return Tooltip(
+                  message:
+                      dark ? 'Switch to Light Mode' : 'Switch to Dark Mode',
+                  child: Material(
+                    color: Colors.transparent,
+                    borderRadius: BorderRadius.circular(12),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(12),
+                      onTap: () {
+                        AppTheme.setThemeMode(
+                          dark ? ThemeMode.light : ThemeMode.dark,
+                        );
+                      },
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeInOut,
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: dark
+                              ? const Color(0xFF1E293B)
+                              : Colors.white.withValues(alpha: 0.25),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: dark
+                                ? const Color(0xFF334155)
+                                : Colors.white.withValues(alpha: 0.6),
+                            width: 1,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.12),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Center(
+                          child: AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 300),
+                            transitionBuilder: (child, anim) =>
+                                RotationTransition(
+                                  turns: anim,
+                                  child: FadeTransition(
+                                    opacity: anim,
+                                    child: child,
+                                  ),
+                                ),
+                            child: Icon(
+                              dark
+                                  ? Icons.dark_mode_rounded
+                                  : Icons.light_mode_rounded,
+                              key: ValueKey(dark),
+                              color: dark
+                                  ? const Color(0xFF94A3B8)
+                                  : Colors.white,
+                              size: 20,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
           AbsorbPointer(
             absorbing: _isProcessing,
             child: Container(

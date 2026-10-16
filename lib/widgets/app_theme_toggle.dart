@@ -5,6 +5,7 @@ import '../utils/app_theme.dart';
 /// APP THEME TOGGLE WIDGET
 /// A standalone, animated theme toggle button that can be embedded in any
 /// AppBar, Page Header, or custom toolbar across the entire project.
+/// Matches the _buildThemeToggleButton design in NavBarPage exactly.
 /// ─────────────────────────────────────────────────────────────────────────────
 class AppThemeToggle extends StatelessWidget {
   final double size;
@@ -21,17 +22,10 @@ class AppThemeToggle extends StatelessWidget {
     return ValueListenableBuilder<ThemeMode>(
       valueListenable: AppTheme.themeModeNotifier,
       builder: (context, mode, _) {
-        final platformDark =
-            MediaQuery.platformBrightnessOf(context) == Brightness.dark;
-        final isDark = mode == ThemeMode.dark ||
-            (mode == ThemeMode.system && platformDark);
-
-        final bg = isDark ? const Color(0xFF1E293B) : const Color(0xFFFFF8E1);
-        final border =
-            isDark ? const Color(0xFF334155) : const Color(0xFFFFCC02);
-        final shadow = isDark
-            ? Colors.black.withValues(alpha: 0.3)
-            : const Color(0xFFFFB300).withValues(alpha: 0.2);
+        final isDark =
+            mode == ThemeMode.dark ||
+            (mode == ThemeMode.system &&
+                MediaQuery.platformBrightnessOf(context) == Brightness.dark);
 
         return Container(
           margin: margin,
@@ -53,37 +47,34 @@ class AppThemeToggle extends StatelessWidget {
                   width: size,
                   height: size,
                   decoration: BoxDecoration(
-                    color: bg,
+                    color: isDark
+                        ? const Color(0xFF1E293B)
+                        : const Color(0xFFFFF8E1),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: border, width: 1.2),
-                    boxShadow: [
-                      BoxShadow(
-                        color: shadow,
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
+                    border: Border.all(
+                      color: isDark
+                          ? const Color(0xFF334155)
+                          : const Color(0xFFFFCC02),
+                      width: 1,
+                    ),
                   ),
                   child: Center(
                     child: AnimatedSwitcher(
                       duration: const Duration(milliseconds: 300),
-                      transitionBuilder: (child, anim) => ScaleTransition(
-                        scale: anim,
-                        child: child,
+                      transitionBuilder: (child, anim) => RotationTransition(
+                        turns: anim,
+                        child: FadeTransition(opacity: anim, child: child),
                       ),
-                      child: isDark
-                          ? const Icon(
-                              Icons.nightlight_round_rounded,
-                              key: ValueKey('dark'),
-                              color: Color(0xFF38BDF8),
-                              size: 20,
-                            )
-                          : const Icon(
-                              Icons.wb_sunny_rounded,
-                              key: ValueKey('light'),
-                              color: Color(0xFFF59E0B),
-                              size: 20,
-                            ),
+                      child: Icon(
+                        isDark
+                            ? Icons.dark_mode_rounded
+                            : Icons.light_mode_rounded,
+                        key: ValueKey(isDark),
+                        color: isDark
+                            ? const Color(0xFF94A3B8)
+                            : const Color(0xFFFF8F00),
+                        size: size * 0.556, // ~20 / 36
+                      ),
                     ),
                   ),
                 ),
@@ -95,6 +86,7 @@ class AppThemeToggle extends StatelessWidget {
     );
   }
 }
+
 
 /// ─────────────────────────────────────────────────────────────────────────────
 /// SEGMENTED APP THEME TOGGLE (For Profile & Settings Page)
