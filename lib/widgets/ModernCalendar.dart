@@ -417,10 +417,11 @@ class _ModernCalendarState extends State<ModernCalendar>
   ) {
     if (_isSelected(date)) return null;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    if (!isCurrentMonth)
+    if (!isCurrentMonth) {
       return isDark
           ? const Color(0xFF0F172A).withValues(alpha: 0.4)
           : Colors.grey.shade50;
+    }
     return null;
   }
 
@@ -431,8 +432,9 @@ class _ModernCalendarState extends State<ModernCalendar>
   ) {
     if (_isSelected(date)) return Colors.white;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    if (!isCurrentMonth)
+    if (!isCurrentMonth) {
       return isDark ? const Color(0xFF475569) : Colors.grey.shade400;
+    }
     return isDark ? const Color(0xFFF1F5F9) : Colors.black87;
   }
 

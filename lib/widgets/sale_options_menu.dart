@@ -502,8 +502,8 @@ class SaleOptionsMenu extends StatelessWidget {
       text: balanceAmount.toStringAsFixed(2),
     );
 
-    return WillPopScope(
-      onWillPop: () async => false,
+    return PopScope(
+      canPop: false,
       child: Dialog(
         insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),

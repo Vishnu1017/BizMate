@@ -144,6 +144,7 @@ Thanks for renting with us!
             // 1️⃣ Copy message
             await Clipboard.setData(ClipboardData(text: message));
 
+            if (!context.mounted) return;
             AppSnackBar.showSuccess(
               context,
               message:
@@ -155,12 +156,14 @@ Thanks for renting with us!
 
             // 2️⃣ Share
             try {
+              // ignore: deprecated_member_use
               await Share.shareXFiles(
                 [file],
                 text: message,
                 subject: '📸 Rental Invoice from ${sale.customerName}',
               );
             } catch (e) {
+              if (!context.mounted) return;
               AppSnackBar.showError(
                 context,
                 message: "Failed to share: ${e.toString()}",

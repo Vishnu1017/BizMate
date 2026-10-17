@@ -28,7 +28,7 @@ class RentalSaleMenu extends StatelessWidget {
   /// Index in the rentalSales list (originalIndex from your list)
   final int originalIndex;
 
-  /// User-specific Hive box: userdata_<safeEmail>
+  /// User-specific Hive box: `userdata_<safeEmail>`
   final Box userBox;
 
   /// For sizing the popup icons (like SaleOptionsMenu)
@@ -325,8 +325,8 @@ class RentalSaleMenu extends StatelessWidget {
       text: balanceAmount.toStringAsFixed(2),
     );
 
-    return WillPopScope(
-      onWillPop: () async => false,
+    return PopScope(
+      canPop: false,
       child: Dialog(
         insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),

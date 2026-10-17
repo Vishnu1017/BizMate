@@ -14,7 +14,7 @@ class SelectItemsScreen extends StatefulWidget {
   const SelectItemsScreen({super.key, this.onItemSaved});
 
   @override
-  _SelectItemsScreenState createState() => _SelectItemsScreenState();
+  State<SelectItemsScreen> createState() => _SelectItemsScreenState();
 }
 
 class _SelectItemsScreenState extends State<SelectItemsScreen> {

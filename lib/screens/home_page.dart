@@ -217,10 +217,27 @@ class _HomePageState extends State<HomePage>
     'DUE': Icons.warning_amber_rounded,
   };
 
-  Widget _buildStatusFilterChips() {
+  Widget _buildStatusFilterChips({
+    bool isSmallScreen = true,
+    bool isLargeScreen = false,
+  }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final double hPadding =
+        isLargeScreen ? 20.0 : (isSmallScreen ? 10.0 : 14.0);
+    final double chipHPadding =
+        isLargeScreen ? 14.0 : (isSmallScreen ? 7.0 : 10.0);
+    final double chipVPadding =
+        isLargeScreen ? 5.5 : (isSmallScreen ? 2.5 : 3.5);
+    final double chipRadius =
+        isLargeScreen ? 16.0 : (isSmallScreen ? 12.0 : 13.0);
+    final double iconSize = isLargeScreen ? 14.0 : (isSmallScreen ? 9.5 : 11.0);
+    final double fontSize = isLargeScreen ? 12.5 : (isSmallScreen ? 9.0 : 10.0);
+    final double gap = isLargeScreen ? 4.0 : 3.0;
+    final double itemSpacing =
+        isLargeScreen ? 6.0 : (isSmallScreen ? 4.0 : 5.0);
+
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 0, 12, 4),
+      padding: EdgeInsets.fromLTRB(hPadding, 0, hPadding, 2),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: Row(
@@ -230,24 +247,24 @@ class _HomePageState extends State<HomePage>
                 final color = _filterColors[label]!;
                 final icon = _filterIcons[label]!;
                 return Padding(
-                  padding: const EdgeInsets.only(right: 8),
+                  padding: EdgeInsets.only(right: itemSpacing),
                   child: GestureDetector(
                     onTap: () => setState(() => _statusFilter = label),
                     child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 220),
+                      duration: const Duration(milliseconds: 200),
                       curve: Curves.easeInOut,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 7,
+                      padding: EdgeInsets.symmetric(
+                        horizontal: chipHPadding,
+                        vertical: chipVPadding,
                       ),
                       decoration: BoxDecoration(
                         color:
                             isSelected
-                                ? color.withValues(alpha: isDark ? 0.22 : 0.13)
+                                ? color.withValues(alpha: isDark ? 0.22 : 0.12)
                                 : (isDark
                                     ? const Color(0xFF1E293B)
                                     : Colors.white),
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(chipRadius),
                         border: Border.all(
                           color:
                               isSelected
@@ -255,15 +272,15 @@ class _HomePageState extends State<HomePage>
                                   : (isDark
                                       ? const Color(0xFF334155)
                                       : const Color(0xFFE2E8F0)),
-                          width: isSelected ? 1.5 : 1,
+                          width: isSelected ? 1.2 : 1,
                         ),
                         boxShadow:
                             isSelected
                                 ? [
                                   BoxShadow(
-                                    color: color.withValues(alpha: 0.18),
-                                    blurRadius: 6,
-                                    offset: const Offset(0, 2),
+                                    color: color.withValues(alpha: 0.15),
+                                    blurRadius: isLargeScreen ? 6 : 4,
+                                    offset: const Offset(0, 1),
                                   ),
                                 ]
                                 : [],
@@ -272,11 +289,11 @@ class _HomePageState extends State<HomePage>
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 200),
+                            duration: const Duration(milliseconds: 180),
                             child: Icon(
                               icon,
                               key: ValueKey('$label-$isSelected'),
-                              size: 14,
+                              size: iconSize,
                               color:
                                   isSelected
                                       ? color
@@ -285,11 +302,11 @@ class _HomePageState extends State<HomePage>
                                           : const Color(0xFF64748B)),
                             ),
                           ),
-                          const SizedBox(width: 5),
+                          SizedBox(width: gap),
                           AnimatedDefaultTextStyle(
-                            duration: const Duration(milliseconds: 200),
+                            duration: const Duration(milliseconds: 180),
                             style: TextStyle(
-                              fontSize: 12.5,
+                              fontSize: fontSize,
                               fontWeight:
                                   isSelected
                                       ? FontWeight.w700
@@ -300,7 +317,7 @@ class _HomePageState extends State<HomePage>
                                       : (isDark
                                           ? const Color(0xFF94A3B8)
                                           : const Color(0xFF64748B)),
-                              letterSpacing: 0.2,
+                              letterSpacing: 0.1,
                             ),
                             child: Text(label),
                           ),
@@ -431,7 +448,10 @@ class _HomePageState extends State<HomePage>
                 ),
 
                 // ── Status Filter Chips ──────────────────────────────
-                _buildStatusFilterChips(),
+                _buildStatusFilterChips(
+                  isSmallScreen: isSmallScreen,
+                  isLargeScreen: isLargeScreen,
+                ),
                 if (sales.isEmpty &&
                     _searchQuery.isEmpty &&
                     selectedRange == null &&
