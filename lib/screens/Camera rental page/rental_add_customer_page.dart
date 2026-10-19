@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:ui';
 import 'package:bizmate/services/rental_cart.dart';
+import 'package:bizmate/utils/app_theme.dart';
 import 'package:bizmate/widgets/app_snackbar.dart' show AppSnackBar;
 import 'package:bizmate/widgets/app_theme_toggle.dart';
 import 'package:flutter/material.dart';
@@ -119,6 +120,7 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) {
+        final isDark = context.isDark;
         final media = MediaQuery.of(context);
         final width = media.size.width;
         final height = media.size.height;
@@ -147,10 +149,15 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [
-                  const Color(0xFF1A237E).withValues(alpha: 0.98),
-                  const Color(0xFF00BCD4).withValues(alpha: 0.95),
-                ],
+                colors: isDark
+                    ? [
+                        const Color(0xFF0F172A).withValues(alpha: 0.98),
+                        const Color(0xFF1E293B).withValues(alpha: 0.95),
+                      ]
+                    : [
+                        const Color(0xFF1A237E).withValues(alpha: 0.98),
+                        const Color(0xFF00BCD4).withValues(alpha: 0.95),
+                      ],
               ),
               borderRadius: const BorderRadius.vertical(
                 top: Radius.circular(32),
@@ -173,7 +180,9 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
                   ),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: const [Color(0xFF1A237E), Color(0xFF00BCD4)],
+                      colors: isDark
+                          ? const [Color(0xFF0F172A), Color(0xFF1E293B)]
+                          : const [Color(0xFF1A237E), Color(0xFF00BCD4)],
                     ),
                     borderRadius: const BorderRadius.vertical(
                       top: Radius.circular(32),
@@ -238,7 +247,7 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
                               valueListenable: filteredCustomers,
                               builder: (context, list, _) {
                                 return GridView.builder(
-                                  physics: const BouncingScrollPhysics(),
+                                  physics: const ClampingScrollPhysics(),
                                   itemCount: list.length,
                                   gridDelegate:
                                       SliverGridDelegateWithFixedCrossAxisCount(
@@ -470,8 +479,9 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
         );
       }
     } finally {
-      if (!mounted) return;
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
 
     void loadCustomers() {
@@ -520,7 +530,7 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
     loadCustomers();
   }
 
-  Future<void> _selectDateTime(BuildContext context, bool isFrom) async {
+  Future<void> _selectDateTime(bool isFrom) async {
     final date = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
@@ -529,6 +539,7 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
     );
 
     if (date == null) return;
+    if (!mounted) return;
 
     final time = await showTimePicker(
       context: context,
@@ -536,6 +547,7 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
     );
 
     if (time == null) return;
+    if (!mounted) return;
 
     final selected = DateTime(
       date.year,
@@ -661,13 +673,18 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
 
       RentalCart.clear();
 
+      if (!mounted) return;
       AppSnackBar.showSuccess(context, message: "Rental saved successfully");
 
       Navigator.pop(context, true);
     } catch (e) {
-      AppSnackBar.showError(context, message: "Failed to save rental");
+      if (mounted) {
+        AppSnackBar.showError(context, message: "Failed to save rental");
+      }
     } finally {
-      setState(() => _isSaving = false);
+      if (mounted) {
+        setState(() => _isSaving = false);
+      }
     }
   }
 
@@ -724,6 +741,7 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
             keyboardType: keyboardType,
             validator: validator,
             onTap: onTap,
+            cursorColor: Colors.white,
             style: TextStyle(
               color: Colors.white,
               fontSize: 12 * localScale,
@@ -732,6 +750,10 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
             ),
             decoration: InputDecoration(
               isDense: true,
+              // ✅ Override global theme fill — keeps glassmorphism visible on
+              // both light and dark themes (page bg is always a blue gradient)
+              filled: true,
+              fillColor: Colors.transparent,
               labelText: label,
               floatingLabelBehavior: FloatingLabelBehavior.auto,
               labelStyle: TextStyle(
@@ -776,6 +798,14 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
               ),
 
               border: InputBorder.none,
+              enabledBorder: InputBorder.none,
+              focusedBorder: InputBorder.none,
+              errorBorder: InputBorder.none,
+              focusedErrorBorder: InputBorder.none,
+              errorStyle: TextStyle(
+                color: Colors.redAccent.shade100,
+                fontSize: 11 * localScale,
+              ),
             ),
             onChanged: (value) {
               if (label == "Customer Name" && value.isNotEmpty) {
@@ -831,10 +861,17 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
             color: Colors.white.withValues(alpha: 0.8),
             fontWeight: FontWeight.w600,
           ),
+          // ✅ Override global theme fill
+          filled: true,
+          fillColor: Colors.transparent,
           border: InputBorder.none,
+          enabledBorder: InputBorder.none,
+          focusedBorder: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(horizontal: 20),
         ),
-        dropdownColor: const Color(0xFF1A237E),
+        dropdownColor: context.isDark
+            ? const Color(0xFF1E293B)
+            : const Color(0xFF1A237E),
         style: const TextStyle(color: Colors.white),
         icon: Icon(Icons.arrow_drop_down, color: Colors.white.withValues(alpha: 0.8)),
         items:
@@ -912,7 +949,7 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
             onTap:
                 _isRentalPeriodLocked
                     ? null
-                    : () => _selectDateTime(context, isFrom),
+                    : () => _selectDateTime(isFrom),
             borderRadius: BorderRadius.circular(16),
             child: Padding(
               padding: EdgeInsets.symmetric(horizontal: 10 * scale),
@@ -1024,7 +1061,7 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
               height:
                   hasMultipleItems ? 180 : null, // 👈 controls scroll height
               child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
+                physics: const ClampingScrollPhysics(),
                 child: Column(
                   children:
                       cartItems.map((item) {
@@ -1237,6 +1274,10 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
   @override
   Widget build(BuildContext context) {
     final item = widget.rentalItem;
+    final isDark = context.isDark;
+    final media = MediaQuery.of(context);
+    final width = media.size.width;
+    scale = (width / 390).clamp(0.85, 1.3);
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -1288,13 +1329,17 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
           Container(
             width: double.infinity,
             height: double.infinity,
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [
-                  Color(0xFF1A237E), // Deep blue
-                  Color(0xFF00BCD4), // Light aqua blue
-                ],
-
+                colors: isDark
+                    ? const [
+                        Color(0xFF0F172A), // Dark slate / midnight
+                        Color(0xFF1E293B), // Slate 800
+                      ]
+                    : const [
+                        Color(0xFF1A237E), // Deep blue
+                        Color(0xFF00BCD4), // Light aqua blue
+                      ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -1402,12 +1447,18 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
                           height: 170 * scale,
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(20 * scale),
-                            gradient: const LinearGradient(
-                              colors: [
-                                Color(0xFF1A237E), // Deep Blue
-                                Color(0xFF00BCD4), // Aqua
-                                Color(0xFF4DD0E1), // Soft Mint / Cyan
-                              ],
+                            gradient: LinearGradient(
+                              colors: isDark
+                                  ? const [
+                                      Color(0xFF0F172A), // Dark Slate
+                                      Color(0xFF1E293B), // Slate
+                                      Color(0xFF334155), // Muted Blue-Slate
+                                    ]
+                                  : const [
+                                      Color(0xFF1A237E), // Deep Blue
+                                      Color(0xFF00BCD4), // Aqua
+                                      Color(0xFF4DD0E1), // Soft Mint / Cyan
+                                    ],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                             ),
@@ -1776,7 +1827,7 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
                           duration: const Duration(milliseconds: 300),
                           transform:
                               _isSaving
-                                  ? (Matrix4.identity()..scale(0.95))
+                                  ? Matrix4.diagonal3Values(0.95, 0.95, 1.0)
                                   : Matrix4.identity(),
                           child: Container(
                             decoration: BoxDecoration(
@@ -1785,7 +1836,9 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
                                 colors:
                                     _isSaving
                                         ? [Colors.grey, Colors.grey.shade600]
-                                        : [Colors.white, Colors.white70],
+                                        : (isDark
+                                            ? const [Color(0xFF38BDF8), Color(0xFF0284C7)]
+                                            : const [Colors.white, Colors.white70]),
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
                               ),
@@ -1794,7 +1847,9 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
                                   color:
                                       _isSaving
                                           ? Colors.grey.withValues(alpha: 0.5)
-                                          : Colors.white.withValues(alpha: 0.4),
+                                          : (isDark
+                                              ? const Color(0xFF38BDF8).withValues(alpha: 0.4)
+                                              : Colors.white.withValues(alpha: 0.4)),
                                   blurRadius: 15,
                                   offset: const Offset(0, 8),
                                 ),
@@ -1829,9 +1884,9 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
                                           ),
                                         )
                                       else
-                                        const Icon(
+                                        Icon(
                                           Icons.save_alt,
-                                          color: Color(0xFF1A237E),
+                                          color: isDark ? Colors.white : const Color(0xFF1A237E),
                                           size: 22,
                                         ),
                                       const SizedBox(width: 12),
@@ -1845,7 +1900,9 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
                                           color:
                                               _isSaving
                                                   ? Colors.grey.shade700
-                                                  : const Color(0xFF1A237E),
+                                                  : (isDark
+                                                      ? Colors.white
+                                                      : const Color(0xFF1A237E)),
                                         ),
                                       ),
                                     ],

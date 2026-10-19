@@ -20,6 +20,7 @@ import 'package:bizmate/utils/app_theme.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:shared_preferences/shared_preferences.dart'
     show SharedPreferences;
+import '../utils/payment_icons.dart';
 
 class RentalSaleMenu extends StatelessWidget {
   /// The rental sale entry
@@ -64,6 +65,14 @@ class RentalSaleMenu extends StatelessWidget {
     return amount != null && amount > 0
         ? 'paytm://upi/pay?pa=$upiId&pn=$encodedName&am=${amount.toStringAsFixed(2)}&cu=INR'
         : 'paytm://upi/pay?pa=$upiId&pn=$encodedName&cu=INR';
+  }
+
+  String _generateBhimLink(String upiId, String name, double? amount) {
+    final encodedName = Uri.encodeComponent(name);
+
+    return amount != null && amount > 0
+        ? 'bhim://upi/pay?pa=$upiId&pn=$encodedName&am=${amount.toStringAsFixed(2)}&cu=INR'
+        : 'bhim://upi/pay?pa=$upiId&pn=$encodedName&cu=INR';
   }
 
   const RentalSaleMenu({
@@ -396,9 +405,13 @@ class RentalSaleMenu extends StatelessWidget {
                     ),
                     child: Column(
                       children: [
-                        const Text(
+                        // Description
+                        Text(
                           "Enter the amount you want to show in the UPI QR. Leave it empty if the customer should enter manually.",
-                          style: TextStyle(fontSize: 14, color: Colors.black87),
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: context.textSecondary,
+                          ),
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 16),
@@ -407,14 +420,41 @@ class RentalSaleMenu extends StatelessWidget {
                           keyboardType: const TextInputType.numberWithOptions(
                             decimal: true,
                           ),
+                          style: TextStyle(color: context.textPrimary),
                           decoration: InputDecoration(
                             labelText: 'Amount (₹)',
-                            prefixIcon: const Icon(Icons.currency_rupee),
+                            labelStyle: TextStyle(color: context.textSecondary),
+                            prefixIcon: Icon(
+                              Icons.currency_rupee,
+                              color: context.isDark
+                                  ? Colors.blue.shade300
+                                  : Colors.blue.shade700,
+                            ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(10),
+                              borderSide: BorderSide(
+                                color: context.borderColor,
+                              ),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: BorderSide(
+                                color: context.borderColor,
+                              ),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: BorderSide(
+                                color: context.isDark
+                                    ? Colors.blue.shade300
+                                    : Colors.blue.shade700,
+                                width: 2,
+                              ),
                             ),
                             filled: true,
-                            fillColor: Colors.grey[100],
+                            fillColor: context.isDark
+                                ? const Color(0xFF1E293B)
+                                : Colors.grey[100],
                           ),
                         ),
                         const SizedBox(height: 24),
@@ -424,7 +464,11 @@ class RentalSaleMenu extends StatelessWidget {
                             TextButton(
                               child: Text(
                                 'Cancel',
-                                style: TextStyle(color: Colors.grey[700]),
+                                style: TextStyle(
+                                  color: context.isDark
+                                      ? Colors.grey.shade400
+                                      : Colors.grey.shade700,
+                                ),
                               ),
                               onPressed: () => Navigator.pop(context, null),
                             ),
@@ -455,18 +499,29 @@ class RentalSaleMenu extends StatelessWidget {
                                 Navigator.pop(context, parsed);
                               },
                               child: Ink(
-                                decoration: const BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      Color(0xFF2563EB),
-                                      Color(0xFF1E40AF),
-                                      Color(0xFF020617),
-                                    ],
-                                    stops: [0.0, 0.6, 1.0],
-                                    begin: Alignment.bottomRight,
-                                    end: Alignment.topLeft,
-                                  ),
-                                  borderRadius: BorderRadius.all(
+                                decoration: BoxDecoration(
+                                  gradient: context.isDark
+                                      ? const LinearGradient(
+                                          colors: [
+                                            Color(0xFF38BDF8),
+                                            Color(0xFF60A5FA),
+                                            Color(0xFFBAE6FD),
+                                          ],
+                                          stops: [0.0, 0.6, 1.0],
+                                          begin: Alignment.bottomRight,
+                                          end: Alignment.topLeft,
+                                        )
+                                      : const LinearGradient(
+                                          colors: [
+                                            Color(0xFF2563EB),
+                                            Color(0xFF1E40AF),
+                                            Color(0xFF020617),
+                                          ],
+                                          stops: [0.0, 0.6, 1.0],
+                                          begin: Alignment.bottomRight,
+                                          end: Alignment.topLeft,
+                                        ),
+                                  borderRadius: const BorderRadius.all(
                                     Radius.circular(10),
                                   ),
                                 ),
@@ -536,25 +591,47 @@ class RentalSaleMenu extends StatelessWidget {
   }
 
   pw.Widget _upiOptionButton(String title, pw.MemoryImage icon, String link) {
-    return pw.UrlLink(
-      destination: link, // ✅ now real upi://pay
-      child: pw.Container(
-        margin: const pw.EdgeInsets.only(right: 10),
-        padding: const pw.EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: pw.BoxDecoration(
-          color: PdfColors.grey200,
-          borderRadius: pw.BorderRadius.circular(14),
-        ),
-        child: pw.Row(
-          mainAxisSize: pw.MainAxisSize.min,
-          children: [
-            pw.Image(icon, width: 16, height: 16),
-            pw.SizedBox(width: 8),
-            pw.Text(
-              title,
-              style: pw.TextStyle(fontSize: 11, color: PdfColors.black),
+    return pw.Expanded(
+      child: pw.UrlLink(
+        destination: link, // ✅ now real upi://pay
+        child: pw.Container(
+          padding: const pw.EdgeInsets.symmetric(horizontal: 6, vertical: 4.5),
+          decoration: pw.BoxDecoration(
+            color: PdfColors.white,
+            borderRadius: pw.BorderRadius.circular(5),
+            border: pw.Border.all(
+              color: PdfColor.fromInt(0xFFE2E8F0),
+              width: 0.8,
             ),
-          ],
+          ),
+          child: pw.Row(
+            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+            children: [
+              pw.Row(
+                mainAxisSize: pw.MainAxisSize.min,
+                children: [
+                  pw.Image(icon, width: 12, height: 12),
+                  pw.SizedBox(width: 4),
+                  pw.Text(
+                    title,
+                    style: pw.TextStyle(
+                      fontSize: 7.5,
+                      fontWeight: pw.FontWeight.bold,
+                      color: PdfColor.fromInt(0xFF1E293B),
+                    ),
+                  ),
+                ],
+              ),
+              pw.Text(
+                '>',
+                style: pw.TextStyle(
+                  fontSize: 9,
+                  fontWeight: pw.FontWeight.bold,
+                  color: PdfColor.fromInt(0xFF94A3B8),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -614,6 +691,8 @@ class RentalSaleMenu extends StatelessWidget {
           (await rootBundle.load(
             'assets/icons/Paytm.png',
           )).buffer.asUint8List();
+
+      final bhimIcon = await PaymentIcons.loadBhimIcon();
 
       pw.Widget? profileImageWidget;
 
@@ -686,6 +765,12 @@ class RentalSaleMenu extends StatelessWidget {
       );
 
       final paytmLink = _generatePaytmLink(
+        currentUser.upiId,
+        currentUser.name,
+        enteredAmount,
+      );
+
+      final bhimLink = _generateBhimLink(
         currentUser.upiId,
         currentUser.name,
         enteredAmount,
@@ -766,74 +851,295 @@ class RentalSaleMenu extends StatelessWidget {
                           //     🔥 SHOW QR ONLY IF BALANCE > 0
                           // ***************************************
                           if (balanceAmount > 0) ...[
-                            pw.BarcodeWidget(
-                              data: qrData,
-                              barcode: pw.Barcode.qrCode(),
-                              width: 120,
-                              height: 120,
-                            ),
-
-                            pw.SizedBox(height: 8),
-
-                            pw.Text(
-                              'Scan or Tap to Pay',
-                              style: pw.TextStyle(
-                                fontSize: 16,
-                                fontWeight: pw.FontWeight.bold,
-                              ),
-                            ),
-
-                            pw.SizedBox(height: 40),
-
-                            // ⬇️ CLICKABLE UPI PAYMENT LINK
                             pw.Container(
-                              padding: pw.EdgeInsets.all(16),
                               decoration: pw.BoxDecoration(
+                                color: PdfColor.fromInt(0xFFF8FAFC),
                                 borderRadius: pw.BorderRadius.circular(8),
+                                border: pw.Border.all(
+                                  color: PdfColor.fromInt(0xFFCBD5E1),
+                                  width: 1,
+                                ),
                               ),
                               child: pw.Column(
-                                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                                crossAxisAlignment: pw.CrossAxisAlignment.stretch,
                                 children: [
-                                  pw.Text(
-                                    "Pay with UPI",
-                                    style: pw.TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: pw.FontWeight.bold,
-                                      color: PdfColors.grey900,
+                                  // 1. Sleek Header Bar
+                                  pw.Container(
+                                    padding: const pw.EdgeInsets.symmetric(
+                                      horizontal: 9,
+                                      vertical: 5,
+                                    ),
+                                    decoration: const pw.BoxDecoration(
+                                      color: PdfColor.fromInt(0xFF0F172A),
+                                      borderRadius: pw.BorderRadius.only(
+                                        topLeft: pw.Radius.circular(7),
+                                        topRight: pw.Radius.circular(7),
+                                      ),
+                                    ),
+                                    child: pw.Row(
+                                      mainAxisAlignment:
+                                          pw.MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        pw.Row(
+                                          mainAxisSize: pw.MainAxisSize.min,
+                                          children: [
+                                            pw.Container(
+                                              width: 5,
+                                              height: 5,
+                                              decoration:
+                                                  const pw.BoxDecoration(
+                                                    color: PdfColor.fromInt(
+                                                      0xFF10B981,
+                                                    ),
+                                                    shape: pw.BoxShape.circle,
+                                                  ),
+                                            ),
+                                            pw.SizedBox(width: 5),
+                                            pw.Text(
+                                              "Pay with UPI",
+                                              style: pw.TextStyle(
+                                                fontSize: 9.5,
+                                                fontWeight: pw.FontWeight.bold,
+                                                color: PdfColors.white,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        pw.Container(
+                                          padding:
+                                              const pw.EdgeInsets.symmetric(
+                                                horizontal: 4.5,
+                                                vertical: 1.5,
+                                              ),
+                                          decoration: pw.BoxDecoration(
+                                            color: PdfColor.fromInt(0xFF1E293B),
+                                            borderRadius:
+                                                pw.BorderRadius.circular(3),
+                                            border: pw.Border.all(
+                                              color: PdfColor.fromInt(
+                                                0xFF334155,
+                                              ),
+                                              width: 0.5,
+                                            ),
+                                          ),
+                                          child: pw.Text(
+                                            "FAST & SECURE",
+                                            style: pw.TextStyle(
+                                              fontSize: 5.5,
+                                              fontWeight: pw.FontWeight.bold,
+                                              color: PdfColor.fromInt(
+                                                0xFF38BDF8,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
 
-                                  pw.SizedBox(height: 12),
+                                  // 2. Card Content
+                                  pw.Padding(
+                                    padding: const pw.EdgeInsets.all(7),
+                                    child: pw.Column(
+                                      crossAxisAlignment:
+                                          pw.CrossAxisAlignment.center,
+                                      children: [
+                                        // Amount Row
+                                        pw.Row(
+                                          mainAxisAlignment:
+                                              pw.MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            pw.Text(
+                                              "Total Payable",
+                                              style: const pw.TextStyle(
+                                                fontSize: 7.5,
+                                                color: PdfColor.fromInt(
+                                                  0xFF64748B,
+                                                ),
+                                              ),
+                                            ),
+                                            pw.Text(
+                                              "INR ${balanceAmount.toStringAsFixed(2)}",
+                                              style: pw.TextStyle(
+                                                fontSize: 9,
+                                                fontWeight: pw.FontWeight.bold,
+                                                color: PdfColor.fromInt(
+                                                  0xFF0F172A,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        pw.SizedBox(height: 5),
 
-                                  pw.Row(
-                                    mainAxisAlignment:
-                                        pw.MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      _upiOptionButton(
-                                        "Google Pay",
-                                        pw.MemoryImage(gpayIcon),
-                                        googlePayLink,
-                                      ),
-                                      _upiOptionButton(
-                                        "PhonePe",
-                                        pw.MemoryImage(phonePeIcon),
-                                        phonePeLink,
-                                      ),
-                                      _upiOptionButton(
-                                        "Paytm",
-                                        pw.MemoryImage(paytmIcon),
-                                        paytmLink,
-                                      ),
-                                    ],
-                                  ),
+                                        // QR Code Container
+                                        pw.Container(
+                                          padding: const pw.EdgeInsets.all(5),
+                                          decoration: pw.BoxDecoration(
+                                            color: PdfColors.white,
+                                            borderRadius:
+                                                pw.BorderRadius.circular(6),
+                                            border: pw.Border.all(
+                                              color: PdfColor.fromInt(
+                                                0xFFE2E8F0,
+                                              ),
+                                              width: 1,
+                                            ),
+                                          ),
+                                          child: pw.BarcodeWidget(
+                                            data: qrData,
+                                            barcode: pw.Barcode.qrCode(),
+                                            width: 100,
+                                            height: 100,
+                                          ),
+                                        ),
+                                        pw.SizedBox(height: 3.5),
+                                        pw.Text(
+                                          "Scan with any UPI QR App",
+                                          style: const pw.TextStyle(
+                                            fontSize: 7,
+                                            color: PdfColor.fromInt(0xFF64748B),
+                                          ),
+                                        ),
 
-                                  pw.SizedBox(height: 10),
+                                        pw.SizedBox(height: 6),
 
-                                  pw.Text(
-                                    "Tap any app above to pay",
-                                    style: pw.TextStyle(
-                                      fontSize: 10,
-                                      color: PdfColors.grey600,
+                                        // Subtle Divider
+                                        pw.Row(
+                                          children: [
+                                            pw.Expanded(
+                                              child: pw.Container(
+                                                height: 0.5,
+                                                color: PdfColor.fromInt(
+                                                  0xFFE2E8F0,
+                                                ),
+                                              ),
+                                            ),
+                                            pw.Padding(
+                                              padding:
+                                                  const pw.EdgeInsets.symmetric(
+                                                    horizontal: 5,
+                                                  ),
+                                              child: pw.Text(
+                                                "OR PAY VIA APP",
+                                                style: pw.TextStyle(
+                                                  fontSize: 5.5,
+                                                  fontWeight:
+                                                      pw.FontWeight.bold,
+                                                  color: PdfColor.fromInt(
+                                                    0xFF94A3B8,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                            pw.Expanded(
+                                              child: pw.Container(
+                                                height: 0.5,
+                                                color: PdfColor.fromInt(
+                                                  0xFFE2E8F0,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+
+                                        pw.SizedBox(height: 5),
+
+                                        // 2x2 App Grid
+                                        pw.Row(
+                                          children: [
+                                            _upiOptionButton(
+                                              "Google Pay",
+                                              pw.MemoryImage(gpayIcon),
+                                              googlePayLink,
+                                            ),
+                                            pw.SizedBox(width: 5),
+                                            _upiOptionButton(
+                                              "PhonePe",
+                                              pw.MemoryImage(phonePeIcon),
+                                              phonePeLink,
+                                            ),
+                                          ],
+                                        ),
+                                        pw.SizedBox(height: 5),
+                                        pw.Row(
+                                          children: [
+                                            _upiOptionButton(
+                                              "Paytm",
+                                              pw.MemoryImage(paytmIcon),
+                                              paytmLink,
+                                            ),
+                                            pw.SizedBox(width: 5),
+                                            _upiOptionButton(
+                                              "BHIM",
+                                              pw.MemoryImage(bhimIcon),
+                                              bhimLink,
+                                            ),
+                                          ],
+                                        ),
+
+                                        pw.SizedBox(height: 6),
+
+                                        // Primary Button
+                                        pw.UrlLink(
+                                          destination: qrData,
+                                          child: pw.Container(
+                                            width: double.infinity,
+                                            padding:
+                                                const pw.EdgeInsets.symmetric(
+                                                  vertical: 5,
+                                                ),
+                                            decoration: pw.BoxDecoration(
+                                              color: PdfColor.fromInt(
+                                                0xFF0F73B8,
+                                              ),
+                                              borderRadius:
+                                                  pw.BorderRadius.circular(5),
+                                            ),
+                                            child: pw.Center(
+                                              child: pw.Text(
+                                                "Tap to Open Any UPI App",
+                                                style: pw.TextStyle(
+                                                  color: PdfColors.white,
+                                                  fontSize: 7.5,
+                                                  fontWeight:
+                                                      pw.FontWeight.bold,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+
+                                        if (currentUser.upiId.isNotEmpty) ...[
+                                          pw.SizedBox(height: 4),
+                                          pw.Row(
+                                            mainAxisAlignment:
+                                                pw.MainAxisAlignment.center,
+                                            children: [
+                                              pw.Text(
+                                                "UPI ID: ",
+                                                style: const pw.TextStyle(
+                                                  fontSize: 6.5,
+                                                  color: PdfColor.fromInt(
+                                                    0xFF94A3B8,
+                                                  ),
+                                                ),
+                                              ),
+                                              pw.Text(
+                                                currentUser.upiId,
+                                                style: pw.TextStyle(
+                                                  fontSize: 6.5,
+                                                  fontWeight:
+                                                      pw.FontWeight.bold,
+                                                  color: PdfColor.fromInt(
+                                                    0xFF475569,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ],
                                     ),
                                   ),
                                 ],

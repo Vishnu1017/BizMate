@@ -36,6 +36,7 @@ class _LoginScreenState extends State<LoginScreen>
   final List<String> roles = [
     'None',
     'Photographer',
+    '3D Printing Brand',
     'Sales Representative',
     'Account Manager',
     'Business Development',
@@ -510,7 +511,10 @@ class _LoginScreenState extends State<LoginScreen>
                           TextField(
                             controller: resetEmailController,
                             keyboardType: TextInputType.emailAddress,
-                            style: const TextStyle(color: Color(0xFF072A4A), fontWeight: FontWeight.w600),
+                            style: const TextStyle(
+                              color: Color(0xFF072A4A),
+                              fontWeight: FontWeight.w600,
+                            ),
                             cursorColor: const Color(0xFF072A4A),
                             decoration: InputDecoration(
                               filled: true,
@@ -529,7 +533,9 @@ class _LoginScreenState extends State<LoginScreen>
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
                                 borderSide: BorderSide(
-                                  color: const Color(0xFF072A4A).withValues(alpha: 0.4),
+                                  color: const Color(
+                                    0xFF072A4A,
+                                  ).withValues(alpha: 0.4),
                                   width: 1.5,
                                 ),
                               ),
@@ -835,8 +841,9 @@ class _LoginScreenState extends State<LoginScreen>
                                                   BorderRadius.circular(radius),
                                               boxShadow: [
                                                 BoxShadow(
-                                                  color: Colors.blue
-                                                      .withValues(alpha: 0.3),
+                                                  color: Colors.blue.withValues(
+                                                    alpha: 0.3,
+                                                  ),
                                                   blurRadius: 10,
                                                   offset: const Offset(0, 4),
                                                 ),
@@ -1010,14 +1017,16 @@ class _LoginScreenState extends State<LoginScreen>
                         width: 36,
                         height: 36,
                         decoration: BoxDecoration(
-                          color: dark
-                              ? const Color(0xFF1E293B)
-                              : Colors.white.withValues(alpha: 0.25),
+                          color:
+                              dark
+                                  ? const Color(0xFF1E293B)
+                                  : Colors.white.withValues(alpha: 0.25),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: dark
-                                ? const Color(0xFF334155)
-                                : Colors.white.withValues(alpha: 0.6),
+                            color:
+                                dark
+                                    ? const Color(0xFF334155)
+                                    : Colors.white.withValues(alpha: 0.6),
                             width: 1,
                           ),
                           boxShadow: [
@@ -1031,8 +1040,8 @@ class _LoginScreenState extends State<LoginScreen>
                         child: Center(
                           child: AnimatedSwitcher(
                             duration: const Duration(milliseconds: 300),
-                            transitionBuilder: (child, anim) =>
-                                RotationTransition(
+                            transitionBuilder:
+                                (child, anim) => RotationTransition(
                                   turns: anim,
                                   child: FadeTransition(
                                     opacity: anim,
@@ -1044,9 +1053,8 @@ class _LoginScreenState extends State<LoginScreen>
                                   ? Icons.dark_mode_rounded
                                   : Icons.light_mode_rounded,
                               key: ValueKey(dark),
-                              color: dark
-                                  ? const Color(0xFF94A3B8)
-                                  : Colors.white,
+                              color:
+                                  dark ? const Color(0xFF94A3B8) : Colors.white,
                               size: 20,
                             ),
                           ),
@@ -1171,7 +1179,9 @@ class _LoginScreenState extends State<LoginScreen>
                                   ),
                                   enabledBorder: OutlineInputBorder(
                                     borderSide: BorderSide(
-                                      color: Colors.white.withValues(alpha: 0.9),
+                                      color: Colors.white.withValues(
+                                        alpha: 0.9,
+                                      ),
                                       width: 1,
                                     ),
                                     borderRadius: BorderRadius.circular(14),
@@ -1224,7 +1234,9 @@ class _LoginScreenState extends State<LoginScreen>
                                   ),
                                   enabledBorder: OutlineInputBorder(
                                     borderSide: BorderSide(
-                                      color: Colors.white.withValues(alpha: 0.9),
+                                      color: Colors.white.withValues(
+                                        alpha: 0.9,
+                                      ),
                                       width: 1,
                                     ),
                                     borderRadius: BorderRadius.circular(14),
@@ -1298,7 +1310,9 @@ class _LoginScreenState extends State<LoginScreen>
                                   ),
                                   enabledBorder: OutlineInputBorder(
                                     borderSide: BorderSide(
-                                      color: Colors.white.withValues(alpha: 0.9),
+                                      color: Colors.white.withValues(
+                                        alpha: 0.9,
+                                      ),
                                       width: 1,
                                     ),
                                     borderRadius: BorderRadius.circular(14),
@@ -1462,7 +1476,9 @@ class _LoginScreenState extends State<LoginScreen>
                                   fontSize: 14 * scale,
                                   shadows: [
                                     Shadow(
-                                      color: Colors.black.withValues(alpha: 0.35),
+                                      color: Colors.black.withValues(
+                                        alpha: 0.35,
+                                      ),
                                       offset: const Offset(0, 1),
                                       blurRadius: 4,
                                     ),
@@ -1530,11 +1546,10 @@ class _LoginScreenState extends State<LoginScreen>
                             children: [
                               TextSpan(
                                 text: isCreating ? "Login" : "Sign up",
-                                style: const TextStyle(
+                                style: TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                  decoration: TextDecoration.underline,
+                                  fontSize: h * 0.019,
                                   decorationColor: Colors.white,
                                 ),
                               ),

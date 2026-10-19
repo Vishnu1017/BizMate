@@ -655,7 +655,7 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                     child: Padding(
                       padding: EdgeInsets.symmetric(horizontal: rs(14)),
                       child: GridView.builder(
-                        physics: const BouncingScrollPhysics(),
+                        physics: const ClampingScrollPhysics(),
                         itemCount: customerList.length,
                         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: columns,
@@ -1860,7 +1860,7 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
             ),
             body: SafeArea(
               child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
+                physics: const ClampingScrollPhysics(),
                 child: ConstrainedBox(
                   constraints: BoxConstraints(
                     minHeight:

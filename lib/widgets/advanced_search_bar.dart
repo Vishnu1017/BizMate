@@ -457,7 +457,7 @@ class _AdvancedSearchBarState extends State<AdvancedSearchBar>
                   Expanded(
                     child: ListView.builder(
                       padding: EdgeInsets.zero,
-                      physics: const BouncingScrollPhysics(),
+                      physics: const ClampingScrollPhysics(),
                       itemCount: DateRangePreset.values.length,
                       itemBuilder: (context, index) {
                         final preset = DateRangePreset.values[index];

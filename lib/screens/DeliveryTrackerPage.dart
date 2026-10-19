@@ -843,7 +843,7 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
             opacity: _fadeAnimation,
             child: CustomScrollView(
               key: _pageKey,
-              physics: const BouncingScrollPhysics(),
+              physics: const ClampingScrollPhysics(),
               slivers: [
                 _buildLargeHeader(r),
                 SliverToBoxAdapter(

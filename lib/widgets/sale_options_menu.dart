@@ -21,6 +21,7 @@ import '../screens/payment_history_page.dart';
 // import '../screens/delivery_tracker_page.dart'; // Comment out if file doesn't exist
 import '../widgets/app_snackbar.dart';
 import '../widgets/confirm_delete_dialog.dart';
+import '../utils/payment_icons.dart';
 
 class SaleOptionsMenu extends StatelessWidget {
   final Sale sale;
@@ -46,6 +47,11 @@ class SaleOptionsMenu extends StatelessWidget {
   String generatePaytmLink(String upiUri) {
     final encoded = Uri.encodeComponent(upiUri);
     return "paytm://upi/pay?url=$encoded";
+  }
+
+  String generateBhimLink(String upiUri) {
+    final encoded = Uri.encodeComponent(upiUri);
+    return "bhim://upi/pay?url=$encoded";
   }
 
   const SaleOptionsMenu({
@@ -400,6 +406,7 @@ class SaleOptionsMenu extends StatelessWidget {
         )).buffer.asUint8List();
     final paytmIcon =
         (await rootBundle.load("assets/icons/Paytm.png")).buffer.asUint8List();
+    final bhimIcon = await PaymentIcons.loadBhimIcon();
 
     // NOW generate UPI link (correct order)
 
@@ -427,6 +434,11 @@ class SaleOptionsMenu extends StatelessWidget {
     final paytmLink =
         "paytm://upi/pay?pa=${currentUser.upiId}&pn=${Uri.encodeComponent(currentUser.name)}&am=${enteredAmount?.toStringAsFixed(2)}&cu=INR";
 
+    final bhimLink =
+        "bhim://upi/pay?pa=${currentUser.upiId}&pn=${Uri.encodeComponent(currentUser.name)}&am=${enteredAmount?.toStringAsFixed(2)}&cu=INR";
+    final upiUniversalLink =
+        "upi://pay?pa=${currentUser.upiId}&pn=${Uri.encodeComponent(currentUser.name)}&am=${enteredAmount?.toStringAsFixed(2)}&cu=INR";
+
     if (currentUser.upiId.isEmpty) {
       AppSnackBar.showWarning(
         context,
@@ -453,6 +465,9 @@ class SaleOptionsMenu extends StatelessWidget {
               pw.MemoryImage(gpayIcon),
               pw.MemoryImage(phonePeIcon),
               pw.MemoryImage(paytmIcon),
+              bhimLink: bhimLink,
+              bhimIcon: pw.MemoryImage(bhimIcon),
+              upiUniversalLink: upiUniversalLink,
             ),
       ),
     );
@@ -574,9 +589,13 @@ class SaleOptionsMenu extends StatelessWidget {
                     ),
                     child: Column(
                       children: [
-                        const Text(
+                        // Description
+                        Text(
                           "Enter the amount you want to show in the UPI QR. Leave it empty if the customer should enter manually.",
-                          style: TextStyle(fontSize: 14, color: Colors.black87),
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: context.textSecondary,
+                          ),
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 16),
@@ -585,14 +604,41 @@ class SaleOptionsMenu extends StatelessWidget {
                           keyboardType: const TextInputType.numberWithOptions(
                             decimal: true,
                           ),
+                          style: TextStyle(color: context.textPrimary),
                           decoration: InputDecoration(
                             labelText: 'Amount (₹)',
-                            prefixIcon: const Icon(Icons.currency_rupee),
+                            labelStyle: TextStyle(color: context.textSecondary),
+                            prefixIcon: Icon(
+                              Icons.currency_rupee,
+                              color: context.isDark
+                                  ? Colors.blue.shade300
+                                  : Colors.blue.shade700,
+                            ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(10),
+                              borderSide: BorderSide(
+                                color: context.borderColor,
+                              ),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: BorderSide(
+                                color: context.borderColor,
+                              ),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: BorderSide(
+                                color: context.isDark
+                                    ? Colors.blue.shade300
+                                    : Colors.blue.shade700,
+                                width: 2,
+                              ),
                             ),
                             filled: true,
-                            fillColor: Colors.grey[100],
+                            fillColor: context.isDark
+                                ? const Color(0xFF1E293B)
+                                : Colors.grey[100],
                           ),
                         ),
                         const SizedBox(height: 24),
@@ -605,10 +651,14 @@ class SaleOptionsMenu extends StatelessWidget {
                             TextButton(
                               child: Text(
                                 'Cancel',
-                                style: TextStyle(color: Colors.grey[700]),
+                                style: TextStyle(
+                                  color: context.isDark
+                                      ? Colors.grey.shade400
+                                      : Colors.grey.shade700,
+                                ),
                               ),
                               onPressed: () {
-                                Navigator.of(context).pop(); // ✅ CLOSE ONLY
+                                Navigator.of(context).pop();
                               },
                             ),
                             const SizedBox(width: 10),
@@ -645,18 +695,29 @@ class SaleOptionsMenu extends StatelessWidget {
                                 Navigator.of(context).pop(parsed);
                               },
                               child: Ink(
-                                decoration: const BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      Color(0xFF2563EB),
-                                      Color(0xFF1E40AF),
-                                      Color(0xFF020617),
-                                    ],
-                                    stops: [0.0, 0.6, 1.0],
-                                    begin: Alignment.bottomRight,
-                                    end: Alignment.topLeft,
-                                  ),
-                                  borderRadius: BorderRadius.all(
+                                decoration: BoxDecoration(
+                                  gradient: context.isDark
+                                      ? const LinearGradient(
+                                          colors: [
+                                            Color(0xFF38BDF8),
+                                            Color(0xFF60A5FA),
+                                            Color(0xFFBAE6FD),
+                                          ],
+                                          stops: [0.0, 0.6, 1.0],
+                                          begin: Alignment.bottomRight,
+                                          end: Alignment.topLeft,
+                                        )
+                                      : const LinearGradient(
+                                          colors: [
+                                            Color(0xFF2563EB),
+                                            Color(0xFF1E40AF),
+                                            Color(0xFF020617),
+                                          ],
+                                          stops: [0.0, 0.6, 1.0],
+                                          begin: Alignment.bottomRight,
+                                          end: Alignment.topLeft,
+                                        ),
+                                  borderRadius: const BorderRadius.all(
                                     Radius.circular(10),
                                   ),
                                 ),
@@ -805,34 +866,47 @@ class SaleOptionsMenu extends StatelessWidget {
   }
 
   pw.Widget _upiOption(String title, pw.MemoryImage icon, String url) {
-    const double fontSize = 11.0;
-    const double iconSize = 16.0;
-    const double horizontalPadding = 14.0;
-    const double verticalPadding = 10.0;
-    const double gap = 8.0;
-
-    return pw.UrlLink(
-      destination: url,
-      child: pw.Container(
-        margin: pw.EdgeInsets.only(right: 11), // spacing between items
-        padding: pw.EdgeInsets.symmetric(
-          vertical: verticalPadding,
-          horizontal: horizontalPadding,
-        ),
-        decoration: pw.BoxDecoration(
-          color: PdfColors.grey200, // ⭐ Background color for each button
-          borderRadius: pw.BorderRadius.circular(14),
-        ),
-        child: pw.Row(
-          mainAxisSize: pw.MainAxisSize.min,
-          children: [
-            pw.Image(icon, width: iconSize, height: iconSize),
-            pw.SizedBox(width: gap),
-            pw.Text(
-              title,
-              style: pw.TextStyle(fontSize: fontSize, color: PdfColors.black),
+    return pw.Expanded(
+      child: pw.UrlLink(
+        destination: url,
+        child: pw.Container(
+          padding: const pw.EdgeInsets.symmetric(horizontal: 6, vertical: 4.5),
+          decoration: pw.BoxDecoration(
+            color: PdfColors.white,
+            borderRadius: pw.BorderRadius.circular(5),
+            border: pw.Border.all(
+              color: PdfColor.fromInt(0xFFE2E8F0),
+              width: 0.8,
             ),
-          ],
+          ),
+          child: pw.Row(
+            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+            children: [
+              pw.Row(
+                mainAxisSize: pw.MainAxisSize.min,
+                children: [
+                  pw.Image(icon, width: 12, height: 12),
+                  pw.SizedBox(width: 4),
+                  pw.Text(
+                    title,
+                    style: pw.TextStyle(
+                      fontSize: 7.5,
+                      fontWeight: pw.FontWeight.bold,
+                      color: PdfColor.fromInt(0xFF1E293B),
+                    ),
+                  ),
+                ],
+              ),
+              pw.Text(
+                '>',
+                style: pw.TextStyle(
+                  fontSize: 9,
+                  fontWeight: pw.FontWeight.bold,
+                  color: PdfColor.fromInt(0xFF94A3B8),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -849,8 +923,11 @@ class SaleOptionsMenu extends StatelessWidget {
     String paytmLink,
     pw.MemoryImage gpayIcon,
     pw.MemoryImage phonePeIcon,
-    pw.MemoryImage paytmIcon,
-  ) {
+    pw.MemoryImage paytmIcon, {
+    String? bhimLink,
+    pw.MemoryImage? bhimIcon,
+    String? upiUniversalLink,
+  }) {
     return pw.Container(
       decoration: pw.BoxDecoration(
         border: pw.Border.all(color: PdfColors.black, width: 2),
@@ -968,76 +1045,283 @@ class SaleOptionsMenu extends StatelessWidget {
                     pw.Text(sale.customerName),
                     pw.Text('Contact No.: +91 ${sale.phoneNumber}'),
                     pw.SizedBox(height: 12),
-                    // Payment Section (QR + Link)
+                    // Payment Section (Modern Integrated Card)
                     if (balanceAmount > 0) ...[
-                      pw.Center(
-                        child: pw.BarcodeWidget(
-                          data: qrData,
-                          barcode: pw.Barcode.qrCode(),
-                          width: 150,
-                          height: 150,
-                        ),
-                      ),
-                      pw.SizedBox(height: 6),
-                      pw.Center(
-                        child: pw.Text(
-                          "Scan & Pay via UPI",
-                          style: pw.TextStyle(
-                            fontSize: 16,
-                            fontWeight: pw.FontWeight.bold,
+                      pw.Container(
+                        decoration: pw.BoxDecoration(
+                          color: PdfColor.fromInt(0xFFF8FAFC),
+                          borderRadius: pw.BorderRadius.circular(8),
+                          border: pw.Border.all(
+                            color: PdfColor.fromInt(0xFFCBD5E1),
+                            width: 1,
                           ),
                         ),
-                      ),
-                      pw.SizedBox(height: 7),
-
-                      // ⬇️ CLICKABLE UPI PAYMENT LINK
-                      pw.Container(
-                        padding: pw.EdgeInsets.all(16),
-                        decoration: pw.BoxDecoration(
-                          borderRadius: pw.BorderRadius.circular(8),
-                        ),
                         child: pw.Column(
-                          crossAxisAlignment: pw.CrossAxisAlignment.start,
+                          crossAxisAlignment: pw.CrossAxisAlignment.stretch,
                           children: [
-                            pw.Text(
-                              "Pay with UPI",
-                              style: pw.TextStyle(
-                                fontSize: 14,
-                                fontWeight: pw.FontWeight.bold,
-                                color: PdfColors.grey900,
+                            // 1. Sleek Header Bar
+                            pw.Container(
+                              padding: const pw.EdgeInsets.symmetric(
+                                horizontal: 9,
+                                vertical: 5,
+                              ),
+                              decoration: const pw.BoxDecoration(
+                                color: PdfColor.fromInt(0xFF0F172A),
+                                borderRadius: pw.BorderRadius.only(
+                                  topLeft: pw.Radius.circular(7),
+                                  topRight: pw.Radius.circular(7),
+                                ),
+                              ),
+                              child: pw.Row(
+                                mainAxisAlignment:
+                                    pw.MainAxisAlignment.spaceBetween,
+                                children: [
+                                  pw.Row(
+                                    mainAxisSize: pw.MainAxisSize.min,
+                                    children: [
+                                      pw.Container(
+                                        width: 5,
+                                        height: 5,
+                                        decoration: const pw.BoxDecoration(
+                                          color: PdfColor.fromInt(0xFF10B981),
+                                          shape: pw.BoxShape.circle,
+                                        ),
+                                      ),
+                                      pw.SizedBox(width: 5),
+                                      pw.Text(
+                                        "Pay with UPI",
+                                        style: pw.TextStyle(
+                                          fontSize: 9.5,
+                                          fontWeight: pw.FontWeight.bold,
+                                          color: PdfColors.white,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  pw.Container(
+                                    padding: const pw.EdgeInsets.symmetric(
+                                      horizontal: 4.5,
+                                      vertical: 1.5,
+                                    ),
+                                    decoration: pw.BoxDecoration(
+                                      color: PdfColor.fromInt(0xFF1E293B),
+                                      borderRadius:
+                                          pw.BorderRadius.circular(3),
+                                      border: pw.Border.all(
+                                        color: PdfColor.fromInt(0xFF334155),
+                                        width: 0.5,
+                                      ),
+                                    ),
+                                    child: pw.Text(
+                                      "FAST & SECURE",
+                                      style: pw.TextStyle(
+                                        fontSize: 5.5,
+                                        fontWeight: pw.FontWeight.bold,
+                                        color: PdfColor.fromInt(0xFF38BDF8),
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
 
-                            pw.SizedBox(height: 12),
+                            // 2. Card Content
+                            pw.Padding(
+                              padding: const pw.EdgeInsets.all(7),
+                              child: pw.Column(
+                                crossAxisAlignment:
+                                    pw.CrossAxisAlignment.center,
+                                children: [
+                                  // Amount Row
+                                  pw.Row(
+                                    mainAxisAlignment:
+                                        pw.MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      pw.Text(
+                                        "Total Payable",
+                                        style: const pw.TextStyle(
+                                          fontSize: 7.5,
+                                          color: PdfColor.fromInt(0xFF64748B),
+                                        ),
+                                      ),
+                                      pw.Text(
+                                        "INR ${balanceAmount.toStringAsFixed(2)}",
+                                        style: pw.TextStyle(
+                                          fontSize: 9,
+                                          fontWeight: pw.FontWeight.bold,
+                                          color: PdfColor.fromInt(0xFF0F172A),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  pw.SizedBox(height: 5),
 
-                            pw.Row(
-                              mainAxisAlignment:
-                                  pw.MainAxisAlignment.spaceBetween,
-                              children: [
-                                _upiOption(
-                                  "Google Pay",
-                                  gpayIcon,
-                                  googlePayLink,
-                                ),
-                                _upiOption("PhonePe", phonePeIcon, phonePeLink),
-                                _upiOption("Paytm", paytmIcon, paytmLink),
-                              ],
-                            ),
+                                  // QR Code Container
+                                  pw.Container(
+                                    padding: const pw.EdgeInsets.all(5),
+                                    decoration: pw.BoxDecoration(
+                                      color: PdfColors.white,
+                                      borderRadius:
+                                          pw.BorderRadius.circular(6),
+                                      border: pw.Border.all(
+                                        color: PdfColor.fromInt(0xFFE2E8F0),
+                                        width: 1,
+                                      ),
+                                    ),
+                                    child: pw.BarcodeWidget(
+                                      data: qrData,
+                                      barcode: pw.Barcode.qrCode(),
+                                      width: 100,
+                                      height: 100,
+                                    ),
+                                  ),
+                                  pw.SizedBox(height: 3.5),
+                                  pw.Text(
+                                    "Scan with any UPI QR App",
+                                    style: const pw.TextStyle(
+                                      fontSize: 7,
+                                      color: PdfColor.fromInt(0xFF64748B),
+                                    ),
+                                  ),
 
-                            pw.SizedBox(height: 10),
+                                  pw.SizedBox(height: 6),
 
-                            pw.Text(
-                              "Tap any app above to pay",
-                              style: pw.TextStyle(
-                                fontSize: 10,
-                                color: PdfColors.grey600,
+                                  // Subtle Divider
+                                  pw.Row(
+                                    children: [
+                                      pw.Expanded(
+                                        child: pw.Container(
+                                          height: 0.5,
+                                          color:
+                                              PdfColor.fromInt(0xFFE2E8F0),
+                                        ),
+                                      ),
+                                      pw.Padding(
+                                        padding:
+                                            const pw.EdgeInsets.symmetric(
+                                              horizontal: 5,
+                                            ),
+                                        child: pw.Text(
+                                          "OR PAY VIA APP",
+                                          style: pw.TextStyle(
+                                            fontSize: 5.5,
+                                            fontWeight: pw.FontWeight.bold,
+                                            color:
+                                                PdfColor.fromInt(0xFF94A3B8),
+                                          ),
+                                        ),
+                                      ),
+                                      pw.Expanded(
+                                        child: pw.Container(
+                                          height: 0.5,
+                                          color:
+                                              PdfColor.fromInt(0xFFE2E8F0),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+
+                                  pw.SizedBox(height: 5),
+
+                                  // 2x2 App Grid
+                                  pw.Row(
+                                    children: [
+                                      _upiOption(
+                                        "Google Pay",
+                                        gpayIcon,
+                                        googlePayLink,
+                                      ),
+                                      pw.SizedBox(width: 5),
+                                      _upiOption(
+                                        "PhonePe",
+                                        phonePeIcon,
+                                        phonePeLink,
+                                      ),
+                                    ],
+                                  ),
+                                  pw.SizedBox(height: 5),
+                                  pw.Row(
+                                    children: [
+                                      _upiOption(
+                                        "Paytm",
+                                        paytmIcon,
+                                        paytmLink,
+                                      ),
+                                      pw.SizedBox(width: 5),
+                                      if (bhimIcon != null && bhimLink != null)
+                                        _upiOption(
+                                          "BHIM",
+                                          bhimIcon,
+                                          bhimLink,
+                                        )
+                                      else
+                                        pw.Expanded(child: pw.SizedBox()),
+                                    ],
+                                  ),
+
+                                  pw.SizedBox(height: 6),
+
+                                  // Primary Button
+                                  pw.UrlLink(
+                                    destination: upiUniversalLink ?? qrData,
+                                    child: pw.Container(
+                                      width: double.infinity,
+                                      padding:
+                                          const pw.EdgeInsets.symmetric(
+                                            vertical: 5,
+                                          ),
+                                      decoration: pw.BoxDecoration(
+                                        color: PdfColor.fromInt(0xFF0F73B8),
+                                        borderRadius:
+                                            pw.BorderRadius.circular(5),
+                                      ),
+                                      child: pw.Center(
+                                        child: pw.Text(
+                                          "Tap to Open Any UPI App",
+                                          style: pw.TextStyle(
+                                            color: PdfColors.white,
+                                            fontSize: 7.5,
+                                            fontWeight: pw.FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+
+                                  if (currentUser.upiId.isNotEmpty) ...[
+                                    pw.SizedBox(height: 4),
+                                    pw.Row(
+                                      mainAxisAlignment:
+                                          pw.MainAxisAlignment.center,
+                                      children: [
+                                        pw.Text(
+                                          "UPI ID: ",
+                                          style: const pw.TextStyle(
+                                            fontSize: 6.5,
+                                            color:
+                                                PdfColor.fromInt(0xFF94A3B8),
+                                          ),
+                                        ),
+                                        pw.Text(
+                                          currentUser.upiId,
+                                          style: pw.TextStyle(
+                                            fontSize: 6.5,
+                                            fontWeight: pw.FontWeight.bold,
+                                            color:
+                                                PdfColor.fromInt(0xFF475569),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ],
                               ),
                             ),
                           ],
                         ),
                       ),
 
-                      pw.SizedBox(height: 16),
+                      pw.SizedBox(height: 12),
                     ],
                   ],
                 ),
@@ -1190,7 +1474,7 @@ class SaleOptionsMenu extends StatelessWidget {
             style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold),
           ),
           pw.SizedBox(height: 8),
-          ..._buildTermsAndConditions(),
+          ..._buildTermsAndConditions(currentUser.role),
           pw.SizedBox(height: 16),
           pw.Align(
             alignment: pw.Alignment.centerRight,
@@ -1204,30 +1488,126 @@ class SaleOptionsMenu extends StatelessWidget {
     );
   }
 
-  List<pw.Widget> _buildTermsAndConditions() {
+  List<pw.Widget> _buildTermsAndConditions([String? role]) {
+    final cleanRole = (role ?? '').trim().toLowerCase();
+
+    // ── 1. 3D Printing Brand Terms ──────────────────────────────────────────
+    if (cleanRole == '3d printing brand' || cleanRole.contains('3d print')) {
+      final widgets = <pw.Widget>[
+        pw.Padding(
+          padding: const pw.EdgeInsets.only(bottom: 3),
+          child: pw.Text(
+            'The following terms apply to the manufacture and sale of 3D-printed products and related services. They supplement the full Terms and Conditions published by the seller.',
+            style: pw.TextStyle(
+              fontSize: 8,
+              fontStyle: pw.FontStyle.italic,
+              color: PdfColors.grey700,
+            ),
+          ),
+        ),
+      ];
+
+      final terms = [
+        '1. Product Characteristics: Additively manufactured products may exhibit variations in surface finish, texture, colour, dimensions, and appearance arising from the manufacturing process, materials, and finishing methods. Products will be assessed against their disclosed specifications and agreed tolerances.',
+        '2. Material Limitations: Products may have specific limitations relating to strength, flexibility, heat resistance, chemical resistance, weather exposure, durability, and other performance characteristics. Customers should use products in accordance with their stated specifications and intended purpose.',
+        '3. Custom Orders and Approvals: Customers are responsible for reviewing and approving applicable designs, dimensions, colours, text, materials, and other specifications before manufacture. Changes requested after approval may affect pricing, production schedules, and delivery timelines.',
+        '4. Functional Applications: Unless expressly specified, tested, and appropriately certified where required, products must not be assumed suitable for safety-critical, medical, structural, load-bearing, or other regulated applications. Customers must verify suitability for their intended use where applicable.',
+        '5. Inspection and Complaints: Customers should inspect delivered products and report damage, missing items, discrepancies, or suspected defects promptly, providing supporting information where reasonably requested. Any applicable statutory rights remain unaffected.',
+        '6. Returns, Refunds, and Replacements: Requests concerning defective, damaged, incorrect, or non-conforming products will be handled in accordance with the seller\'s applicable policies and governing law. Customized or made-to-order products remain subject to any remedies required by applicable law.',
+        '7. Production and Delivery: Production and delivery timelines are estimates unless expressly confirmed otherwise. Delays may arise from manufacturing requirements, material availability, design changes, or shipping conditions. Material delays and applicable remedies will be communicated as appropriate.',
+        '8. Designs and Intellectual Property: Ownership, licensing, reproduction rights, and permitted use of digital design files, models, drawings, and other intellectual property are governed by the applicable agreement, quotation, or licence.',
+        '9. Full Terms and Policies: The complete Terms and Conditions, applicable return policy, warranty information, and Privacy Policy are available upon request.',
+        '10. Customer Rights: Nothing in these terms excludes, restricts, or waives any right, remedy, warranty, or protection that cannot legally be excluded or restricted under applicable law.',
+      ];
+
+      widgets.addAll(
+        terms.map(
+          (term) => pw.Padding(
+            padding: const pw.EdgeInsets.only(bottom: 2),
+            child: pw.Text(term, style: const pw.TextStyle(fontSize: 7.8)),
+          ),
+        ),
+      );
+
+      return widgets;
+    }
+
+    // ── 2. Photography Terms ────────────────────────────────────────────────
+    if (cleanRole == 'photographer' || cleanRole.contains('photo')) {
+      final businessName =
+          currentUserName.isNotEmpty ? currentUserName : 'the photographer';
+      final terms = [
+        '1. All photographs remain the property of $businessName and are protected by copyright law.',
+        '2. Client is granted personal use license for the photographs, not for commercial purposes.',
+        '3. Delivery timelines are estimates and may vary based on workload and complexity.',
+        '4. Rush delivery services may incur additional charges.',
+        '5. Once delivered, client is responsible for backup and storage of digital files.',
+        '6. Re-shoots may be requested within 7 days of delivery if quality issues are found.',
+        '7. Payments are non-refundable once services have been rendered.',
+        '8. Balance amount must be paid in full before final delivery of photographs.',
+        '9. If advance payment is made, the photo shoot will be considered officially booked and reserved.',
+        '10. If the program takes extra hours beyond the agreed timeframe, additional charges will apply.',
+        '11. Weather conditions may affect outdoor shoots and may require rescheduling.',
+        '12. Client must provide access to suitable locations for the shoot as agreed upon.',
+        '13. Raw files are not included in the package unless specified in writing.',
+        '14. The photographer retains the right to use images for portfolio and marketing purposes.',
+        '15. Client cooperation is essential for achieving desired results.',
+      ];
+
+      return terms
+          .map(
+            (term) => pw.Padding(
+              padding: const pw.EdgeInsets.only(bottom: 2.5),
+              child: pw.Text(term, style: const pw.TextStyle(fontSize: 8.5)),
+            ),
+          )
+          .toList();
+    }
+
+    // ── 3. Marketing Specialist Terms ───────────────────────────────────────
+    if (cleanRole.contains('marketing')) {
+      final terms = [
+        '1. Scope of Work: Services and deliverables are executed in accordance with agreed project briefs and proposals.',
+        '2. Client Approvals: Client is responsible for timely review and sign-off on creative assets, ad copies, and campaigns before launch.',
+        '3. Third-Party Expenses: Platform ad spends, media buys, tools, and third-party software fees are excluded from service charges and payable in advance.',
+        '4. Intellectual Property: Final approved deliverables transfer to the client upon full settlement; preparatory drafts and internal strategies remain proprietary.',
+        '5. Revisions: Included revisions are limited to the scope specified. Out-of-scope alterations will be invoiced additionally.',
+        '6. Performance Disclaimers: Marketing reach and conversion metrics depend on market trends, algorithm shifts, and audience dynamics; specific ROI cannot be guaranteed.',
+        '7. Confidentiality: Both parties agree to maintain strict confidentiality of proprietary data, strategies, and business intelligence.',
+        '8. Payment Terms: Invoices are payable on presentation or per the milestone schedule. Overdue accounts may cause active campaigns to be paused.',
+        '9. Cancellation & Termination: Early termination requires written notice as agreed; work completed up to the date of notice remains billable.',
+        '10. Legal & Compliance: The client certifies that all provided promotional materials and claims comply with applicable advertising laws and regulatory guidelines.',
+      ];
+
+      return terms
+          .map(
+            (term) => pw.Padding(
+              padding: const pw.EdgeInsets.only(bottom: 2),
+              child: pw.Text(term, style: const pw.TextStyle(fontSize: 8)),
+            ),
+          )
+          .toList();
+    }
+
+    // ── 4. General / Commercial Invoice Terms (All Other Roles) ─────────────
     final terms = [
-      '1. All photographs remain the property of $currentUserName and are protected by copyright law.',
-      '2. Client is granted personal use license for the photographs, not for commercial purposes.',
-      '3. Delivery timelines are estimates and may vary based on workload and complexity.',
-      '4. Rush delivery services may incur additional charges.',
-      '5. Once delivered, client is responsible for backup and storage of digital files.',
-      '6. Re-shoots may be requested within 7 days of delivery if quality issues are found.',
-      '7. Payments are non-refundable once services have been rendered.',
-      '8. Balance amount must be paid in full before final delivery of photographs.',
-      '9. If advance payment is made, the photo shoot will be considered officially booked and reserved.',
-      '10. If the program takes extra hours beyond the agreed timeframe, additional charges will apply.',
-      '11. Weather conditions may affect outdoor shoots and may require rescheduling.',
-      '12. Client must provide access to suitable locations for the shoot as agreed upon.',
-      '13. Raw files are not included in the package unless specified in writing.',
-      '14. The photographer retains the right to use images for portfolio and marketing purposes.',
-      '15. Client cooperation is essential for achieving desired results.',
+      '1. Payment Terms: Payment must be cleared by the due date specified on this invoice. Outstanding balances must be settled as agreed.',
+      '2. Inspection & Discrepancies: The customer must inspect all goods/services upon receipt and report any shortages, defects, or damages within 48 hours.',
+      '3. Title & Risk: Risk of loss or damage passes to the customer upon delivery. Ownership and title to goods remain with the seller until full payment is received.',
+      '4. Returns & Exchanges: Returns or exchanges must be accompanied by the original invoice and items in original, unused condition within the authorized return period.',
+      '5. Custom & Special Orders: Customized, personalized, or specially ordered items/services cannot be cancelled or returned once production or fulfillment has commenced.',
+      '6. Delivery & Lead Times: Delivery dates are estimated in good faith. The seller is not liable for transit delays caused by carriers or events beyond reasonable control.',
+      '7. Pricing & Taxes: All prices, applicable taxes, and authorized discounts are reflected on this invoice. Disputes must be raised before final settlement.',
+      '8. Warranty & Limitations: Standard manufacturer warranty applies where applicable. The seller is not liable for incidental or consequential damages arising from misuse.',
+      '9. Governing Law & Jurisdiction: All sales transactions and agreements are governed by the local laws and jurisdiction of the seller\'s registered business location.',
+      '10. Acceptance of Terms: Acceptance of this invoice or receipt of the billed items/services constitutes full acceptance of these terms and conditions.',
     ];
 
     return terms
         .map(
           (term) => pw.Padding(
-            padding: const pw.EdgeInsets.only(bottom: 4),
-            child: pw.Text(term, style: const pw.TextStyle(fontSize: 10)),
+            padding: const pw.EdgeInsets.only(bottom: 2),
+            child: pw.Text(term, style: const pw.TextStyle(fontSize: 8)),
           ),
         )
         .toList();

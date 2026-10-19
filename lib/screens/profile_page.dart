@@ -2,7 +2,6 @@
 
 import 'dart:io';
 import 'dart:ui';
-import 'package:bizmate/services/backup_service.dart';
 import 'package:bizmate/services/image_compression_service.dart';
 import 'package:bizmate/utils/app_theme.dart';
 import 'package:bizmate/widgets/app_snackbar.dart' show AppSnackBar;
@@ -20,6 +19,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:bizmate/models/user_model.dart';
 import 'login_screen.dart';
+import 'backup_screen.dart';
 import 'package:path/path.dart' as p;
 
 class ProfilePage extends StatefulWidget {
@@ -70,6 +70,7 @@ class _ProfilePageState extends State<ProfilePage>
   final List<String> roles = [
     'None',
     'Photographer',
+    '3D Printing Brand',
     'Sales Representative',
     'Account Manager',
     'Business Development',
@@ -456,7 +457,7 @@ class _ProfilePageState extends State<ProfilePage>
               maxHeight: screenHeight * 0.85,
             ),
             child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
+              physics: const ClampingScrollPhysics(),
               child: Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(
@@ -855,7 +856,7 @@ class _ProfilePageState extends State<ProfilePage>
                   maxHeight: screenHeight * 0.85,
                 ),
                 child: SingleChildScrollView(
-                  physics: const BouncingScrollPhysics(),
+                  physics: const ClampingScrollPhysics(),
                   child: Container(
                     decoration: BoxDecoration(
                       color: context.appColors.card,
@@ -2217,7 +2218,7 @@ class _ProfilePageState extends State<ProfilePage>
                         context: context,
                         removeTop: true, // ✅ removes status bar gap
                         child: SingleChildScrollView(
-                          physics: const BouncingScrollPhysics(),
+                          physics: const ClampingScrollPhysics(),
                           child: Padding(
                             padding: EdgeInsets.symmetric(
                               horizontal: 10 * scale,
@@ -3061,7 +3062,7 @@ class _ProfilePageState extends State<ProfilePage>
                   decoration: const BoxDecoration(
                     shape: BoxShape.circle,
                     gradient: LinearGradient(
-                      colors: [Color(0xFF2563EB), Color(0xFF1D4ED8)],
+                      colors: [Color(0xFF2563EB), Color(0xFF38BDF8)],
                     ),
                   ),
                 ),
@@ -3077,20 +3078,120 @@ class _ProfilePageState extends State<ProfilePage>
               ],
             ),
             const SizedBox(height: 14),
+            // Modern Cloud Backup Banner
+            Container(
+              padding: EdgeInsets.all(12 * scale),
+              decoration: BoxDecoration(
+                color: (context.isDark ? const Color(0xFF2563EB) : const Color(0xFF3B82F6))
+                    .withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: (context.isDark ? const Color(0xFF2563EB) : const Color(0xFF3B82F6))
+                      .withValues(alpha: 0.25),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 38 * scale,
+                    height: 38 * scale,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF2563EB), Color(0xFF1D4ED8)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF2563EB).withValues(alpha: 0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    child: Center(
+                      child: Icon(
+                        Icons.cloud_sync_rounded,
+                        color: Colors.white,
+                        size: 20 * scale,
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 12 * scale),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Cloud & Data Backup',
+                          style: TextStyle(
+                            fontSize: 13 * scale,
+                            fontWeight: FontWeight.bold,
+                            color: context.appColors.text1,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'Google Drive sync, auto-backup, PIN encryption & restore',
+                          style: TextStyle(
+                            fontSize: 10 * scale,
+                            color: context.appColors.text2,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  ElevatedButton(
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => BackupScreen(userEmail: email),
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF2563EB),
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 14 * scale,
+                        vertical: 8 * scale,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: Text(
+                      'Manage',
+                      style: TextStyle(
+                        fontSize: 11 * scale,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
             Row(
               children: [
                 Expanded(
                   child: ElevatedButton.icon(
-                    onPressed:
-                        () => BackupService.exportBackupToJson(context, email),
-                    icon: Icon(Icons.upload_file_rounded, size: 16 * scale),
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => BackupScreen(userEmail: email),
+                      ),
+                    ),
+                    icon: Icon(Icons.backup_rounded, size: 16 * scale),
                     label: Text(
-                      "Export Backup",
+                      "Back Up Now",
                       style: TextStyle(fontSize: 12 * scale),
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF2563EB),
                       foregroundColor: Colors.white,
+                      elevation: 0,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
@@ -3101,18 +3202,23 @@ class _ProfilePageState extends State<ProfilePage>
                 const SizedBox(width: 10),
                 Expanded(
                   child: OutlinedButton.icon(
-                    onPressed:
-                        () =>
-                            BackupService.importBackupFromJson(context, email),
-                    icon: Icon(Icons.download_rounded, size: 16 * scale),
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => BackupScreen(userEmail: email),
+                      ),
+                    ),
+                    icon: Icon(Icons.restore_rounded, size: 16 * scale),
                     label: Text(
                       "Restore Data",
                       style: TextStyle(fontSize: 12 * scale),
                     ),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: context.appColors.primary,
+                      foregroundColor: context.isDark ? const Color(0xFF38BDF8) : const Color(0xFF2563EB),
                       padding: const EdgeInsets.symmetric(vertical: 12),
-                      side: BorderSide(color: context.appColors.primary),
+                      side: BorderSide(
+                        color: context.isDark ? const Color(0xFF38BDF8) : const Color(0xFF2563EB),
+                      ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),

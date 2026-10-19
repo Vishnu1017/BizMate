@@ -313,7 +313,7 @@ class _RentalOrdersPageState extends State<RentalOrdersPage> {
                           horizontal: 10 * scale,
                           vertical: 8 * scale,
                         ),
-                        physics: const BouncingScrollPhysics(),
+                        physics: const ClampingScrollPhysics(),
                         itemBuilder: (context, index) {
                           final order = filteredOrders[index];
                           final originalIndex = allOrders.indexOf(order);

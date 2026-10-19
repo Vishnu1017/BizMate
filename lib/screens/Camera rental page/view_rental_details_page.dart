@@ -10,6 +10,7 @@ import 'package:bizmate/services/rental_cart.dart';
 import 'package:bizmate/widgets/ModernCalendar.dart' show ModernCalendar;
 import 'package:bizmate/widgets/app_snackbar.dart' show AppSnackBar;
 import 'package:bizmate/widgets/app_theme_toggle.dart';
+import 'package:bizmate/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:intl/intl.dart';
@@ -467,6 +468,7 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
     required Widget child,
     EdgeInsetsGeometry? margin,
   }) {
+    final isDark = context.isDark;
     final width = MediaQuery.of(context).size.width;
     final bool isTablet = width >= 600;
 
@@ -477,16 +479,20 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
           margin ?? EdgeInsets.symmetric(horizontal: horizontal, vertical: 8),
       padding: EdgeInsets.all(isTablet ? 24 : 20),
       decoration: BoxDecoration(
-        color: Colors.grey.shade50,
+        color: isDark ? const Color(0xFF1E293B) : Colors.grey.shade50,
         borderRadius: BorderRadius.circular(isTablet ? 24 : 20),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.shade300,
+            color: isDark
+                ? Colors.black.withValues(alpha: 0.4)
+                : Colors.grey.shade300,
             blurRadius: isTablet ? 24 : 20,
             offset: const Offset(10, 10),
           ),
           BoxShadow(
-            color: Colors.white,
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.03)
+                : Colors.white,
             blurRadius: isTablet ? 24 : 20,
             offset: const Offset(-10, -10),
           ),
@@ -497,6 +503,7 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
   }
 
   Widget _buildDateTimeButton(bool isFrom) {
+    final isDark = context.isDark;
     final dateTime = isFrom ? fromDate : toDate;
     final label = isFrom ? "From" : "To";
     final icon = isFrom ? Icons.calendar_today : Icons.calendar_month;
@@ -505,16 +512,23 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
       child: Container(
         height: 55 * scale,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: isDark ? const Color(0xFF1E293B) : Colors.white,
           borderRadius: BorderRadius.circular(15 * scale),
+          border: isDark
+              ? Border.all(color: const Color(0xFF334155), width: 1)
+              : null,
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.shade300,
+              color: isDark
+                  ? Colors.black.withValues(alpha: 0.35)
+                  : Colors.grey.shade300,
               blurRadius: 10,
               offset: const Offset(4, 4),
             ),
             BoxShadow(
-              color: Colors.white,
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.03)
+                  : Colors.white,
               blurRadius: 10,
               offset: const Offset(-4, -4),
             ),
@@ -530,7 +544,7 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
               padding: EdgeInsets.symmetric(horizontal: 12 * scale),
               child: Row(
                 children: [
-                  Icon(icon, color: Colors.blue.shade600, size: 16 * scale),
+                  Icon(icon, color: Colors.blue.shade400, size: 16 * scale),
                   SizedBox(width: 10 * scale),
                   Expanded(
                     child: Text(
@@ -538,10 +552,9 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
                           ? "Select $label Date"
                           : DateFormat('dd/MM/yyyy').format(dateTime),
                       style: TextStyle(
-                        color:
-                            dateTime == null
-                                ? Colors.grey.shade500
-                                : Colors.grey.shade800,
+                        color: dateTime == null
+                            ? context.textSecondary
+                            : context.textPrimary,
                         fontSize: 10 * scale,
                         fontWeight: FontWeight.w500,
                         overflow: TextOverflow.ellipsis,
@@ -558,21 +571,31 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
   }
 
   Widget _buildTimeDropdown(bool isFrom) {
+    final isDark = context.isDark;
     final value = isFrom ? selectedFromTime : selectedToTime;
     final label = isFrom ? "From Time" : "To Time";
+    final containerColor = isDark ? const Color(0xFF1E293B) : Colors.white;
+    final dropdownColor = isDark ? const Color(0xFF1E293B) : Colors.white;
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: containerColor,
         borderRadius: BorderRadius.circular(15 * scale),
+        border: isDark
+            ? Border.all(color: const Color(0xFF334155), width: 1)
+            : null,
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.shade300,
+            color: isDark
+                ? Colors.black.withValues(alpha: 0.35)
+                : Colors.grey.shade300,
             blurRadius: 10,
             offset: const Offset(4, 4),
           ),
           BoxShadow(
-            color: Colors.white,
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.03)
+                : Colors.white,
             blurRadius: 10,
             offset: const Offset(-4, -4),
           ),
@@ -588,7 +611,7 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
                     child: Text(
                       t,
                       style: TextStyle(
-                        color: Colors.grey.shade800,
+                        color: context.textPrimary,
                         fontWeight: FontWeight.w500,
                         fontSize: 12 * scale,
                       ),
@@ -612,32 +635,48 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
         decoration: InputDecoration(
           labelText: label,
           labelStyle: TextStyle(
-            color: Colors.grey.shade600,
+            color: context.textSecondary,
             fontWeight: FontWeight.w500,
             fontSize: 12 * scale,
           ),
+          filled: true,
+          fillColor: Colors.transparent,
           border: InputBorder.none,
+          enabledBorder: InputBorder.none,
+          focusedBorder: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(horizontal: 16),
         ),
-        dropdownColor: Colors.white,
+        dropdownColor: dropdownColor,
         style: TextStyle(
-          color: Colors.grey.shade800,
+          color: context.textPrimary,
           fontWeight: FontWeight.w500,
         ),
-        icon: Icon(Icons.arrow_drop_down, color: Colors.blue.shade600),
+        icon: Icon(
+          Icons.arrow_drop_down,
+          color: isDark ? Colors.blue.shade300 : Colors.blue.shade600,
+        ),
       ),
     );
   }
 
   Widget _buildStatusIndicator() {
+    final isDark = context.isDark;
     final isAvailable = availabilityStatus == "Available";
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 8 * scale, vertical: 6 * scale),
       decoration: BoxDecoration(
-        color: isAvailable ? Colors.green.shade50 : Colors.red.shade50,
+        color: isAvailable
+            ? (isDark
+                ? Colors.green.withValues(alpha: 0.15)
+                : Colors.green.shade50)
+            : (isDark
+                ? Colors.red.withValues(alpha: 0.15)
+                : Colors.red.shade50),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: isAvailable ? Colors.green.shade200 : Colors.red.shade200,
+          color: isAvailable
+              ? (isDark ? Colors.green.shade700 : Colors.green.shade200)
+              : (isDark ? Colors.red.shade700 : Colors.red.shade200),
         ),
       ),
       child: Row(
@@ -645,14 +684,18 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
         children: [
           Icon(
             isAvailable ? Icons.check_circle : Icons.error,
-            color: isAvailable ? Colors.green.shade600 : Colors.red.shade600,
+            color: isAvailable
+                ? (isDark ? Colors.green.shade400 : Colors.green.shade600)
+                : (isDark ? Colors.red.shade400 : Colors.red.shade600),
             size: 14 * scale,
           ),
           SizedBox(width: 4 * scale),
           Text(
             availabilityStatus,
             style: TextStyle(
-              color: isAvailable ? Colors.green.shade800 : Colors.red.shade800,
+              color: isAvailable
+                  ? (isDark ? Colors.green.shade300 : Colors.green.shade800)
+                  : (isDark ? Colors.red.shade300 : Colors.red.shade800),
               fontWeight: FontWeight.w600,
               fontSize: 10 * scale,
             ),
@@ -663,6 +706,7 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
   }
 
   Widget _buildPriceCard() {
+    final isDark = context.isDark;
     return _buildNeumorphicCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -672,12 +716,14 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
               Container(
                 padding: EdgeInsets.all(6 * scale),
                 decoration: BoxDecoration(
-                  color: Colors.blue.shade50,
+                  color: isDark
+                      ? Colors.blue.withValues(alpha: 0.2)
+                      : Colors.blue.shade50,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
                   Icons.attach_money_rounded,
-                  color: Colors.blue.shade600,
+                  color: isDark ? Colors.blue.shade300 : Colors.blue.shade600,
                   size: 16,
                 ),
               ),
@@ -687,7 +733,7 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
                 style: TextStyle(
                   fontSize: 14 * scale,
                   fontWeight: FontWeight.w700,
-                  color: Colors.grey.shade800,
+                  color: context.textPrimary,
                 ),
               ),
             ],
@@ -710,7 +756,7 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
                   Text(
                     "Status",
                     style: TextStyle(
-                      color: Colors.grey.shade600,
+                      color: context.textSecondary,
                       fontWeight: FontWeight.w500,
                       fontSize: 13 * scale,
                     ),
@@ -719,7 +765,7 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
                 ],
               ),
             ),
-          Divider(height: 24 * scale, color: Colors.grey.shade300),
+          Divider(height: 24 * scale, color: context.borderColor),
           _buildPriceRow(
             "Total Amount",
             "₹${totalAmount.toStringAsFixed(0)}",
@@ -729,6 +775,7 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
           LayoutBuilder(
             builder: (context, constraints) {
               // 🔒 Slightly reduced scale (safe)
+              final isDark = context.isDark;
               final double buttonScale =
                   (constraints.maxWidth / 360).clamp(0.85, 1.0) * scale;
 
@@ -836,10 +883,14 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
                       height: buttonHeight,
                       child: DecoratedBox(
                         decoration: BoxDecoration(
-                          color: Colors.orange.shade50,
+                          color: isDark
+                              ? Colors.orange.withValues(alpha: 0.15)
+                              : Colors.orange.shade50,
                           borderRadius: BorderRadius.circular(radius),
                           border: Border.all(
-                            color: Colors.orange.shade300,
+                            color: isDark
+                                ? Colors.orange.shade700
+                                : Colors.orange.shade300,
                             width: 1.2,
                           ),
                           boxShadow: [
@@ -895,14 +946,18 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
                               children: [
                                 Icon(
                                   Icons.add_shopping_cart_rounded,
-                                  color: Colors.orange.shade800,
+                                  color: isDark
+                                      ? Colors.orange.shade300
+                                      : Colors.orange.shade800,
                                   size: iconSize,
                                 ),
                                 SizedBox(width: 6 * buttonScale),
                                 Text(
                                   'Add to Cart',
                                   style: TextStyle(
-                                    color: Colors.orange.shade900,
+                                    color: isDark
+                                        ? Colors.orange.shade300
+                                        : Colors.orange.shade900,
                                     fontWeight: FontWeight.w700,
                                     fontSize: textSize,
                                   ),
@@ -923,10 +978,14 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
                     height: buttonHeight,
                     child: DecoratedBox(
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: isDark
+                            ? const Color(0xFF1E293B)
+                            : Colors.white,
                         borderRadius: BorderRadius.circular(radius),
                         border: Border.all(
-                          color: Colors.grey.shade300,
+                          color: isDark
+                              ? const Color(0xFF334155)
+                              : Colors.grey.shade300,
                           width: 1.1,
                         ),
                         boxShadow: [
@@ -945,7 +1004,9 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
                           onTap: clearSelection,
                           child: Icon(
                             Icons.refresh_rounded,
-                            color: Colors.grey.shade700,
+                            color: isDark
+                                ? Colors.grey.shade400
+                                : Colors.grey.shade700,
                             size: 20 * buttonScale,
                           ),
                         ),
@@ -962,6 +1023,7 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
   }
 
   Widget _buildPriceRow(String label, String value, {bool isTotal = false}) {
+    final isDark = context.isDark;
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 6 * scale),
       child: Row(
@@ -970,7 +1032,7 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
           Text(
             label,
             style: TextStyle(
-              color: Colors.grey.shade600,
+              color: context.textSecondary,
               fontSize: 12 * scale,
               fontWeight: isTotal ? FontWeight.w600 : FontWeight.w500,
             ),
@@ -978,7 +1040,9 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
           Text(
             value,
             style: TextStyle(
-              color: isTotal ? Colors.blue.shade800 : Colors.grey.shade800,
+              color: isTotal
+                  ? (isDark ? Colors.blue.shade300 : Colors.blue.shade800)
+                  : context.textPrimary,
               fontSize: 12 * scale,
               fontWeight: isTotal ? FontWeight.w700 : FontWeight.w600,
             ),
@@ -1020,7 +1084,9 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
                 height: 30 * scale,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.white,
+                  color: context.isDark
+                      ? const Color(0xFF1E293B)
+                      : Colors.white,
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withValues(alpha: 0.1),
@@ -1031,7 +1097,7 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
                 ),
                 child: Icon(
                   Icons.arrow_back,
-                  color: Colors.black,
+                  color: context.textPrimary,
                   size: 20 * scale,
                 ),
               ),
@@ -1107,12 +1173,16 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
                                   Container(
                                     padding: EdgeInsets.all(6 * scale),
                                     decoration: BoxDecoration(
-                                      color: Colors.orange.shade50,
+                                      color: context.isDark
+                                          ? Colors.orange.withValues(alpha: 0.2)
+                                          : Colors.orange.shade50,
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: Icon(
                                       Icons.calendar_today,
-                                      color: Colors.orange.shade600,
+                                      color: context.isDark
+                                          ? Colors.orange.shade300
+                                          : Colors.orange.shade600,
                                       size: 16 * scale,
                                     ),
                                   ),
@@ -1122,7 +1192,7 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
                                     style: TextStyle(
                                       fontSize: 14 * scale,
                                       fontWeight: FontWeight.w700,
-                                      color: Colors.grey.shade800,
+                                      color: context.textPrimary,
                                     ),
                                   ),
                                 ],
@@ -1154,13 +1224,13 @@ class _ViewRentalDetailsPageState extends State<ViewRentalDetailsPage> {
                                         vertical: 6 * scale,
                                       ),
                                       decoration: BoxDecoration(
-                                        color: Colors.grey.shade100,
+                                        color: context.isDark
+                                            ? const Color(0xFF1E293B)
+                                            : Colors.grey.shade100,
                                         borderRadius: BorderRadius.circular(30),
                                         border: Border.all(
-                                          color: const Color(
-                                            0xFF1E40AF,
-                                          ), // 🔵 border color
-                                          width: 1.2, // optional thickness
+                                          color: const Color(0xFF1E40AF),
+                                          width: 1.2,
                                         ),
                                         boxShadow: [
                                           BoxShadow(

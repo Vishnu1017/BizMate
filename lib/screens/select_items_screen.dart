@@ -412,7 +412,7 @@ class _SelectItemsScreenState extends State<SelectItemsScreen> {
                       child: Padding(
                         padding: EdgeInsets.symmetric(horizontal: rs(14)),
                         child: GridView.builder(
-                          physics: const BouncingScrollPhysics(),
+                          physics: const ClampingScrollPhysics(),
                           itemCount: items.length,
                           gridDelegate:
                               SliverGridDelegateWithFixedCrossAxisCount(
@@ -980,7 +980,7 @@ class _SelectItemsScreenState extends State<SelectItemsScreen> {
                       child: Form(
                         key: _formKey,
                         child: SingleChildScrollView(
-                          physics: const BouncingScrollPhysics(),
+                          physics: const ClampingScrollPhysics(),
                           padding: EdgeInsets.only(bottom: 20 + bottomInset),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,

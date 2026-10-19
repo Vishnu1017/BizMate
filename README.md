@@ -1,5 +1,5 @@
 <h1 align="center">
-  <img src="assets/images/bizmate_logo.JPG" width="80" height="80" style="border-radius:20px"/><br/>
+  <img src="assets/images/bizmate_logo.JPG" width="90" height="90" style="border-radius:20px"/><br/>
   BizMate
 </h1>
 
@@ -18,22 +18,45 @@
   <a href="https://github.com/Vishnu1017/BizMate/blob/main/LICENSE">
     <img src="https://img.shields.io/github/license/Vishnu1017/BizMate" alt="License"/>
   </a>
-  <img src="https://img.shields.io/badge/version-1.1.0-blue" alt="Version"/>
+  <img src="https://img.shields.io/badge/version-1.0.51-blue" alt="Version"/>
   <img src="https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter" alt="Flutter"/>
   <img src="https://img.shields.io/badge/Dart-3.x-0175C2?logo=dart" alt="Dart"/>
+  <img src="https://img.shields.io/badge/Platform-Android%20%7C%20iOS-green" alt="Platform"/>
+  <img src="https://img.shields.io/badge/Storage-Hive%20(Offline)-orange" alt="Storage"/>
 </p>
 
 ---
 
 ## 🧾 About BizMate
 
-**BizMate** is a powerful, offline-first Flutter application built for **photographers, freelancers, and small business owners**. It provides a complete suite of tools to manage sales, customers, products, camera rental gear, bookings, payments, and business reports — all from a single beautifully designed app.
+**BizMate** is a powerful, **offline-first** Flutter application built for **photographers, freelancers, and small business owners**. It provides a complete suite of tools to manage sales, customers, products, camera rental gear, bookings, payments, and business reports — all from a single beautifully designed app.
 
-Built with **Hive** for lightning-fast local storage, BizMate works entirely offline. It supports **dark and light themes**, **biometric authentication**, **GST-compliant PDF invoices**, **UPI QR codes**, **WhatsApp messaging**, and a dedicated **Camera Rental module** for photographers.
+Built with **Hive** for lightning-fast local storage, BizMate works entirely offline with no internet required for day-to-day operations. It features a premium **Business Analytics splash screen** with cinematic animations, supports **dark and light themes**, **biometric authentication**, **GST-compliant PDF invoices**, **UPI QR codes**, **WhatsApp messaging**, and a dedicated **Camera Rental module** tailored for photographers.
 
 ---
 
-## ✨ Features
+## ✨ Features at a Glance
+
+| Module | Highlights |
+|---|---|
+| 🔐 **Auth & Security** | Passcode, Biometrics (Face ID / Fingerprint), Auto-login |
+| 🏠 **Dashboard** | Animated stats, filter chips, quick actions |
+| 🛒 **Sales** | GST invoices, advance payments, payment timeline |
+| 📦 **Products** | Drag-reorder, categories, quick search |
+| 👥 **Customers** | WhatsApp integration, call, Release Agreement PDF |
+| 📅 **Calendar** | Visual booking calendar, date-range picker |
+| 🚚 **Delivery** | Status tracker with animated progress |
+| 💳 **Payments** | Timeline view, mode icons, due/paid highlights |
+| 📊 **Reports** | fl_chart analytics, CSV/PDF export |
+| 📁 **PDF Invoice** | UPI QR, GST-compliant, shareable |
+| 📸 **Camera Rental** | Full rental module for photographers |
+| 👤 **Profile** | Avatar, role, passcode management |
+| 💾 **Backup** | Local data backup & restore |
+| 🌗 **Theme** | Instant dark/light toggle on every screen |
+
+---
+
+## 🚀 Feature Details
 
 ### 🔐 Authentication & Security
 - Email/phone login with **passcode protection**
@@ -116,183 +139,126 @@ Built with **Hive** for lightning-fast local storage, BizMate works entirely off
 - Passcode management (setup / change / remove)
 - Rental visibility toggle for the camera rental module
 
+### 💾 Backup & Restore
+- Local data backup to device storage
+- Restore from a previous backup file
+- Export and import Hive database snapshots
+
 ### 🌗 Dark & Light Theme
 - Full **dark mode and light mode** support across all screens
-- **Custom animated theme toggle** on every page — smooth `RotationTransition` + `FadeTransition` with `AnimatedContainer` colour switching
-  - 🌙 Dark mode: slate icon `#94A3B8`, dark background `#1E293B`, slate border
-  - ☀️ Light mode: orange sun icon `#FF8F00`, warm cream background `#FFF8E1`, golden border `#FFCC02`
-- Theme toggle available on: **NavBar, Camera Rental NavBar, Login screen, Profile page**, and all inner pages via `AppThemeToggle`
-- Persistent theme preference stored locally
-
----
-
-## 🆕 What's New in v1.1.0
-
-| Feature | Description |
-|---------|-------------|
-| **Profile Photo** | Pick & persist avatar from gallery; shown in NavBar header and profile page in real time |
-| **Animated Theme Toggle** | `RotationTransition` + `FadeTransition` design applied uniformly across all pages |
-| **Login Page Theme Toggle** | Theme can now be switched from the login/signup screen |
-| **Camera Rental Navbar Toggle** | Inline animated toggle matching the unified design |
-| **Sales Filter Chips** | All / PAID / PARTIAL / DUE filter row below search bar on home page |
-| **`AppThemeToggle` Widget** | Shared widget updated with the new animation design — one change, app-wide effect |
-
----
-
-## 📁 Project Structure
-
-```
-bizmate/
-├── lib/
-│   ├── main.dart                       # App entry point, Hive init, theme setup
-│   ├── models/                         # Hive data models
-│   │   ├── sale.dart
-│   │   ├── product.dart
-│   │   ├── customer.dart
-│   │   ├── rental_item.dart
-│   │   └── rental_sale_model.dart
-│   ├── screens/                        # All app screens
-│   │   ├── auth_gate_screen.dart       # Login / Signup / Passcode
-│   │   ├── login_screen.dart           # Login & signup UI (with theme toggle)
-│   │   ├── nav_bar_page.dart           # Main bottom navigation + profile avatar
-│   │   ├── home_page.dart              # Sales dashboard / home (with filter chips)
-│   │   ├── dashboard_page.dart         # Stats and analytics overview
-│   │   ├── new_sale_screen.dart        # Create / edit a sale
-│   │   ├── sale_detail_screen.dart     # Sale detail + payment management
-│   │   ├── select_items_screen.dart    # Product selection for a sale
-│   │   ├── products_page.dart          # Products / Items management
-│   │   ├── customers_page.dart         # Customer directory
-│   │   ├── payment_history_page.dart
-│   │   ├── CalendarPage.dart
-│   │   ├── DeliveryTrackerPage.dart
-│   │   ├── SalesReportPage.dart
-│   │   ├── profile_page.dart           # Profile photo, passcode, theme, settings
-│   │   ├── pdf_preview_screen.dart
-│   │   ├── rental_pdf_preview_screen.dart
-│   │   └── Camera rental page/
-│   │       ├── camera_rental_nav_bar.dart  # Rental navbar (with animated theme toggle)
-│   │       ├── camera_rental.dart
-│   │       ├── rental_items.dart
-│   │       ├── rental_customers_page.dart
-│   │       ├── rental_orders_page.dart
-│   │       ├── rental_add_customer_page.dart
-│   │       ├── rental_cart_preview_page.dart
-│   │       ├── add_rental_item_page.dart
-│   │       ├── edit_rental_item_page.dart
-│   │       ├── rental_sale_detail_screen.dart
-│   │       └── view_rental_details_page.dart
-│   ├── widgets/                        # Reusable UI components
-│   │   ├── app_theme_toggle.dart       # Unified animated theme toggle widget
-│   │   ├── advanced_search_bar.dart    # Search + date filter bar
-│   │   └── ...
-│   └── utils/
-│       └── app_theme.dart              # AppColors, ThemeExtension, isDark helpers
-├── assets/
-│   ├── images/                         # App logo, branding
-│   ├── icons/                          # GPay, PhonePe, Paytm icons
-│   ├── fonts/                          # Roboto
-│   └── screenshots/                    # App screenshots
-├── android/
-├── ios/
-├── pubspec.yaml
-└── README.md
-```
+- Animated theme toggle (`RotationTransition` + `FadeTransition`) on all pages
+- Theme preference persisted across sessions
 
 ---
 
 ## 🛠️ Tech Stack
 
-| Technology | Purpose |
+| Category | Technology |
 |---|---|
-| **Flutter 3.x** | Cross-platform UI framework |
-| **Dart 3.x** | Programming language |
-| **Hive + Hive Flutter** | Offline-first local database |
-| **fl_chart** | Revenue and analytics charts |
-| **pdf + printing** | GST invoice and agreement PDF generation |
-| **pdfx / syncfusion_flutter_pdfviewer** | PDF preview |
-| **qr_flutter + barcode** | UPI QR code generation |
-| **local_auth** | Biometric fingerprint / Face ID |
-| **flutter_secure_storage** | Secure passcode storage |
-| **image_picker + image_cropper** | Profile photo and rental item photos |
-| **flutter_image_compress** | Image optimization |
-| **share_plus** | Share PDFs via WhatsApp, email, etc. |
-| **url_launcher** | Phone calls and WhatsApp deep links |
-| **table_calendar** | Booking calendar UI |
-| **flutter_local_notifications** | Local push notifications |
-| **flutter_animate + confetti** | Micro-animations and celebrations |
-| **hugeicons + unicons + iconsax** | Rich icon libraries |
-| **lottie** | Lottie animation support |
-| **csv** | Sales report CSV export |
-| **intl** | Date/time formatting |
-| **shared_preferences** | Theme, session, and profile photo persistence |
-| **file_picker / file_saver** | File import/export |
+| **Framework** | Flutter 3.x / Dart 3.x |
+| **Local Database** | Hive 2.x + hive_flutter |
+| **State Management** | StatefulWidget + ValueNotifier |
+| **PDF Generation** | pdf, printing, pdfx, syncfusion_flutter_pdfviewer |
+| **Charts** | fl_chart |
+| **Authentication** | local_auth (biometrics), flutter_secure_storage |
+| **Images** | image_picker, image_cropper, flutter_image_compress |
+| **QR Code** | qr_flutter, barcode |
+| **Calendar** | table_calendar |
+| **Notifications** | flutter_local_notifications |
+| **Sharing** | share_plus, url_launcher |
+| **Animations** | flutter_animate, lottie, confetti |
+| **Icons** | font_awesome_flutter, hugeicons, iconsax, unicons |
+| **CSV Export** | csv, file_saver |
+| **Misc** | intl, path_provider, shared_preferences, package_info_plus |
 
 ---
 
-## 🚀 Getting Started
+## 📂 Project Structure
+
+```
+bizmate/
+├── lib/
+│   ├── main.dart                     # App entry, splash screen, routing
+│   ├── models/                       # Hive data models (Sale, Customer, Product…)
+│   ├── screens/                      # All feature screens
+│   │   ├── home_page.dart
+│   │   ├── dashboard_page.dart
+│   │   ├── profile_page.dart
+│   │   ├── backup_screen.dart
+│   │   ├── Camera rental page/
+│   │   └── ...
+│   ├── widgets/                      # Reusable UI components
+│   ├── services/                     # Business logic & data services
+│   └── utils/                        # Helpers, constants, extensions
+├── assets/
+│   ├── images/                       # Logo, app images
+│   ├── icons/                        # Custom icons
+│   └── fonts/                        # Roboto font
+├── android/                          # Android native config
+├── ios/                              # iOS native config
+├── pubspec.yaml                      # Dependencies & asset declarations
+└── README.md
+```
+
+---
+
+## ⚙️ Getting Started
 
 ### Prerequisites
-- Flutter **3.x** or higher
-- Dart **3.x**
-- Android **5.0+** (API 21+) or iOS **12+**
-- Xcode (for iOS builds)
+
+- [Flutter SDK](https://flutter.dev/docs/get-started/install) ≥ 3.x
+- Dart ≥ 3.x
+- Android Studio / Xcode / VS Code with Flutter extension
 
 ### Installation
 
 ```bash
+# 1. Clone the repository
 git clone https://github.com/Vishnu1017/BizMate.git
 cd BizMate
+
+# 2. Install dependencies
 flutter pub get
-```
 
-### Running the App
+# 3. Generate Hive adapters
+dart run build_runner build --delete-conflicting-outputs
 
-```bash
+# 4. Run on a connected device or emulator
 flutter run
 ```
 
-### Building Release Versions
+### Build Release APK
 
 ```bash
-# Android APK
 flutter build apk --release
-
-# Android App Bundle (Play Store)
-flutter build appbundle --release
-
-# iOS (requires Xcode + Apple Developer account)
-flutter build ios --release
-
-# Web
-flutter build web --release
 ```
 
-### Regenerate Hive Adapters (if models change)
+### Build iOS IPA
 
 ```bash
-flutter pub run build_runner build --delete-conflicting-outputs
+flutter build ipa --release
 ```
 
 ---
 
 ## 📸 Screenshots
 
-### 🔐 Splash & Authentication
+### 🔐 Authentication & Security
 
 <table>
   <tr>
-    <td align="center"><b>Splash Screen</b></td>
+    <td align="center"><b>Login</b></td>
+    <td align="center"><b>Signup</b></td>
     <td align="center"><b>Passcode Setup</b></td>
-    <td align="center"><b>Passcode Step 2</b></td>
   </tr>
   <tr>
-    <td><img src="assets/screenshots/SplashScreen.png" width="220"/></td>
-    <td><img src="assets/screenshots/passcode_in_profile_page.png" width="220"/></td>
+    <td><img src="assets/screenshots/Login_page.png" width="220"/></td>
+    <td><img src="assets/screenshots/Signup_page.png" width="220"/></td>
     <td><img src="assets/screenshots/passcode_in_profile_page1.png" width="220"/></td>
   </tr>
   <tr>
-    <td align="center"><b>Passcode Change</b></td>
-    <td align="center"><b>Passcode Remove</b></td>
+    <td align="center"><b>Passcode (2)</b></td>
+    <td align="center"><b>Passcode (3)</b></td>
     <td></td>
   </tr>
   <tr>
@@ -545,12 +511,28 @@ flutter pub run build_runner build --delete-conflicting-outputs
 - [x] Sales report with charts and CSV export
 - [x] Payment history timeline
 - [x] Delivery tracker
+- [x] Local data backup & restore
+- [x] Premium Business Analytics splash screen with cinematic animations
 - [ ] Cloud sync and backup (Firebase / Supabase)
 - [ ] Multi-device support
 - [ ] Push notifications for upcoming bookings and overdue payments
 - [ ] Custom invoice branding (logo, colors, header)
 - [ ] Expense tracking module
 - [ ] Multi-language / localization support
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Here's how to get started:
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/amazing-feature`
+3. Commit your changes: `git commit -m 'feat: add amazing feature'`
+4. Push to the branch: `git push origin feature/amazing-feature`
+5. Open a Pull Request
+
+Please make sure your code follows the existing style and passes `flutter analyze` with no issues.
 
 ---
 

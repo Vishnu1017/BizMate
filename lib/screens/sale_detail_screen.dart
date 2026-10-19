@@ -351,7 +351,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
             ),
             body: SafeArea(
               child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
+                physics: const ClampingScrollPhysics(),
                 padding: EdgeInsets.symmetric(
                   horizontal: horizontalPadding,
                   vertical: 18,

@@ -458,7 +458,7 @@ class _RentalItemsState extends State<RentalItems> {
             horizontal: width <= 380 ? 10 : 14,
             vertical: 14,
           ),
-          physics: const BouncingScrollPhysics(),
+          physics: const ClampingScrollPhysics(),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: columns,
             crossAxisSpacing: width <= 380 ? 10 : 12,
