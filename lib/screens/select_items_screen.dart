@@ -566,7 +566,11 @@ class _SelectItemsScreenState extends State<SelectItemsScreen> {
                           onPressed: () {
                             Navigator.pop(context);
                           },
-                          icon: Icon(Icons.add, size: rs(18)),
+                          icon: Icon(
+                            Icons.add,
+                            size: rs(18),
+                            color: context.appColors.primary,
+                          ),
                           label: Text(
                             "Add New Product",
                             style: TextStyle(
@@ -782,20 +786,28 @@ class _SelectItemsScreenState extends State<SelectItemsScreen> {
                     Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [
-                            Color(0xFF2563EB),
-                            Color(0xFF1E40AF),
-                            Color(0xFF020617),
-                          ],
-                          stops: [0.0, 0.6, 1.0],
-                          begin: Alignment.bottomRight,
-                          end: Alignment.topLeft,
-                        ),
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(24),
-                          topRight: Radius.circular(24),
-                        ),
+                        gradient:
+                            context.isDark
+                                ? const LinearGradient(
+                                  colors: [
+                                    Color(0xFF38BDF8),
+                                    Color(0xFF60A5FA),
+                                    Color(0xFFBAE6FD),
+                                  ],
+                                  stops: [0.0, 0.6, 1.0],
+                                  begin: Alignment.bottomRight,
+                                  end: Alignment.topLeft,
+                                )
+                                : const LinearGradient(
+                                  colors: [
+                                    Color(0xFF2563EB),
+                                    Color(0xFF1E40AF),
+                                    Color(0xFF020617),
+                                  ],
+                                  stops: [0.0, 0.6, 1.0],
+                                  begin: Alignment.bottomRight,
+                                  end: Alignment.topLeft,
+                                ),
                       ),
                       child: Row(
                         children: [
@@ -1061,7 +1073,10 @@ class _SelectItemsScreenState extends State<SelectItemsScreen> {
                                         controller: itemController,
                                         focusNode: _itemFocusNode,
                                         onTap: showItemPicker,
-                                        style: TextStyle(fontSize: 14 * scale),
+                                        style: TextStyle(
+                                          fontSize: 14 * scale,
+                                          color: context.appColors.text1,
+                                        ),
                                         readOnly: false, // 🔥 Allow typing
                                         decoration: _buildInputDecoration(
                                           "Item Name",
@@ -1167,6 +1182,7 @@ class _SelectItemsScreenState extends State<SelectItemsScreen> {
                                               focusNode: _quantityFocusNode,
                                               style: TextStyle(
                                                 fontSize: 14 * scale,
+                                                color: context.appColors.text1,
                                               ),
                                               decoration: _buildInputDecoration(
                                                 "Quantity",
@@ -1209,11 +1225,13 @@ class _SelectItemsScreenState extends State<SelectItemsScreen> {
                                           Expanded(
                                             child: Container(
                                               decoration: BoxDecoration(
-                                                color: Colors.white,
+                                                color:
+                                                    context.appColors.inputFill,
                                                 borderRadius:
                                                     BorderRadius.circular(12),
                                                 border: Border.all(
-                                                  color: Colors.grey.shade300,
+                                                  color:
+                                                      context.appColors.divider,
                                                 ),
                                               ),
                                               child: Padding(
@@ -1224,9 +1242,14 @@ class _SelectItemsScreenState extends State<SelectItemsScreen> {
                                                 child: DropdownButtonHideUnderline(
                                                   child: DropdownButton<String>(
                                                     value: selectedUnit,
+                                                    dropdownColor:
+                                                        context.appColors.card,
                                                     style: TextStyle(
                                                       fontSize: 14 * scale,
-                                                      color: Colors.black,
+                                                      color:
+                                                          context
+                                                              .appColors
+                                                              .text1,
                                                     ),
                                                     isExpanded: true,
                                                     icon: const Icon(
@@ -1236,9 +1259,9 @@ class _SelectItemsScreenState extends State<SelectItemsScreen> {
                                                       "Unit",
                                                       style: TextStyle(
                                                         color:
-                                                            Colors
-                                                                .grey
-                                                                .shade600,
+                                                            context
+                                                                .appColors
+                                                                .text2,
                                                         fontSize: 14 * scale,
                                                       ),
                                                     ),
@@ -1271,7 +1294,10 @@ class _SelectItemsScreenState extends State<SelectItemsScreen> {
                                       TextFormField(
                                         controller: rateController,
                                         focusNode: _rateFocusNode,
-                                        style: TextStyle(fontSize: 14 * scale),
+                                        style: TextStyle(
+                                          fontSize: 14 * scale,
+                                          color: context.appColors.text1,
+                                        ),
                                         decoration: _buildInputDecoration(
                                           "Rate (Price/Unit)",
                                           Icons.currency_rupee,
@@ -1313,7 +1339,7 @@ class _SelectItemsScreenState extends State<SelectItemsScreen> {
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(16),
                                   ),
-                                  color: Colors.white,
+                                  color: context.appColors.card,
                                   child: Padding(
                                     padding: EdgeInsets.all(16 * scale),
                                     child: Column(
@@ -1354,9 +1380,10 @@ class _SelectItemsScreenState extends State<SelectItemsScreen> {
                                                       fontWeight:
                                                           FontWeight.bold,
                                                       fontSize: 16 * scale,
-                                                      color: const Color(
-                                                        0xFF333333,
-                                                      ),
+                                                      color:
+                                                          context
+                                                              .appColors
+                                                              .text1,
                                                     ),
                                               ),
                                             ),
@@ -1400,7 +1427,7 @@ class _SelectItemsScreenState extends State<SelectItemsScreen> {
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(16),
                                   ),
-                                  color: Colors.white,
+                                  color: context.appColors.card,
                                   child: Padding(
                                     padding: EdgeInsets.all(16 * scale),
                                     child: Column(
@@ -1441,9 +1468,10 @@ class _SelectItemsScreenState extends State<SelectItemsScreen> {
                                                       fontWeight:
                                                           FontWeight.bold,
                                                       fontSize: 16 * scale,
-                                                      color: const Color(
-                                                        0xFF333333,
-                                                      ),
+                                                      color:
+                                                          context
+                                                              .appColors
+                                                              .text1,
                                                     ),
                                               ),
                                             ),
@@ -1476,7 +1504,8 @@ class _SelectItemsScreenState extends State<SelectItemsScreen> {
                                               ),
                                               Divider(
                                                 height: 24,
-                                                color: Colors.grey.shade300,
+                                                color:
+                                                    context.appColors.divider,
                                               ),
                                               _buildSummaryRow(
                                                 "Discount",
@@ -1485,7 +1514,8 @@ class _SelectItemsScreenState extends State<SelectItemsScreen> {
                                               ),
                                               Divider(
                                                 height: 24,
-                                                color: Colors.grey.shade300,
+                                                color:
+                                                    context.appColors.divider,
                                               ),
                                               _buildSummaryRow(
                                                 "Tax",
@@ -1494,7 +1524,8 @@ class _SelectItemsScreenState extends State<SelectItemsScreen> {
                                               ),
                                               Divider(
                                                 height: 24 * scale,
-                                                color: Colors.grey.shade300,
+                                                color:
+                                                    context.appColors.divider,
                                               ),
                                               Container(
                                                 padding: const EdgeInsets.all(

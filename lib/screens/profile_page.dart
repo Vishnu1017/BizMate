@@ -1865,6 +1865,32 @@ class _ProfilePageState extends State<ProfilePage>
 
         await existingUser.save();
 
+        // 🔥 KEEP IN-MEMORY USER IN SYNC FOR PARENT NAV BAR & CALENDAR
+        widget.user.role = existingUser.role;
+        widget.user.name = existingUser.name;
+        widget.user.email = existingUser.email;
+        widget.user.phone = existingUser.phone;
+
+        // 🔥 PERSIST TO SESSION FOR GLOBAL ACCESS
+        try {
+          final sessionBox = Hive.isBoxOpen('session')
+              ? Hive.box('session')
+              : await Hive.openBox('session');
+          await sessionBox.put('currentUserRole', existingUser.role);
+        } catch (_) {}
+
+        // 🔥 PERSIST TO USERDATA BOX
+        try {
+          final safeEmail = existingUser.email.replaceAll('.', '_').replaceAll('@', '_');
+          final uBox = Hive.isBoxOpen("userdata_$safeEmail")
+              ? Hive.box("userdata_$safeEmail")
+              : await Hive.openBox("userdata_$safeEmail");
+          final profile = Map<String, dynamic>.from(uBox.get('profile', defaultValue: {}) ?? {});
+          profile['role'] = existingUser.role;
+          profile['name'] = existingUser.name;
+          await uBox.put('profile', profile);
+        } catch (_) {}
+
         setState(() {
           name = existingUser.name;
           role = existingUser.role;
@@ -2608,6 +2634,14 @@ class _ProfilePageState extends State<ProfilePage>
             });
 
             final prefs = await SharedPreferences.getInstance();
+            widget.user.role = newValue;
+            try {
+              final sessionBox = Hive.isBoxOpen('session')
+                  ? Hive.box('session')
+                  : await Hive.openBox('session');
+              await sessionBox.put('currentUserRole', newValue);
+            } catch (_) {}
+
             if (newValue == 'Photographer') {
               await prefs.setBool('${widget.user.email}_rentalEnabled', true);
               setState(() => _isRentalEnabled = true);

@@ -62,7 +62,8 @@ class _CustomersPageState extends State<CustomersPage> {
       filteredCustomers =
           customers.where((c) {
             return (c['name'] ?? "").toLowerCase().contains(q) ||
-                (c['phone'] ?? "").toLowerCase().contains(q);
+                (c['phone'] ?? "").toLowerCase().contains(q) ||
+                (c['address'] ?? "").toLowerCase().contains(q);
           }).toList();
     }
   }
@@ -100,6 +101,7 @@ class _CustomersPageState extends State<CustomersPage> {
         uniqueList.add({
           'name': sale.customerName.trim(),
           'phone': sale.phoneNumber.trim(),
+          'address': sale.customerAddress?.trim() ?? '',
         });
       }
     }
@@ -553,6 +555,8 @@ class _CustomersPageState extends State<CustomersPage> {
                         itemBuilder: (context, index) {
                           final name = filteredCustomers[index]['name'] ?? '';
                           final phone = filteredCustomers[index]['phone'] ?? '';
+                          final address =
+                              filteredCustomers[index]['address'] ?? '';
                           final initials =
                               name.isNotEmpty
                                   ? name
@@ -719,19 +723,40 @@ class _CustomersPageState extends State<CustomersPage> {
                                     ),
 
                                     // ---------------------------------------------------------------------
-                                    // 📞 PHONE
+                                    // 📞 PHONE & ADDRESS
                                     // ---------------------------------------------------------------------
-                                    subtitle: Text(
-                                      phone,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(
-                                        color:
-                                            context.isDark
-                                                ? const Color(0xFF315D89)
-                                                : Colors.white70,
-                                        fontSize: 12.5 * scale,
-                                      ),
+                                    subtitle: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          phone,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(
+                                            color:
+                                                context.isDark
+                                                    ? const Color(0xFF315D89)
+                                                    : Colors.white70,
+                                            fontSize: 12.5 * scale,
+                                          ),
+                                        ),
+                                        if (address.isNotEmpty) ...[
+                                          SizedBox(height: 2 * scale),
+                                          Text(
+                                            address,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: TextStyle(
+                                              color:
+                                                  context.isDark
+                                                      ? const Color(0xFF476C94)
+                                                      : Colors.white60,
+                                              fontSize: 11 * scale,
+                                            ),
+                                          ),
+                                        ],
+                                      ],
                                     ),
 
                                     // ---------------------------------------------------------------------

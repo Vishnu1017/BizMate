@@ -18,7 +18,7 @@
   <a href="https://github.com/Vishnu1017/BizMate/blob/main/LICENSE">
     <img src="https://img.shields.io/github/license/Vishnu1017/BizMate" alt="License"/>
   </a>
-  <img src="https://img.shields.io/badge/version-1.0.51-blue" alt="Version"/>
+  <img src="https://img.shields.io/badge/version-1.0.65-blue" alt="Version"/>
   <img src="https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter" alt="Flutter"/>
   <img src="https://img.shields.io/badge/Dart-3.x-0175C2?logo=dart" alt="Dart"/>
   <img src="https://img.shields.io/badge/Platform-Android%20%7C%20iOS-green" alt="Platform"/>
@@ -31,7 +31,7 @@
 
 **BizMate** is a powerful, **offline-first** Flutter application built for **photographers, freelancers, and small business owners**. It provides a complete suite of tools to manage sales, customers, products, camera rental gear, bookings, payments, and business reports — all from a single beautifully designed app.
 
-Built with **Hive** for lightning-fast local storage, BizMate works entirely offline with no internet required for day-to-day operations. It features a premium **Business Analytics splash screen** with cinematic animations, supports **dark and light themes**, **biometric authentication**, **GST-compliant PDF invoices**, **UPI QR codes**, **WhatsApp messaging**, and a dedicated **Camera Rental module** tailored for photographers.
+Built with **Hive** for lightning-fast local storage, BizMate works entirely offline with no internet required for day-to-day operations. It features a premium **Business Analytics splash screen with modern Lottie animations**, **Google Drive cloud backup & restore** with automated **Workmanager background scheduling**, network constraints (Wi-Fi only vs. Any Network), customizable backup frequencies (Manual, Daily, Weekly, Monthly), local backup completion notifications, **dark and light themes with enhanced financial readability**, **biometric authentication**, **GST-compliant PDF invoices with embedded NPCI UPI QR codes and accepted UPI app badges (Google Pay, PhonePe, Paytm, BHIM)**, **WhatsApp messaging**, and a dedicated **Camera Rental module** tailored for photographers.
 
 ---
 
@@ -39,24 +39,55 @@ Built with **Hive** for lightning-fast local storage, BizMate works entirely off
 
 | Module | Highlights |
 |---|---|
-| 🔐 **Auth & Security** | Passcode, Biometrics (Face ID / Fingerprint), Auto-login |
-| 🏠 **Dashboard** | Animated stats, filter chips, quick actions |
-| 🛒 **Sales** | GST invoices, advance payments, payment timeline |
-| 📦 **Products** | Drag-reorder, categories, quick search |
-| 👥 **Customers** | WhatsApp integration, call, Release Agreement PDF |
-| 📅 **Calendar** | Visual booking calendar, date-range picker |
-| 🚚 **Delivery** | Status tracker with animated progress |
-| 💳 **Payments** | Timeline view, mode icons, due/paid highlights |
-| 📊 **Reports** | fl_chart analytics, CSV/PDF export |
-| 📁 **PDF Invoice** | UPI QR, GST-compliant, shareable |
-| 📸 **Camera Rental** | Full rental module for photographers |
-| 👤 **Profile** | Avatar, role, passcode management |
-| 💾 **Backup** | Local data backup & restore |
-| 🌗 **Theme** | Instant dark/light toggle on every screen |
+| 🔐 **Auth & Security** | Passcode, Biometrics (Face ID / Fingerprint), Auto-login, Role-based signup |
+| 💫 **Splash Experience** | Centered Analytics Showcase Deck, Lottie animated 'B', glowing cyber orbitals, floating KPI cards |
+| 🏠 **Dashboard** | Animated stats, payment status filter chips (All / PAID / PARTIAL / DUE), quick actions |
+| 🛒 **Sales** | GST invoices, advance payments, payment timeline, tax calculations, contextual options menu |
+| 📦 **Products** | Drag-reorder, categories, quick search, price bundles |
+| 👥 **Customers** | WhatsApp integration with templates, direct calling, Client Release Agreement PDF |
+| 📅 **Calendar** | Visual booking calendar, date-range picker, event markers |
+| 🚚 **Delivery** | Status tracker with animated progress timeline |
+| 💳 **Payments** | Timeline view, payment mode badges, due/paid status highlights, theme-accessible breakdown |
+| 📊 **Reports** | fl_chart analytics (bar & spline curves), CSV and PDF export, revenue breakdown |
+| 📁 **PDF Invoices** | GST-compliant invoices, embedded NPCI UPI QR code, crisp accepted UPI app logos (GPay, PhonePe, Paytm, BHIM), shareable via WhatsApp/Email |
+| 📸 **Camera Rental** | Full rental management for photographers: gear inventory with photos, booking date pickers, customer records & rental invoices |
+| ☁️ **Cloud Backup** | Google Drive cloud sync (OAuth 2.0), automated Workmanager background scheduler (Daily, Weekly, Monthly), Wi-Fi only constraint, backup completion alerts |
+| 💾 **Local Backup** | Device storage backup & restore, Hive snapshot import/export, database maintenance |
+| 👤 **Profile** | Avatar photo picking & cropping, role badges, UPI ID configuration, passcode management |
+| 🌗 **Theme** | Instant dark/light toggle on every screen with smooth transitions & high-contrast financial records |
 
 ---
 
 ## 🚀 Feature Details
+
+### 💫 Modern Splash & Brand Identity
+- **Centralized Analytics Showcase Deck** — beautifully balanced on both phone and tablet displays
+- **Lottie Animated Letter 'B'** — seamless vector typography animation with smooth looping and assembly motion
+- **Cybernetic Orbital Aura** — concentric orbit rings with counter-rotating neon cyan and violet arcs
+- **Orbiting Kinetic Energy Sparks** — micro-particles revolving dynamically around the brand monogram
+- **Financial Distribution Donut Ring** — animated 3-segment progress breakdown (Revenue 60%, Profit 25%, Expenses 15%)
+- **Monthly Performance Bar Chart** — 7-month comparative analytics with dynamic spline trend curve and glowing data nodes
+- **Floating Glassmorphic KPI Cards** — live preview cards for Revenue (₹2.4L), Sales (1,284), Customers (348), and Stock (96 items)
+
+### 📁 GST PDF Invoices & Seamless UPI Payments
+- **GST-Compliant Invoices** — itemized product tables, tax breakdowns, discount calculation, and customer details
+- **Integrated NPCI UPI QR Code** — dynamically generated QR code encoding exact payable balance, merchant UPI ID, and payee name for instant scanning
+- **Accepted UPI App Showcase** — high-resolution visual badges for **Google Pay**, **PhonePe**, **Paytm**, and **BHIM** displaying accepted payment methods without clutter or broken links
+- **Fast Sharing & Export** — share invoices instantly as PDF via WhatsApp, Email, or save/print directly on the device
+- **Client Release Agreement PDF** — generate standardized client release agreements with customer name and event terms
+
+### ☁️ Google Drive Cloud Backup & Background Scheduling
+- **Google Sign-In with OAuth 2.0** (`google_sign_in`, `googleapis`) for seamless authentication
+- **Automated Workmanager Background Backups** — schedule automatic backups effortlessly with options for:
+  - **Only when I tap backup**
+  - **Everyday**
+  - **Weekly**
+  - **Monthly**
+- **Network Constraint Configuration** — choose between **Backup over Wi-Fi only** (saving mobile data) or **Any Network (Cellular + Wi-Fi)**
+- **Backup Completion Notifications** — automated notifications via `flutter_local_notifications` alerting users when a background backup succeeds
+- **Automated Hive Box Extraction & Restoration** — complete recovery of sales, rental items, customers, products, settings, and credentials
+- **In-Memory Hot Refresh** — immediate UI synchronization after restore without requiring app restarts
+- **One-Tap Manual Drive Sync** — instant upload and instant restore directly from the Backup screen
 
 ### 🔐 Authentication & Security
 - Email/phone login with **passcode protection**
@@ -80,7 +111,8 @@ Built with **Hive** for lightning-fast local storage, BizMate works entirely off
 - Track **advance payments**, **balance due**, and **payment history timeline**
 - Edit sales, update received amounts, change payment mode
 - Mark delivery status and due dates per sale
-- Full **sale detail screen** with payment breakdown and progress ring
+- Contextual **Sale Options Menu** for fast status changes, sharing, and payment logs
+- Full **sale detail screen** with high-contrast payment breakdown and progress ring
 
 ### 📦 Products / Items
 - Add, edit, reorder, and delete products with pricing
@@ -105,11 +137,11 @@ Built with **Hive** for lightning-fast local storage, BizMate works entirely off
 - Mark delivery as pending, in-transit, or delivered
 - Visual delivery timeline with animated progress
 
-### 💳 Payment History
+### 💳 Payment History & Financial Insights
 - Chronological **payment timeline** per sale
 - Animated progress bar showing % paid
-- Payment mode icons (Cash, UPI, Card, Online, Bank)
-- Balance due highlighted in red; fully paid shown in green
+- Payment mode badges (Cash, UPI, Card, Online, Bank)
+- High-contrast balance due and fully-paid visual highlights in both Dark & Light themes
 
 ### 📊 Sales Report
 - Revenue analytics with **fl_chart** bar and line charts
@@ -117,36 +149,33 @@ Built with **Hive** for lightning-fast local storage, BizMate works entirely off
 - Export report as **CSV** or share as PDF
 - Summary stats: total sales, collected, outstanding
 
-### 📁 PDF Invoice
-- Generate beautiful **GST-compliant PDF invoices**
-- Embedded **UPI QR codes** (GPay, PhonePe, Paytm)
-- Share invoices via WhatsApp, email, or save to device
-- **Release Agreement PDF** generation for clients
-
 ### 📸 Camera Rental Module *(Photographer role only)*
 - Separate **Rental Nav Bar** with 4 tabs: Rentals, Items, Customers, Orders
 - **Rental Items**: Add camera gear with photos, pricing, and categories
 - **Rental Sales**: Create rental bookings with from/to date-time pickers
 - **Rental Customers**: Manage rental-specific customer contacts
 - **Rental Orders**: View and manage all rental orders with status
+- **Rental Sale Menu**: Quick context sheet for instant returns, status changes, and invoice generation
 - Rental sale detail with full edit, payment tracking, and PDF generation
 
 ### 👤 Profile
 - **Profile photo** — pick, crop, and persist your avatar across the entire app
 - Avatar displayed in the NavBar header and profile page in real-time
 - First-letter initial shown when no photo is set (with role-aware gradient)
-- Edit name, phone, email, and business role inline
+- Edit name, phone, email, UPI ID, and business role inline
 - Passcode management (setup / change / remove)
 - Rental visibility toggle for the camera rental module
 
 ### 💾 Backup & Restore
-- Local data backup to device storage
+- Full local data backup to device storage
 - Restore from a previous backup file
 - Export and import Hive database snapshots
+- Database maintenance service for storage health
 
 ### 🌗 Dark & Light Theme
 - Full **dark mode and light mode** support across all screens
 - Animated theme toggle (`RotationTransition` + `FadeTransition`) on all pages
+- Enhanced accessibility: crisp text contrast, dedicated card borders, and readable financial labels in both modes
 - Theme preference persisted across sessions
 
 ---
@@ -157,19 +186,21 @@ Built with **Hive** for lightning-fast local storage, BizMate works entirely off
 |---|---|
 | **Framework** | Flutter 3.x / Dart 3.x |
 | **Local Database** | Hive 2.x + hive_flutter |
+| **Cloud Sync & Auth** | Google Sign-In (`google_sign_in`), Google Drive API (`googleapis`) |
+| **Background Scheduling** | Workmanager (`workmanager`) |
+| **Notifications** | Flutter Local Notifications (`flutter_local_notifications`) |
 | **State Management** | StatefulWidget + ValueNotifier |
+| **Animations** | Lottie (`lottie`), flutter_animate, confetti |
 | **PDF Generation** | pdf, printing, pdfx, syncfusion_flutter_pdfviewer |
 | **Charts** | fl_chart |
 | **Authentication** | local_auth (biometrics), flutter_secure_storage |
 | **Images** | image_picker, image_cropper, flutter_image_compress |
 | **QR Code** | qr_flutter, barcode |
 | **Calendar** | table_calendar |
-| **Notifications** | flutter_local_notifications |
 | **Sharing** | share_plus, url_launcher |
-| **Animations** | flutter_animate, lottie, confetti |
 | **Icons** | font_awesome_flutter, hugeicons, iconsax, unicons |
 | **CSV Export** | csv, file_saver |
-| **Misc** | intl, path_provider, shared_preferences, package_info_plus |
+| **Misc** | intl, path_provider, shared_preferences, package_info_plus, http |
 
 ---
 
@@ -512,9 +543,16 @@ flutter build ipa --release
 - [x] Payment history timeline
 - [x] Delivery tracker
 - [x] Local data backup & restore
-- [x] Premium Business Analytics splash screen with cinematic animations
-- [ ] Cloud sync and backup (Firebase / Supabase)
-- [ ] Multi-device support
+- [x] Premium Business Analytics splash screen with centered showcase deck
+- [x] Modern Lottie Letter 'B' vector animation with cybernetic orbital aura
+- [x] Cloud sync and backup (Google Drive with OAuth 2.0)
+- [x] Scheduled automatic background backups (Workmanager)
+- [x] Network-aware backup options (Wi-Fi only vs. Any Network)
+- [x] Background backup completion notifications
+- [x] GST-compliant PDF invoices with NPCI UPI QR code
+- [x] High-resolution Accepted UPI App badges on invoices (Google Pay, PhonePe, Paytm, BHIM)
+- [x] Dark & Light theme financial contrast and accessibility polish
+- [ ] Multi-device real-time sync
 - [ ] Push notifications for upcoming bookings and overdue payments
 - [ ] Custom invoice branding (logo, colors, header)
 - [ ] Expense tracking module

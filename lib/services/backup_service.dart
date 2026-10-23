@@ -6,6 +6,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import '../models/payment.dart';
 import '../models/product.dart';
 import '../models/rental_item.dart';
 import '../models/rental_sale_model.dart';
@@ -55,6 +56,7 @@ class BackupService {
                 .map(
                   (s) => {
                     'customerName': s.customerName,
+                    'customerAddress': s.customerAddress ?? '',
                     'phoneNumber': s.phoneNumber,
                     'productName': s.productName,
                     'item': s.item,
@@ -63,6 +65,16 @@ class BackupService {
                     'discount': s.discount,
                     'paymentMode': s.paymentMode,
                     'dateTime': s.dateTime.toIso8601String(),
+                    'deliveryStatus': s.deliveryStatus,
+                    'deliveryLink': s.deliveryLink,
+                    'deliveryStatusHistory': s.deliveryStatusHistory ?? [],
+                    'eventDates': (s.eventDates ?? []).map((d) => d.toIso8601String()).toList(),
+                    'completedEventDates': (s.completedEventDates ?? []).map((d) => d.toIso8601String()).toList(),
+                    'paymentHistory': s.paymentHistory.map((p) => {
+                      'amount': p.amount,
+                      'date': p.date.toIso8601String(),
+                      'mode': p.mode,
+                    }).toList(),
                   },
                 )
                 .toList(),
@@ -185,8 +197,44 @@ class BackupService {
         );
         for (var item in salesData) {
           try {
+            final payments = <Payment>[];
+            if (item['paymentHistory'] is List) {
+              for (final p in item['paymentHistory'] as List) {
+                try {
+                  payments.add(Payment(
+                    amount: (p['amount'] ?? 0.0).toDouble(),
+                    date: DateTime.tryParse(p['date'] ?? '') ?? DateTime.now(),
+                    mode: p['mode'] ?? 'Cash',
+                  ));
+                } catch (_) {}
+              }
+            }
+
+            final evDates = <DateTime>[];
+            if (item['eventDates'] is List) {
+              for (final d in item['eventDates'] as List) {
+                final parsed = DateTime.tryParse(d.toString());
+                if (parsed != null) evDates.add(parsed);
+              }
+            }
+
+            final compEvDates = <DateTime>[];
+            if (item['completedEventDates'] is List) {
+              for (final d in item['completedEventDates'] as List) {
+                final parsed = DateTime.tryParse(d.toString());
+                if (parsed != null) compEvDates.add(parsed);
+              }
+            }
+
+            List<String>? delHist;
+            if (item['deliveryStatusHistory'] is List) {
+              delHist = List<String>.from(item['deliveryStatusHistory']);
+            }
+
             final sale = Sale(
               customerName: item['customerName'] ?? '',
+              customerAddress:
+                  item['customerAddress'] ?? item['address'] ?? '',
               phoneNumber: item['phoneNumber'] ?? '',
               productName: item['productName'] ?? '',
               item: item['item'] ?? '',
@@ -196,6 +244,13 @@ class BackupService {
               paymentMode: item['paymentMode'] ?? 'Cash',
               dateTime:
                   DateTime.tryParse(item['dateTime'] ?? '') ?? DateTime.now(),
+              paymentHistory: payments,
+              deliveryStatus: item['deliveryStatus'] ?? 'All Non Editing Images',
+              deliveryLink: item['deliveryLink'] ?? '',
+              deliveryStatusHistory: delHist,
+              eventDates: evDates,
+              completedEventDates: compEvDates,
+              tax: (item['tax'] ?? 0.0).toDouble(),
             );
             currentSales.add(sale);
             restoredCount++;

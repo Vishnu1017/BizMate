@@ -33,13 +33,17 @@ class SaleAdapter extends TypeAdapter<Sale> {
       discount: (fields[11] as double?) ?? 0.0,
       item: (fields[12] as String?) ?? '',
       eventDates: (fields[13] as List?)?.cast<DateTime>() ?? <DateTime>[],
+      completedEventDates:
+          (fields[14] as List?)?.cast<DateTime>() ?? <DateTime>[],
+      customerAddress: (fields[15] as String?) ?? '',
+      tax: (fields[16] as double?) ?? 0.0,
     );
   }
 
   @override
   void write(BinaryWriter writer, Sale obj) {
     writer
-      ..writeByte(14)
+      ..writeByte(17)
       ..writeByte(0)
       ..write(obj.customerName)
       ..writeByte(1)
@@ -67,7 +71,13 @@ class SaleAdapter extends TypeAdapter<Sale> {
       ..writeByte(12)
       ..write(obj.item)
       ..writeByte(13)
-      ..write(obj.eventDates);
+      ..write(obj.eventDates)
+      ..writeByte(14)
+      ..write(obj.completedEventDates)
+      ..writeByte(15)
+      ..write(obj.customerAddress)
+      ..writeByte(16)
+      ..write(obj.tax ?? 0.0);
   }
 
   @override

@@ -63,10 +63,16 @@ class WhatsAppService {
               ? "phonepe://pay?pa=$upiId&pn=${Uri.encodeComponent(businessName)}&am=$amountText&cu=INR"
               : "phonepe://pay?pa=$upiId&pn=${Uri.encodeComponent(businessName)}&cu=INR";
 
+      // paytmmp://pay works on both iOS and Android
       final paytm =
           amountText != null
-              ? "paytm://upi/pay?pa=$upiId&pn=${Uri.encodeComponent(businessName)}&am=$amountText&cu=INR"
-              : "paytm://upi/pay?pa=$upiId&pn=${Uri.encodeComponent(businessName)}&cu=INR";
+              ? "paytmmp://pay?pa=$upiId&pn=${Uri.encodeComponent(businessName)}&am=$amountText&cu=INR"
+              : "paytmmp://pay?pa=$upiId&pn=${Uri.encodeComponent(businessName)}&cu=INR";
+
+      final upiUniversal =
+          amountText != null
+              ? "upi://pay?pa=$upiId&pn=${Uri.encodeComponent(businessName)}&am=$amountText&cu=INR"
+              : "upi://pay?pa=$upiId&pn=${Uri.encodeComponent(businessName)}&cu=INR";
 
       /// ✅ MESSAGE
       String message =
@@ -83,6 +89,8 @@ class WhatsAppService {
             "👉 Google Pay:\n$gpay\n\n"
             "👉 PhonePe:\n$phonePe\n\n"
             "👉 Paytm:\n$paytm\n\n"
+            "👉 Any UPI App:\n$upiUniversal\n\n"
+            "UPI ID: $upiId\n\n"
             "Please confirm once payment is done.\n\n"
             "Regards,\n$businessName";
       }

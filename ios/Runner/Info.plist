@@ -35,9 +35,12 @@
 			<string>upi</string>
 			<string>phonepe</string>
 			<string>paytmmp</string>
+			<string>paytm</string>
 			<string>tez</string>
 			<string>gpay</string>
 			<string>bhim</string>
+			<string>credpay</string>
+			<string>whatsapp</string>
 		</array>
 		<key>UIApplicationSceneManifest</key>
 		<dict>

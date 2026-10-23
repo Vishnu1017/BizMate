@@ -52,6 +52,12 @@ class Sale extends HiveObject {
   @HiveField(14)
   List<DateTime>? completedEventDates;
 
+  @HiveField(15)
+  String? customerAddress;
+
+  @HiveField(16)
+  double? tax;
+
   Sale({
     required this.customerName,
     required this.amount,
@@ -68,10 +74,16 @@ class Sale extends HiveObject {
     this.deliveryStatusHistory,
     this.eventDates,
     this.completedEventDates = const [],
+    this.customerAddress = '',
+    this.tax = 0.0,
   });
 
   // Safe getter for old data
+  double get safeTax => tax ?? 0.0;
+
   List<DateTime> get safeEventDates => eventDates ?? [];
+
+  String get safeCustomerAddress => customerAddress ?? '';
 
   List<DateTime> get safeCompletedEventDates => completedEventDates ?? [];
 

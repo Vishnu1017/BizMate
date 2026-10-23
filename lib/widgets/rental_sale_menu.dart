@@ -21,6 +21,7 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:shared_preferences/shared_preferences.dart'
     show SharedPreferences;
 import '../utils/payment_icons.dart';
+import '../utils/upi_payment_helper.dart';
 
 class RentalSaleMenu extends StatelessWidget {
   /// The rental sale entry
@@ -44,35 +45,35 @@ class RentalSaleMenu extends StatelessWidget {
   final BuildContext parentContext;
 
   String _generateGooglePayLink(String upiId, String name, double? amount) {
-    final encodedName = Uri.encodeComponent(name);
-
-    return amount != null && amount > 0
-        ? 'gpay://upi/pay?pa=$upiId&pn=$encodedName&am=${amount.toStringAsFixed(2)}&cu=INR'
-        : 'gpay://upi/pay?pa=$upiId&pn=$encodedName&cu=INR';
+    return UpiPaymentHelper.buildGooglePayLink(
+      upiId: upiId,
+      payeeName: name,
+      amount: amount,
+    );
   }
 
   String _generatePhonePeLink(String upiId, String name, double? amount) {
-    final encodedName = Uri.encodeComponent(name);
-
-    return amount != null && amount > 0
-        ? 'phonepe://pay?pa=$upiId&pn=$encodedName&am=${amount.toStringAsFixed(2)}&cu=INR'
-        : 'phonepe://pay?pa=$upiId&pn=$encodedName&cu=INR';
+    return UpiPaymentHelper.buildPhonePeLink(
+      upiId: upiId,
+      payeeName: name,
+      amount: amount,
+    );
   }
 
   String _generatePaytmLink(String upiId, String name, double? amount) {
-    final encodedName = Uri.encodeComponent(name);
-
-    return amount != null && amount > 0
-        ? 'paytm://upi/pay?pa=$upiId&pn=$encodedName&am=${amount.toStringAsFixed(2)}&cu=INR'
-        : 'paytm://upi/pay?pa=$upiId&pn=$encodedName&cu=INR';
+    return UpiPaymentHelper.buildPaytmLink(
+      upiId: upiId,
+      payeeName: name,
+      amount: amount,
+    );
   }
 
   String _generateBhimLink(String upiId, String name, double? amount) {
-    final encodedName = Uri.encodeComponent(name);
-
-    return amount != null && amount > 0
-        ? 'bhim://upi/pay?pa=$upiId&pn=$encodedName&am=${amount.toStringAsFixed(2)}&cu=INR'
-        : 'bhim://upi/pay?pa=$upiId&pn=$encodedName&cu=INR';
+    return UpiPaymentHelper.buildBhimLink(
+      upiId: upiId,
+      payeeName: name,
+      amount: amount,
+    );
   }
 
   const RentalSaleMenu({
@@ -426,9 +427,10 @@ class RentalSaleMenu extends StatelessWidget {
                             labelStyle: TextStyle(color: context.textSecondary),
                             prefixIcon: Icon(
                               Icons.currency_rupee,
-                              color: context.isDark
-                                  ? Colors.blue.shade300
-                                  : Colors.blue.shade700,
+                              color:
+                                  context.isDark
+                                      ? Colors.blue.shade300
+                                      : Colors.blue.shade700,
                             ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(10),
@@ -445,16 +447,18 @@ class RentalSaleMenu extends StatelessWidget {
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(10),
                               borderSide: BorderSide(
-                                color: context.isDark
-                                    ? Colors.blue.shade300
-                                    : Colors.blue.shade700,
+                                color:
+                                    context.isDark
+                                        ? Colors.blue.shade300
+                                        : Colors.blue.shade700,
                                 width: 2,
                               ),
                             ),
                             filled: true,
-                            fillColor: context.isDark
-                                ? const Color(0xFF1E293B)
-                                : Colors.grey[100],
+                            fillColor:
+                                context.isDark
+                                    ? const Color(0xFF1E293B)
+                                    : Colors.grey[100],
                           ),
                         ),
                         const SizedBox(height: 24),
@@ -465,9 +469,10 @@ class RentalSaleMenu extends StatelessWidget {
                               child: Text(
                                 'Cancel',
                                 style: TextStyle(
-                                  color: context.isDark
-                                      ? Colors.grey.shade400
-                                      : Colors.grey.shade700,
+                                  color:
+                                      context.isDark
+                                          ? Colors.grey.shade400
+                                          : Colors.grey.shade700,
                                 ),
                               ),
                               onPressed: () => Navigator.pop(context, null),
@@ -500,27 +505,28 @@ class RentalSaleMenu extends StatelessWidget {
                               },
                               child: Ink(
                                 decoration: BoxDecoration(
-                                  gradient: context.isDark
-                                      ? const LinearGradient(
-                                          colors: [
-                                            Color(0xFF38BDF8),
-                                            Color(0xFF60A5FA),
-                                            Color(0xFFBAE6FD),
-                                          ],
-                                          stops: [0.0, 0.6, 1.0],
-                                          begin: Alignment.bottomRight,
-                                          end: Alignment.topLeft,
-                                        )
-                                      : const LinearGradient(
-                                          colors: [
-                                            Color(0xFF2563EB),
-                                            Color(0xFF1E40AF),
-                                            Color(0xFF020617),
-                                          ],
-                                          stops: [0.0, 0.6, 1.0],
-                                          begin: Alignment.bottomRight,
-                                          end: Alignment.topLeft,
-                                        ),
+                                  gradient:
+                                      context.isDark
+                                          ? const LinearGradient(
+                                            colors: [
+                                              Color(0xFF38BDF8),
+                                              Color(0xFF60A5FA),
+                                              Color(0xFFBAE6FD),
+                                            ],
+                                            stops: [0.0, 0.6, 1.0],
+                                            begin: Alignment.bottomRight,
+                                            end: Alignment.topLeft,
+                                          )
+                                          : const LinearGradient(
+                                            colors: [
+                                              Color(0xFF2563EB),
+                                              Color(0xFF1E40AF),
+                                              Color(0xFF020617),
+                                            ],
+                                            stops: [0.0, 0.6, 1.0],
+                                            begin: Alignment.bottomRight,
+                                            end: Alignment.topLeft,
+                                          ),
                                   borderRadius: const BorderRadius.all(
                                     Radius.circular(10),
                                   ),
@@ -580,60 +586,22 @@ class RentalSaleMenu extends StatelessWidget {
   }
 
   String _generateQrData(double? enteredAmount, User currentUser) {
-    final upiId = currentUser.upiId;
-    final name = Uri.encodeComponent(currentUser.name);
-
-    if (enteredAmount != null && enteredAmount > 0) {
-      return 'upi://pay?pa=$upiId&pn=$name&am=${enteredAmount.toStringAsFixed(2)}&cu=INR';
-    } else {
-      return 'upi://pay?pa=$upiId&pn=$name&cu=INR';
-    }
+    return UpiPaymentHelper.buildQrData(
+      upiId: currentUser.upiId,
+      payeeName: currentUser.name,
+      amount: enteredAmount,
+    );
   }
 
-  pw.Widget _upiOptionButton(String title, pw.MemoryImage icon, String link) {
-    return pw.Expanded(
-      child: pw.UrlLink(
-        destination: link, // ✅ now real upi://pay
-        child: pw.Container(
-          padding: const pw.EdgeInsets.symmetric(horizontal: 6, vertical: 4.5),
-          decoration: pw.BoxDecoration(
-            color: PdfColors.white,
-            borderRadius: pw.BorderRadius.circular(5),
-            border: pw.Border.all(
-              color: PdfColor.fromInt(0xFFE2E8F0),
-              width: 0.8,
-            ),
-          ),
-          child: pw.Row(
-            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-            children: [
-              pw.Row(
-                mainAxisSize: pw.MainAxisSize.min,
-                children: [
-                  pw.Image(icon, width: 12, height: 12),
-                  pw.SizedBox(width: 4),
-                  pw.Text(
-                    title,
-                    style: pw.TextStyle(
-                      fontSize: 7.5,
-                      fontWeight: pw.FontWeight.bold,
-                      color: PdfColor.fromInt(0xFF1E293B),
-                    ),
-                  ),
-                ],
-              ),
-              pw.Text(
-                '>',
-                style: pw.TextStyle(
-                  fontSize: 9,
-                  fontWeight: pw.FontWeight.bold,
-                  color: PdfColor.fromInt(0xFF94A3B8),
-                ),
-              ),
-            ],
-          ),
-        ),
+  pw.Widget _appIconBadge(pw.MemoryImage icon) {
+    return pw.Container(
+      padding: const pw.EdgeInsets.all(3.5),
+      decoration: pw.BoxDecoration(
+        color: PdfColors.white,
+        borderRadius: pw.BorderRadius.circular(4),
+        border: pw.Border.all(color: PdfColor.fromInt(0xFFE2E8F0), width: 0.8),
       ),
+      child: pw.Image(icon, width: 22, height: 22),
     );
   }
 
@@ -752,30 +720,6 @@ class RentalSaleMenu extends StatelessWidget {
 
       final qrData = _generateQrData(enteredAmount, currentUser);
 
-      final googlePayLink = _generateGooglePayLink(
-        currentUser.upiId,
-        currentUser.name,
-        enteredAmount,
-      );
-
-      final phonePeLink = _generatePhonePeLink(
-        currentUser.upiId,
-        currentUser.name,
-        enteredAmount,
-      );
-
-      final paytmLink = _generatePaytmLink(
-        currentUser.upiId,
-        currentUser.name,
-        enteredAmount,
-      );
-
-      final bhimLink = _generateBhimLink(
-        currentUser.upiId,
-        currentUser.name,
-        enteredAmount,
-      );
-
       pdf.addPage(
         pw.Page(
           build: (pw.Context context) {
@@ -845,6 +789,7 @@ class RentalSaleMenu extends StatelessWidget {
                           ),
                           pw.Text(customerName),
                           pw.Text('Phone: +91 $customerPhone'),
+
                           pw.SizedBox(height: 12),
 
                           // ***************************************
@@ -861,7 +806,8 @@ class RentalSaleMenu extends StatelessWidget {
                                 ),
                               ),
                               child: pw.Column(
-                                crossAxisAlignment: pw.CrossAxisAlignment.stretch,
+                                crossAxisAlignment:
+                                    pw.CrossAxisAlignment.stretch,
                                 children: [
                                   // 1. Sleek Header Bar
                                   pw.Container(
@@ -913,8 +859,8 @@ class RentalSaleMenu extends StatelessWidget {
                                               ),
                                           decoration: pw.BoxDecoration(
                                             color: PdfColor.fromInt(0xFF1E293B),
-                                            borderRadius:
-                                                pw.BorderRadius.circular(3),
+                                            borderRadius: pw
+                                                .BorderRadius.circular(3),
                                             border: pw.Border.all(
                                               color: PdfColor.fromInt(
                                                 0xFF334155,
@@ -977,8 +923,8 @@ class RentalSaleMenu extends StatelessWidget {
                                           padding: const pw.EdgeInsets.all(5),
                                           decoration: pw.BoxDecoration(
                                             color: PdfColors.white,
-                                            borderRadius:
-                                                pw.BorderRadius.circular(6),
+                                            borderRadius: pw
+                                                .BorderRadius.circular(6),
                                             border: pw.Border.all(
                                               color: PdfColor.fromInt(
                                                 0xFFE2E8F0,
@@ -989,8 +935,8 @@ class RentalSaleMenu extends StatelessWidget {
                                           child: pw.BarcodeWidget(
                                             data: qrData,
                                             barcode: pw.Barcode.qrCode(),
-                                            width: 100,
-                                            height: 100,
+                                            width: 130,
+                                            height: 130,
                                           ),
                                         ),
                                         pw.SizedBox(height: 3.5),
@@ -1021,7 +967,7 @@ class RentalSaleMenu extends StatelessWidget {
                                                     horizontal: 5,
                                                   ),
                                               child: pw.Text(
-                                                "OR PAY VIA APP",
+                                                "ACCEPTED UPI APPS",
                                                 style: pw.TextStyle(
                                                   fontSize: 5.5,
                                                   fontWeight:
@@ -1045,69 +991,27 @@ class RentalSaleMenu extends StatelessWidget {
 
                                         pw.SizedBox(height: 5),
 
-                                        // 2x2 App Grid
+                                        // App Images Only
                                         pw.Row(
+                                          mainAxisAlignment:
+                                              pw.MainAxisAlignment.center,
                                           children: [
-                                            _upiOptionButton(
-                                              "Google Pay",
+                                            _appIconBadge(
                                               pw.MemoryImage(gpayIcon),
-                                              googlePayLink,
                                             ),
                                             pw.SizedBox(width: 5),
-                                            _upiOptionButton(
-                                              "PhonePe",
+                                            _appIconBadge(
                                               pw.MemoryImage(phonePeIcon),
-                                              phonePeLink,
-                                            ),
-                                          ],
-                                        ),
-                                        pw.SizedBox(height: 5),
-                                        pw.Row(
-                                          children: [
-                                            _upiOptionButton(
-                                              "Paytm",
-                                              pw.MemoryImage(paytmIcon),
-                                              paytmLink,
                                             ),
                                             pw.SizedBox(width: 5),
-                                            _upiOptionButton(
-                                              "BHIM",
+                                            _appIconBadge(
+                                              pw.MemoryImage(paytmIcon),
+                                            ),
+                                            pw.SizedBox(width: 5),
+                                            _appIconBadge(
                                               pw.MemoryImage(bhimIcon),
-                                              bhimLink,
                                             ),
                                           ],
-                                        ),
-
-                                        pw.SizedBox(height: 6),
-
-                                        // Primary Button
-                                        pw.UrlLink(
-                                          destination: qrData,
-                                          child: pw.Container(
-                                            width: double.infinity,
-                                            padding:
-                                                const pw.EdgeInsets.symmetric(
-                                                  vertical: 5,
-                                                ),
-                                            decoration: pw.BoxDecoration(
-                                              color: PdfColor.fromInt(
-                                                0xFF0F73B8,
-                                              ),
-                                              borderRadius:
-                                                  pw.BorderRadius.circular(5),
-                                            ),
-                                            child: pw.Center(
-                                              child: pw.Text(
-                                                "Tap to Open Any UPI App",
-                                                style: pw.TextStyle(
-                                                  color: PdfColors.white,
-                                                  fontSize: 7.5,
-                                                  fontWeight:
-                                                      pw.FontWeight.bold,
-                                                ),
-                                              ),
-                                            ),
-                                          ),
                                         ),
 
                                         if (currentUser.upiId.isNotEmpty) ...[

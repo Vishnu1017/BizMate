@@ -1,6 +1,7 @@
 // lib/screens/new_sale_screen.dart
 import 'dart:ui';
 import 'package:bizmate/models/payment.dart';
+import 'package:bizmate/models/user_model.dart';
 import 'package:bizmate/widgets/ModernCalendar.dart' show ModernCalendar;
 import 'package:bizmate/widgets/app_snackbar.dart' show AppSnackBar;
 import 'package:bizmate/widgets/app_theme_toggle.dart';
@@ -24,9 +25,11 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
   final totalAmountController = TextEditingController();
   final receivedController = TextEditingController();
   final phoneController = TextEditingController();
+  final addressController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   DateTime selectedDate = DateTime.now();
   List<DateTime> selectedEventDates = [];
+  String _userRole = '';
 
   bool isLoading = false;
   bool isFullyPaid = false;
@@ -106,10 +109,48 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
     fetchCustomerList();
   }
 
+  /// Reads the role saved in Hive session and updates [_userRole].
+  Future<void> _loadUserRole() async {
+    try {
+      final sessionBox = await Hive.openBox('session');
+      String role = sessionBox.get('currentUserRole', defaultValue: '') as String? ?? '';
+      if (role.trim().isEmpty) {
+        final email = sessionBox.get('currentUserEmail')?.toString();
+        if (email != null && email.isNotEmpty) {
+          final usersBox = Hive.isBoxOpen('users')
+              ? Hive.box<User>('users')
+              : await Hive.openBox<User>('users');
+          final user = usersBox.values.firstWhere(
+            (u) => u.email.trim().toLowerCase() == email.trim().toLowerCase(),
+            orElse: () => User(name: '', email: '', phone: '', password: '', role: 'None'),
+          );
+          if (user.role.isNotEmpty && user.role != 'None') {
+            role = user.role;
+          } else {
+            final safeEmail = email.replaceAll('.', '_').replaceAll('@', '_');
+            final uBox = await Hive.openBox("userdata_$safeEmail");
+            final profile = uBox.get('profile');
+            if (profile != null && profile is Map && profile['role'] != null) {
+              role = profile['role'].toString();
+            }
+          }
+        }
+      }
+      if (role.isNotEmpty) {
+        await sessionBox.put('currentUserRole', role);
+      }
+      if (mounted) setState(() => _userRole = role.toLowerCase().trim());
+    } catch (_) {}
+  }
+
   void fetchCustomerList() async {
     try {
       final sessionBox = await Hive.openBox('session');
       final email = sessionBox.get('currentUserEmail');
+
+      // Also load role alongside customer list
+      final role = sessionBox.get('currentUserRole', defaultValue: '') as String? ?? '';
+      if (mounted) setState(() => _userRole = role.toLowerCase().trim());
 
       if (email == null || email.toString().isEmpty) {
         setState(() => customerList = []);
@@ -133,6 +174,7 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
           uniqueCustomers.add({
             'name': sale.customerName,
             'phone': sale.phoneNumber,
+            'address': sale.customerAddress ?? '',
           });
         }
       }
@@ -181,6 +223,7 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
     return sales.any((sale) => sale.phoneNumber.trim() == phoneNumber);
   }
 
+  /// Photography: multi-select event dates
   void _showEventCalendar(BuildContext context) {
     final isDark = context.isDark;
     showModalBottomSheet(
@@ -213,6 +256,41 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                 if (!exists) {
                   selectedEventDates.add(date);
                 }
+              });
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  /// 3D Printing: single delivery date picker
+  void _showDeliveryDatePicker(BuildContext context) {
+    final isDark = context.isDark;
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return Container(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+          ),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E293B) : Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: ModernCalendar(
+            selectedDate:
+                selectedEventDates.isNotEmpty
+                    ? selectedEventDates.first
+                    : selectedDate,
+            onDateSelected: (DateTime date) {
+              setState(() {
+                // Replace with single delivery date
+                selectedEventDates
+                  ..clear()
+                  ..add(date);
               });
             },
           ),
@@ -682,6 +760,8 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                               setState(() {
                                 customerController.text = customer['name']!;
                                 phoneController.text = customer['phone']!;
+                                addressController.text =
+                                    customer['address'] ?? '';
                                 isCustomerSelectedFromList = true;
                               });
                               Navigator.pop(context);
@@ -781,6 +861,18 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
+                                      if ((customer['address'] ?? '').isNotEmpty) ...[
+                                        SizedBox(height: rs(3)),
+                                        Text(
+                                          customer['address']!,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(
+                                            color: Colors.white60,
+                                            fontSize: rs(10.5),
+                                          ),
+                                        ),
+                                      ],
                                     ],
                                   ),
                                 ],
@@ -851,6 +943,7 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
     // 🔹 Create sale
     final sale = Sale(
       customerName: customerController.text.trim(),
+      customerAddress: addressController.text.trim(),
       item: productController.text.trim(),
       productName: productController.text.trim(),
       phoneNumber: normalizedPhone,
@@ -861,6 +954,7 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
       deliveryStatus: 'All Non Editing Images',
       paymentHistory: [newPayment],
       discount: totalDiscount,
+      tax: totalTaxAmount,
     );
 
     // 🔹 Fetch existing sales (DO NOT overwrite)
@@ -1096,6 +1190,25 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                         }
                       },
                     ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: addressController,
+                      keyboardType: TextInputType.streetAddress,
+                      maxLines: 2,
+                      style: TextStyle(
+                        color: isDark ? Colors.white : const Color(0xFF1E293B),
+                      ),
+                      decoration: customInput(
+                        "Customer Address",
+                        Icons.location_on_outlined,
+                        context,
+                      ),
+                      onChanged: (value) {
+                        if (isCustomerSelectedFromList) {
+                          setState(() => isCustomerSelectedFromList = false);
+                        }
+                      },
+                    ),
                   ],
                 ),
               ),
@@ -1115,7 +1228,11 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      "Booking & Event Dates",
+                      _userRole.contains('photo')
+                          ? "Booking & Event Dates"
+                          : _userRole.contains('3d') || _userRole.contains('print')
+                              ? "Booking & Delivery Date"
+                              : "Booking Date",
                       style: TextStyle(
                         fontSize: 16 * scale,
                         fontWeight: FontWeight.bold,
@@ -1237,153 +1354,210 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
 
                     const SizedBox(height: 15),
 
-                    /// EVENT DATES
-                    GestureDetector(
-                      onTap: () => _showEventCalendar(context),
-                      child: Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.symmetric(
-                          vertical: 8,
-                          horizontal: 10,
-                        ),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              const Color(0xFF2563EB).withValues(alpha: 0.1),
-                              const Color(0xFF1E40AF).withValues(alpha: 0.1),
-                              const Color(0xFF020617).withValues(alpha: 0.1),
-                            ],
-                          ),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color:
-                                isDark
-                                    ? const Color(
-                                      0xFF38BDF8,
-                                    ).withValues(alpha: 0.4)
-                                    : const Color(
-                                      0xFF1E40AF,
-                                    ).withValues(alpha: 0.3),
-                            width: 1.5,
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 40,
-                              height: 40,
-                              decoration: BoxDecoration(
-                                gradient:
-                                    context.isDark
-                                        ? const LinearGradient(
-                                          colors: [
-                                            Color(0xFF38BDF8),
-                                            Color(0xFF60A5FA),
-                                            Color(0xFFBAE6FD),
-                                          ],
-                                          stops: [0.0, 0.6, 1.0],
-                                          begin: Alignment.bottomRight,
-                                          end: Alignment.topLeft,
-                                        )
-                                        : const LinearGradient(
-                                          colors: [
-                                            Color(0xFF2563EB),
-                                            Color(0xFF1E40AF),
-                                            Color(0xFF020617),
-                                          ],
-                                          stops: [0.0, 0.6, 1.0],
-                                          begin: Alignment.bottomRight,
-                                          end: Alignment.topLeft,
-                                        ),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: const Icon(
-                                Icons.event_available,
-                                color: Colors.white,
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    "Photography Event Dates",
-                                    style: TextStyle(
-                                      fontSize: 12 * scale,
-                                      color:
-                                          isDark
-                                              ? Colors.grey.shade400
-                                              : Colors.grey.shade600,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    selectedEventDates.isEmpty
-                                        ? "Select Event Dates"
-                                        : "${selectedEventDates.length} Date(s) Selected",
-                                    style: TextStyle(
-                                      fontSize: 14 * scale,
-                                      fontWeight: FontWeight.bold,
-                                      color:
-                                          isDark
-                                              ? Colors.white
-                                              : const Color(0xFF333333),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-
-                            Icon(
-                              Icons.arrow_forward_ios,
-                              size: 16,
-                              color:
-                                  isDark
-                                      ? const Color(0xFF60A5FA)
-                                      : const Color(0xFF1E40AF),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-
-                    if (selectedEventDates.isNotEmpty) ...[
+                    /// ─── ROLE-AWARE EXTRA DATE SECTION ──────────────────
+                    if (_userRole.contains('photo')) ...[
                       const SizedBox(height: 15),
 
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children:
-                            selectedEventDates.map((date) {
-                              return Chip(
-                                backgroundColor:
-                                    isDark
-                                        ? const Color(0xFF334155)
-                                        : const Color(0xFFEEF4FF),
-                                label: Text(
-                                  "${date.day}/${date.month}/${date.year}",
-                                  style: TextStyle(
-                                    color:
-                                        isDark ? Colors.white : Colors.black87,
-                                  ),
+                      // Photography: multi-select event dates
+                      GestureDetector(
+                        onTap: () => _showEventCalendar(context),
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 8,
+                            horizontal: 10,
+                          ),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                const Color(0xFF2563EB).withValues(alpha: 0.1),
+                                const Color(0xFF1E40AF).withValues(alpha: 0.1),
+                                const Color(0xFF020617).withValues(alpha: 0.1),
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color:
+                                  isDark
+                                      ? const Color(0xFF38BDF8).withValues(alpha: 0.4)
+                                      : const Color(0xFF1E40AF).withValues(alpha: 0.3),
+                              width: 1.5,
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  gradient:
+                                      context.isDark
+                                          ? const LinearGradient(
+                                            colors: [Color(0xFF38BDF8), Color(0xFF60A5FA), Color(0xFFBAE6FD)],
+                                            stops: [0.0, 0.6, 1.0],
+                                            begin: Alignment.bottomRight,
+                                            end: Alignment.topLeft,
+                                          )
+                                          : const LinearGradient(
+                                            colors: [Color(0xFF2563EB), Color(0xFF1E40AF), Color(0xFF020617)],
+                                            stops: [0.0, 0.6, 1.0],
+                                            begin: Alignment.bottomRight,
+                                            end: Alignment.topLeft,
+                                          ),
+                                  borderRadius: BorderRadius.circular(12),
                                 ),
-                                deleteIcon: Icon(
-                                  Icons.close,
-                                  size: 18,
-                                  color:
-                                      isDark
-                                          ? Colors.grey.shade300
-                                          : Colors.black54,
+                                child: const Icon(Icons.camera_alt, color: Colors.white),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      "Photography Event Dates",
+                                      style: TextStyle(
+                                        fontSize: 12 * scale,
+                                        color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      selectedEventDates.isEmpty
+                                          ? "Select Event Dates"
+                                          : "${selectedEventDates.length} Date(s) Selected",
+                                      style: TextStyle(
+                                        fontSize: 14 * scale,
+                                        fontWeight: FontWeight.bold,
+                                        color: isDark ? Colors.white : const Color(0xFF333333),
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                onDeleted: () {
-                                  setState(() {
-                                    selectedEventDates.remove(date);
-                                  });
-                                },
-                              );
-                            }).toList(),
+                              ),
+                              Icon(
+                                Icons.arrow_forward_ios,
+                                size: 16,
+                                color: isDark ? const Color(0xFF60A5FA) : const Color(0xFF1E40AF),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+
+                      if (selectedEventDates.isNotEmpty) ...[
+                        const SizedBox(height: 12),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: selectedEventDates.map((date) {
+                            return Chip(
+                              backgroundColor:
+                                  isDark ? const Color(0xFF334155) : const Color(0xFFEEF4FF),
+                              label: Text(
+                                "${date.day}/${date.month}/${date.year}",
+                                style: TextStyle(
+                                  color: isDark ? Colors.white : Colors.black87,
+                                ),
+                              ),
+                              deleteIcon: Icon(
+                                Icons.close,
+                                size: 18,
+                                color: isDark ? Colors.grey.shade300 : Colors.black54,
+                              ),
+                              onDeleted: () {
+                                setState(() => selectedEventDates.remove(date));
+                              },
+                            );
+                          }).toList(),
+                        ),
+                      ],
+                    ] else if (_userRole.contains('3d') || _userRole.contains('print')) ...[
+                      const SizedBox(height: 15),
+
+                      // 3D Printing: single delivery date
+                      GestureDetector(
+                        onTap: () => _showDeliveryDatePicker(context),
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 8,
+                            horizontal: 10,
+                          ),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                const Color(0xFF7C3AED).withValues(alpha: 0.1),
+                                const Color(0xFF5B21B6).withValues(alpha: 0.1),
+                                const Color(0xFF2E1065).withValues(alpha: 0.1),
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color:
+                                  isDark
+                                      ? const Color(0xFFA78BFA).withValues(alpha: 0.5)
+                                      : const Color(0xFF7C3AED).withValues(alpha: 0.4),
+                              width: 1.5,
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  gradient:
+                                      context.isDark
+                                          ? const LinearGradient(
+                                            colors: [Color(0xFFA78BFA), Color(0xFF8B5CF6), Color(0xFFDDD6FE)],
+                                            stops: [0.0, 0.6, 1.0],
+                                            begin: Alignment.bottomRight,
+                                            end: Alignment.topLeft,
+                                          )
+                                          : const LinearGradient(
+                                            colors: [Color(0xFF7C3AED), Color(0xFF5B21B6), Color(0xFF2E1065)],
+                                            stops: [0.0, 0.6, 1.0],
+                                            begin: Alignment.bottomRight,
+                                            end: Alignment.topLeft,
+                                          ),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: const Icon(Icons.local_shipping_rounded, color: Colors.white),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      "Delivery Date",
+                                      style: TextStyle(
+                                        fontSize: 12 * scale,
+                                        color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      selectedEventDates.isEmpty
+                                          ? "Select Delivery Date"
+                                          : "${selectedEventDates.first.day}/${selectedEventDates.first.month}/${selectedEventDates.first.year}",
+                                      style: TextStyle(
+                                        fontSize: 14 * scale,
+                                        fontWeight: FontWeight.bold,
+                                        color: isDark ? Colors.white : const Color(0xFF333333),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Icon(
+                                Icons.arrow_forward_ios,
+                                size: 16,
+                                color: isDark ? const Color(0xFFA78BFA) : const Color(0xFF7C3AED),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                     ],
                   ],
@@ -1894,6 +2068,7 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
     totalAmountController.dispose();
     receivedController.dispose();
     phoneController.dispose();
+    addressController.dispose();
     super.dispose();
   }
 }

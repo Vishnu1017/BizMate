@@ -13,6 +13,7 @@ import 'package:hugeicons/hugeicons.dart' show HugeIcon, HugeIcons;
 import 'package:shared_preferences/shared_preferences.dart'
     show SharedPreferences;
 import '../models/product_store.dart';
+import 'backup_screen.dart';
 import 'customers_page.dart';
 import 'dashboard_page.dart';
 import 'home_page.dart';
@@ -448,7 +449,32 @@ class _NavBarPageState extends State<NavBarPage>
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => CalendarPage(),
+                                builder: (context) => CalendarPage(
+                                  initialRole: widget.user.role,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+
+                        // Cloud & Auto Backup button
+                        SizedBox(
+                          width: _scaleForWidth(screenWidth, 10 * scale),
+                        ),
+                        _buildCleanActionButton(
+                          screenWidth: screenWidth,
+                          icon: Icons.cloud_sync_outlined,
+                          tooltip: 'Cloud & Auto Backup',
+                          barBg: barBg,
+                          barDivider: barDivider,
+                          barText2: barText2,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder:
+                                    (context) =>
+                                        BackupScreen(userEmail: widget.userEmail),
                               ),
                             );
                           },

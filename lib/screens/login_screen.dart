@@ -152,11 +152,13 @@ class _LoginScreenState extends State<LoginScreen>
 
     if (!isValid) {
       showError("Please fix the validation errors above");
+      setState(() => _isProcessing = false);
       return;
     }
 
     if (selectedRole == "None") {
       showError("Please select your profession");
+      setState(() => _isProcessing = false);
       return;
     }
 
@@ -164,11 +166,13 @@ class _LoginScreenState extends State<LoginScreen>
 
     if (usersBox.values.any((u) => u.email == email)) {
       showError("Email already exists");
+      setState(() => _isProcessing = false);
       return;
     }
 
     if (usersBox.values.any((u) => u.phone == phone)) {
       showError("Phone number already exists");
+      setState(() => _isProcessing = false);
       return;
     }
 

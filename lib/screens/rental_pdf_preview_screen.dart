@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_pdfview/flutter_pdfview.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../models/rental_sale_model.dart';
 import '../../widgets/app_snackbar.dart';
 import '../../widgets/app_theme_toggle.dart';
@@ -97,6 +98,21 @@ class RentalPdfPreviewScreen extends StatelessWidget {
                       autoSpacing: true,
                       pageFling: true,
                       fitEachPage: true,
+                      onLinkHandler: (String? uri) async {
+                        if (uri != null && uri.isNotEmpty) {
+                          final parsed = Uri.tryParse(uri);
+                          if (parsed != null) {
+                            try {
+                              await launchUrl(
+                                parsed,
+                                mode: LaunchMode.externalApplication,
+                              );
+                            } catch (e) {
+                              debugPrint("Error launching link: $e");
+                            }
+                          }
+                        }
+                      },
                     ),
                   ),
                 ),

@@ -3,14 +3,15 @@ import 'dart:convert' show jsonEncode, jsonDecode;
 import 'dart:ui' show lerpDouble;
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart' show HugeIcon, HugeIcons;
-import 'package:url_launcher/url_launcher.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:hive/hive.dart';
+import 'package:bizmate/screens/WhatsAppHelper.dart';
 import 'package:bizmate/widgets/app_snackbar.dart' show AppSnackBar;
 import 'package:bizmate/widgets/app_theme_toggle.dart';
 import 'package:bizmate/models/sale.dart';
 import 'package:bizmate/utils/app_theme.dart';
+import 'package:flutter/services.dart' show Clipboard, ClipboardData;
 
 /// DeliveryTrackerPage - fully responsive, polished and production-ready.
 /// Combines responsive helper functions, an iOS-style large title header,
@@ -19,12 +20,14 @@ class DeliveryTrackerPage extends StatefulWidget {
   final Sale sale;
   final String phoneWithCountryCode;
   final String phoneWithoutCountryCode;
+  final String? userRole;
 
   const DeliveryTrackerPage({
     super.key,
     required this.sale,
     required this.phoneWithCountryCode,
     required this.phoneWithoutCountryCode,
+    this.userRole,
   });
 
   @override
@@ -62,38 +65,104 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
   final TextEditingController _statusNotesController = TextEditingController();
   String _ownerName = '';
   String _ownerPhone = '';
+  String _currentRole = '';
   double scale = 1.0;
 
+  bool get _is3DPrinting {
+    final r = _currentRole.trim().toLowerCase();
+    return r == '3d printing brand' ||
+        r.contains('3d print') ||
+        r.contains('printing');
+  }
+
   String? _selectedStatus;
-  final List<String> statuses = [
-    'All Non Editing Images',
-    'Editing',
-    'Printed',
-    'Delivered',
-  ];
 
-  final Map<String, Color> _statusColors = {
-    'All Non Editing Images': const Color(0xFF1E40AF),
-    'Editing': const Color(0xFFF6AD55),
-    'Printed': const Color(0xFF9F7AEA),
-    'Delivered': const Color(0xFF48BB78),
-  };
+  List<String> get statuses =>
+      _is3DPrinting
+          ? [
+            'Order Confirmed',
+            'Printing in Progress',
+            'Quality Check & Packed',
+            'Delivered',
+          ]
+          : ['All Non Editing Images', 'Editing', 'Printed', 'Delivered'];
 
-  final Map<String, IconData> _statusIcons = {
-    'All Non Editing Images': Icons.cloud_queue_rounded,
-    'Editing': Icons.auto_fix_high_rounded,
-    'Printed': Icons.local_printshop_rounded,
-    'Delivered': Icons.verified_rounded,
-  };
+  Map<String, Color> get _statusColors =>
+      _is3DPrinting
+          ? {
+            'Order Confirmed':
+                context.isDark
+                    ? const Color(0xFF0284C7)
+                    : const Color(0xFF1E40AF),
+            'Printing in Progress':
+                context.isDark
+                    ? const Color(0xFFF59E0B)
+                    : const Color(0xFFD97706),
+            'Quality Check & Packed':
+                context.isDark
+                    ? const Color(0xFFA855F7)
+                    : const Color(0xFF7E22CE),
+            'Delivered':
+                context.isDark
+                    ? const Color(0xFF16A34A)
+                    : const Color(0xFF15803D),
+          }
+          : {
+            'All Non Editing Images':
+                context.isDark
+                    ? const Color(0xFF0284C7)
+                    : const Color(0xFF1E40AF),
+            'Editing':
+                context.isDark
+                    ? const Color(0xFFF59E0B)
+                    : const Color(0xFFD97706),
+            'Printed':
+                context.isDark
+                    ? const Color(0xFFA855F7)
+                    : const Color(0xFF7E22CE),
+            'Delivered':
+                context.isDark
+                    ? const Color(0xFF16A34A)
+                    : const Color(0xFF15803D),
+          };
 
-  final Map<String, String> _statusNoteSuggestions = {
-    'All Non Editing Images':
-        'Non-edited photos are ready for download. Final edited versions will be shared separately once completed.',
-    'Editing':
-        'Photos are currently being edited. We\'ll notify you when they\'re ready for review.',
-    'Printed': 'Photos have been printed and are being prepared for delivery.',
-    'Delivered': 'Photos have been successfully delivered to the customer.',
-  };
+  Map<String, IconData> get _statusIcons =>
+      _is3DPrinting
+          ? {
+            'Order Confirmed': Icons.assignment_turned_in_rounded,
+            'Printing in Progress': Icons.precision_manufacturing_rounded,
+            'Quality Check & Packed': Icons.inventory_2_rounded,
+            'Delivered': Icons.verified_rounded,
+          }
+          : {
+            'All Non Editing Images': Icons.cloud_queue_rounded,
+            'Editing': Icons.auto_fix_high_rounded,
+            'Printed': Icons.local_printshop_rounded,
+            'Delivered': Icons.verified_rounded,
+          };
+
+  Map<String, String> get _statusNoteSuggestions =>
+      _is3DPrinting
+          ? {
+            'Order Confirmed':
+                'Your 3D print order is confirmed and queued for printing.',
+            'Printing in Progress':
+                'Your 3D model is currently being printed on our 3D printers.',
+            'Quality Check & Packed':
+                '3D printing completed! Your item has passed quality check and is safely packed.',
+            'Delivered':
+                'Your 3D printed order has been successfully delivered to the customer.',
+          }
+          : {
+            'All Non Editing Images':
+                'Non-edited photos are ready for download. Final edited versions will be shared separately once completed.',
+            'Editing':
+                'Photos are currently being edited. We\'ll notify you when they\'re ready for review.',
+            'Printed':
+                'Photos have been printed and are being prepared for delivery.',
+            'Delivered':
+                'Photos have been successfully delivered to the customer.',
+          };
 
   List<Map<String, dynamic>> deliveryStatusHistory = [];
   String _previousSuggestion = '';
@@ -103,7 +172,7 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
   late final Animation<double> _fadeAnimation;
 
   int? _invoiceNumber;
-  final bool _isSendingWhatsApp = false;
+  bool _isSendingWhatsApp = false;
   bool _isSaving = false;
 
   // Store the Hive key separately
@@ -136,9 +205,16 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
 
     _animationController.forward();
 
+    _currentRole = (widget.userRole ?? '').trim();
+    if (_currentRole.isEmpty && Hive.isBoxOpen('session')) {
+      _currentRole =
+          Hive.box('session').get('currentUserRole')?.toString().trim() ?? '';
+    }
+
     _linkController.text = widget.sale.deliveryLink;
     _selectedStatus =
-        (widget.sale.deliveryStatus.isNotEmpty)
+        (widget.sale.deliveryStatus.isNotEmpty &&
+                statuses.contains(widget.sale.deliveryStatus))
             ? widget.sale.deliveryStatus
             : statuses.first;
 
@@ -156,6 +232,23 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
           Hive.isBoxOpen('session')
               ? Hive.box('session')
               : await Hive.openBox('session');
+
+      final sessionRole = sessionBox.get('currentUserRole')?.toString().trim();
+      if (sessionRole != null &&
+          sessionRole.isNotEmpty &&
+          _currentRole != sessionRole) {
+        if (mounted) {
+          setState(() {
+            _currentRole = sessionRole;
+            if (_selectedStatus == null ||
+                !statuses.contains(_selectedStatus)) {
+              _selectedStatus = statuses.first;
+            }
+          });
+          _updateStatusNoteSuggestion();
+        }
+      }
+
       final email = sessionBox.get('currentUserEmail');
 
       if (email == null) return;
@@ -173,7 +266,17 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
         setState(() {
           _ownerName = (user.name ?? '').toString();
           _ownerPhone = (user.phone ?? '').toString();
+          if (_currentRole.isEmpty &&
+              user.role != null &&
+              (user.role as String).trim().isNotEmpty) {
+            _currentRole = (user.role as String).trim();
+            if (_selectedStatus == null ||
+                !statuses.contains(_selectedStatus)) {
+              _selectedStatus = statuses.first;
+            }
+          }
         });
+        _updateStatusNoteSuggestion();
       }
     } catch (_) {
       // silent – app should never crash
@@ -428,21 +531,25 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
     _hiveKey = newKey;
   }
 
-  void _sendWhatsApp() {
+  Future<void> _sendWhatsApp() async {
     final customerName =
         widget.sale.customerName.isNotEmpty
             ? widget.sale.customerName
             : "Customer";
     final deliveryStatus = _selectedStatus ?? 'Ready';
     final deliveryLink =
-        _linkController.text.isNotEmpty
-            ? _linkController.text
+        _linkController.text.trim().isNotEmpty
+            ? _linkController.text.trim()
             : 'Link not available';
-    final phone = widget.sale.phoneNumber.replaceAll(' ', '');
 
-    String cleaned = phone.replaceAll(RegExp(r'[^\d]'), '');
+    final rawPhone =
+        widget.phoneWithCountryCode.trim().isNotEmpty
+            ? widget.phoneWithCountryCode
+            : widget.sale.phoneNumber;
 
-    if (cleaned.length < 10) {
+    final cleanedPhone = WhatsAppHelper.formatPhone(rawPhone);
+
+    if (cleanedPhone.length < 10) {
       AppSnackBar.showWarning(
         context,
         message: "Please enter a valid phone number",
@@ -452,7 +559,16 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
     }
 
     String message;
-    if (_selectedStatus == 'All Non Editing Images') {
+    if (_is3DPrinting) {
+      message =
+          "Hi $customerName,\n\n"
+          "Your 3D printing order is now *$deliveryStatus*.\n\n"
+          "${deliveryLink != 'Link not available' ? 'Tracking / Order Link: $deliveryLink\n\n' : ''}"
+          "${_statusNotesController.text.trim().isNotEmpty ? 'Update: ${_statusNotesController.text.trim()}\n\n' : ''}"
+          "Thanks,\n"
+          "${_ownerName.isNotEmpty ? _ownerName : 'Regards'}"
+          "${_ownerPhone.isNotEmpty ? '\n$_ownerPhone' : ''}";
+    } else if (_selectedStatus == 'All Non Editing Images') {
       message =
           "Hi $customerName,\n\n"
           "Your non-edited photos are now ready for download!\n\n"
@@ -465,23 +581,46 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
     } else {
       message =
           "Hi $customerName,\n\n"
-          "Your photos are now *$deliveryStatus*.\n"
-          "Download here: $deliveryLink\n\n"
+          "Your photos are now *$deliveryStatus*.\n\n"
+          "${deliveryLink != 'Link not available' ? 'Download here: $deliveryLink\n\n' : ''}"
           "Thanks,\n"
           "${_ownerName.isNotEmpty ? _ownerName : 'Regards'}"
           "${_ownerPhone.isNotEmpty ? '\n$_ownerPhone' : ''}";
     }
 
-    final url1 = "https://wa.me/$phone?text=${Uri.encodeComponent(message)}";
-    final url2 = "https://wa.me/91$phone?text=${Uri.encodeComponent(message)}";
+    setState(() => _isSendingWhatsApp = true);
 
-    canLaunchUrl(Uri.parse(url1)).then((canLaunch) {
-      if (canLaunch) {
-        launchUrl(Uri.parse(url1), mode: LaunchMode.externalApplication);
-      } else {
-        launchUrl(Uri.parse(url2), mode: LaunchMode.externalApplication);
+    try {
+      final success = await WhatsAppHelper.sendWhatsAppMessage(
+        phone: cleanedPhone,
+        message: message,
+      );
+
+      if (!success) {
+        await Clipboard.setData(ClipboardData(text: message));
+        if (mounted) {
+          AppSnackBar.showWarning(
+            context,
+            message:
+                "Could not open WhatsApp directly. Message copied to clipboard!",
+            duration: const Duration(seconds: 3),
+          );
+        }
       }
-    });
+    } catch (e) {
+      await Clipboard.setData(ClipboardData(text: message));
+      if (mounted) {
+        AppSnackBar.showError(
+          context,
+          message: "WhatsApp error. Message copied to clipboard!",
+          duration: const Duration(seconds: 3),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSendingWhatsApp = false);
+      }
+    }
   }
 
   void _showStatusHistory() {
@@ -498,14 +637,14 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
     return Container(
       height: height,
       decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
+        color: context.cardBg,
         borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(28),
           topRight: Radius.circular(28),
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
+            color: Colors.black.withValues(alpha: context.isDark ? 0.3 : 0.06),
             blurRadius: 40,
             spreadRadius: 8,
           ),
@@ -520,7 +659,8 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.grey[300],
+                color:
+                    context.isDark ? const Color(0xFF334155) : Colors.grey[300],
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -558,7 +698,10 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
                     ),
                     child: Icon(
                       Icons.timeline_rounded,
-                      color: Colors.white,
+                      color:
+                          context.isDark
+                              ? const Color(0xFF0F172A)
+                              : Colors.white,
                       size: 16 * scale,
                     ),
                   ),
@@ -569,12 +712,16 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
                       style: TextStyle(
                         fontSize: 16 * scale,
                         fontWeight: FontWeight.w700,
+                        color: context.textPrimary,
                       ),
                     ),
                   ),
                   IconButton(
                     onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.close_rounded),
+                    icon: Icon(
+                      Icons.close_rounded,
+                      color: context.textSecondary,
+                    ),
                     tooltip: 'Close timeline',
                   ),
                 ],
@@ -591,13 +738,16 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
                             Icon(
                               Icons.timeline_rounded,
                               size: 64,
-                              color: Colors.grey[300],
+                              color:
+                                  context.isDark
+                                      ? const Color(0xFF334155)
+                                      : Colors.grey[300],
                             ),
                             const SizedBox(height: 12),
                             Text(
                               'No history available',
                               style: TextStyle(
-                                color: Colors.grey[600],
+                                color: context.textSecondary,
                                 fontSize: 15,
                               ),
                             ),
@@ -626,19 +776,20 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
                 child: OutlinedButton(
                   onPressed: () => Navigator.pop(context),
                   style: OutlinedButton.styleFrom(
-                    backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+                    backgroundColor: context.scaffoldBg,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),
                     ),
-                    side: BorderSide(
-                      color: Colors.black.withValues(alpha: 0.5),
-                    ),
+                    side: BorderSide(color: context.borderColor),
                   ),
-                  child: const Text(
+                  child: Text(
                     'Close Timeline',
                     style: TextStyle(
                       fontWeight: FontWeight.w600,
-                      color: Color(0xFF1E40AF),
+                      color:
+                          context.isDark
+                              ? const Color(0xFF38BDF8)
+                              : const Color(0xFF1E40AF),
                     ),
                   ),
                 ),
@@ -663,20 +814,27 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
 
     return Container(
       decoration: BoxDecoration(
-        color: isCurrent ? Colors.white : Colors.grey[50],
+        color:
+            isCurrent
+                ? context.cardBg
+                : (context.isDark ? const Color(0xFF0F172A) : Colors.grey[50]),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color:
               isCurrent
-                  ? Colors.grey.withValues(alpha: 0.12)
-                  : Colors.grey[200]!,
+                  ? (context.isDark
+                      ? const Color(0xFF38BDF8).withValues(alpha: 0.4)
+                      : const Color(0xFF1E40AF).withValues(alpha: 0.2))
+                  : context.borderColor,
           width: isCurrent ? 1.4 : 1,
         ),
         boxShadow:
             isCurrent
                 ? [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.04),
+                    color: Colors.black.withValues(
+                      alpha: context.isDark ? 0.2 : 0.04,
+                    ),
                     blurRadius: 14,
                     spreadRadius: 1,
                   ),
@@ -691,22 +849,35 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
               Container(
                 padding: EdgeInsets.all(6 * scale),
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors:
-                        isCurrent
-                            ? [
+                  gradient:
+                      context.isDark
+                          ? const LinearGradient(
+                            colors: [
+                              Color(0xFF38BDF8),
+                              Color(0xFF60A5FA),
+                              Color(0xFFBAE6FD),
+                            ],
+                            stops: [0.0, 0.6, 1.0],
+                            begin: Alignment.bottomRight,
+                            end: Alignment.topLeft,
+                          )
+                          : const LinearGradient(
+                            colors: [
                               Color(0xFF2563EB),
                               Color(0xFF1E40AF),
                               Color(0xFF020617),
-                            ]
-                            : [Colors.grey[300]!, Colors.grey[400]!],
-                  ),
-                  borderRadius: BorderRadius.circular(10),
+                            ],
+                            stops: [0.0, 0.6, 1.0],
+                            begin: Alignment.bottomRight,
+                            end: Alignment.topLeft,
+                          ),
+                  borderRadius: BorderRadius.circular(12),
                 ),
                 child: Center(
                   child: Icon(
                     isCurrent ? Icons.check_rounded : Icons.circle_rounded,
-                    color: Colors.white,
+                    color:
+                        context.isDark ? const Color(0xFF0F172A) : Colors.white,
                     size: 16 * scale,
                   ),
                 ),
@@ -715,7 +886,7 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
                 Container(
                   width: 2 * scale,
                   height: 48 * scale,
-                  color: Colors.grey[200],
+                  color: context.borderColor,
                   margin: const EdgeInsets.only(top: 8),
                 ),
             ],
@@ -733,6 +904,7 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
                         style: TextStyle(
                           fontSize: 13 * scale,
                           fontWeight: FontWeight.w700,
+                          color: context.textPrimary,
                         ),
                       ),
                     ),
@@ -763,14 +935,14 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
                     Icon(
                       Icons.calendar_today_rounded,
                       size: 12 * scale,
-                      color: Colors.grey[500],
+                      color: context.textSecondary,
                     ),
                     const SizedBox(width: 6),
                     Text(
                       '$formattedDate • $formattedTime',
                       style: TextStyle(
                         fontSize: 11 * scale,
-                        color: Colors.grey[600],
+                        color: context.textSecondary,
                       ),
                     ),
                   ],
@@ -782,15 +954,18 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
                     width: double.infinity,
                     padding: EdgeInsets.all(8 * scale),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF8FAFC),
+                      color:
+                          context.isDark
+                              ? const Color(0xFF1E293B)
+                              : const Color(0xFFF8FAFC),
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: Colors.grey[100]!),
+                      border: Border.all(color: context.borderColor),
                     ),
                     child: Text(
                       status['notes'],
                       style: TextStyle(
                         fontSize: 12 * scale,
-                        color: Colors.black87,
+                        color: context.textPrimary,
                       ),
                     ),
                   ),
@@ -817,8 +992,14 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
       pinned: true,
       delegate: _LargeTitleDelegate(
         expandedHeight: r.sp(140),
-        title: 'Delivery Tracker',
-        subtitle: 'Track photo delivery progress',
+        title:
+            _is3DPrinting
+                ? '3D Print Delivery Tracker'
+                : 'Photo Delivery Tracker',
+        subtitle:
+            _is3DPrinting
+                ? 'Track 3D print order progress'
+                : 'Track photo delivery progress',
         onBack: () => Navigator.pop(context),
         onHistory: _showStatusHistory,
       ),
@@ -894,11 +1075,12 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
   Widget _buildCustomerInfoCard(_R r) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.cardBg,
         borderRadius: BorderRadius.circular(r.sp(16)),
+        border: Border.all(color: context.borderColor),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: Colors.black.withValues(alpha: context.isDark ? 0.2 : 0.04),
             blurRadius: r.sp(18),
             spreadRadius: 1,
           ),
@@ -911,24 +1093,29 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
             width: r.sp(56),
             height: r.sp(56),
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [
-                  Color(0xFF2563EB),
-                  Color(0xFF1E40AF),
-                  Color(0xFF020617),
-                ],
-                stops: [0.0, 0.6, 1.0],
-                begin: Alignment.bottomRight,
-                end: Alignment.topLeft,
-              ),
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF1E40AF).withValues(alpha: 0.22),
-                  blurRadius: r.sp(12),
-                  spreadRadius: 1,
-                ),
-              ],
+              gradient:
+                  context.isDark
+                      ? const LinearGradient(
+                        colors: [
+                          Color(0xFF38BDF8),
+                          Color(0xFF60A5FA),
+                          Color(0xFFBAE6FD),
+                        ],
+                        stops: [0.0, 0.6, 1.0],
+                        begin: Alignment.bottomRight,
+                        end: Alignment.topLeft,
+                      )
+                      : const LinearGradient(
+                        colors: [
+                          Color(0xFF2563EB),
+                          Color(0xFF1E40AF),
+                          Color(0xFF020617),
+                        ],
+                        stops: [0.0, 0.6, 1.0],
+                        begin: Alignment.bottomRight,
+                        end: Alignment.topLeft,
+                      ),
+              borderRadius: BorderRadius.circular(12),
             ),
             child: Center(
               child: Text(
@@ -938,7 +1125,8 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
                 style: TextStyle(
                   fontSize: r.fp(20),
                   fontWeight: FontWeight.w800,
-                  color: Colors.white,
+                  color:
+                      context.isDark ? const Color(0xFF0F172A) : Colors.white,
                 ),
               ),
             ),
@@ -955,6 +1143,7 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
                   style: TextStyle(
                     fontSize: r.fp(18),
                     fontWeight: FontWeight.w800,
+                    color: context.textPrimary,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -962,7 +1151,10 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
                 SizedBox(height: r.sp(4)),
                 Text(
                   widget.sale.phoneNumber,
-                  style: TextStyle(fontSize: r.fp(13), color: Colors.grey[600]),
+                  style: TextStyle(
+                    fontSize: r.fp(13),
+                    color: context.textSecondary,
+                  ),
                 ),
                 SizedBox(height: r.sp(8)),
                 Wrap(
@@ -970,7 +1162,10 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
                   runSpacing: r.sp(6),
                   children: [
                     _buildInfoChip(
-                      icon: Icons.photo_album_rounded,
+                      icon:
+                          _is3DPrinting
+                              ? Icons.view_in_ar_rounded
+                              : Icons.photo_album_rounded,
                       text: widget.sale.productName,
                       r: r,
                     ),
@@ -1003,21 +1198,21 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
     return Container(
       padding: EdgeInsets.symmetric(horizontal: r.sp(10), vertical: r.sp(6)),
       decoration: BoxDecoration(
-        color: Colors.grey[50],
+        color: context.isDark ? const Color(0xFF0F172A) : Colors.grey[50],
         borderRadius: BorderRadius.circular(r.sp(10)),
-        border: Border.all(color: Colors.grey[200]!),
+        border: Border.all(color: context.borderColor),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: r.ip(14), color: Colors.grey[600]),
+          Icon(icon, size: r.ip(14), color: context.textSecondary),
           SizedBox(width: r.sp(8)),
           Text(
             text,
             style: TextStyle(
               fontSize: r.fp(12),
               fontWeight: FontWeight.w500,
-              color: Colors.grey[700],
+              color: context.textPrimary,
             ),
           ),
         ],
@@ -1034,11 +1229,12 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.cardBg,
         borderRadius: BorderRadius.circular(r.sp(14)),
+        border: Border.all(color: context.borderColor),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: Colors.black.withValues(alpha: context.isDark ? 0.2 : 0.04),
             blurRadius: r.sp(16),
             spreadRadius: 1,
           ),
@@ -1056,6 +1252,7 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
                 style: TextStyle(
                   fontSize: r.fp(16),
                   fontWeight: FontWeight.w700,
+                  color: context.textPrimary,
                 ),
               ),
               Container(
@@ -1087,7 +1284,8 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
           Container(
             height: r.sp(12),
             decoration: BoxDecoration(
-              color: Colors.grey[100],
+              color:
+                  context.isDark ? const Color(0xFF0F172A) : Colors.grey[100],
               borderRadius: BorderRadius.circular(r.sp(8)),
             ),
             child: LayoutBuilder(
@@ -1148,7 +1346,7 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
                 style: TextStyle(
                   fontSize: r.fp(12),
                   fontWeight: FontWeight.w600,
-                  color: Colors.grey[600],
+                  color: context.textSecondary,
                 ),
               ),
               Text(
@@ -1156,7 +1354,7 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
                 style: TextStyle(
                   fontSize: r.fp(12),
                   fontWeight: FontWeight.w600,
-                  color: Colors.grey[600],
+                  color: context.textSecondary,
                 ),
               ),
             ],
@@ -1177,11 +1375,12 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.cardBg,
         borderRadius: BorderRadius.circular(r.sp(14)),
+        border: Border.all(color: context.borderColor),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: Colors.black.withValues(alpha: context.isDark ? 0.2 : 0.04),
             blurRadius: r.sp(16),
             spreadRadius: 1,
           ),
@@ -1193,7 +1392,11 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
         children: [
           Text(
             'Update Status',
-            style: TextStyle(fontSize: r.fp(16), fontWeight: FontWeight.w700),
+            style: TextStyle(
+              fontSize: r.fp(16),
+              fontWeight: FontWeight.w700,
+              color: context.textPrimary,
+            ),
           ),
           SizedBox(height: r.sp(12)),
           GridView.builder(
@@ -1210,6 +1413,7 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
               final status = statuses[index];
               final isSelected = _selectedStatus == status;
               final color = _statusColors[status] ?? const Color(0xFF1E40AF);
+              const selectedFg = Colors.white;
 
               return GestureDetector(
                 onTap: () {
@@ -1221,10 +1425,15 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 260),
                   decoration: BoxDecoration(
-                    color: isSelected ? color : Colors.white,
+                    color:
+                        isSelected
+                            ? color
+                            : (context.isDark
+                                ? const Color(0xFF0F172A)
+                                : Colors.white),
                     borderRadius: BorderRadius.circular(r.sp(12)),
                     border: Border.all(
-                      color: isSelected ? color : Colors.grey[200]!,
+                      color: isSelected ? color : context.borderColor,
                       width: 2,
                     ),
                     boxShadow:
@@ -1249,7 +1458,7 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
                     children: [
                       Icon(
                         _statusIcons[status],
-                        color: isSelected ? Colors.white : color,
+                        color: isSelected ? selectedFg : color,
                         size: r.ip(18),
                       ),
                       SizedBox(width: r.sp(8)),
@@ -1262,7 +1471,7 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
                               fontSize: r.fp(13),
                               fontWeight: FontWeight.w600,
                               color:
-                                  isSelected ? Colors.white : Colors.grey[800],
+                                  isSelected ? selectedFg : context.textPrimary,
                             ),
                             maxLines: 2,
                             textAlign: TextAlign.center,
@@ -1283,11 +1492,12 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
   Widget _buildNotesCard(_R r) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.cardBg,
         borderRadius: BorderRadius.circular(r.sp(14)),
+        border: Border.all(color: context.borderColor),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: Colors.black.withValues(alpha: context.isDark ? 0.2 : 0.04),
             blurRadius: r.sp(16),
             spreadRadius: 1,
           ),
@@ -1305,6 +1515,7 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
                 style: TextStyle(
                   fontSize: r.fp(16),
                   fontWeight: FontWeight.w700,
+                  color: context.textPrimary,
                 ),
               ),
               Tooltip(
@@ -1324,14 +1535,20 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
                     width: r.sp(36),
                     height: r.sp(36),
                     decoration: BoxDecoration(
-                      color: Colors.grey[50],
+                      color:
+                          context.isDark
+                              ? const Color(0xFF0F172A)
+                              : Colors.grey[50],
                       borderRadius: BorderRadius.circular(r.sp(10)),
-                      border: Border.all(color: Colors.grey[200]!),
+                      border: Border.all(color: context.borderColor),
                     ),
                     child: Icon(
                       Icons.auto_awesome_rounded,
                       size: r.ip(18),
-                      color: const Color(0xFF1E40AF),
+                      color:
+                          context.isDark
+                              ? const Color(0xFF38BDF8)
+                              : const Color(0xFF1E40AF),
                     ),
                   ),
                 ),
@@ -1344,16 +1561,31 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
             style: TextStyle(
               fontSize: r.fp(14),
               fontWeight: FontWeight.w500,
-              color: Colors.black87,
+              color: context.textPrimary,
             ),
             decoration: InputDecoration(
               hintText: 'Add notes about this status...',
-              hintStyle: TextStyle(color: Colors.grey[400]),
+              hintStyle: TextStyle(color: context.textSecondary),
               filled: true,
-              fillColor: Colors.grey[50],
+              fillColor:
+                  context.isDark ? const Color(0xFF0F172A) : Colors.grey[50],
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(r.sp(12)),
-                borderSide: BorderSide.none,
+                borderSide: BorderSide(color: context.borderColor),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(r.sp(12)),
+                borderSide: BorderSide(color: context.borderColor),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(r.sp(12)),
+                borderSide: BorderSide(
+                  color:
+                      context.isDark
+                          ? const Color(0xFF38BDF8)
+                          : const Color(0xFF1E40AF),
+                  width: 1.5,
+                ),
               ),
               contentPadding: EdgeInsets.all(r.sp(12)),
             ),
@@ -1367,11 +1599,12 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
   Widget _buildLinkCard(_R r) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.cardBg,
         borderRadius: BorderRadius.circular(r.sp(14)),
+        border: Border.all(color: context.borderColor),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: Colors.black.withValues(alpha: context.isDark ? 0.2 : 0.04),
             blurRadius: r.sp(16),
             spreadRadius: 1,
           ),
@@ -1382,8 +1615,12 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Download Link',
-            style: TextStyle(fontSize: r.fp(16), fontWeight: FontWeight.w700),
+            _is3DPrinting ? 'Tracking / Drive Link' : 'Download Link',
+            style: TextStyle(
+              fontSize: r.fp(16),
+              fontWeight: FontWeight.w700,
+              color: context.textPrimary,
+            ),
           ),
           SizedBox(height: r.sp(12)),
           TextField(
@@ -1391,22 +1628,42 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
             style: TextStyle(
               fontSize: r.fp(14),
               fontWeight: FontWeight.w500,
-              color: Colors.black87,
+              color: context.textPrimary,
             ),
             decoration: InputDecoration(
-              hintText: 'https://drive.google.com/...',
-              hintStyle: TextStyle(color: Colors.grey[400]),
+              hintText:
+                  _is3DPrinting
+                      ? 'https://tracking-or-drive-link...'
+                      : 'https://drive.google.com/...',
+              hintStyle: TextStyle(color: context.textSecondary),
               prefixIcon: Container(
                 margin: const EdgeInsets.only(right: 8),
                 width: r.sp(44),
-                child: const Center(child: Icon(Icons.link_rounded)),
+                child: Center(
+                  child: Icon(Icons.link_rounded, color: context.textSecondary),
+                ),
               ),
               prefixIconConstraints: BoxConstraints(minWidth: r.sp(44)),
               filled: true,
-              fillColor: Colors.grey[50],
+              fillColor:
+                  context.isDark ? const Color(0xFF0F172A) : Colors.grey[50],
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(r.sp(12)),
-                borderSide: BorderSide.none,
+                borderSide: BorderSide(color: context.borderColor),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(r.sp(12)),
+                borderSide: BorderSide(color: context.borderColor),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(r.sp(12)),
+                borderSide: BorderSide(
+                  color:
+                      context.isDark
+                          ? const Color(0xFF38BDF8)
+                          : const Color(0xFF1E40AF),
+                  width: 1.5,
+                ),
               ),
               contentPadding: EdgeInsets.symmetric(
                 horizontal: r.sp(12),
@@ -1420,6 +1677,9 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
   }
 
   Widget _buildActionButtons(_R r) {
+    final saveContentColor =
+        context.isDark ? const Color(0xFF0F172A) : Colors.white;
+
     return Row(
       children: [
         Expanded(
@@ -1435,16 +1695,28 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
               ),
               child: Ink(
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [
-                      Color(0xFF2563EB),
-                      Color(0xFF1E40AF),
-                      Color(0xFF020617),
-                    ],
-                    stops: [0.0, 0.6, 1.0],
-                    begin: Alignment.bottomRight,
-                    end: Alignment.topLeft,
-                  ),
+                  gradient:
+                      context.isDark
+                          ? const LinearGradient(
+                            colors: [
+                              Color(0xFF38BDF8),
+                              Color(0xFF60A5FA),
+                              Color(0xFFBAE6FD),
+                            ],
+                            stops: [0.0, 0.6, 1.0],
+                            begin: Alignment.bottomRight,
+                            end: Alignment.topLeft,
+                          )
+                          : const LinearGradient(
+                            colors: [
+                              Color(0xFF2563EB),
+                              Color(0xFF1E40AF),
+                              Color(0xFF020617),
+                            ],
+                            stops: [0.0, 0.6, 1.0],
+                            begin: Alignment.bottomRight,
+                            end: Alignment.topLeft,
+                          ),
                   borderRadius: BorderRadius.circular(r.sp(14)),
                 ),
                 child: Container(
@@ -1454,27 +1726,24 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
                           ? SizedBox(
                             width: r.sp(18),
                             height: r.sp(18),
-                            child: const CircularProgressIndicator(
+                            child: CircularProgressIndicator(
                               strokeWidth: 2,
                               valueColor: AlwaysStoppedAnimation<Color>(
-                                Colors.white,
+                                saveContentColor,
                               ),
                             ),
                           )
                           : Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const Icon(
-                                Icons.save_rounded,
-                                color: Colors.white,
-                              ),
+                              Icon(Icons.save_rounded, color: saveContentColor),
                               SizedBox(width: r.sp(10)),
                               Text(
                                 'Save Changes',
                                 style: TextStyle(
                                   fontSize: r.fp(15),
                                   fontWeight: FontWeight.w700,
-                                  color: Colors.white,
+                                  color: saveContentColor,
                                 ),
                               ),
                             ],
@@ -1491,9 +1760,11 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage>
           child: ElevatedButton(
             onPressed: _isSendingWhatsApp ? null : _sendWhatsApp,
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white,
+              backgroundColor: context.cardBg,
               foregroundColor: const Color(0xFF25D366),
               padding: EdgeInsets.zero,
+              side: BorderSide(color: context.borderColor),
+              elevation: context.isDark ? 0 : 1,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(r.sp(14)),
               ),
@@ -1551,7 +1822,7 @@ class _LargeTitleDelegate extends SliverPersistentHeaderDelegate {
     final double paddingTop = lerpDouble(40, 10, t)!;
 
     return Container(
-      decoration:  BoxDecoration(
+      decoration: BoxDecoration(
         gradient:
             context.isDark
                 ? const LinearGradient(
@@ -1588,7 +1859,8 @@ class _LargeTitleDelegate extends SliverPersistentHeaderDelegate {
                   style: TextStyle(
                     fontSize: titleSize,
                     fontWeight: FontWeight.w800,
-                    color: Colors.white,
+                    color:
+                        context.isDark ? const Color(0xFF0F172A) : Colors.white,
                   ),
                 ),
                 if (t < 0.8) // hide subtitle when fully collapsed
@@ -1600,7 +1872,10 @@ class _LargeTitleDelegate extends SliverPersistentHeaderDelegate {
                       style: TextStyle(
                         fontSize: subtitleSize,
                         fontWeight: FontWeight.w500,
-                        color: Colors.white.withValues(alpha: 0.9),
+                        color:
+                            context.isDark
+                                ? const Color(0xFF0F172A).withValues(alpha: 0.8)
+                                : Colors.white.withValues(alpha: 0.9),
                       ),
                     ),
                   ),
@@ -1613,9 +1888,10 @@ class _LargeTitleDelegate extends SliverPersistentHeaderDelegate {
             left: 12,
             top: 12,
             child: _circleButton(
+              context: context,
               icon: Icon(
                 Icons.arrow_back,
-                color: Colors.black,
+                color: context.isDark ? Colors.white : Colors.black,
                 size: 20 * scale,
               ),
               onTap: () => Navigator.pop(context),
@@ -1632,9 +1908,10 @@ class _LargeTitleDelegate extends SliverPersistentHeaderDelegate {
                 const AppThemeToggle(size: 30),
                 const SizedBox(width: 8),
                 _circleButton(
+                  context: context,
                   icon: HugeIcon(
                     icon: HugeIcons.strokeRoundedTransactionHistory,
-                    color: Colors.black87,
+                    color: context.isDark ? Colors.white : Colors.black87,
                     size: 20 * scale,
                   ),
                   onTap: onHistory,
@@ -1647,32 +1924,46 @@ class _LargeTitleDelegate extends SliverPersistentHeaderDelegate {
     );
   }
 
-  Widget _circleButton({required Widget icon, required VoidCallback onTap}) {
+  Widget _circleButton({
+    required Widget icon,
+    required VoidCallback onTap,
+    required BuildContext context,
+  }) {
+    final isDark = context.isDark;
     return Material(
       color: Colors.transparent,
       shape: const CircleBorder(),
       child: InkWell(
         customBorder: const CircleBorder(),
         onTap: onTap,
-        splashColor: Colors.black.withValues(alpha: 0.08),
-        highlightColor: Colors.black.withValues(alpha: 0.05),
+        splashColor:
+            isDark
+                ? Colors.white.withValues(alpha: 0.1)
+                : Colors.black.withValues(alpha: 0.08),
+        highlightColor:
+            isDark
+                ? Colors.white.withValues(alpha: 0.05)
+                : Colors.black.withValues(alpha: 0.05),
         child: Container(
           width: 30 * scale,
           height: 30 * scale,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: Colors.white,
+            color: isDark ? const Color(0xFF1E293B) : Colors.white,
 
             // ✅ SUBTLE BORDER (clean & visible)
             border: Border.all(
-              color: Colors.black.withValues(alpha: 0.08),
+              color:
+                  isDark
+                      ? const Color(0xFF334155)
+                      : Colors.black.withValues(alpha: 0.08),
               width: 1,
             ),
 
             // ✅ SOFT ELEVATION
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.12),
+                color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.12),
                 blurRadius: 10,
                 offset: const Offset(0, 4),
               ),

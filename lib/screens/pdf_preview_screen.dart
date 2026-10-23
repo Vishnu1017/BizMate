@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_pdfview/flutter_pdfview.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../models/sale.dart';
 
 class PdfPreviewScreen extends StatelessWidget {
@@ -109,6 +110,21 @@ class PdfPreviewScreen extends StatelessWidget {
                       pageFling: true,
                       fitEachPage: true,
                       fitPolicy: FitPolicy.BOTH, // best for all screens
+                      onLinkHandler: (String? uri) async {
+                        if (uri != null && uri.isNotEmpty) {
+                          final parsed = Uri.tryParse(uri);
+                          if (parsed != null) {
+                            try {
+                              await launchUrl(
+                                parsed,
+                                mode: LaunchMode.externalApplication,
+                              );
+                            } catch (e) {
+                              debugPrint("Error launching link: $e");
+                            }
+                          }
+                        }
+                      },
                     ),
                   ),
                 ),
@@ -164,11 +180,17 @@ class PdfPreviewScreen extends StatelessWidget {
 
           // Same share logic untouched
           onPressed: () async {
+            final taxLine = '• Tax: ₹${sale.safeTax.toStringAsFixed(2)}';
+            final discountLine = sale.discount > 0
+                ? '\n              • Discount: ₹${sale.discount.toStringAsFixed(2)}'
+                : '';
+
             final message = '''
               Hi ${sale.customerName},
 
               🧾 *Invoice Summary*
               • Total Amount: ₹${sale.totalAmount}
+              $taxLine$discountLine
               • Received: ₹${sale.receivedAmount}
               • Balance Due: ₹${sale.balanceAmount}
               • Date: ${sale.formattedDate}
@@ -181,6 +203,7 @@ class PdfPreviewScreen extends StatelessWidget {
 
             await Clipboard.setData(ClipboardData(text: message));
 
+            if (!context.mounted) return;
             AppSnackBar.showSuccess(
               context,
               message:
@@ -197,6 +220,7 @@ class PdfPreviewScreen extends StatelessWidget {
                 subject: '📸 Your Invoice from ${sale.customerName}',
               );
             } catch (e) {
+              if (!context.mounted) return;
               AppSnackBar.showError(
                 context,
                 message: "Failed to share: $e",

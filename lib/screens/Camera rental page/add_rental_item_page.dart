@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:bizmate/models/rental_item.dart';
 import 'package:bizmate/services/image_compression_service.dart';
+import 'package:bizmate/utils/app_theme.dart';
 import 'package:bizmate/widgets/app_snackbar.dart' show AppSnackBar;
 import 'package:bizmate/widgets/app_theme_toggle.dart';
 import 'package:flutter/material.dart';
@@ -21,7 +22,6 @@ class AddRentalItemPage extends StatefulWidget {
 
 class _AddRentalItemPageState extends State<AddRentalItemPage>
     with SingleTickerProviderStateMixin {
-  double Scale = 1.0;
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _brandController = TextEditingController();
@@ -176,14 +176,14 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
   Widget _buildImageSourceSheet() {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.cardBg,
         borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(32),
           topRight: Radius.circular(32),
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.2),
+            color: Colors.black.withValues(alpha: context.isDark ? 0.35 : 0.15),
             blurRadius: 40,
             offset: const Offset(0, -10),
           ),
@@ -198,22 +198,25 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
               height: 5,
               margin: const EdgeInsets.symmetric(vertical: 12),
               decoration: BoxDecoration(
-                color: Colors.grey[300],
+                color:
+                    context.isDark ? const Color(0xFF334155) : Colors.grey[300],
                 borderRadius: BorderRadius.circular(3),
               ),
             ),
             Padding(
               padding: EdgeInsets.symmetric(
-                horizontal: 24 * Scale,
+                horizontal: 24 * scale,
                 vertical: 8,
               ),
               child: Row(
                 children: [
                   Container(
-                    width: 40 * Scale,
-                    height: 40 * Scale,
+                    width: 40 * scale,
+                    height: 40 * scale,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF6366F1).withValues(alpha: 0.1),
+                      color: const Color(
+                        0xFF6366F1,
+                      ).withValues(alpha: context.isDark ? 0.2 : 0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Icon(
@@ -232,14 +235,14 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.w700,
-                            color: Colors.grey[900],
+                            color: context.textPrimary,
                             letterSpacing: -0.5,
                           ),
                         ),
                         Text(
                           'Choose image source',
                           style: TextStyle(
-                            color: Colors.grey[600],
+                            color: context.textSecondary,
                             fontSize: 14,
                           ),
                         ),
@@ -249,9 +252,9 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
                 ],
               ),
             ),
-            const Divider(height: 24),
+            Divider(height: 24, color: context.borderColor),
             Padding(
-              padding: EdgeInsets.all(20 * Scale),
+              padding: EdgeInsets.all(20 * scale),
               child: Row(
                 children: [
                   Expanded(
@@ -292,9 +295,12 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
       child: Container(
         height: 140,
         decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.05),
+          color: color.withValues(alpha: context.isDark ? 0.12 : 0.05),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withValues(alpha: 0.2), width: 1.5),
+          border: Border.all(
+            color: color.withValues(alpha: context.isDark ? 0.4 : 0.2),
+            width: 1.5,
+          ),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -303,7 +309,7 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
               width: 60,
               height: 60,
               decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
+                color: color.withValues(alpha: context.isDark ? 0.2 : 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(icon, size: 28, color: color),
@@ -351,6 +357,7 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
       final currentEmail = sessionBox.get("currentUserEmail");
 
       if (currentEmail == null || currentEmail.toString().isEmpty) {
+        if (!mounted) return;
         AppSnackBar.showError(
           context,
           message: "🔒 No active session found!",
@@ -385,6 +392,7 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
       setState(() => _showSuccess = true);
       await Future.delayed(const Duration(milliseconds: 1500));
 
+      if (!mounted) return;
       AppSnackBar.showSuccess(
         context,
         message: '✅ Item added successfully!',
@@ -393,6 +401,7 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
 
       await _clearForm();
     } catch (e) {
+      if (!mounted) return;
       AppSnackBar.showError(
         context,
         message: '❌ Error: ${e.toString()}',
@@ -432,7 +441,8 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
     final isDesktop = width > 1024;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor:
+          context.isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
       body: AbsorbPointer(
         absorbing: _isSaving, // 👈 THIS IS THE KEY
         child: Stack(
@@ -444,7 +454,10 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    colors: [Colors.white, const Color(0xFFF1F5F9)],
+                    colors:
+                        context.isDark
+                            ? const [Color(0xFF0F172A), Color(0xFF1E293B)]
+                            : const [Colors.white, Color(0xFFF1F5F9)],
                   ),
                 ),
               ),
@@ -461,8 +474,12 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
                   shape: BoxShape.circle,
                   gradient: LinearGradient(
                     colors: [
-                      const Color(0xFF6366F1).withValues(alpha: 0.1),
-                      const Color(0xFF8B5CF6).withValues(alpha: 0.05),
+                      const Color(
+                        0xFF6366F1,
+                      ).withValues(alpha: context.isDark ? 0.15 : 0.1),
+                      const Color(
+                        0xFF8B5CF6,
+                      ).withValues(alpha: context.isDark ? 0.08 : 0.05),
                     ],
                   ),
                 ),
@@ -479,8 +496,12 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
                   shape: BoxShape.circle,
                   gradient: LinearGradient(
                     colors: [
-                      const Color(0xFF10B981).withValues(alpha: 0.1),
-                      const Color(0xFF059669).withValues(alpha: 0.05),
+                      const Color(
+                        0xFF10B981,
+                      ).withValues(alpha: context.isDark ? 0.15 : 0.1),
+                      const Color(
+                        0xFF059669,
+                      ).withValues(alpha: context.isDark ? 0.08 : 0.05),
                     ],
                   ),
                 ),
@@ -491,7 +512,10 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
               slivers: [
                 // Modern App Bar
                 SliverAppBar(
-                  backgroundColor: const Color(0xFF6366F1),
+                  backgroundColor:
+                      context.isDark
+                          ? const Color(0xFF1E293B)
+                          : const Color(0xFF6366F1),
                   elevation: 0,
                   pinned: true,
                   floating: true,
@@ -518,11 +542,17 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
                       ),
                     ),
                     background: Container(
-                      decoration: const BoxDecoration(
+                      decoration: BoxDecoration(
                         gradient: LinearGradient(
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
-                          colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+                          colors:
+                              context.isDark
+                                  ? const [Color(0xFF1E293B), Color(0xFF0F172A)]
+                                  : const [
+                                    Color(0xFF6366F1),
+                                    Color(0xFF8B5CF6),
+                                  ],
                         ),
                       ),
                       child: Stack(
@@ -678,11 +708,14 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
       color: Colors.transparent,
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: context.cardBg,
           borderRadius: BorderRadius.circular(isDesktop ? 36 : 32),
+          border: Border.all(color: context.borderColor, width: 1.2),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
+              color: Colors.black.withValues(
+                alpha: context.isDark ? 0.35 : 0.06,
+              ),
               blurRadius: 40,
               offset: const Offset(0, 20),
             ),
@@ -777,14 +810,14 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
                     style: TextStyle(
                       fontSize: isDesktop ? 18 : (isTablet ? 17 : 16),
                       fontWeight: FontWeight.w600,
-                      color: Colors.grey[900],
+                      color: context.textPrimary,
                       letterSpacing: -0.3,
                     ),
                   ),
                   Text(
                     'Clear, well-lit photos work best',
                     style: TextStyle(
-                      color: Colors.grey[600],
+                      color: context.textSecondary,
                       fontSize: isDesktop ? 14 : (isTablet ? 13 : 12),
                     ),
                   ),
@@ -801,7 +834,10 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
             height: isDesktop ? 220 : (isTablet ? 200 : 180),
             width: double.infinity,
             decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFC),
+              color:
+                  context.isDark
+                      ? const Color(0xFF111827)
+                      : const Color(0xFFF8FAFC),
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
                 color:
@@ -830,7 +866,9 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
                           width: isDesktop ? 80 : (isTablet ? 72 : 64),
                           height: isDesktop ? 80 : (isTablet ? 72 : 64),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF6366F1).withValues(alpha: 0.1),
+                            color: const Color(
+                              0xFF6366F1,
+                            ).withValues(alpha: 0.1),
                             shape: BoxShape.circle,
                           ),
                           child: Icon(
@@ -845,14 +883,14 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
                           style: TextStyle(
                             fontSize: isDesktop ? 18 : (isTablet ? 17 : 16),
                             fontWeight: FontWeight.w600,
-                            color: Colors.grey[700],
+                            color: context.textSecondary,
                           ),
                         ),
                         SizedBox(height: isDesktop ? 8 : (isTablet ? 6 : 4)),
                         Text(
                           'PNG, JPG up to 5MB',
                           style: TextStyle(
-                            color: Colors.grey[500],
+                            color: context.textSecondary,
                             fontSize: isDesktop ? 14 : (isTablet ? 13 : 12),
                           ),
                         ),
@@ -868,7 +906,10 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
                             fit: BoxFit.cover,
                             errorBuilder:
                                 (context, error, stackTrace) => Container(
-                                  color: Colors.grey[200],
+                                  color:
+                                      context.isDark
+                                          ? const Color(0xFF273449)
+                                          : Colors.grey[200],
                                   child: const Icon(Icons.error_outline),
                                 ),
                           ),
@@ -962,7 +1003,7 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
           style: TextStyle(
             fontSize: isDesktop ? 16 : (isTablet ? 15 : 14),
             fontWeight: FontWeight.w600,
-            color: Colors.grey[800],
+            color: context.textPrimary,
             letterSpacing: -0.2,
           ),
         ),
@@ -975,7 +1016,9 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
               color:
                   focusNode.hasFocus
                       ? const Color(0xFF6366F1)
-                      : const Color(0xFFE2E8F0),
+                      : (context.isDark
+                          ? const Color(0xFF334155)
+                          : const Color(0xFFE2E8F0)),
               width: focusNode.hasFocus ? 2 : 1.5,
             ),
             boxShadow:
@@ -996,7 +1039,7 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
             keyboardType: keyboardType,
             style: TextStyle(
               fontSize: isDesktop ? 18 : (isTablet ? 17 : 16),
-              color: Colors.black,
+              color: context.textPrimary,
             ),
             decoration: InputDecoration(
               hintText: hint,
@@ -1024,7 +1067,7 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
                   color:
                       focusNode.hasFocus
                           ? const Color(0xFF6366F1)
-                          : Colors.grey[600],
+                          : context.textSecondary,
                   size: isDesktop ? 24 : (isTablet ? 22 : 20),
                 ),
               ),
@@ -1080,7 +1123,7 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
           style: TextStyle(
             fontSize: isDesktop ? 16 : (isTablet ? 15 : 14),
             fontWeight: FontWeight.w600,
-            color: Colors.grey[800],
+            color: context.textPrimary,
             letterSpacing: -0.2,
           ),
         ),
@@ -1112,13 +1155,17 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
                     color:
                         isSelected
                             ? const Color(0xFF6366F1)
-                            : const Color(0xFFF1F5F9),
+                            : (context.isDark
+                                ? const Color(0xFF273449)
+                                : const Color(0xFFF1F5F9)),
                     borderRadius: BorderRadius.circular(isDesktop ? 14 : 12),
                     border: Border.all(
                       color:
                           isSelected
                               ? const Color(0xFF6366F1)
-                              : const Color(0xFFE2E8F0),
+                              : (context.isDark
+                                  ? const Color(0xFF334155)
+                                  : const Color(0xFFE2E8F0)),
                     ),
                   ),
                   child: Row(
@@ -1126,7 +1173,8 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
                     children: [
                       Icon(
                         _getCategoryIcon(category),
-                        color: isSelected ? Colors.white : Colors.grey[600],
+                        color:
+                            isSelected ? Colors.white : context.textSecondary,
                         size: isDesktop ? 18 : (isTablet ? 16 : 14),
                       ),
                       SizedBox(width: isDesktop ? 10 : 6),
@@ -1135,7 +1183,8 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
                         style: TextStyle(
                           fontSize: isDesktop ? 14 : (isTablet ? 13 : 12),
                           fontWeight: FontWeight.w600,
-                          color: isSelected ? Colors.white : Colors.grey[700],
+                          color:
+                              isSelected ? Colors.white : context.textPrimary,
                         ),
                       ),
                     ],
@@ -1158,23 +1207,31 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
           style: TextStyle(
             fontSize: isDesktop ? 16 : (isTablet ? 15 : 14),
             fontWeight: FontWeight.w600,
-            color: Colors.grey[800],
+            color: context.textPrimary,
             letterSpacing: -0.2,
           ),
         ),
         SizedBox(height: isDesktop ? 12 : (isTablet ? 10 : 8)),
         Container(
           decoration: BoxDecoration(
-            color: const Color(0xFFF8FAFC),
+            color:
+                context.isDark
+                    ? const Color(0xFF111827)
+                    : const Color(0xFFF8FAFC),
             borderRadius: BorderRadius.circular(isDesktop ? 18 : 16),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
+            border: Border.all(
+              color:
+                  context.isDark
+                      ? const Color(0xFF334155)
+                      : const Color(0xFFE2E8F0),
+            ),
           ),
           child: Row(
             children: [
               Padding(
                 padding: EdgeInsets.only(left: isDesktop ? 20 : 16),
                 child: Text(
-                  '₹',
+                  '₹ ',
                   style: TextStyle(
                     fontSize: isDesktop ? 24 : (isTablet ? 22 : 20),
                     fontWeight: FontWeight.w700,
@@ -1182,18 +1239,17 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
                   ),
                 ),
               ),
+
               Expanded(
                 child: TextFormField(
                   controller: _priceController,
                   focusNode: _priceFocus,
                   keyboardType: TextInputType.number,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.digitsOnly, // ✅ ONLY NUMBERS
-                  ],
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   style: TextStyle(
                     fontSize: isDesktop ? 20 : (isTablet ? 19 : 18),
                     fontWeight: FontWeight.w700,
-                    color: Colors.black,
+                    color: context.textPrimary,
                   ),
                   decoration: InputDecoration(
                     hintText: '0',
@@ -1220,10 +1276,14 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
                   },
                 ),
               ),
+
+              // Gap between price input and /day
+              SizedBox(width: isDesktop ? 12 : 8),
+
               Container(
                 padding: EdgeInsets.symmetric(
-                  horizontal: isDesktop ? 20 : 16,
-                  vertical: isDesktop ? 8 : 4,
+                  horizontal: isDesktop ? 14 : 10,
+                  vertical: isDesktop ? 8 : 6,
                 ),
                 margin: EdgeInsets.only(right: isDesktop ? 16 : 12),
                 decoration: BoxDecoration(
@@ -1255,26 +1315,36 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
           style: TextStyle(
             fontSize: isDesktop ? 16 : (isTablet ? 15 : 14),
             fontWeight: FontWeight.w600,
-            color: Colors.grey[800],
+            color: context.textPrimary,
             letterSpacing: -0.2,
           ),
         ),
         SizedBox(height: isDesktop ? 12 : (isTablet ? 10 : 8)),
         Container(
           decoration: BoxDecoration(
-            color: const Color(0xFFF8FAFC),
+            color:
+                context.isDark
+                    ? const Color(0xFF111827)
+                    : const Color(0xFFF8FAFC),
             borderRadius: BorderRadius.circular(isDesktop ? 18 : 16),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
+            border: Border.all(
+              color:
+                  context.isDark
+                      ? const Color(0xFF334155)
+                      : const Color(0xFFE2E8F0),
+            ),
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
+              dropdownColor: context.cardBg,
+              style: TextStyle(color: context.textPrimary),
               value: _condition,
               isExpanded: true,
               icon: Padding(
                 padding: EdgeInsets.only(right: isDesktop ? 20 : 16),
                 child: Icon(
                   Icons.expand_more_rounded,
-                  color: Colors.grey[600],
+                  color: context.textSecondary,
                   size: isDesktop ? 26 : (isTablet ? 24 : 20),
                 ),
               ),
@@ -1316,7 +1386,7 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
                               child: Text(
                                 condition,
                                 style: TextStyle(
-                                  color: Colors.grey[800],
+                                  color: context.textPrimary,
                                   fontSize:
                                       isDesktop ? 16 : (isTablet ? 15 : 14),
                                   fontWeight: FontWeight.w500,
@@ -1348,11 +1418,11 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
           style: TextStyle(
             fontSize: isDesktop ? 16 : (isTablet ? 15 : 14),
             fontWeight: FontWeight.w600,
-            color: Colors.grey[800],
+            color: context.textPrimary,
             letterSpacing: -0.2,
           ),
         ),
-        SizedBox(height: 8 * Scale),
+        SizedBox(height: 8 * scale),
         Row(
           children: [
             Expanded(
@@ -1366,7 +1436,7 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
                 onTap: () => setState(() => _availability = 'Available'),
               ),
             ),
-            SizedBox(width: 8 * Scale),
+            SizedBox(width: 8 * scale),
             Expanded(
               child: _buildAvailabilityButton(
                 label: 'Not Available',
@@ -1393,50 +1463,82 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
     required bool isDesktop,
     required VoidCallback onTap,
   }) {
-    return GestureDetector(
-      onTap: () {
-        HapticFeedback.selectionClick();
-        onTap();
-      },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        height: isDesktop ? 64 : (isTablet ? 60 : 56),
-        decoration: BoxDecoration(
-          color: isSelected ? color.withValues(alpha: 0.1) : Colors.grey.shade200,
-          borderRadius: BorderRadius.circular(isDesktop ? 18 : 16),
-          border: Border.all(
-            color: isSelected ? color : const Color(0xFFE2E8F0),
-            width: isSelected ? 2 : 1.5,
+    final isDark = context.isDark;
+    final surfaceColor =
+        isSelected
+            ? color.withValues(alpha: isDark ? 0.18 : 0.10)
+            : (isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC));
+    final borderColor =
+        isSelected
+            ? color
+            : (isDark ? const Color(0xFF475569) : const Color(0xFFE2E8F0));
+    final foregroundColor =
+        isSelected
+            ? (isDark ? Color.lerp(color, Colors.white, 0.18)! : color)
+            : context.textSecondary;
+
+    return Semantics(
+      button: true,
+      selected: isSelected,
+      label: label,
+      child: GestureDetector(
+        onTap: () {
+          HapticFeedback.selectionClick();
+          onTap();
+        },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeInOut,
+          height: isDesktop ? 64 : (isTablet ? 60 : 56),
+          decoration: BoxDecoration(
+            color: surfaceColor,
+            borderRadius: BorderRadius.circular(isDesktop ? 18 : 16),
+            border: Border.all(
+              color: borderColor,
+              width: isSelected ? 1.8 : 1.2,
+            ),
+            boxShadow:
+                isSelected
+                    ? [
+                      BoxShadow(
+                        color: color.withValues(alpha: isDark ? 0.12 : 0.16),
+                        blurRadius: 10,
+                        offset: const Offset(0, 3),
+                      ),
+                    ]
+                    : null,
           ),
-          boxShadow:
-              isSelected
-                  ? [
-                    BoxShadow(
-                      color: color.withValues(alpha: 0.2),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ]
-                  : null,
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              icon,
-              color: isSelected ? color : Colors.grey[600],
-              size: 16 * Scale,
-            ),
-            SizedBox(width: isDesktop ? 12 : 8),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 10 * Scale,
-                fontWeight: FontWeight.w600,
-                color: isSelected ? color : Colors.grey[700],
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                color: foregroundColor,
+                size: isDesktop ? 20 : (isTablet ? 19 : 18),
               ),
-            ),
-          ],
+              SizedBox(width: isDesktop ? 10 : 7),
+              Flexible(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: isDesktop ? 14 : (isTablet ? 13 : 12),
+                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+                    color: foregroundColor,
+                  ),
+                ),
+              ),
+              if (isSelected) ...[
+                const SizedBox(width: 5),
+                Icon(
+                  Icons.check_rounded,
+                  size: isDesktop ? 17 : 15,
+                  color: foregroundColor,
+                ),
+              ],
+            ],
+          ),
         ),
       ),
     );
@@ -1448,10 +1550,15 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
         Expanded(
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 140),
-            height: 50 * Scale,
+            height: 50 * scale,
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16 * Scale),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
+              borderRadius: BorderRadius.circular(16 * scale),
+              border: Border.all(
+                color:
+                    context.isDark
+                        ? const Color(0xFF334155)
+                        : const Color(0xFFE2E8F0),
+              ),
               gradient:
                   _isSaving
                       ? null
@@ -1466,7 +1573,9 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
                       ? null
                       : [
                         BoxShadow(
-                          color: const Color(0xFF6366F1).withValues(alpha: 0.25),
+                          color: const Color(
+                            0xFF6366F1,
+                          ).withValues(alpha: 0.25),
                           blurRadius: 14, // ⬅️ less blur
                           offset: const Offset(0, 4), // ⬅️ less lift
                         ),
@@ -1474,17 +1583,17 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
             ),
             child: Material(
               color: Colors.transparent,
-              borderRadius: BorderRadius.circular(16 * Scale),
+              borderRadius: BorderRadius.circular(16 * scale),
               child: InkWell(
-                borderRadius: BorderRadius.circular(16 * Scale),
+                borderRadius: BorderRadius.circular(16 * scale),
                 onTap: _isSaving ? null : _saveItem,
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
                     if (_isSaving)
                       SizedBox(
-                        width: 24 * Scale,
-                        height: 24 * Scale,
+                        width: 24 * scale,
+                        height: 24 * scale,
                         child: CircularProgressIndicator(
                           strokeWidth: 3,
                           valueColor: AlwaysStoppedAnimation(Colors.grey[600]),
@@ -1497,13 +1606,13 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
                           Icon(
                             Icons.add_circle_outline_rounded,
                             color: Colors.white,
-                            size: 14 * Scale,
+                            size: 14 * scale,
                           ),
-                          SizedBox(width: 8 * Scale),
+                          SizedBox(width: 8 * scale),
                           Text(
                             'Add Gear',
                             style: TextStyle(
-                              fontSize: 12 * Scale,
+                              fontSize: 12 * scale,
                               fontWeight: FontWeight.w700,
                               color: Colors.white,
                               letterSpacing: -0.3,
@@ -1518,14 +1627,23 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
           ),
         ),
         if (!_isSaving) ...[
-          SizedBox(width: 10 * Scale),
+          SizedBox(width: 10 * scale),
           Container(
-            width: 50 * Scale,
-            height: 50 * Scale,
+            width: 50 * scale,
+            height: 50 * scale,
             decoration: BoxDecoration(
-              color: const Color(0xFFF1F5F9),
+              color:
+                  context.isDark
+                      ? const Color(0xFF273449)
+                      : const Color(0xFFF1F5F9),
               borderRadius: BorderRadius.circular(isDesktop ? 18 : 16),
-              border: Border.all(color: const Color(0xFFE2E8F0), width: 1.2),
+              border: Border.all(
+                color:
+                    context.isDark
+                        ? const Color(0xFF334155)
+                        : const Color(0xFFE2E8F0),
+                width: 1.2,
+              ),
             ),
             child: Material(
               color: Colors.transparent,
@@ -1536,7 +1654,7 @@ class _AddRentalItemPageState extends State<AddRentalItemPage>
                 child: Icon(
                   Icons.refresh_rounded,
                   color: const Color(0xFF64748B),
-                  size: 20 * Scale,
+                  size: 20 * scale,
                 ),
               ),
             ),

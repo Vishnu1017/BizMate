@@ -45,9 +45,52 @@ class _HomePageState extends State<HomePage>
   bool _isSendingReminder = false;
   double scale = 1.0;
   String _statusFilter = 'All'; // 'All' | 'PAID' | 'PARTIAL' | 'DUE'
+  String _currentUserRole = '';
+
+  Future<void> _loadUserRole() async {
+    try {
+      if (!Hive.isBoxOpen('session')) {
+        await Hive.openBox('session');
+      }
+      final sessionBox = Hive.box('session');
+      String? role = sessionBox.get('currentUserRole')?.toString();
+
+      if (role == null || role.trim().isEmpty) {
+        final email = sessionBox.get('currentUserEmail')?.toString();
+        if (email != null && email.isNotEmpty) {
+          final usersBox = Hive.isBoxOpen('users')
+              ? Hive.box<User>('users')
+              : await Hive.openBox<User>('users');
+          final user = usersBox.values.firstWhere(
+            (u) => u.email.trim().toLowerCase() == email.trim().toLowerCase(),
+            orElse: () => User(name: '', email: '', phone: '', password: '', role: 'None'),
+          );
+          if (user.role.isNotEmpty && user.role != 'None') {
+            role = user.role;
+          } else {
+            final safeEmail = email.replaceAll('.', '_').replaceAll('@', '_');
+            final uBox = await Hive.openBox("userdata_$safeEmail");
+            final profile = uBox.get('profile');
+            if (profile != null && profile is Map && profile['role'] != null) {
+              role = profile['role'].toString();
+            }
+          }
+        }
+      }
+      if (role != null && role.isNotEmpty) {
+        await sessionBox.put('currentUserRole', role);
+      }
+      if (mounted) {
+        setState(() {
+          _currentUserRole = (role ?? '').toLowerCase().trim();
+        });
+      }
+    } catch (_) {}
+  }
 
   Future<void> _loadCurrentUserData() async {
     final user = await _getCurrentUserName();
+    await _loadUserRole();
 
     if (!Hive.isBoxOpen('session')) {
       await Hive.openBox('session');
@@ -337,7 +380,8 @@ class _HomePageState extends State<HomePage>
       return Center(child: CircularProgressIndicator());
     }
 
-    return ValueListenableBuilder(
+    final sessionBox = Hive.isBoxOpen('session') ? Hive.box('session') : null;
+    final salesListWidget = ValueListenableBuilder(
       valueListenable: userBox!.listenable(),
       builder: (context, Box box, _) {
         // Get all sales from user-specific box and sort them by date in descending order (newest first)
@@ -560,6 +604,14 @@ class _HomePageState extends State<HomePage>
                                 ? redColor
                                 : Colors.orange;
                         if (sale == null) return SizedBox.shrink();
+
+                        final currentRole = (Hive.isBoxOpen('session')
+                                ? (Hive.box('session').get('currentUserRole')?.toString() ?? _currentUserRole)
+                                : _currentUserRole)
+                            .toLowerCase()
+                            .trim();
+                        final is3dPrinting =
+                            currentRole.contains('3d') || currentRole.contains('print');
 
                         // Get the original index from the box to maintain invoice numbering
                         final originalIndex = sales.indexOf(sale);
@@ -967,8 +1019,11 @@ class _HomePageState extends State<HomePage>
                                                         Row(
                                                           children: [
                                                             Icon(
-                                                              Icons
-                                                                  .camera_alt_rounded,
+                                                              is3dPrinting
+                                                                  ? Icons
+                                                                      .local_shipping_rounded
+                                                                  : Icons
+                                                                      .camera_alt_rounded,
                                                               size: 12 * scale,
                                                               color:
                                                                   partiallyCompleted
@@ -984,7 +1039,9 @@ class _HomePageState extends State<HomePage>
 
                                                             Expanded(
                                                               child: Text(
-                                                                "Photography Schedule",
+                                                                is3dPrinting
+                                                                    ? "Delivery Schedule"
+                                                                    : "Photography Schedule",
                                                                 style: TextStyle(
                                                                   fontSize:
                                                                       10 *
@@ -1710,6 +1767,14 @@ class _HomePageState extends State<HomePage>
         );
       },
     );
+
+    if (sessionBox != null) {
+      return ValueListenableBuilder(
+        valueListenable: sessionBox.listenable(keys: ['currentUserRole']),
+        builder: (context, roleBox, child) => salesListWidget,
+      );
+    }
+    return salesListWidget;
   }
 
   @override

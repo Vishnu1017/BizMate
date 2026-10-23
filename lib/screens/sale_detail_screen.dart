@@ -1,11 +1,12 @@
 // lib/screens/sale_detail_screen.dart
 import 'package:bizmate/models/payment.dart';
+import 'package:bizmate/models/user_model.dart';
 import 'package:bizmate/widgets/ModernCalendar.dart';
 import 'package:bizmate/widgets/app_snackbar.dart' show AppSnackBar;
 import 'package:bizmate/widgets/app_theme_toggle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:hive/hive.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:intl/intl.dart';
 import '../models/sale.dart';
 import '../utils/app_theme.dart';
@@ -23,6 +24,7 @@ class SaleDetailScreen extends StatefulWidget {
 class _SaleDetailScreenState extends State<SaleDetailScreen> {
   late TextEditingController customerController;
   late TextEditingController phoneController;
+  late TextEditingController addressController;
   late TextEditingController productController;
   late TextEditingController amountController;
   late TextEditingController totalAmountController;
@@ -43,9 +45,66 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
   final _formKey = GlobalKey<FormState>();
 
   List<DateTime> selectedEventDates = [];
+  String _userRole = '';
+
+  Future<void> _loadUserRole() async {
+    try {
+      if (!Hive.isBoxOpen('session')) await Hive.openBox('session');
+      final sessionBox = Hive.box('session');
+      String? role = sessionBox.get('currentUserRole')?.toString();
+
+      if (role == null || role.trim().isEmpty) {
+        final email = sessionBox.get('currentUserEmail')?.toString();
+        if (email != null && email.isNotEmpty) {
+          final usersBox =
+              Hive.isBoxOpen('users')
+                  ? Hive.box<User>('users')
+                  : await Hive.openBox<User>('users');
+          final user = usersBox.values.firstWhere(
+            (u) => u.email.trim().toLowerCase() == email.trim().toLowerCase(),
+            orElse:
+                () => User(
+                  name: '',
+                  email: '',
+                  phone: '',
+                  password: '',
+                  role: 'None',
+                ),
+          );
+          if (user.role.isNotEmpty && user.role != 'None') {
+            role = user.role;
+          } else {
+            final safeEmail = email.replaceAll('.', '_').replaceAll('@', '_');
+            final uBox = await Hive.openBox("userdata_$safeEmail");
+            final profile = uBox.get('profile');
+            if (profile != null && profile is Map && profile['role'] != null) {
+              role = profile['role'].toString();
+            }
+          }
+        }
+      }
+      if (role != null && role.isNotEmpty) {
+        await sessionBox.put('currentUserRole', role);
+      }
+      if (mounted) {
+        setState(() {
+          _userRole = (role ?? '').toLowerCase().trim();
+        });
+      }
+    } catch (_) {}
+  }
 
   Future<void> _selectMultipleDates() async {
-    final isDark = context.isDark;
+    final currentRole =
+        (Hive.isBoxOpen('session')
+                ? (Hive.box('session').get('currentUserRole')?.toString() ??
+                    _userRole)
+                : _userRole)
+            .toLowerCase()
+            .trim();
+    final is3dPrinting =
+        currentRole.contains('3d') || currentRole.contains('print');
+
     final result = await showModalBottomSheet<List<DateTime>>(
       context: context,
       isScrollControlled: true,
@@ -53,7 +112,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
       builder: (context) {
         return Container(
           decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF1E293B) : Colors.white,
+            color: context.appColors.card,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           ),
           child: ModernCalendar(
@@ -63,15 +122,19 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                     : DateTime.now(),
             onDateSelected: (DateTime date) {
               setState(() {
-                final exists = selectedEventDates.any(
-                  (d) =>
-                      d.day == date.day &&
-                      d.month == date.month &&
-                      d.year == date.year,
-                );
+                if (is3dPrinting) {
+                  selectedEventDates = [date];
+                } else {
+                  final exists = selectedEventDates.any(
+                    (d) =>
+                        d.day == date.day &&
+                        d.month == date.month &&
+                        d.year == date.year,
+                  );
 
-                if (!exists) {
-                  selectedEventDates.add(date);
+                  if (!exists) {
+                    selectedEventDates.add(date);
+                  }
                 }
               });
             },
@@ -82,7 +145,11 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
 
     if (result != null) {
       setState(() {
-        selectedEventDates = List<DateTime>.from(result);
+        if (is3dPrinting && result.isNotEmpty) {
+          selectedEventDates = [result.first];
+        } else {
+          selectedEventDates = List<DateTime>.from(result);
+        }
       });
     }
   }
@@ -109,8 +176,12 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
   @override
   void initState() {
     super.initState();
+    _loadUserRole();
     customerController = TextEditingController(text: widget.sale.customerName);
     phoneController = TextEditingController(text: widget.sale.phoneNumber);
+    addressController = TextEditingController(
+      text: widget.sale.customerAddress ?? '',
+    );
     productController = TextEditingController(text: widget.sale.productName);
     amountController = TextEditingController(
       text: widget.sale.amount.toString(),
@@ -129,6 +200,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
   void dispose() {
     customerController.dispose();
     phoneController.dispose();
+    addressController.dispose();
     productController.dispose();
     amountController.dispose();
     totalAmountController.dispose();
@@ -221,6 +293,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
 
     final updatedSale = Sale(
       customerName: customerController.text,
+      customerAddress: addressController.text.trim(),
       phoneNumber: phoneController.text,
       productName: productController.text,
       amount: newPayment.amount,
@@ -231,6 +304,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
       deliveryLink: widget.sale.deliveryLink,
       paymentHistory: [newPayment, ...widget.sale.paymentHistory],
       discount: widget.sale.discount,
+      tax: widget.sale.tax,
       item: widget.sale.item,
       eventDates: selectedEventDates,
     );
@@ -310,6 +384,16 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
         final completedCount = widget.sale.completedPhotographyCount;
         final totalCount = selectedEventDates.length;
 
+        final currentRole =
+            (Hive.isBoxOpen('session')
+                    ? (Hive.box('session').get('currentUserRole')?.toString() ??
+                        _userRole)
+                    : _userRole)
+                .toLowerCase()
+                .trim();
+        final is3dPrinting =
+            currentRole.contains('3d') || currentRole.contains('print');
+
         final allCompleted = completedCount == totalCount && totalCount > 0;
         final partiallyCompleted =
             completedCount > 0 && completedCount < totalCount;
@@ -322,15 +406,15 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
             backgroundColor: c.background,
             appBar: AppBar(
               elevation: 0,
-              backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
-              foregroundColor:
-                  isDark ? const Color(0xFF38BDF8) : const Color(0xFF1E40AF),
+              backgroundColor: c.card,
+              foregroundColor: c.text1,
               title: Text(
                 "Edit Sale Details",
                 style: TextStyle(
-                  color: isDark
-                      ? const Color(0xFFF1F5F9)
-                      : const Color(0xFF1E40AF),
+                  color:
+                      isDark
+                          ? const Color(0xFFF1F5F9)
+                          : const Color(0xFF1E40AF),
                   fontWeight: FontWeight.w600,
                   fontSize: 18 * scale,
                 ),
@@ -369,10 +453,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                             width: double.infinity,
                             padding: EdgeInsets.all(cardPadding),
                             decoration: BoxDecoration(
-                              color:
-                                  context.isDark
-                                      ? const Color(0xFF1E293B)
-                                      : Colors.white,
+                              color: c.card,
                               borderRadius: BorderRadius.circular(16),
                               boxShadow: [
                                 BoxShadow(
@@ -509,10 +590,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                             width: double.infinity,
                             padding: EdgeInsets.all(cardPadding),
                             decoration: BoxDecoration(
-                              color:
-                                  context.isDark
-                                      ? const Color(0xFF1E293B)
-                                      : Colors.white,
+                              color: c.card,
                               borderRadius: BorderRadius.circular(16),
                               boxShadow: [
                                 BoxShadow(
@@ -553,6 +631,14 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                   icon: Icons.phone_iphone_rounded,
                                   keyboardType: TextInputType.phone,
                                   isRequired: true,
+                                ),
+                                const SizedBox(height: 12),
+                                _buildModernTextField(
+                                  controller: addressController,
+                                  label: "Customer Address",
+                                  icon: Icons.location_on_outlined,
+                                  keyboardType: TextInputType.streetAddress,
+                                  maxLines: 2,
                                 ),
                                 const SizedBox(height: 12),
                                 _buildModernTextField(
@@ -616,7 +702,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                 color:
                                     context.isDark
                                         ? const Color(0xFF334155)
-                                        : Colors.grey.shade200,
+                                        : context.appColors.divider,
                                 width: 1,
                               ),
                             ),
@@ -665,6 +751,8 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                       child: Icon(
                                         allCompleted
                                             ? Icons.done_all_rounded
+                                            : is3dPrinting
+                                            ? Icons.local_shipping_rounded
                                             : Icons.camera_alt_rounded,
                                         color: Colors.white,
                                         size: 16 * scale,
@@ -679,7 +767,9 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                           Row(
                                             children: [
                                               Text(
-                                                "Photography Schedule",
+                                                is3dPrinting
+                                                    ? "Delivery Schedule"
+                                                    : "Photography Schedule",
                                                 style: TextStyle(
                                                   fontSize: 13 * scale,
                                                   fontWeight: FontWeight.w700,
@@ -744,10 +834,11 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                           ),
                                           SizedBox(height: 3 * scale),
                                           Text(
-                                            "${selectedEventDates.length} shoot date${selectedEventDates.length != 1 ? 's' : ''}",
+                                            "${selectedEventDates.length} ${is3dPrinting ? 'delivery' : 'shoot'} date${selectedEventDates.length != 1 ? 's' : ''}",
                                             style: TextStyle(
                                               fontSize: 8 * scale,
-                                              color: Colors.grey.shade500,
+                                              color:
+                                                  context.appColors.inputFill,
                                               fontWeight: FontWeight.w500,
                                             ),
                                           ),
@@ -816,7 +907,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                       color:
                                           context.isDark
                                               ? const Color(0xFF334155)
-                                              : Colors.grey.shade200,
+                                              : context.appColors.divider,
                                     ),
                                     _buildModernStat(
                                       label: "Pending",
@@ -830,7 +921,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                       color:
                                           context.isDark
                                               ? const Color(0xFF334155)
-                                              : Colors.grey.shade200,
+                                              : context.appColors.divider,
                                     ),
                                     _buildModernStat(
                                       label: "Total",
@@ -914,7 +1005,9 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                         Expanded(
                                           child: Text(
                                             selectedEventDates.isEmpty
-                                                ? "Add photography dates"
+                                                ? (is3dPrinting
+                                                    ? "Add delivery date"
+                                                    : "Add photography dates")
                                                 : "Manage schedule",
                                             style: TextStyle(
                                               fontWeight: FontWeight.w600,
@@ -1071,7 +1164,8 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                                   color: Colors.white,
                                                 ),
                                               ),
-                                              backgroundColor: Colors.white,
+                                              backgroundColor:
+                                                  context.appColors.card,
                                               side: BorderSide(
                                                 color:
                                                     isCompleted
@@ -1253,16 +1347,25 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                                   4 * scale,
                                                 ),
                                                 decoration: BoxDecoration(
-                                                  color: Colors.grey.shade100,
+                                                  color:
+                                                      context
+                                                          .appColors
+                                                          .inputFill,
                                                   shape: BoxShape.circle,
                                                   border: Border.all(
-                                                    color: Colors.grey.shade300,
+                                                    color:
+                                                        context
+                                                            .appColors
+                                                            .divider,
                                                     width: 0.5,
                                                   ),
                                                 ),
                                                 child: Icon(
                                                   Icons.close_rounded,
-                                                  color: Colors.grey.shade500,
+                                                  color:
+                                                      context
+                                                          .appColors
+                                                          .inputFill,
                                                   size: 8 * scale,
                                                 ),
                                               ),
@@ -1310,7 +1413,9 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                       child: Column(
                                         children: [
                                           Icon(
-                                            Icons.photo_camera_outlined,
+                                            is3dPrinting
+                                                ? Icons.local_shipping_outlined
+                                                : Icons.photo_camera_outlined,
                                             color: const Color(
                                               0xFFEF4444,
                                             ).withValues(alpha: 0.2),
@@ -1320,13 +1425,15 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                           Text(
                                             "No dates scheduled",
                                             style: TextStyle(
-                                              color: const Color(0xFF0F172A),
+                                              color: context.appColors.text1,
                                               fontSize: 12 * scale,
                                               fontWeight: FontWeight.w600,
                                             ),
                                           ),
                                           Text(
-                                            "Tap above to add your first photography date",
+                                            is3dPrinting
+                                                ? "Tap above to add delivery date"
+                                                : "Tap above to add your first photography date",
                                             style: TextStyle(
                                               color: Colors.grey.shade400,
                                               fontSize: 10 * scale,
@@ -1348,7 +1455,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                             width: double.infinity,
                             padding: EdgeInsets.all(cardPadding),
                             decoration: BoxDecoration(
-                              color: Colors.white,
+                              color: c.card,
                               borderRadius: BorderRadius.circular(16),
                               boxShadow: [
                                 BoxShadow(
@@ -1366,7 +1473,10 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                   style: TextStyle(
                                     fontSize: 14 * scale,
                                     fontWeight: FontWeight.w600,
-                                    color: Color(0xFF1E40AF),
+                                    color:
+                                        isDark
+                                            ? Colors.lightBlueAccent
+                                            : c.primary,
                                   ),
                                 ),
                                 SizedBox(height: 12 * scale),
@@ -1375,7 +1485,9 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                   "Total Amount",
                                   "₹${total.toStringAsFixed(2)}",
                                   Icons.currency_rupee_rounded,
-                                  const Color(0xFF1E40AF),
+                                  isDark
+                                      ? Colors.lightBlueAccent
+                                      : const Color(0xFF1E40AF),
                                 ),
                                 SizedBox(height: 12 * scale),
 
@@ -1391,7 +1503,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                             ? const Color(
                                               0xFF10B981,
                                             ).withValues(alpha: 0.1)
-                                            : Colors.grey.shade50,
+                                            : context.appColors.inputFill,
                                     borderRadius: BorderRadius.circular(12),
                                     border: Border.all(
                                       color:
@@ -1399,7 +1511,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                               ? const Color(
                                                 0xFF10B981,
                                               ).withValues(alpha: 0.3)
-                                              : Colors.grey.shade200,
+                                              : context.appColors.divider,
                                     ),
                                   ),
                                   child: Row(
@@ -1410,7 +1522,9 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                           color:
                                               isFullyPaid
                                                   ? const Color(0xFF10B981)
-                                                  : Colors.grey.shade300,
+                                                  : (isDark
+                                                      ? Colors.grey.shade800
+                                                      : Colors.grey.shade300),
                                           borderRadius: BorderRadius.circular(
                                             8,
                                           ),
@@ -1420,7 +1534,9 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                           color:
                                               isFullyPaid
                                                   ? Colors.white
-                                                  : Colors.grey.shade600,
+                                                  : (isDark
+                                                      ? Colors.grey.shade400
+                                                      : Colors.grey.shade600),
                                           size: 20 * scale,
                                         ),
                                       ),
@@ -1434,7 +1550,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                               "Received Amount",
                                               style: TextStyle(
                                                 fontSize: 12 * scale,
-                                                color: Colors.grey.shade700,
+                                                color: context.appColors.text2,
                                                 fontWeight: FontWeight.w500,
                                               ),
                                             ),
@@ -1533,7 +1649,9 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                               }
                                             });
                                           },
-                                          activeThumbColor: const Color(0xFF10B981),
+                                          activeThumbColor: const Color(
+                                            0xFF10B981,
+                                          ),
                                         ),
                                       ),
                                     ],
@@ -1550,7 +1668,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                       style: TextStyle(
                                         fontSize: 12 * scale,
                                         fontWeight: FontWeight.w500,
-                                        color: Colors.grey.shade700,
+                                        color: context.appColors.text2,
                                       ),
                                     ),
                                     SizedBox(height: 8 * scale),
@@ -1577,7 +1695,9 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                                           ? const Color(
                                                             0xFF1E40AF,
                                                           )
-                                                          : Colors.grey.shade50,
+                                                          : context
+                                                              .appColors
+                                                              .inputFill,
                                                   borderRadius:
                                                       BorderRadius.circular(12),
                                                   border: Border.all(
@@ -1586,9 +1706,11 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                                             ? const Color(
                                                               0xFF1E40AF,
                                                             )
-                                                            : Colors
-                                                                .grey
-                                                                .shade200,
+                                                            : (isDark
+                                                                ? c.divider
+                                                                : Colors
+                                                                    .grey
+                                                                    .shade200),
                                                   ),
                                                 ),
                                                 child: Row(
@@ -1601,6 +1723,8 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                                       color:
                                                           isSelected
                                                               ? Colors.white
+                                                              : isDark
+                                                              ? Colors.white70
                                                               : const Color(
                                                                 0xFF1E40AF,
                                                               ),
@@ -1615,6 +1739,8 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                                         color:
                                                             isSelected
                                                                 ? Colors.white
+                                                                : isDark
+                                                                ? Colors.white70
                                                                 : const Color(
                                                                   0xFF1E40AF,
                                                                 ),
@@ -1640,7 +1766,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                             child: ElevatedButton(
                               onPressed: _isSaving ? null : saveChanges,
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF1E40AF),
+                                backgroundColor: context.appColors.primary,
                                 foregroundColor: Colors.white,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(14),
@@ -1765,6 +1891,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
     bool isRequired = false,
     bool enabled = true,
     TextInputType? keyboardType,
+    int? maxLines = 1,
   }) {
     final isDark = context.isDark;
     return Column(
@@ -1791,21 +1918,28 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
               color:
                   enabled
                       ? (isDark
-                          ? const Color(0xFF334155)
-                          : Colors.grey.shade300)
+                          ? context.appColors.divider
+                          : context.appColors.divider)
                       : (isDark
-                          ? const Color(0xFF1E293B)
-                          : Colors.grey.shade200),
+                          ? context.appColors.divider
+                          : context.appColors.divider),
             ),
             color:
                 enabled
-                    ? (isDark ? const Color(0xFF0F172A) : Colors.white)
-                    : (isDark ? const Color(0xFF1E293B) : Colors.grey.shade50),
+                    ? context.appColors.inputFill
+                    : context.appColors.background,
           ),
           child: Row(
+            crossAxisAlignment:
+                (maxLines ?? 1) > 1
+                    ? CrossAxisAlignment.start
+                    : CrossAxisAlignment.center,
             children: [
               Padding(
-                padding: EdgeInsets.only(left: 12 * scale),
+                padding: EdgeInsets.only(
+                  left: 12 * scale,
+                  top: (maxLines ?? 1) > 1 ? 12 * scale : 0,
+                ),
                 child: Icon(
                   icon,
                   size: 16 * scale,
@@ -1824,11 +1958,12 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                     controller: controller,
                     enabled: enabled,
                     keyboardType: keyboardType,
+                    maxLines: maxLines,
                     style: TextStyle(
                       color:
                           enabled
-                              ? (isDark ? Colors.white : Colors.black)
-                              : Colors.grey.shade400,
+                              ? context.appColors.text1
+                              : context.appColors.text2,
                       fontSize: 12 * scale,
                       fontWeight: FontWeight.w500,
                     ),
