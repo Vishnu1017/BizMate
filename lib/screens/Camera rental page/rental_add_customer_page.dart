@@ -632,6 +632,7 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
           fromDateTime: fromDateTime!,
           toDateTime: toDateTime!,
           imageUrl: widget.rentalItem.imagePath,
+          tax: summary['taxAmount'] ?? 0.0,
         );
 
         await salesBox.add(rental);
@@ -647,6 +648,10 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
 
       // 3️⃣ SAVE MULTIPLE ITEMS (NEW FEATURE)
       for (final cartItem in RentalCart.items) {
+        final itemTax = summary['subtotal']! > 0
+            ? ((summary['taxAmount'] ?? 0.0) *
+                (cartItem.totalAmount / summary['subtotal']!))
+            : ((summary['taxAmount'] ?? 0.0) / RentalCart.items.length);
         final sale = RentalSaleModel(
           id: DateTime.now().millisecondsSinceEpoch.toString(),
           customerName: newCustomer.name,
@@ -658,6 +663,7 @@ class _RentalAddCustomerPageState extends State<RentalAddCustomerPage> {
           fromDateTime: cartItem.fromDateTime,
           toDateTime: cartItem.toDateTime,
           imageUrl: cartItem.item.imagePath,
+          tax: itemTax,
         );
 
         await salesBox.add(sale);

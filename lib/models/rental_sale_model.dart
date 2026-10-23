@@ -50,6 +50,9 @@ class RentalSaleModel extends HiveObject {
   @HiveField(14)
   List<Payment> paymentHistory; // ⭐ NON-NULLABLE
 
+  @HiveField(15)
+  double? tax;
+
   RentalSaleModel({
     required this.id,
     required this.customerName,
@@ -64,6 +67,7 @@ class RentalSaleModel extends HiveObject {
     this.pdfFilePath,
     this.paymentMode = 'Cash',
     this.amountPaid = 0,
+    this.tax = 0.0,
     DateTime? rentalDateTime,
     List<Payment>? paymentHistory,
   }) : rentalDateTime = rentalDateTime ?? DateTime.now(),
@@ -80,6 +84,7 @@ class RentalSaleModel extends HiveObject {
   double get balanceDue => totalCost - amountPaid;
   double get originalTotal => ratePerDay * numberOfDays;
   double get discount => (originalTotal - totalCost).clamp(0, double.infinity);
+  double get safeTax => tax ?? 0.0;
 
   // ================== COPY WITH ==================
   // ⭐ REQUIRED FOR GROUPING MULTIPLE ITEMS INTO ONE CARD
@@ -89,6 +94,7 @@ class RentalSaleModel extends HiveObject {
     String? itemName,
     double? totalCost,
     double? amountPaid,
+    double? tax,
     List<Payment>? paymentHistory,
   }) {
     return RentalSaleModel(
@@ -105,6 +111,7 @@ class RentalSaleModel extends HiveObject {
       pdfFilePath: pdfFilePath,
       paymentMode: paymentMode,
       amountPaid: amountPaid ?? this.amountPaid,
+      tax: tax ?? this.tax,
       rentalDateTime: rentalDateTime,
       paymentHistory: paymentHistory ?? List<Payment>.from(this.paymentHistory),
     );

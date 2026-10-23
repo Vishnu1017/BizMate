@@ -242,8 +242,6 @@ class _CustomSplashScreenState extends State<CustomSplashScreen>
   late final Animation<double> _ringProgress;
   late final Animation<double> _barsProgress;
   late final Animation<double> _lineProgress;
-  late final Animation<double> _cardsSlide;
-  late final Animation<double> _cardsFade;
   late final Animation<double> _brandSlide;
   late final Animation<double> _brandFade;
   late final Animation<double> _loaderFade;
@@ -294,18 +292,6 @@ class _CustomSplashScreenState extends State<CustomSplashScreen>
       CurvedAnimation(
         parent: _masterCtrl,
         curve: const Interval(0.40, 0.75, curve: Curves.easeInOutCubic),
-      ),
-    );
-    _cardsSlide = Tween<double>(begin: 40.0, end: 0.0).animate(
-      CurvedAnimation(
-        parent: _masterCtrl,
-        curve: const Interval(0.52, 0.78, curve: Curves.easeOutBack),
-      ),
-    );
-    _cardsFade = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _masterCtrl,
-        curve: const Interval(0.52, 0.74, curve: Curves.easeOut),
       ),
     );
     _brandSlide = Tween<double>(begin: 30.0, end: 0.0).animate(
@@ -510,7 +496,7 @@ class _CustomSplashScreenState extends State<CustomSplashScreen>
     final availableDeckW = math.max(1.0, screenW - 24.0).toDouble();
 
     if (isShort) {
-      deckH = (screenH * 0.58).clamp(170.0, 220.0).toDouble();
+      deckH = (screenH * 0.64).clamp(185.0, 240.0).toDouble();
       deckW =
           math
               .min((deckH * 1.45).clamp(240.0, 360.0), availableDeckW)
@@ -521,14 +507,14 @@ class _CustomSplashScreenState extends State<CustomSplashScreen>
           math
               .min((screenW * 0.55).clamp(360.0, 520.0), availableDeckW)
               .toDouble();
-      deckH = (screenH * 0.36).clamp(280.0, 400.0).toDouble();
+      deckH = (screenH * 0.41).clamp(300.0, 440.0).toDouble();
       cardScale = 1.14;
     } else if (isCompact) {
       deckW =
           math
               .min((screenW - 24.0).clamp(240.0, 360.0), availableDeckW)
               .toDouble();
-      deckH = (screenH * 0.36).clamp(220.0, 270.0).toDouble();
+      deckH = (screenH * 0.40).clamp(240.0, 300.0).toDouble();
       cardScale = 0.85;
     } else {
       // Standard & Large Smartphones
@@ -536,7 +522,7 @@ class _CustomSplashScreenState extends State<CustomSplashScreen>
           math
               .min((screenW - 28.0).clamp(280.0, 400.0), availableDeckW)
               .toDouble();
-      deckH = (screenH * 0.36).clamp(260.0, 320.0).toDouble();
+      deckH = (screenH * 0.41).clamp(280.0, 350.0).toDouble();
       cardScale = 1.00;
     }
 
@@ -545,9 +531,19 @@ class _CustomSplashScreenState extends State<CustomSplashScreen>
     final taglineSize =
         isShort ? 10.5 : (isCompact ? 11.5 : (isTablet ? 13.5 : 12.5));
 
-    // Keep the B emblem mathematically centered in the available splash body.
-    // The KPI cards are sized responsively around it without moving this center.
-    final centerY = screenH / 2;
+    // Center the complete splash content group (dashboard, wordmark, tagline,
+    // and progress indicator) vertically within the available screen.
+    // The version footer remains independently anchored to the bottom safe area.
+    final brandGap = isCompact ? 16.0 : 24.0;
+    final brandBlockHeight =
+        (wordmarkSize * 1.25) +
+        (isCompact ? 4.0 : 6.0) +
+        (taglineSize * 1.5) +
+        (isCompact ? 12.0 : 18.0) +
+        4.0;
+    final contentHeight = deckH + brandGap + brandBlockHeight;
+    final contentTop =
+        ((screenH - contentHeight) / 2).clamp(0.0, screenH).toDouble();
     final safeBottom = MediaQuery.paddingOf(context).bottom;
 
     return Stack(
@@ -556,7 +552,7 @@ class _CustomSplashScreenState extends State<CustomSplashScreen>
         // ── CENTER HERO SHOWCASE (Deck with Central B Logo) ─────────────────
         Positioned(
           left: (screenW - deckW) / 2,
-          top: centerY - (deckH / 2),
+          top: contentTop,
           width: deckW,
           height: deckH,
           child: _buildAnalyticsDeck(
@@ -570,7 +566,7 @@ class _CustomSplashScreenState extends State<CustomSplashScreen>
         Positioned(
           left: 16,
           right: 16,
-          top: centerY + (deckH / 2) + (isCompact ? 10 : 16),
+          top: contentTop + deckH + brandGap,
           child: AnimatedBuilder(
             animation: _masterCtrl,
             builder: (context, _) {
@@ -650,83 +646,7 @@ class _CustomSplashScreenState extends State<CustomSplashScreen>
           _buildAnimatedCircleLogo(
             cx: width * 0.50,
             cy: height * 0.50,
-            r: (height * 0.17).clamp(34.0, 60.0).toDouble(),
-          ),
-
-          // 3. Floating KPI Cards (Pinned safely to Deck Boundaries)
-          Positioned.fill(
-            child: AnimatedBuilder(
-              animation: Listenable.merge([_masterCtrl, _floatCtrl]),
-              builder: (context, _) {
-                return Opacity(
-                  opacity: _cardsFade.value.clamp(0.0, 1.0),
-                  child: Transform.translate(
-                    offset: Offset(0, _cardsSlide.value),
-                    child: Stack(
-                      clipBehavior: Clip.none,
-                      children: [
-                        // Revenue — Top Left
-                        Positioned(
-                          left: 0,
-                          top: -18,
-                          child: _kpiCard(
-                            icon: Icons.trending_up_rounded,
-                            label: "Revenue",
-                            value: "₹2.4L",
-                            color: const Color(0xFF2563EB),
-                            change: "+18%",
-                            positive: true,
-                            scale: cardScale,
-                          ),
-                        ),
-                        // Sales — Top Right
-                        Positioned(
-                          right: 0,
-                          top: -18,
-                          child: _kpiCard(
-                            icon: Icons.receipt_long_rounded,
-                            label: "Sales",
-                            value: "1,284",
-                            color: const Color(0xFF818CF8),
-                            change: "+9%",
-                            positive: true,
-                            scale: cardScale,
-                          ),
-                        ),
-                        // Customers — Bottom Left
-                        Positioned(
-                          left: 0,
-                          top: height * 0.40,
-                          child: _kpiCard(
-                            icon: Icons.people_alt_rounded,
-                            label: "Customers",
-                            value: "348",
-                            color: const Color(0xFF22C55E),
-                            change: "+5%",
-                            positive: true,
-                            scale: cardScale,
-                          ),
-                        ),
-                        // Stock — Bottom Right
-                        Positioned(
-                          right: 0,
-                          top: height * 0.40,
-                          child: _kpiCard(
-                            icon: Icons.inventory_2_rounded,
-                            label: "Stock",
-                            value: "96 items",
-                            color: const Color(0xFF38BDF8),
-                            change: "OK",
-                            positive: true,
-                            scale: cardScale,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            ),
+            r: (height * 0.19).clamp(38.0, 66.0).toDouble(),
           ),
         ],
       ),
@@ -1550,9 +1470,15 @@ class _BizDashboardPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     _drawGlowOrb(canvas, size);
     _drawDonutRing(canvas, size);
+
+    // Move only the Monthly Performance heading and chart downward.
+    // The central logo ring and the rest of the splash layout stay in place.
+    canvas.save();
+    canvas.translate(0, (size.height * 0.08).clamp(22.0, 32.0));
     _drawBarChart(canvas, size);
     _drawTrendLine(canvas, size);
     _drawAxisDecor(canvas, size);
+    canvas.restore();
   }
 
   // ── Ambient Glow Orb ──────────────────────────────────────────────────────
@@ -1580,7 +1506,7 @@ class _BizDashboardPainter extends CustomPainter {
   void _drawDonutRing(Canvas canvas, Size size) {
     final cx = size.width * 0.50;
     final cy = size.height * 0.50;
-    final double r = (size.height * 0.17).clamp(34.0, 60.0).toDouble();
+    final double r = (size.height * 0.19).clamp(38.0, 66.0).toDouble();
     final double sw = (r * 0.22).clamp(8.0, 12.0).toDouble();
 
     // Background track
@@ -1792,8 +1718,8 @@ class _BizDashboardPainter extends CustomPainter {
   void _drawBarChart(Canvas canvas, Size size) {
     if (barsProgress <= 0) return;
 
-    final double left = size.width * 0.08;
-    final double bottom = size.height * 0.95;
+    final double left = size.width * 0.06;
+    final double bottom = size.height * 0.96;
     final double chartH = size.height * 0.20;
 
     final List<double> heights = [0.45, 0.62, 0.50, 0.80, 0.68, 0.92, 0.75];
@@ -1807,8 +1733,8 @@ class _BizDashboardPainter extends CustomPainter {
       const Color(0xFF818CF8),
     ];
     const List<String> labels = ["J", "F", "M", "A", "M", "J", "J"];
-    final double gapW = (size.width * 0.84) / heights.length;
-    final double barW = (gapW * 0.44).clamp(10.0, 18.0);
+    final double gapW = (size.width * 0.88) / heights.length;
+    final double barW = (gapW * 0.48).clamp(12.0, 22.0);
 
     for (int i = 0; i < heights.length; i++) {
       final double h = chartH * heights[i] * barsProgress;
@@ -1846,7 +1772,7 @@ class _BizDashboardPainter extends CustomPainter {
           canvas,
           labels[i],
           Offset(x + barW / 2, bottom + 5),
-          size: 9.0,
+          size: 10.0,
           bold: false,
           alpha: 0.35 * la,
           centered: true,
@@ -1859,11 +1785,11 @@ class _BizDashboardPainter extends CustomPainter {
   void _drawTrendLine(Canvas canvas, Size size) {
     if (lineProgress <= 0) return;
 
-    final double left = size.width * 0.08;
-    final double bottom = size.height * 0.95;
+    final double left = size.width * 0.06;
+    final double bottom = size.height * 0.96;
     final double chartH = size.height * 0.20;
     final List<double> heights = [0.45, 0.62, 0.50, 0.80, 0.68, 0.92, 0.75];
-    final double gapW = (size.width * 0.84) / heights.length;
+    final double gapW = (size.width * 0.88) / heights.length;
 
     final List<Offset> pts = List.generate(heights.length, (i) {
       final double cx = left + i * gapW + gapW / 2;
@@ -1985,7 +1911,7 @@ class _BizDashboardPainter extends CustomPainter {
 
     final double left = size.width * 0.06;
     final double right = size.width * 0.94;
-    final double bottom = size.height * 0.95;
+    final double bottom = size.height * 0.96;
     final double chartH = size.height * 0.20;
 
     for (int i = 1; i <= 3; i++) {
@@ -1995,12 +1921,12 @@ class _BizDashboardPainter extends CustomPainter {
 
     if (barsProgress > 0.35) {
       final double la = ((barsProgress - 0.35) / 0.65).clamp(0.0, 1.0);
-      // Left-align the chart heading with the chart's left edge.
+      // Left-align the chart heading with the chart's left edge, leaving a clean gap above the chart.
       _drawText(
         canvas,
         "MONTHLY PERFORMANCE",
-        Offset(left + 8, bottom - chartH - 17),
-        size: 8.2,
+        Offset(left + 8, bottom - chartH - 16),
+        size: 9.0,
         bold: true,
         alpha: 0.30 * la,
         leftAligned: true,

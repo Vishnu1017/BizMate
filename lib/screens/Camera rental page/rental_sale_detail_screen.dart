@@ -198,6 +198,7 @@ class _RentalSaleDetailScreenState extends State<RentalSaleDetailScreen> {
       amountPaid: finalPaidAmount,
       rentalDateTime: existingSale.rentalDateTime,
       paymentHistory: updatedHistory,
+      tax: existingSale.tax,
     );
 
     originalList[realIndex] = updatedSale;

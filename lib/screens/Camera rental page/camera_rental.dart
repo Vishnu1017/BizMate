@@ -97,6 +97,7 @@ class _CameraRentalPageState extends State<CameraRentalPage> {
           itemName: '${existing.itemName}, ${sale.itemName}',
           totalCost: existing.totalCost + sale.totalCost,
           amountPaid: existing.amountPaid + sale.amountPaid,
+          tax: existing.safeTax + sale.safeTax,
         );
       } else {
         grouped[key] = sale;

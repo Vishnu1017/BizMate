@@ -128,6 +128,7 @@ Future<void> _performAutoBackup(Map<String, dynamic>? inputData) async {
         'paymentMode': rs.paymentMode,
         'fromDateTime': rs.fromDateTime.toIso8601String(),
         'toDateTime': rs.toDateTime.toIso8601String(),
+        'tax': rs.safeTax,
       }).toList(),
     };
 

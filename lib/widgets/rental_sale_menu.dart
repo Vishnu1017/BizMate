@@ -637,7 +637,13 @@ class RentalSaleMenu extends StatelessWidget {
       // ignore: unused_local_variable
       final totalCost = sale.totalCost.toStringAsFixed(2);
       final double originalTotal = sale.ratePerDay * sale.numberOfDays;
-      final double discountAmount = (originalTotal - sale.totalCost).clamp(
+      final double taxAmount = sale.safeTax > 0
+          ? sale.safeTax
+          : (sale.totalCost > originalTotal
+              ? (sale.totalCost - originalTotal).clamp(0.0, double.infinity)
+              : 0.0);
+      final double discountAmount =
+          (originalTotal + taxAmount - sale.totalCost).clamp(
         0,
         double.infinity,
       );
@@ -1122,6 +1128,26 @@ class RentalSaleMenu extends StatelessWidget {
                                       discountAmount > 0
                                           ? '- ₹ ${discountAmount.toStringAsFixed(2)}'
                                           : '₹ 0.00',
+                                      style: pw.TextStyle(font: ttf),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              pw.TableRow(
+                                children: [
+                                  pw.Padding(
+                                    padding: const pw.EdgeInsets.all(6),
+                                    child: pw.Text(
+                                      'Tax',
+                                      style: pw.TextStyle(
+                                        fontWeight: pw.FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                  pw.Padding(
+                                    padding: const pw.EdgeInsets.all(6),
+                                    child: pw.Text(
+                                      '₹ ${taxAmount.toStringAsFixed(2)}',
                                       style: pw.TextStyle(font: ttf),
                                     ),
                                   ),

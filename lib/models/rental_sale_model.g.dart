@@ -30,6 +30,7 @@ class RentalSaleModelAdapter extends TypeAdapter<RentalSaleModel> {
       pdfFilePath: fields[10] as String?,
       paymentMode: fields[11] as String,
       amountPaid: fields[12] as double,
+      tax: fields[15] as double?,
       rentalDateTime: fields[13] as DateTime?,
       paymentHistory: (fields[14] as List?)?.cast<Payment>(),
     );
@@ -38,7 +39,7 @@ class RentalSaleModelAdapter extends TypeAdapter<RentalSaleModel> {
   @override
   void write(BinaryWriter writer, RentalSaleModel obj) {
     writer
-      ..writeByte(15)
+      ..writeByte(16)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -68,7 +69,9 @@ class RentalSaleModelAdapter extends TypeAdapter<RentalSaleModel> {
       ..writeByte(13)
       ..write(obj.rentalDateTime)
       ..writeByte(14)
-      ..write(obj.paymentHistory);
+      ..write(obj.paymentHistory)
+      ..writeByte(15)
+      ..write(obj.tax);
   }
 
   @override

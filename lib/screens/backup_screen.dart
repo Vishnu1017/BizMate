@@ -603,6 +603,7 @@ class _BackupScreenState extends State<BackupScreen>
                     'paymentMode': rs.paymentMode,
                     'fromDateTime': rs.fromDateTime.toIso8601String(),
                     'toDateTime': rs.toDateTime.toIso8601String(),
+                    'tax': rs.safeTax,
                   },
                 )
                 .toList(),
@@ -1162,6 +1163,7 @@ class _BackupScreenState extends State<BackupScreen>
                     DateTime.tryParse(item['toDateTime']?.toString() ?? '') ??
                     DateTime.now(),
                 paymentHistory: payments,
+                tax: safeToDouble(item['tax']),
               ),
             );
             restoredTotal++;
