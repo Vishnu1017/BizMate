@@ -77,7 +77,6 @@ class DriveBackupService {
   static final GoogleSignIn _googleSignIn = GoogleSignIn(
     scopes: [
       drive.DriveApi.driveFileScope,
-      drive.DriveApi.driveReadonlyScope,
     ],
   );
 
