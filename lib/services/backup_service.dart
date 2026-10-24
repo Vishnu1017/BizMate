@@ -130,10 +130,12 @@ class BackupService {
       final file = File('${tempDir.path}/BizMate_Backup_$dateStr.json');
       await file.writeAsString(jsonString);
 
-      // ignore: deprecated_member_use
-      await Share.shareXFiles([
-        XFile(file.path),
-      ], text: 'BizMate Data Backup ($dateStr)');
+      await SharePlus.instance.share(
+        ShareParams(
+          files: [XFile(file.path)],
+          text: 'BizMate Data Backup ($dateStr)',
+        ),
+      );
 
       if (context.mounted) {
         AppSnackBar.showSuccess(
@@ -330,10 +332,12 @@ class BackupService {
       final file = File('${tempDir.path}/SalesReport_$dateStr.csv');
       await file.writeAsString(buffer.toString());
 
-      // ignore: deprecated_member_use
-      await Share.shareXFiles([
-        XFile(file.path),
-      ], text: 'BizMate Sales Report ($dateStr)');
+      await SharePlus.instance.share(
+        ShareParams(
+          files: [XFile(file.path)],
+          text: 'BizMate Sales Report ($dateStr)',
+        ),
+      );
 
       if (context.mounted) {
         AppSnackBar.showSuccess(

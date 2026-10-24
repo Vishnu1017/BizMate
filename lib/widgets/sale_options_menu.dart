@@ -299,12 +299,14 @@ class SaleOptionsMenu extends StatelessWidget {
           await box.put("sales", sales);
 
           // 4. Update UI
+          if (!parentContext.mounted) return;
           AppSnackBar.showSuccess(
             parentContext,
             message: "Sale deleted successfully.",
             duration: Duration(seconds: 2),
           );
         } catch (e) {
+          if (!parentContext.mounted) return;
           AppSnackBar.showError(
             parentContext,
             message: "Failed to delete sale: $e",
@@ -394,6 +396,7 @@ class SaleOptionsMenu extends StatelessWidget {
     final usersBox = Hive.box<User>('users');
     final currentUser = await _getCurrentUser(usersBox);
 
+    if (!context.mounted) return;
     if (currentUser == null || currentUser.upiId.isEmpty) {
       AppSnackBar.showWarning(
         context,
@@ -424,6 +427,7 @@ class SaleOptionsMenu extends StatelessWidget {
 
       await launchUrl(whatsappUri, mode: LaunchMode.externalApplication);
     } catch (e) {
+      if (!context.mounted) return;
       AppSnackBar.showError(
         context,
         message: "Unable to open WhatsApp on this device",
@@ -454,6 +458,7 @@ class SaleOptionsMenu extends StatelessWidget {
       await rootBundle.load('assets/fonts/Roboto-Regular.ttf'),
     );
 
+    if (!context.mounted) return;
     final enteredAmount = await _showAmountDialog(
       context,
       balanceAmount.toDouble(),

@@ -144,7 +144,9 @@ class _SelectItemsScreenState extends State<SelectItemsScreen> {
         return converted;
       }
     } catch (e) {
-      AppSnackBar.showError(context, message: "Failed to load products");
+      if (mounted) {
+        AppSnackBar.showError(context, message: "Failed to load products");
+      }
       return [];
     }
   }
@@ -172,7 +174,9 @@ class _SelectItemsScreenState extends State<SelectItemsScreen> {
       current.add(p);
       await userBox.put("products", current);
     } catch (e) {
-      AppSnackBar.showError(context, message: "Failed to save product");
+      if (mounted) {
+        AppSnackBar.showError(context, message: "Failed to save product");
+      }
     }
   }
 
@@ -295,6 +299,7 @@ class _SelectItemsScreenState extends State<SelectItemsScreen> {
 
     try {
       final items = await loadUserProducts();
+      if (!mounted) return;
 
       if (items.isEmpty) {
         AppSnackBar.showWarning(
@@ -595,7 +600,9 @@ class _SelectItemsScreenState extends State<SelectItemsScreen> {
         },
       );
     } catch (e) {
-      AppSnackBar.showError(context, message: "Error loading products");
+      if (mounted) {
+        AppSnackBar.showError(context, message: "Error loading products");
+      }
     } finally {
       if (mounted) setState(() => _isLoadingProducts = false);
     }
@@ -738,14 +745,18 @@ class _SelectItemsScreenState extends State<SelectItemsScreen> {
 
       if (rate > 0 && name.isNotEmpty) {
         await saveUserProduct(Product(name, rate));
+        if (!mounted) return;
         widget.onItemSaved?.call(name);
       }
 
+      if (!mounted) return;
       _resetForm();
 
       AppSnackBar.showSuccess(context, message: "Item saved successfully");
     } catch (e) {
-      AppSnackBar.showError(context, message: "Failed to save item");
+      if (mounted) {
+        AppSnackBar.showError(context, message: "Failed to save item");
+      }
     }
   }
 

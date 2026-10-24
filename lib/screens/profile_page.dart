@@ -1872,19 +1872,25 @@ class _ProfilePageState extends State<ProfilePage>
 
         // 🔥 PERSIST TO SESSION FOR GLOBAL ACCESS
         try {
-          final sessionBox = Hive.isBoxOpen('session')
-              ? Hive.box('session')
-              : await Hive.openBox('session');
+          final sessionBox =
+              Hive.isBoxOpen('session')
+                  ? Hive.box('session')
+                  : await Hive.openBox('session');
           await sessionBox.put('currentUserRole', existingUser.role);
         } catch (_) {}
 
         // 🔥 PERSIST TO USERDATA BOX
         try {
-          final safeEmail = existingUser.email.replaceAll('.', '_').replaceAll('@', '_');
-          final uBox = Hive.isBoxOpen("userdata_$safeEmail")
-              ? Hive.box("userdata_$safeEmail")
-              : await Hive.openBox("userdata_$safeEmail");
-          final profile = Map<String, dynamic>.from(uBox.get('profile', defaultValue: {}) ?? {});
+          final safeEmail = existingUser.email
+              .replaceAll('.', '_')
+              .replaceAll('@', '_');
+          final uBox =
+              Hive.isBoxOpen("userdata_$safeEmail")
+                  ? Hive.box("userdata_$safeEmail")
+                  : await Hive.openBox("userdata_$safeEmail");
+          final profile = Map<String, dynamic>.from(
+            uBox.get('profile', defaultValue: {}) ?? {},
+          );
           profile['role'] = existingUser.role;
           profile['name'] = existingUser.name;
           await uBox.put('profile', profile);
@@ -2269,7 +2275,9 @@ class _ProfilePageState extends State<ProfilePage>
                                   SizedBox(height: 10 * scale),
                                   _buildDataBackupSection(isSmallScreen),
                                   SizedBox(height: 10 * scale),
-                                  _buildDisplayPerformanceSection(isSmallScreen),
+                                  _buildDisplayPerformanceSection(
+                                    isSmallScreen,
+                                  ),
                                 ],
 
                                 // Rental Section (for photographers only)
@@ -2635,9 +2643,10 @@ class _ProfilePageState extends State<ProfilePage>
             final prefs = await SharedPreferences.getInstance();
             widget.user.role = newValue;
             try {
-              final sessionBox = Hive.isBoxOpen('session')
-                  ? Hive.box('session')
-                  : await Hive.openBox('session');
+              final sessionBox =
+                  Hive.isBoxOpen('session')
+                      ? Hive.box('session')
+                      : await Hive.openBox('session');
               await sessionBox.put('currentUserRole', newValue);
             } catch (_) {}
 
@@ -3115,11 +3124,15 @@ class _ProfilePageState extends State<ProfilePage>
             Container(
               padding: EdgeInsets.all(12 * scale),
               decoration: BoxDecoration(
-                color: (context.isDark ? const Color(0xFF2563EB) : const Color(0xFF3B82F6))
+                color: (context.isDark
+                        ? const Color(0xFF2563EB)
+                        : const Color(0xFF3B82F6))
                     .withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: (context.isDark ? const Color(0xFF2563EB) : const Color(0xFF3B82F6))
+                  color: (context.isDark
+                          ? const Color(0xFF2563EB)
+                          : const Color(0xFF3B82F6))
                       .withValues(alpha: 0.25),
                 ),
               ),
@@ -3176,12 +3189,13 @@ class _ProfilePageState extends State<ProfilePage>
                     ),
                   ),
                   ElevatedButton(
-                    onPressed: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => BackupScreen(userEmail: email),
-                      ),
-                    ),
+                    onPressed:
+                        () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => BackupScreen(userEmail: email),
+                          ),
+                        ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF2563EB),
                       foregroundColor: Colors.white,
@@ -3210,12 +3224,13 @@ class _ProfilePageState extends State<ProfilePage>
               children: [
                 Expanded(
                   child: ElevatedButton.icon(
-                    onPressed: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => BackupScreen(userEmail: email),
-                      ),
-                    ),
+                    onPressed:
+                        () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => BackupScreen(userEmail: email),
+                          ),
+                        ),
                     icon: Icon(Icons.backup_rounded, size: 16 * scale),
                     label: Text(
                       "Back Up Now",
@@ -3235,22 +3250,29 @@ class _ProfilePageState extends State<ProfilePage>
                 const SizedBox(width: 10),
                 Expanded(
                   child: OutlinedButton.icon(
-                    onPressed: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => BackupScreen(userEmail: email),
-                      ),
-                    ),
+                    onPressed:
+                        () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => BackupScreen(userEmail: email),
+                          ),
+                        ),
                     icon: Icon(Icons.restore_rounded, size: 16 * scale),
                     label: Text(
                       "Restore Data",
                       style: TextStyle(fontSize: 12 * scale),
                     ),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: context.isDark ? const Color(0xFF38BDF8) : const Color(0xFF2563EB),
+                      foregroundColor:
+                          context.isDark
+                              ? const Color(0xFF38BDF8)
+                              : const Color(0xFF2563EB),
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       side: BorderSide(
-                        color: context.isDark ? const Color(0xFF38BDF8) : const Color(0xFF2563EB),
+                        color:
+                            context.isDark
+                                ? const Color(0xFF38BDF8)
+                                : const Color(0xFF2563EB),
                       ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
@@ -3272,7 +3294,8 @@ class _ProfilePageState extends State<ProfilePage>
       builder: (context, rate, _) {
         final rateText = rate > 0 ? '${rate.toStringAsFixed(0)} Hz' : '60 Hz';
         final isHighHz = rate >= 90;
-        final badgeColor = isHighHz ? const Color(0xFF10B981) : const Color(0xFF3B82F6);
+        final badgeColor =
+            isHighHz ? const Color(0xFF10B981) : const Color(0xFF3B82F6);
 
         return Container(
           decoration: BoxDecoration(
@@ -3321,11 +3344,16 @@ class _ProfilePageState extends State<ProfilePage>
                       ],
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
                         color: badgeColor.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: badgeColor.withValues(alpha: 0.3)),
+                        border: Border.all(
+                          color: badgeColor.withValues(alpha: 0.3),
+                        ),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -3353,7 +3381,10 @@ class _ProfilePageState extends State<ProfilePage>
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: context.isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC),
+                    color:
+                        context.isDark
+                            ? const Color(0xFF1E293B)
+                            : const Color(0xFFF8FAFC),
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(color: context.appColors.divider),
                   ),
@@ -3377,7 +3408,9 @@ class _ProfilePageState extends State<ProfilePage>
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              isHighHz ? 'High Refresh Rate Active' : 'Adaptive Screen Sync',
+                              isHighHz
+                                  ? 'High Refresh Rate Active'
+                                  : 'Adaptive Screen Sync',
                               style: TextStyle(
                                 fontSize: 13 * scale,
                                 fontWeight: FontWeight.bold,
@@ -3403,7 +3436,9 @@ class _ProfilePageState extends State<ProfilePage>
                           size: 20 * scale,
                         ),
                         onPressed: () async {
-                          final newRate = await DisplayModeService.instance.enableHighestRefreshRate();
+                          final newRate =
+                              await DisplayModeService.instance
+                                  .enableHighestRefreshRate();
                           if (context.mounted) {
                             AppSnackBar.showSuccess(
                               context,

@@ -214,10 +214,12 @@ class PdfPreviewScreen extends StatelessWidget {
             await Future.delayed(const Duration(milliseconds: 300));
 
             try {
-              await Share.shareXFiles(
-                [XFile(filePath)],
-                text: message,
-                subject: '📸 Your Invoice from ${sale.customerName}',
+              await SharePlus.instance.share(
+                ShareParams(
+                  files: [XFile(filePath)],
+                  text: message,
+                  subject: '📸 Your Invoice from ${sale.customerName}',
+                ),
               );
             } catch (e) {
               if (!context.mounted) return;

@@ -313,6 +313,7 @@ class _LoginScreenState extends State<LoginScreen>
       await sessionBox.put('currentUserEmail', existsUser.email);
 
       final isEnabled = await _isPasscodeEnabledForUser(existsUser.email);
+      if (!mounted) return;
 
       if (isEnabled) {
         Navigator.pushReplacement(
@@ -377,6 +378,7 @@ class _LoginScreenState extends State<LoginScreen>
 
     if (mounted) {
       final isEnabled = await _isPasscodeEnabledForUser(user.email);
+      if (!mounted) return;
 
       if (isEnabled) {
         Navigator.pushReplacement(
@@ -917,7 +919,9 @@ class _LoginScreenState extends State<LoginScreen>
                                                     updatedUser,
                                                   );
 
-                                                  Navigator.pop(dialogContext);
+                                                  if (dialogContext.mounted) {
+                                                    Navigator.pop(dialogContext);
+                                                  }
 
                                                   showSuccess(
                                                     "Password updated successfully!",

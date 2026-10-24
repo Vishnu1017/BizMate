@@ -711,7 +711,12 @@ class _BackupScreenState extends State<BackupScreen>
         if (shareDirectlyToWhatsApp) {
           final shareText =
               'BizMate Business Backup ($dateStr). Keep this file safe to restore sales & rental records.';
-          await Share.shareXFiles([XFile(backupFile.path)], text: shareText);
+          await SharePlus.instance.share(
+            ShareParams(
+              files: [XFile(backupFile.path)],
+              text: shareText,
+            ),
+          );
         } else if (driveUploaded) {
           AppSnackBar.showSuccess(
             context,
@@ -725,7 +730,12 @@ class _BackupScreenState extends State<BackupScreen>
           );
           final shareText =
               'BizMate Data Backup ($dateStr) - ${_googleAccount.isNotEmpty ? _googleAccount : widget.userEmail}';
-          await Share.shareXFiles([XFile(backupFile.path)], text: shareText);
+          await SharePlus.instance.share(
+            ShareParams(
+              files: [XFile(backupFile.path)],
+              text: shareText,
+            ),
+          );
         }
       }
     } catch (e) {
@@ -1514,10 +1524,13 @@ class _BackupScreenState extends State<BackupScreen>
           mimeType: 'application/json',
           name: fileName,
         );
-        await Share.shareXFiles(
-          [xFile],
-          subject: 'BizMate Backup - Save to Google Drive',
-          text: 'BizMate Data Backup ($fileName). Save this to your Google Drive folder.',
+        await SharePlus.instance.share(
+          ShareParams(
+            files: [xFile],
+            subject: 'BizMate Backup - Save to Google Drive',
+            text:
+                'BizMate Data Backup ($fileName). Save this to your Google Drive folder.',
+          ),
         );
       }
     } catch (e) {

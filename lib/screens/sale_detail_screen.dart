@@ -256,6 +256,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
     }
 
     if (!Hive.isBoxOpen('session')) await Hive.openBox('session');
+    if (!mounted) return;
     final sessionBox = Hive.box('session');
     final email = sessionBox.get("currentUserEmail");
 

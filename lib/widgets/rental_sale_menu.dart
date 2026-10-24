@@ -202,6 +202,7 @@ class RentalSaleMenu extends StatelessWidget {
 
           await userBox.put('rental_sales', persisted);
 
+          if (!parentContext.mounted) return;
           AppSnackBar.showSuccess(
             parentContext,
             message:
@@ -211,6 +212,7 @@ class RentalSaleMenu extends StatelessWidget {
             duration: const Duration(seconds: 2),
           );
         } catch (e) {
+          if (!parentContext.mounted) return;
           AppSnackBar.showError(
             parentContext,
             message: "Failed to delete rental: $e",
@@ -708,6 +710,7 @@ class RentalSaleMenu extends StatelessWidget {
 
       final currentUser = await _getCurrentUser();
 
+      if (!context.mounted) return;
       if (currentUser == null || currentUser.upiId.isEmpty) {
         AppSnackBar.showWarning(
           context,
@@ -723,6 +726,7 @@ class RentalSaleMenu extends StatelessWidget {
               .toDouble();
 
       final enteredAmount = await _showAmountDialog(context, balanceAmount);
+      if (!context.mounted) return;
 
       final qrData = _generateQrData(enteredAmount, currentUser);
 
@@ -1285,6 +1289,7 @@ class RentalSaleMenu extends StatelessWidget {
       }
     } catch (e) {
       debugPrint('PDF generation error: $e');
+      if (!context.mounted) return;
       AppSnackBar.showError(
         context,
         message: 'Failed to generate PDF: $e',

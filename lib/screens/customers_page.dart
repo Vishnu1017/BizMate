@@ -307,9 +307,12 @@ class _CustomersPageState extends State<CustomersPage> {
       await file.writeAsBytes(await pdf.save());
 
       // ===== SHARE =====
-      await Share.shareXFiles([
-        XFile(file.path),
-      ], text: 'Photography Release Agreement - $customerName');
+      await SharePlus.instance.share(
+        ShareParams(
+          files: [XFile(file.path)],
+          text: 'Photography Release Agreement - $customerName',
+        ),
+      );
 
       if (mounted) {
         AppSnackBar.showSuccess(

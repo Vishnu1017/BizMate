@@ -896,6 +896,7 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
 
     // 🔹 Get current logged-in user
     final sessionBox = await Hive.openBox('session');
+    if (!mounted) return;
     final currentEmail = sessionBox.get("currentUserEmail");
 
     if (currentEmail == null || currentEmail.toString().isEmpty) {
@@ -968,6 +969,7 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
     // 🔹 Save back to Hive
     await userBox.put("sales", userSales);
 
+    if (!mounted) return;
     setState(() => isLoading = false);
 
     // 🔹 Success feedback
@@ -1889,6 +1891,7 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
 
                       if (!isCustomerSelectedFromList) {
                         final isDuplicate = await isPhoneNumberDuplicate();
+                        if (!mounted) return;
                         if (isDuplicate) {
                           AppSnackBar.showError(
                             context,
