@@ -3335,10 +3335,10 @@ class _ProfilePageState extends State<ProfilePage>
                         Text(
                           'GPU & DISPLAY PERFORMANCE',
                           style: TextStyle(
-                            fontSize: 12 * scale,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 0.5,
-                            color: context.appColors.text1,
+                            fontSize: 10 * scale,
+                            fontWeight: FontWeight.bold,
+                            color: context.appColors.text2,
+                            letterSpacing: 2,
                           ),
                         ),
                       ],
