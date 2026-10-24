@@ -473,8 +473,7 @@ class _CustomSplashScreenState extends State<CustomSplashScreen>
   }
 
   // ─────────────────────────────────────────────────────────────────────────
-  // UNIFIED RESPONSIVE SPLASH LAYOUT (Mobile, Tablets, iPads & Big Screens)
-  // Perfectly centers the 'B' Brand Emblem in both X and Y axes on all devices
+  // UNIFIED RESPONSIVE SPLASH LAYOUT (Mobile, Tablets, iPads & All Screen Sizes)
   // ─────────────────────────────────────────────────────────────────────────
   Widget _buildResponsiveSplash(
     BuildContext context,
@@ -482,125 +481,199 @@ class _CustomSplashScreenState extends State<CustomSplashScreen>
   ) {
     final screenH = constraints.maxHeight;
     final screenW = constraints.maxWidth;
-    final isShort = screenH < 500; // landscape phones
-    final isCompact = screenH < 720; // compact phones (iPhone SE, mini)
-    final isTablet = screenW >= 600; // tablets, iPads, desktop
+    final isShort = screenH < 520; // Short screens / landscape mobile
+    final isLandscapeWide = screenW >= screenH * 1.25 && isShort; // Wide landscape on phones
+    final isTablet = screenW >= 600; // Tablets, iPads, Desktop, Foldables unfolded
+    final isLargeTablet = screenW >= 900 && screenH >= 900; // 12.9" iPad Pro, Large tablets
+    final isCompact = !isTablet && screenH < 720 && screenW < 400; // Compact phones (iPhone SE, mini, etc.)
 
     // Responsive deck dimensions
     final double deckW;
     final double deckH;
     final double cardScale;
 
-    // Always constrain the artwork to the available width. This also handles
-    // narrow phones in landscape and iPad split-screen / Stage Manager windows.
-    final availableDeckW = math.max(1.0, screenW - 24.0).toDouble();
-
-    if (isShort) {
-      deckH = (screenH * 0.64).clamp(185.0, 240.0).toDouble();
-      deckW =
-          math
-              .min((deckH * 1.45).clamp(240.0, 360.0), availableDeckW)
-              .toDouble();
+    if (isLandscapeWide) {
+      deckH = (screenH * 0.72).clamp(180.0, 260.0).toDouble();
+      deckW = (deckH * 1.35).clamp(240.0, 360.0).toDouble();
       cardScale = 0.85;
+    } else if (isLargeTablet) {
+      deckW = math.min(screenW * 0.50, 560.0).toDouble();
+      deckH = (screenH * 0.36).clamp(360.0, 460.0).toDouble();
+      cardScale = 1.20;
     } else if (isTablet) {
-      deckW =
-          math
-              .min((screenW * 0.55).clamp(360.0, 520.0), availableDeckW)
-              .toDouble();
-      deckH = (screenH * 0.41).clamp(300.0, 440.0).toDouble();
-      cardScale = 1.14;
+      deckW = math.min(screenW * 0.60, 500.0).toDouble();
+      deckH = (screenH * 0.38).clamp(320.0, 420.0).toDouble();
+      cardScale = 1.15;
     } else if (isCompact) {
-      deckW =
-          math
-              .min((screenW - 24.0).clamp(240.0, 360.0), availableDeckW)
-              .toDouble();
-      deckH = (screenH * 0.40).clamp(240.0, 300.0).toDouble();
-      cardScale = 0.85;
+      deckW = math.min(screenW - 28.0, 340.0).toDouble();
+      deckH = (screenH * 0.36).clamp(240.0, 280.0).toDouble();
+      cardScale = 0.88;
     } else {
-      // Standard & Large Smartphones
-      deckW =
-          math
-              .min((screenW - 28.0).clamp(280.0, 400.0), availableDeckW)
-              .toDouble();
-      deckH = (screenH * 0.41).clamp(280.0, 350.0).toDouble();
+      // Standard & Large Smartphones (iPhone 14/15/16, Pro Max, Pixel, Galaxy)
+      deckW = math.min(screenW - 32.0, 400.0).toDouble();
+      deckH = (screenH * 0.39).clamp(280.0, 350.0).toDouble();
       cardScale = 1.00;
     }
 
-    final wordmarkSize =
-        isShort ? 24.0 : (isCompact ? 28.0 : (isTablet ? 38.0 : 34.0));
-    final taglineSize =
-        isShort ? 10.5 : (isCompact ? 11.5 : (isTablet ? 13.5 : 12.5));
+    // Typography & Gaps tailored for device scale
+    final double wordmarkSize;
+    final double taglineSize;
+    final double brandGap;
+    final double wordmarkToTaglineGap;
+    final double taglineToCapsuleGap;
+    final double capsuleWidth;
 
-    // Center the complete splash content group (dashboard, wordmark, tagline,
-    // and progress indicator) vertically within the available screen.
-    // The version footer remains independently anchored to the bottom safe area.
-    final brandGap = isCompact ? 16.0 : 24.0;
-    final brandBlockHeight =
-        (wordmarkSize * 1.25) +
-        (isCompact ? 4.0 : 6.0) +
-        (taglineSize * 1.5) +
-        (isCompact ? 12.0 : 18.0) +
-        4.0;
-    final contentHeight = deckH + brandGap + brandBlockHeight;
-    final contentTop =
-        ((screenH - contentHeight) / 2).clamp(0.0, screenH).toDouble();
+    if (isLandscapeWide) {
+      wordmarkSize = 26.0;
+      taglineSize = 11.0;
+      brandGap = 20.0;
+      wordmarkToTaglineGap = 8.0;
+      taglineToCapsuleGap = 16.0;
+      capsuleWidth = 110.0;
+    } else if (isLargeTablet) {
+      wordmarkSize = 44.0;
+      taglineSize = 15.0;
+      brandGap = 56.0;
+      wordmarkToTaglineGap = 16.0;
+      taglineToCapsuleGap = 32.0;
+      capsuleWidth = 160.0;
+    } else if (isTablet) {
+      wordmarkSize = 40.0;
+      taglineSize = 14.0;
+      brandGap = 52.0;
+      wordmarkToTaglineGap = 14.0;
+      taglineToCapsuleGap = 30.0;
+      capsuleWidth = 150.0;
+    } else if (isCompact) {
+      wordmarkSize = 28.0;
+      taglineSize = 11.5;
+      brandGap = 38.0;
+      wordmarkToTaglineGap = 10.0;
+      taglineToCapsuleGap = 22.0;
+      capsuleWidth = 105.0;
+    } else {
+      wordmarkSize = 34.0;
+      taglineSize = 12.5;
+      brandGap = 48.0;
+      wordmarkToTaglineGap = 14.0;
+      taglineToCapsuleGap = 28.0;
+      capsuleWidth = 128.0;
+    }
+
     final safeBottom = MediaQuery.paddingOf(context).bottom;
 
-    return Stack(
-      fit: StackFit.expand,
+    // Portrait & Tablet Centered Presentation
+    final portraitContent = Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        // ── CENTER HERO SHOWCASE (Deck with Central B Logo) ─────────────────
-        Positioned(
-          left: (screenW - deckW) / 2,
-          top: contentTop,
+        _buildAnalyticsDeck(
           width: deckW,
           height: deckH,
-          child: _buildAnalyticsDeck(
-            width: deckW,
-            height: deckH,
-            cardScale: cardScale,
-          ),
+          cardScale: cardScale,
         ),
-
-        // ── BRAND IDENTITY BLOCK (Wordmark + Tagline + Progress Capsule) ────
-        Positioned(
-          left: 16,
-          right: 16,
-          top: contentTop + deckH + brandGap,
-          child: AnimatedBuilder(
-            animation: _masterCtrl,
-            builder: (context, _) {
-              return Opacity(
-                opacity: _brandFade.value.clamp(0.0, 1.0),
-                child: Transform.translate(
-                  offset: Offset(0, _brandSlide.value),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _buildBrandWordmark(fontSize: wordmarkSize),
-                      SizedBox(height: isCompact ? 4 : 6),
-                      _buildBrandTagline(
-                        fontSize: taglineSize,
-                        maxW: deckW + 40,
-                      ),
-                      SizedBox(height: isCompact ? 12 : 18),
-                      _buildProgressCapsule(width: isCompact ? 105 : 128),
-                    ],
-                  ),
+        SizedBox(height: brandGap),
+        AnimatedBuilder(
+          animation: _masterCtrl,
+          builder: (context, _) {
+            return Opacity(
+              opacity: _brandFade.value.clamp(0.0, 1.0),
+              child: Transform.translate(
+                offset: Offset(0, _brandSlide.value),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _buildBrandWordmark(fontSize: wordmarkSize),
+                    SizedBox(height: wordmarkToTaglineGap),
+                    _buildBrandTagline(
+                      fontSize: taglineSize,
+                      maxW: isTablet ? 480.0 : deckW + 40,
+                    ),
+                    SizedBox(height: taglineToCapsuleGap),
+                    _buildProgressCapsule(width: capsuleWidth),
+                  ],
                 ),
-              );
-            },
-          ),
-        ),
-
-        // ── ANCHORED VERSION FOOTER ─────────────────────────────────────────
-        Positioned(
-          left: 0,
-          right: 0,
-          bottom: safeBottom + (isCompact ? 8 : 14),
-          child: _buildVersionFooter(),
+              ),
+            );
+          },
         ),
       ],
+    );
+
+    // Landscape Mode Content (for wide phones/split-screen with restricted height)
+    final landscapeContent = Row(
+      mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        _buildAnalyticsDeck(
+          width: deckW,
+          height: deckH,
+          cardScale: cardScale,
+        ),
+        const SizedBox(width: 36.0),
+        AnimatedBuilder(
+          animation: _masterCtrl,
+          builder: (context, _) {
+            return Opacity(
+              opacity: _brandFade.value.clamp(0.0, 1.0),
+              child: Transform.translate(
+                offset: Offset(0, _brandSlide.value),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    _buildBrandWordmark(fontSize: wordmarkSize),
+                    SizedBox(height: wordmarkToTaglineGap),
+                    _buildBrandTagline(
+                      fontSize: taglineSize,
+                      maxW: 280.0,
+                    ),
+                    SizedBox(height: taglineToCapsuleGap),
+                    _buildProgressCapsule(width: capsuleWidth),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
+      ],
+    );
+
+    return SafeArea(
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          // ── CENTERED SPLASH CONTENT (Guaranteed 0 overflow on ANY screen) ─
+          Center(
+            child: SingleChildScrollView(
+              physics: const NeverScrollableScrollPhysics(),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: isTablet ? 720.0 : screenW,
+                  maxHeight: math.max(1.0, screenH - safeBottom - 36.0),
+                ),
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.center,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: isLandscapeWide ? landscapeContent : portraitContent,
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          // ── ANCHORED VERSION FOOTER ─────────────────────────────────────────
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: isCompact ? 6.0 : 12.0,
+            child: _buildVersionFooter(),
+          ),
+        ],
+      ),
     );
   }
 
