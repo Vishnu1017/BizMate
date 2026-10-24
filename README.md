@@ -18,11 +18,12 @@
   <a href="https://github.com/Vishnu1017/BizMate/blob/main/LICENSE">
     <img src="https://img.shields.io/github/license/Vishnu1017/BizMate" alt="License"/>
   </a>
-  <img src="https://img.shields.io/badge/version-1.0.65-blue" alt="Version"/>
+  <img src="https://img.shields.io/badge/version-1.0.67-blue" alt="Version"/>
   <img src="https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter" alt="Flutter"/>
   <img src="https://img.shields.io/badge/Dart-3.x-0175C2?logo=dart" alt="Dart"/>
   <img src="https://img.shields.io/badge/Platform-Android%20%7C%20iOS-green" alt="Platform"/>
   <img src="https://img.shields.io/badge/Storage-Hive%20(Offline)-orange" alt="Storage"/>
+  <img src="https://img.shields.io/badge/Cloud-Google%20Drive%20OAuth%202.0-4285F4?logo=googledrive" alt="Cloud"/>
 </p>
 
 ---
@@ -31,7 +32,7 @@
 
 **BizMate** is a powerful, **offline-first** Flutter application built for **photographers, freelancers, and small business owners**. It provides a complete suite of tools to manage sales, customers, products, camera rental gear, bookings, payments, and business reports — all from a single beautifully designed app.
 
-Built with **Hive** for lightning-fast local storage, BizMate works entirely offline with no internet required for day-to-day operations. It features a premium **Business Analytics splash screen with modern Lottie animations**, **Google Drive cloud backup & restore** with automated **Workmanager background scheduling**, network constraints (Wi-Fi only vs. Any Network), customizable backup frequencies (Manual, Daily, Weekly, Monthly), local backup completion notifications, **dark and light themes with enhanced financial readability**, **biometric authentication**, **GST-compliant PDF invoices with embedded NPCI UPI QR codes and accepted UPI app badges (Google Pay, PhonePe, Paytm, BHIM)**, **WhatsApp messaging**, and a dedicated **Camera Rental module** tailored for photographers.
+Built with **Hive** for lightning-fast local storage, BizMate works entirely offline with no internet required for day-to-day operations. It features a premium **Business Analytics splash screen with modern Lottie animations**, **direct Google Drive cloud backup & restore** (100% direct Google Cloud OAuth 2.0 with **zero Firebase dependency**), non-restricted `driveFileScope` security compliance, automated **Workmanager background scheduling**, network constraints (Wi-Fi only vs. Any Network), customizable backup frequencies (Manual, Daily, Weekly, Monthly), local backup completion alerts, **optional End-to-End Encryption (E2EE with secret PIN)**, **dark and light themes with enhanced financial readability**, **biometric authentication**, **GST-compliant PDF invoices with embedded NPCI UPI QR codes and accepted UPI app badges (Google Pay, PhonePe, Paytm, BHIM)**, **WhatsApp messaging**, and a dedicated **Camera Rental module** tailored for photographers.
 
 ---
 
@@ -51,8 +52,8 @@ Built with **Hive** for lightning-fast local storage, BizMate works entirely off
 | 📊 **Reports** | fl_chart analytics (bar & spline curves), CSV and PDF export, revenue breakdown |
 | 📁 **PDF Invoices** | GST-compliant invoices, embedded NPCI UPI QR code, crisp accepted UPI app logos (GPay, PhonePe, Paytm, BHIM), shareable via WhatsApp/Email |
 | 📸 **Camera Rental** | Full rental management for photographers: gear inventory with photos, booking date pickers, customer records & rental invoices |
-| ☁️ **Cloud Backup** | Google Drive cloud sync (OAuth 2.0), automated Workmanager background scheduler (Daily, Weekly, Monthly), Wi-Fi only constraint, backup completion alerts |
-| 💾 **Local Backup** | Device storage backup & restore, Hive snapshot import/export, database maintenance |
+| ☁️ **Cloud Backup** | Direct Google Drive sync (OAuth 2.0, zero Firebase), `driveFileScope` security, `BizMate Backups` folder, Cloud Restore Browser, automated Workmanager scheduler (Daily, Weekly, Monthly), Wi-Fi constraint, notifications |
+| 💾 **Data Protection** | On-device backups manager, recent audit logs, optional End-to-End Encryption (AES PIN), WhatsApp export, JSON file import, database health |
 | 👤 **Profile** | Avatar photo picking & cropping, role badges, UPI ID configuration, passcode management |
 | 🌗 **Theme** | Instant dark/light toggle on every screen with smooth transitions & high-contrast financial records |
 
@@ -77,17 +78,21 @@ Built with **Hive** for lightning-fast local storage, BizMate works entirely off
 - **Client Release Agreement PDF** — generate standardized client release agreements with customer name and event terms
 
 ### ☁️ Google Drive Cloud Backup & Background Scheduling
-- **Google Sign-In with OAuth 2.0** (`google_sign_in`, `googleapis`) for seamless authentication
-- **Automated Workmanager Background Backups** — schedule automatic backups effortlessly with options for:
-  - **Only when I tap backup**
-  - **Everyday**
-  - **Weekly**
-  - **Monthly**
-- **Network Constraint Configuration** — choose between **Backup over Wi-Fi only** (saving mobile data) or **Any Network (Cellular + Wi-Fi)**
+- **Zero-Firebase Direct Google Cloud OAuth 2.0** (`google_sign_in`, `googleapis/drive/v3.dart`) for lightweight, secure, and privacy-first cloud synchronization
+- **Non-Restricted Scoped Security (`driveFileScope`)** — strictly confined to files created by BizMate (`https://www.googleapis.com/auth/drive.file`), completely eliminating Google CASA Tier 2/3 audit requirements and preventing `403 Access Blocked` verification warnings
+- **Isolated `BizMate Backups` Drive Folder** — automatically locates or creates an organized folder in the user's personal Google Drive
+- **Interactive Cloud Restore Browser** — inspect all remote backups with file name, record count, exact file size, and timestamps; perform one-tap cloud restoration or remote backup deletion
+- **Automated Workmanager Background Backups** — flexible scheduling with background task persistence:
+  - **Only when I tap "Back up"** (Manual)
+  - **Daily** (Every day background sync)
+  - **Weekly** (Scheduled weekly maintenance)
+  - **Monthly** (Long-term snapshot retention)
+- **Network Constraint Configuration** — choose between **Backup over Wi-Fi only** (saving cellular data) or **Wi-Fi or cellular**
+- **Test Auto-Sync** — on-demand diagnostic action to trigger background scheduler worker immediately and verify cloud uploads
 - **Backup Completion Notifications** — automated notifications via `flutter_local_notifications` alerting users when a background backup succeeds
 - **Automated Hive Box Extraction & Restoration** — complete recovery of sales, rental items, customers, products, settings, and credentials
 - **In-Memory Hot Refresh** — immediate UI synchronization after restore without requiring app restarts
-- **One-Tap Manual Drive Sync** — instant upload and instant restore directly from the Backup screen
+- **One-Tap Manual Drive Sync** — instant upload and instant restore directly from the Hero status card
 
 ### 🔐 Authentication & Security
 - Email/phone login with **passcode protection**
@@ -166,11 +171,13 @@ Built with **Hive** for lightning-fast local storage, BizMate works entirely off
 - Passcode management (setup / change / remove)
 - Rental visibility toggle for the camera rental module
 
-### 💾 Backup & Restore
-- Full local data backup to device storage
-- Restore from a previous backup file
-- Export and import Hive database snapshots
-- Database maintenance service for storage health
+### 💾 Data Backup, Local Storage & Security
+- **On-Device Local Backups Manager** — view all local backup files saved on device with timestamps and size metrics; restore or delete individual local copies with one tap
+- **Recent Backup Audit Logs** — historical audit trail tracking timestamp, record count, file size, encryption state, and status indicators
+- **End-to-End Encrypted Backups (E2EE)** — secure backup payloads with a custom secret PIN (AES encryption) before saving locally or uploading to cloud
+- **Share to WhatsApp / Direct Chat** — export instant database snapshots directly to WhatsApp, email, or chat apps via native share sheet
+- **Import JSON Backup File** — system file picker integration to import and validate any `.json` backup file from Downloads or external storage
+- **Database Maintenance Service** — compact and maintain Hive database boxes for maximum read/write performance
 
 ### 🌗 Dark & Light Theme
 - Full **dark mode and light mode** support across all screens
@@ -545,10 +552,16 @@ flutter build ipa --release
 - [x] Local data backup & restore
 - [x] Premium Business Analytics splash screen with centered showcase deck
 - [x] Modern Lottie Letter 'B' vector animation with cybernetic orbital aura
-- [x] Cloud sync and backup (Google Drive with OAuth 2.0)
-- [x] Scheduled automatic background backups (Workmanager)
+- [x] Cloud sync and backup (Google Drive with direct OAuth 2.0, zero Firebase)
+- [x] Non-restricted `driveFileScope` security compliance & privacy-first storage
+- [x] Cloud Restore Browser with remote backup management (inspect, restore, delete)
+- [x] End-to-End Encrypted Backups (E2EE with secret PIN)
+- [x] Scheduled automatic background backups (Workmanager Daily, Weekly, Monthly)
+- [x] On-demand "Test Auto-Sync" background verification
 - [x] Network-aware backup options (Wi-Fi only vs. Any Network)
 - [x] Background backup completion notifications
+- [x] On-device local backups manager & historical audit logs
+- [x] WhatsApp direct chat export & system JSON file picker import
 - [x] GST-compliant PDF invoices with NPCI UPI QR code
 - [x] High-resolution Accepted UPI App badges on invoices (Google Pay, PhonePe, Paytm, BHIM)
 - [x] Dark & Light theme financial contrast and accessibility polish
