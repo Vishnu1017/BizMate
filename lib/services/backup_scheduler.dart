@@ -3,10 +3,12 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:bizmate/models/customer_model.dart';
+import 'package:bizmate/models/payment.dart';
 import 'package:bizmate/models/product.dart';
 import 'package:bizmate/models/rental_item.dart';
 import 'package:bizmate/models/rental_sale_model.dart';
 import 'package:bizmate/models/sale.dart';
+import 'package:bizmate/models/user_model.dart';
 import 'package:bizmate/services/drive_backup_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -61,12 +63,14 @@ Future<void> _performAutoBackup(Map<String, dynamic>? inputData) async {
     final dir = await getApplicationDocumentsDirectory();
     Hive.init(dir.path);
 
-    // Register adapters (re-register is safe)
-    if (!Hive.isAdapterRegistered(0)) Hive.registerAdapter(SaleAdapter());
-    if (!Hive.isAdapterRegistered(1)) Hive.registerAdapter(ProductAdapter());
-    if (!Hive.isAdapterRegistered(2)) Hive.registerAdapter(CustomerModelAdapter());
+    // Register adapters matching main.dart (re-register is safe)
+    if (!Hive.isAdapterRegistered(0)) Hive.registerAdapter(UserAdapter());
+    if (!Hive.isAdapterRegistered(1)) Hive.registerAdapter(SaleAdapter());
+    if (!Hive.isAdapterRegistered(2)) Hive.registerAdapter(ProductAdapter());
+    if (!Hive.isAdapterRegistered(3)) Hive.registerAdapter(PaymentAdapter());
     if (!Hive.isAdapterRegistered(4)) Hive.registerAdapter(RentalItemAdapter());
-    if (!Hive.isAdapterRegistered(5)) Hive.registerAdapter(RentalSaleModelAdapter());
+    if (!Hive.isAdapterRegistered(5)) Hive.registerAdapter(CustomerModelAdapter());
+    if (!Hive.isAdapterRegistered(6)) Hive.registerAdapter(RentalSaleModelAdapter());
 
     final safeEmail = email.replaceAll('.', '_').replaceAll('@', '_');
     final box = await Hive.openBox('userdata_$safeEmail');

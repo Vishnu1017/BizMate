@@ -1987,8 +1987,8 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
     // Mobile-first: single column scrollable layout to avoid overflow on keyboard
     return LayoutBuilder(
       builder: (context, constraints) {
-        return WillPopScope(
-          onWillPop: () async => !_isSaving,
+        return PopScope(
+          canPop: !_isSaving,
           child: Scaffold(
             backgroundColor: Theme.of(context).scaffoldBackgroundColor,
             appBar: AppBar(

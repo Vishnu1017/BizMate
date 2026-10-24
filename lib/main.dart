@@ -26,6 +26,7 @@ import 'package:bizmate/services/notification_service.dart';
 import 'package:bizmate/services/backup_scheduler.dart';
 import 'package:bizmate/utils/app_theme.dart';
 import 'package:bizmate/constants/bizmate_emblem_bytes.dart';
+import 'package:bizmate/services/display_mode_service.dart';
 import 'utils/responsive.dart';
 
 /// ----------------------------------------------------------------
@@ -33,6 +34,9 @@ import 'utils/responsive.dart';
 /// ----------------------------------------------------------------
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize high refresh rate (90Hz / 120Hz / 144Hz / 165Hz) and multi-GPU display sync
+  await DisplayModeService.instance.initialize();
 
   // Initialise workmanager for background scheduled backups
   await BackupScheduler.init();

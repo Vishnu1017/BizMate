@@ -55,6 +55,7 @@ Built with **Hive** for lightning-fast local storage, BizMate works entirely off
 | ☁️ **Cloud Backup** | Direct Google Drive sync (OAuth 2.0, zero Firebase), `driveFileScope` security, `BizMate Backups` folder, Cloud Restore Browser, automated Workmanager scheduler (Daily, Weekly, Monthly), Wi-Fi constraint, notifications |
 | 💾 **Data Protection** | On-device backups manager, recent audit logs, optional End-to-End Encryption (AES PIN), WhatsApp export, JSON file import, database health |
 | 👤 **Profile** | Avatar photo picking & cropping, role badges, UPI ID configuration, passcode management |
+| ⚡ **GPU & Display** | Adaptive High-Hz Engine (60Hz–165Hz & LTPO), Multi-GPU hardware acceleration (Adreno, Mali, Immortalis, Apple Silicon), zero-latency Surface pipeline |
 | 🌗 **Theme** | Instant dark/light toggle on every screen with smooth transitions & high-contrast financial records |
 
 ---
@@ -184,6 +185,15 @@ Built with **Hive** for lightning-fast local storage, BizMate works entirely off
 - Animated theme toggle (`RotationTransition` + `FadeTransition`) on all pages
 - Enhanced accessibility: crisp text contrast, dedicated card borders, and readable financial labels in both modes
 - Theme preference persisted across sessions
+
+### ⚡ High-Hz Refresh Rate & Multi-GPU Acceleration Engine
+- **Universal Multi-GPU Support** — natively optimized for Qualcomm Adreno, ARM Mali, ARM Immortalis, Apple Silicon, PowerVR, and x86/x86_64 emulator virtual renderers
+- **Dynamic Display Refresh Rates** — full hardware synchronization supporting **60Hz, 90Hz, 120Hz, 144Hz, 165Hz**, and adaptive **LTPO/VRR variable refresh rate**
+- **Hardware-Direct Surface Pipeline** — configured with `io.flutter.embedding.android.RenderMode: surface` for lowest latency Direct Hardware Composer compositing
+- **Anti-Throttling Display Synchronization** — auto-inspects hardware display modes and applies maximum panel refresh rate on Android `WindowManager.LayoutParams`, automatically re-enforced in `onResume()` to counter OEM aggressive throttling (Samsung OneUI, OnePlus OxygenOS, Xiaomi MIUI)
+- **iOS ProMotion 120Hz** — configured with `CADisableMinimumFrameDurationOnPhone` enabled for smooth 120fps motion on iPhone Pro models and iPad Pro
+- **Profile Performance Diagnostics** — live GPU & Display Performance monitor card in the Profile page displaying current panel refresh rate, supported hardware modes, and one-tap refresh rate re-synchronization
+- **Large Heap & Screen Density Resilience** — `largeHeap="true"` and `<supports-screens>` for smooth frame budgets on 2K/4K/QHD+ high-density displays
 
 ---
 

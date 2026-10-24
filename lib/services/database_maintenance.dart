@@ -1,3 +1,10 @@
+import 'package:bizmate/models/customer_model.dart';
+import 'package:bizmate/models/payment.dart';
+import 'package:bizmate/models/product.dart';
+import 'package:bizmate/models/rental_item.dart';
+import 'package:bizmate/models/rental_sale_model.dart';
+import 'package:bizmate/models/sale.dart';
+import 'package:bizmate/models/user_model.dart';
 import 'package:flutter/widgets.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
@@ -47,10 +54,39 @@ class DatabaseMaintenance with WidgetsBindingObserver {
       ];
 
       for (final boxName in globalBoxes) {
-        if (Hive.isBoxOpen(boxName)) {
-          final box = Hive.box(boxName);
-          await box.compact();
-          debugPrint('Compacted global Hive box: $boxName');
+        try {
+          if (Hive.isBoxOpen(boxName)) {
+            BoxBase? box;
+            switch (boxName) {
+              case 'users':
+                box = Hive.box<User>(boxName);
+                break;
+              case 'sales':
+                box = Hive.box<Sale>(boxName);
+                break;
+              case 'products':
+                box = Hive.box<Product>(boxName);
+                break;
+              case 'payments':
+                box = Hive.box<Payment>(boxName);
+                break;
+              case 'rental_items':
+                box = Hive.box<RentalItem>(boxName);
+                break;
+              case 'customers':
+                box = Hive.box<CustomerModel>(boxName);
+                break;
+              case 'rental_sales':
+                box = Hive.box<RentalSaleModel>(boxName);
+                break;
+              default:
+                box = Hive.box(boxName);
+            }
+            await box.compact();
+            debugPrint('Compacted global Hive box: $boxName');
+          }
+        } catch (boxError) {
+          debugPrint('Notice: box $boxName compaction skip: $boxError');
         }
       }
 

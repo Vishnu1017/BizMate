@@ -765,8 +765,7 @@ class _NavBarPageState extends State<NavBarPage>
             : "New Customer Sale";
 
     final c = context.appColors;
-    return Container(
-      child: Material(
+    return Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: () async {
@@ -855,7 +854,6 @@ class _NavBarPageState extends State<NavBarPage>
               ],
             ),
           ),
-        ),
       ),
     );
   }
@@ -864,8 +862,7 @@ class _NavBarPageState extends State<NavBarPage>
     if (_currentIndex != 3) return const SizedBox.shrink();
 
     final c2 = context.appColors;
-    return Container(
-      child: Material(
+    return Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: () async {
@@ -967,7 +964,6 @@ class _NavBarPageState extends State<NavBarPage>
               ],
             ),
           ),
-        ),
       ),
     );
   }

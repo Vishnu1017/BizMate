@@ -10,7 +10,7 @@ import 'package:bizmate/widgets/confirm_delete_dialog.dart'
     show showConfirmDialog;
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart'
-    show FlutterSecureStorage, AndroidOptions;
+    show FlutterSecureStorage;
 import 'package:hive/hive.dart';
 import 'package:hugeicons/hugeicons.dart' show HugeIcon, HugeIcons;
 import 'package:image_picker/image_picker.dart';
@@ -20,6 +20,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:bizmate/models/user_model.dart';
 import 'login_screen.dart';
 import 'backup_screen.dart';
+import 'package:bizmate/services/display_mode_service.dart';
 import 'package:path/path.dart' as p;
 
 class ProfilePage extends StatefulWidget {
@@ -88,9 +89,7 @@ class _ProfilePageState extends State<ProfilePage>
   final _upiController = TextEditingController();
   final _locationController = TextEditingController();
 
-  final FlutterSecureStorage _secureStorage = FlutterSecureStorage(
-    aOptions: const AndroidOptions(encryptedSharedPreferences: true),
-  );
+  final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
 
   @override
   void initState() {
@@ -2113,7 +2112,7 @@ class _ProfilePageState extends State<ProfilePage>
     setState(() => _isDeleting = true); // ✅ LOCK UI immediately
 
     try {
-      print("Deleting account for: $email");
+      debugPrint("Deleting account for: $email");
 
       final userBox = Hive.box<User>('users');
       dynamic userKey;
@@ -2130,9 +2129,7 @@ class _ProfilePageState extends State<ProfilePage>
         await userBox.delete(userKey);
       }
 
-      final storage = FlutterSecureStorage(
-        aOptions: const AndroidOptions(encryptedSharedPreferences: true),
-      );
+      const storage = FlutterSecureStorage();
 
       await storage.delete(key: "passcode_$email");
       await storage.delete(key: "passcode_type_$email");
@@ -2271,6 +2268,8 @@ class _ProfilePageState extends State<ProfilePage>
                                   _buildSecuritySection(isSmallScreen),
                                   SizedBox(height: 10 * scale),
                                   _buildDataBackupSection(isSmallScreen),
+                                  SizedBox(height: 10 * scale),
+                                  _buildDisplayPerformanceSection(isSmallScreen),
                                 ],
 
                                 // Rental Section (for photographers only)
@@ -3264,6 +3263,164 @@ class _ProfilePageState extends State<ProfilePage>
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildDisplayPerformanceSection(bool isSmallScreen) {
+    return ValueListenableBuilder<double>(
+      valueListenable: DisplayModeService.instance.currentRefreshRate,
+      builder: (context, rate, _) {
+        final rateText = rate > 0 ? '${rate.toStringAsFixed(0)} Hz' : '60 Hz';
+        final isHighHz = rate >= 90;
+        final badgeColor = isHighHz ? const Color(0xFF10B981) : const Color(0xFF3B82F6);
+
+        return Container(
+          decoration: BoxDecoration(
+            color: context.appColors.card,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 30,
+                spreadRadius: 5,
+                offset: const Offset(0, 10),
+              ),
+            ],
+            border: Border.all(color: context.appColors.divider, width: 1),
+          ),
+          child: Padding(
+            padding: EdgeInsets.all(16 * scale),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          width: 6 * scale,
+                          height: 6 * scale,
+                          margin: const EdgeInsets.only(right: 8),
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: LinearGradient(
+                              colors: [Color(0xFF8B5CF6), Color(0xFF06B6D4)],
+                            ),
+                          ),
+                        ),
+                        Text(
+                          'GPU & DISPLAY PERFORMANCE',
+                          style: TextStyle(
+                            fontSize: 12 * scale,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.5,
+                            color: context.appColors.text1,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: badgeColor.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: badgeColor.withValues(alpha: 0.3)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            isHighHz ? Icons.speed_rounded : Icons.tv_rounded,
+                            size: 12 * scale,
+                            color: badgeColor,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            rateText,
+                            style: TextStyle(
+                              fontSize: 11 * scale,
+                              fontWeight: FontWeight.bold,
+                              color: badgeColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 12 * scale),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: context.isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: context.appColors.divider),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: badgeColor.withValues(alpha: 0.12),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.auto_awesome_rounded,
+                          color: badgeColor,
+                          size: 20 * scale,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              isHighHz ? 'High Refresh Rate Active' : 'Adaptive Screen Sync',
+                              style: TextStyle(
+                                fontSize: 13 * scale,
+                                fontWeight: FontWeight.bold,
+                                color: context.appColors.text1,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'Optimized for Adreno, Mali & Apple GPUs (${DisplayModeService.instance.refreshRateLabel})',
+                              style: TextStyle(
+                                fontSize: 10 * scale,
+                                color: context.appColors.text2,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        tooltip: 'Optimize Refresh Rate',
+                        icon: Icon(
+                          Icons.refresh_rounded,
+                          color: badgeColor,
+                          size: 20 * scale,
+                        ),
+                        onPressed: () async {
+                          final newRate = await DisplayModeService.instance.enableHighestRefreshRate();
+                          if (context.mounted) {
+                            AppSnackBar.showSuccess(
+                              context,
+                              message:
+                                  'GPU & Screen Display synchronized at ${newRate.toStringAsFixed(0)} Hz',
+                            );
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 

@@ -1089,8 +1089,7 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                           final isPending =
                                               !isCompleted && !isToday;
 
-                                          return Container(
-                                            child: Chip(
+                                          return Chip(
                                               avatar: AnimatedContainer(
                                                 duration: const Duration(
                                                   milliseconds: 300,
@@ -1376,7 +1375,6 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                                   );
                                                 });
                                               },
-                                            ),
                                           );
                                         }).toList(),
                                   ),

@@ -5,7 +5,7 @@ import 'package:bizmate/utils/app_theme.dart';
 import 'package:bizmate/widgets/app_snackbar.dart' show AppSnackBar;
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart'
-    show FlutterSecureStorage, AndroidOptions;
+    show FlutterSecureStorage;
 import 'package:hive/hive.dart';
 import 'package:bizmate/models/user_model.dart';
 import 'package:bizmate/screens/auth_gate_screen.dart';
@@ -234,9 +234,7 @@ class _LoginScreenState extends State<LoginScreen>
   // ✅ PASSCODE ENABLE / DISABLE CHECK (Respects ProfilePage Switch)
   // ----------------------------------------------------------------------
   Future<bool> _isPasscodeEnabledForUser(String email) async {
-    final secure = const FlutterSecureStorage(
-      aOptions: AndroidOptions(encryptedSharedPreferences: true),
-    );
+    const secure = FlutterSecureStorage();
 
     // Is there any passcode stored?
     final passcodeExists = await secure.read(key: "passcode_$email");

@@ -7,9 +7,7 @@ import 'package:bizmate/screens/nav_bar_page.dart';
 import 'package:bizmate/services/biometric_service.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-final _storage = FlutterSecureStorage(
-  aOptions: const AndroidOptions(encryptedSharedPreferences: true),
-);
+const _storage = FlutterSecureStorage();
 
 enum PasscodeType { numeric, alphanumeric }
 

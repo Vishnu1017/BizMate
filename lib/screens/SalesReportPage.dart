@@ -645,7 +645,7 @@ class _SalesReportPageState extends State<SalesReportPage> {
               pw.SizedBox(height: 20),
 
               // ---------- SALES TABLE ----------
-              pw.Table.fromTextArray(
+              pw.TableHelper.fromTextArray(
                 headerStyle: pw.TextStyle(
                   fontWeight: pw.FontWeight.bold,
                   font: ttf,
