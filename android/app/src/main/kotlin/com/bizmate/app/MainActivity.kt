@@ -78,6 +78,19 @@ class MainActivity : FlutterActivity() {
      * Finds and applies the highest available display refresh rate supported by the GPU & display panel
      * (e.g., 90Hz, 120Hz, 144Hz, 165Hz) while preserving optimal resolution.
      */
+    private fun isEmulator(): Boolean {
+        return (Build.BRAND.startsWith("generic") && Build.DEVICE.startsWith("generic"))
+                || Build.FINGERPRINT.startsWith("generic")
+                || Build.FINGERPRINT.startsWith("unknown")
+                || Build.HARDWARE.contains("goldfish")
+                || Build.HARDWARE.contains("ranchu")
+                || Build.MODEL.contains("google_sdk")
+                || Build.MODEL.contains("Emulator")
+                || Build.MODEL.contains("Android SDK built for x86")
+                || Build.PRODUCT.contains("sdk")
+                || Build.PRODUCT.contains("emulator")
+    }
+
     private fun enableHighestRefreshRate(): Float {
         var highestRate = 60.0f
         try {
@@ -87,6 +100,16 @@ class MainActivity : FlutterActivity() {
                 } else {
                     @Suppress("DEPRECATION")
                     windowManager.defaultDisplay
+                }
+
+                if (display != null) {
+                    @Suppress("DEPRECATION")
+                    highestRate = display.refreshRate
+                }
+
+                // Virtual emulator displays don't have physical panels; avoid host QEMU compositor pipeline lag
+                if (isEmulator()) {
+                    return highestRate
                 }
 
                 val modes = display?.supportedModes

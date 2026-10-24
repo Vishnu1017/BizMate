@@ -34,15 +34,15 @@
               android:name="io.flutter.embedding.android.NormalTheme"
               android:resource="@style/NormalTheme"
               />
-            <!-- Surface render mode directly utilizes hardware compositor for lowest latency and maximum FPS -->
-            <meta-data
-              android:name="io.flutter.embedding.android.RenderMode"
-              android:value="surface" />
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <!-- Disable Impeller OpenGLES backend to eliminate simulator/emulator frame drops and stutter -->
+        <meta-data
+            android:name="io.flutter.embedding.android.EnableImpeller"
+            android:value="false" />
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data
