@@ -457,13 +457,13 @@ class BackupScheduler {
   static Future<DateTime?> lastAutoBackupTime() async {
     final prefs = await SharedPreferences.getInstance();
     final str = prefs.getString(kPrefLastAuto);
-    return str != null ? DateTime.tryParse(str) : null;
+    return str != null ? DateTime.tryParse(str)?.toLocal() : null;
   }
 
   /// Returns the last Google Drive backup DateTime, or null.
   static Future<DateTime?> lastDriveBackupTime() async {
     final prefs = await SharedPreferences.getInstance();
     final str = prefs.getString(kPrefLastDrive);
-    return str != null ? DateTime.tryParse(str) : null;
+    return str != null ? DateTime.tryParse(str)?.toLocal() : null;
   }
 }

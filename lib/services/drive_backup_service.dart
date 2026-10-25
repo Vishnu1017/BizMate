@@ -246,6 +246,49 @@ class DriveBackupService {
     }
   }
 
+  /// Extracts the precise backup timestamp in local time:
+  /// First attempts parsing the timestamp in the filename (BizMate_Backup_yyyyMMdd_HHmmss.json),
+  /// falling back to Drive's createdTime or modifiedTime converted to local time.
+  static DateTime _extractBackupTime(
+    String? name,
+    DateTime? createdTime,
+    DateTime? modifiedTime,
+  ) {
+    if (name != null) {
+      final match = RegExp(
+        r'_(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2})\.json$',
+        caseSensitive: false,
+      ).firstMatch(name);
+      if (match != null) {
+        try {
+          final year = int.parse(match.group(1)!);
+          final month = int.parse(match.group(2)!);
+          final day = int.parse(match.group(3)!);
+          final hour = int.parse(match.group(4)!);
+          final minute = int.parse(match.group(5)!);
+          final second = int.parse(match.group(6)!);
+          return DateTime(year, month, day, hour, minute, second);
+        } catch (_) {}
+      }
+    }
+    if (createdTime != null) return createdTime.toLocal();
+    if (modifiedTime != null) return modifiedTime.toLocal();
+    return DateTime.now();
+  }
+
+  /// Returns the DateTime of the newest backup file found on Google Drive, or null.
+  static Future<DateTime?> getLatestBackupTime() async {
+    try {
+      final list = await listDriveBackups();
+      if (list.isNotEmpty) {
+        return list.first.createdAt;
+      }
+    } catch (e) {
+      debugPrint('DriveBackupService.getLatestBackupTime error: $e');
+    }
+    return null;
+  }
+
   static Future<List<DriveBackupFile>> listDriveBackups() async {
     try {
       var api = await _getDriveApi();
@@ -278,7 +321,7 @@ class DriveBackupService {
                 q: "'${folder.id}' in parents and trashed=false",
                 orderBy: 'createdTime desc',
                 spaces: 'drive',
-                $fields: 'files(id, name, size, createdTime)',
+                $fields: 'files(id, name, size, createdTime, modifiedTime)',
               );
               for (final f in (res.files ?? [])) {
                 if (f.id != null && !seenIds.contains(f.id)) {
@@ -287,7 +330,11 @@ class DriveBackupService {
                     id: f.id!,
                     name: f.name ?? 'BizMate_Backup.json',
                     sizeBytes: int.tryParse(f.size ?? '0') ?? 0,
-                    createdAt: f.createdTime ?? DateTime.now(),
+                    createdAt: _extractBackupTime(
+                      f.name,
+                      f.createdTime,
+                      f.modifiedTime,
+                    ),
                   ));
                 }
               }
@@ -306,7 +353,7 @@ class DriveBackupService {
           q: "trashed=false and (name contains 'BizMate' or name contains 'bizmate' or name contains 'Backup')",
           orderBy: 'createdTime desc',
           spaces: 'drive',
-          $fields: 'files(id, name, size, createdTime)',
+          $fields: 'files(id, name, size, createdTime, modifiedTime)',
         );
         for (final f in (broadRes.files ?? [])) {
           if (f.id != null && !seenIds.contains(f.id)) {
@@ -317,7 +364,11 @@ class DriveBackupService {
                 id: f.id!,
                 name: f.name ?? 'BizMate_Backup.json',
                 sizeBytes: int.tryParse(f.size ?? '0') ?? 0,
-                createdAt: f.createdTime ?? DateTime.now(),
+                createdAt: _extractBackupTime(
+                  f.name,
+                  f.createdTime,
+                  f.modifiedTime,
+                ),
               ));
             }
           }

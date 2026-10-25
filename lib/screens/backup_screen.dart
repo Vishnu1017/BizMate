@@ -121,7 +121,7 @@ class BackupHistoryEntry {
 
   factory BackupHistoryEntry.fromMap(Map<String, dynamic> m) =>
       BackupHistoryEntry(
-        createdAt: DateTime.parse(m['createdAt']),
+        createdAt: DateTime.parse(m['createdAt']).toLocal(),
         salesCount: m['salesCount'] ?? 0,
         productsCount: m['productsCount'] ?? 0,
         customersCount: m['customersCount'] ?? 0,
@@ -264,6 +264,10 @@ class _BackupScreenState extends State<BackupScreen>
       } catch (_) {}
     }
 
+    if (driveConnected) {
+      _syncDriveBackupTimeFromCloud();
+    }
+
     final parsedFreq =
         WhatsAppBackupFrequency.values[freqIdx.clamp(
           0,
@@ -299,9 +303,9 @@ class _BackupScreenState extends State<BackupScreen>
       _isDataDirty = isDirty;
 
       _lastLocalBackupTime =
-          lastLocalStr != null ? DateTime.tryParse(lastLocalStr) : null;
+          lastLocalStr != null ? DateTime.tryParse(lastLocalStr)?.toLocal() : null;
       _lastDriveBackupTime =
-          lastDriveStr != null ? DateTime.tryParse(lastDriveStr) : null;
+          lastDriveStr != null ? DateTime.tryParse(lastDriveStr)?.toLocal() : null;
       _lastBackupSizeKb = lastSize;
       _lastRecordCount = lastRecords;
 
@@ -404,7 +408,6 @@ class _BackupScreenState extends State<BackupScreen>
     final prefs = await SharedPreferences.getInstance();
     final nowIso = entry.createdAt.toIso8601String();
     await prefs.setString(_kLastLocal, nowIso);
-    await prefs.setString(_kLastDrive, nowIso);
     await prefs.setDouble(_kLastSize, entry.fileSizeKb);
     await prefs.setInt(_kLastRecords, entry.totalRecords);
 
@@ -415,7 +418,6 @@ class _BackupScreenState extends State<BackupScreen>
 
     setState(() {
       _lastLocalBackupTime = entry.createdAt;
-      _lastDriveBackupTime = entry.createdAt;
       _lastBackupSizeKb = entry.fileSizeKb;
       _lastRecordCount = entry.totalRecords;
       _history.insert(0, entry);
@@ -1256,6 +1258,7 @@ class _BackupScreenState extends State<BackupScreen>
         setState(() {
           _isGoogleDriveConnected = true;
         });
+        _syncDriveBackupTimeFromCloud();
         if (mounted) {
           AppSnackBar.showSuccess(
             context,
@@ -2928,7 +2931,7 @@ class _BackupScreenState extends State<BackupScreen>
                   const SizedBox(height: 4),
                   Text(
                     exportedAt != null
-                        ? 'Created on ${fmt.format(exportedAt)}'
+                        ? 'Created on ${fmt.format(exportedAt.toLocal())}'
                         : fileName,
                     textAlign: TextAlign.center,
                     style: TextStyle(
@@ -3117,25 +3120,45 @@ class _BackupScreenState extends State<BackupScreen>
   // ─────────────────────────────────────────────────────────────────────────
   // HELPERS
   // ─────────────────────────────────────────────────────────────────────────
+  Future<void> _syncDriveBackupTimeFromCloud() async {
+    try {
+      final latestCloudTime = await DriveBackupService.getLatestBackupTime();
+      if (latestCloudTime != null && mounted) {
+        final prefs = await SharedPreferences.getInstance();
+        if (_lastDriveBackupTime == null || latestCloudTime.isAfter(_lastDriveBackupTime!)) {
+          await prefs.setString(_kLastDrive, latestCloudTime.toIso8601String());
+          setState(() {
+            _lastDriveBackupTime = latestCloudTime;
+          });
+        }
+      }
+    } catch (_) {}
+  }
+
   String _formatDateTime(DateTime? dt) {
     if (dt == null) return 'Never';
+    final localDt = dt.toLocal();
     final now = DateTime.now();
-    final diff = now.difference(dt);
+    final diff = now.difference(localDt);
 
-    if (diff.inMinutes < 60 && diff.inMinutes >= 0) {
-      if (diff.inMinutes == 0) return 'Just now';
+    if (diff.inSeconds < 60 && diff.inSeconds >= -5) {
+      return 'Just now';
+    }
+    if (diff.inMinutes < 60 && diff.inMinutes > 0) {
       return '${diff.inMinutes}m ago';
     }
-    if (diff.inHours < 24 && dt.day == now.day) {
-      return 'Today, ${DateFormat('hh:mm a').format(dt)}';
+    if (localDt.year == now.year &&
+        localDt.month == now.month &&
+        localDt.day == now.day) {
+      return 'Today, ${DateFormat('hh:mm a').format(localDt)}';
     }
     final yesterday = now.subtract(const Duration(days: 1));
-    if (dt.day == yesterday.day &&
-        dt.month == yesterday.month &&
-        dt.year == yesterday.year) {
-      return 'Yesterday, ${DateFormat('hh:mm a').format(dt)}';
+    if (localDt.year == yesterday.year &&
+        localDt.month == yesterday.month &&
+        localDt.day == yesterday.day) {
+      return 'Yesterday, ${DateFormat('hh:mm a').format(localDt)}';
     }
-    return DateFormat('dd MMM yyyy, hh:mm a').format(dt);
+    return DateFormat('dd MMM yyyy, hh:mm a').format(localDt);
   }
 
   String _formatSize(double kb) {
@@ -4249,7 +4272,7 @@ class _BackupScreenState extends State<BackupScreen>
                     ),
                   ),
                   title: Text(
-                    DateFormat('dd MMM yyyy, hh:mm a').format(lastMod),
+                    DateFormat('dd MMM yyyy, hh:mm a').format(lastMod.toLocal()),
                     softWrap: true,
                     style: TextStyle(
                       fontSize: 13,
@@ -4370,7 +4393,7 @@ class _BackupScreenState extends State<BackupScreen>
                   ),
                 ),
                 title: Text(
-                  DateFormat('dd MMM yyyy, hh:mm a').format(h.createdAt),
+                  DateFormat('dd MMM yyyy, hh:mm a').format(h.createdAt.toLocal()),
                   softWrap: true,
                   style: TextStyle(
                     fontSize: 13,
