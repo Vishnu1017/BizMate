@@ -1,4 +1,5 @@
 // lib/services/backup_scheduler.dart
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -19,7 +20,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workmanager/workmanager.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Constants
+// Constants & SharedPreferences Keys (Shared across Scheduler & UI)
 // ─────────────────────────────────────────────────────────────────────────────
 const String kBackupTaskName = 'bizmate_auto_backup';
 const String kBackupTaskTag  = 'bizmate_backup_tag';
@@ -28,9 +29,16 @@ const String kPrefEmail       = 'wa_backup_account';
 const String kPrefFrequency   = 'wa_backup_frequency';
 const String kPrefLastAuto    = 'wa_last_auto_backup';
 const String kPrefAutoEnabled = 'wa_auto_backup_enabled';
+const String kPrefDirty       = 'wa_backup_dirty';
+const String kPrefDirtyTime   = 'wa_backup_dirty_time';
+const String kPrefLastDrive   = 'wa_last_drive_backup';
+const String kPrefLastLocal   = 'wa_last_local_backup';
+const String kPrefLastSize    = 'wa_last_backup_size';
+const String kPrefLastRecords = 'wa_last_backup_records';
+const String kPrefLastStatus  = 'wa_last_backup_status';
+const String kPrefNetwork     = 'wa_backup_network';
 
-// Frequency index mapping (must match WhatsAppBackupFrequency enum order)
-// 0=never, 1=manualOnly, 2=daily, 3=weekly, 4=monthly
+// Frequency index mapping (0=never, 1=manualOnly, 2=daily, 3=weekly, 4=monthly)
 const Map<int, Duration> kFrequencyDurations = {
   2: Duration(hours: 24),
   3: Duration(days: 7),
@@ -51,19 +59,31 @@ void callbackDispatcher() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Auto-backup logic (runs inside workmanager background isolate)
+// Background isolate execution
 // ─────────────────────────────────────────────────────────────────────────────
 Future<void> _performAutoBackup(Map<String, dynamic>? inputData) async {
   try {
     final prefs = await SharedPreferences.getInstance();
-    final email = prefs.getString(kPrefEmail) ?? '';
+    final email = prefs.getString(kPrefEmail) ?? inputData?['email'] ?? '';
     if (email.isEmpty) return;
+
+    // Check if auto backup is enabled
+    final isEnabled = prefs.getBool(kPrefAutoEnabled) ?? false;
+    if (!isEnabled) return;
+
+    // Change detection check: if data is not dirty and a previous backup exists, skip
+    final isDirty = prefs.getBool(kPrefDirty) ?? true;
+    final lastDrive = prefs.getString(kPrefLastDrive);
+    if (!isDirty && lastDrive != null) {
+      debugPrint('BackupScheduler (Background): No records modified since last backup. Skipping.');
+      return;
+    }
 
     // Init Hive in background isolate
     final dir = await getApplicationDocumentsDirectory();
     Hive.init(dir.path);
 
-    // Register adapters matching main.dart (re-register is safe)
+    // Register all adapters (0-6)
     if (!Hive.isAdapterRegistered(0)) Hive.registerAdapter(UserAdapter());
     if (!Hive.isAdapterRegistered(1)) Hive.registerAdapter(SaleAdapter());
     if (!Hive.isAdapterRegistered(2)) Hive.registerAdapter(ProductAdapter());
@@ -75,13 +95,15 @@ Future<void> _performAutoBackup(Map<String, dynamic>? inputData) async {
     final safeEmail = email.replaceAll('.', '_').replaceAll('@', '_');
     final box = await Hive.openBox('userdata_$safeEmail');
 
-    final sales    = List<Sale>.from(box.get('sales', defaultValue: <Sale>[]));
+    final sales = List<Sale>.from(box.get('sales', defaultValue: <Sale>[]));
     final products = List<Product>.from(box.get('products', defaultValue: <Product>[]));
     final customers = List<CustomerModel>.from(box.get('customers', defaultValue: <CustomerModel>[]));
     final rentalItems = List<RentalItem>.from(box.get('rental_items', defaultValue: <RentalItem>[]));
     final rentalSales = List<RentalSaleModel>.from(box.get('rental_sales', defaultValue: <RentalSaleModel>[]));
 
+    final totalRecords = sales.length + products.length + customers.length + rentalItems.length + rentalSales.length;
     final now = DateTime.now();
+
     final payload = {
       'appName': 'BizMate',
       'format': 'AutoBackup',
@@ -113,22 +135,32 @@ Future<void> _performAutoBackup(Map<String, dynamic>? inputData) async {
       }).toList(),
       'products': products.map((p) => {'name': p.name, 'rate': p.rate}).toList(),
       'customers': customers.map((c) => {
-        'name': c.name, 'phone': c.phone,
+        'name': c.name,
+        'phone': c.phone,
         'createdAt': c.createdAt.toIso8601String(),
         'rentals': c.rentals.map((r) => {
-          'from': r.from.toIso8601String(), 'to': r.to.toIso8601String(),
+          'from': r.from.toIso8601String(),
+          'to': r.to.toIso8601String(),
         }).toList(),
       }).toList(),
       'rentalItems': rentalItems.map((r) => {
-        'name': r.name, 'brand': r.brand, 'category': r.category,
-        'price': r.price, 'availability': r.availability,
-        'imagePath': r.imagePath, 'condition': r.condition,
+        'name': r.name,
+        'brand': r.brand,
+        'category': r.category,
+        'price': r.price,
+        'availability': r.availability,
+        'imagePath': r.imagePath,
+        'condition': r.condition,
       }).toList(),
       'rentalSales': rentalSales.map((rs) => {
-        'id': rs.id, 'customerName': rs.customerName,
-        'customerPhone': rs.customerPhone, 'itemName': rs.itemName,
-        'ratePerDay': rs.ratePerDay, 'numberOfDays': rs.numberOfDays,
-        'totalCost': rs.totalCost, 'amountPaid': rs.amountPaid,
+        'id': rs.id,
+        'customerName': rs.customerName,
+        'customerPhone': rs.customerPhone,
+        'itemName': rs.itemName,
+        'ratePerDay': rs.ratePerDay,
+        'numberOfDays': rs.numberOfDays,
+        'totalCost': rs.totalCost,
+        'amountPaid': rs.amountPaid,
         'paymentMode': rs.paymentMode,
         'fromDateTime': rs.fromDateTime.toIso8601String(),
         'toDateTime': rs.toDateTime.toIso8601String(),
@@ -136,27 +168,40 @@ Future<void> _performAutoBackup(Map<String, dynamic>? inputData) async {
       }).toList(),
     };
 
-    // Save local file
+    // Save local backup file
     final backupDir = Directory('${dir.path}/BizMate_Backups');
     if (!backupDir.existsSync()) backupDir.createSync(recursive: true);
 
     final dateStr = DateFormat('yyyyMMdd_HHmmss').format(now);
     final backupFile = File('${backupDir.path}/BizMate_AutoBackup_$dateStr.json');
     await backupFile.writeAsString(const JsonEncoder.withIndent('  ').convert(payload));
+    final sizeKb = backupFile.lengthSync() / 1024.0;
 
-    // Update last auto-backup timestamp
-    await prefs.setString(kPrefLastAuto, now.toIso8601String());
+    await prefs.setString(kPrefLastLocal, now.toIso8601String());
 
-    // Try uploading to Drive (silently)
+    // Upload to Google Drive (silently in background)
     await DriveBackupService.signInSilently();
     if (DriveBackupService.isSignedIn) {
-      await DriveBackupService.uploadBackupFile(backupFile);
-    }
+      final driveFileId = await DriveBackupService.uploadBackupFile(backupFile);
+      if (driveFileId != null && driveFileId.isNotEmpty) {
+        // Success: update cloud timestamp, size, status, and clear dirty flag
+        await prefs.setString(kPrefLastDrive, now.toIso8601String());
+        await prefs.setString(kPrefLastAuto, now.toIso8601String());
+        await prefs.setDouble(kPrefLastSize, sizeKb);
+        await prefs.setInt(kPrefLastRecords, totalRecords);
+        await prefs.setString(kPrefLastStatus, 'Success');
+        await prefs.setBool(kPrefDirty, false);
 
-    // Show local notification
-    await _showBackupNotification(sales.length + products.length + customers.length);
-  } catch (_) {
-    // Background isolate — silently fail
+        await _showBackupNotification(totalRecords);
+      } else {
+        final err = DriveBackupService.lastUploadError ?? 'Upload failed';
+        await prefs.setString(kPrefLastStatus, 'Pending upload ($err)');
+      }
+    } else {
+      await prefs.setString(kPrefLastStatus, 'Pending Google Drive connection');
+    }
+  } catch (e) {
+    debugPrint('BackupScheduler background error: $e');
   }
 }
 
@@ -164,41 +209,131 @@ Future<void> _performAutoBackup(Map<String, dynamic>? inputData) async {
 // Notification helper
 // ─────────────────────────────────────────────────────────────────────────────
 Future<void> _showBackupNotification(int recordCount) async {
-  final plugin = FlutterLocalNotificationsPlugin();
-  const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
-  await plugin.initialize(
-    settings: const InitializationSettings(android: androidInit),
-  );
+  try {
+    final plugin = FlutterLocalNotificationsPlugin();
+    const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
+    await plugin.initialize(
+      settings: const InitializationSettings(android: androidInit),
+    );
 
-  const details = NotificationDetails(
-    android: AndroidNotificationDetails(
-      'bizmate_backup_channel',
-      'BizMate Backups',
-      channelDescription: 'Automatic backup notifications',
-      importance: Importance.low,
-      priority: Priority.low,
-      icon: '@mipmap/ic_launcher',
-    ),
-  );
+    const details = NotificationDetails(
+      android: AndroidNotificationDetails(
+        'bizmate_backup_channel',
+        'BizMate Backups',
+        channelDescription: 'Automatic backup notifications',
+        importance: Importance.low,
+        priority: Priority.low,
+        icon: '@mipmap/ic_launcher',
+      ),
+    );
 
-  await plugin.show(
-    id: 99,
-    title: '✅ BizMate Auto Backup',
-    body: '$recordCount records backed up to Drive',
-    notificationDetails: details,
-  );
+    await plugin.show(
+      id: 99,
+      title: '✅ BizMate Auto Backup Complete',
+      body: '$recordCount records synced to Google Drive',
+      notificationDetails: details,
+    );
+  } catch (_) {}
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// BackupScheduler — call from UI
+// BackupScheduler Service (Centralized Controller)
 // ─────────────────────────────────────────────────────────────────────────────
 class BackupScheduler {
+  static bool _isBackingUpBusy = false;
+  static bool get isBackingUpBusy => _isBackingUpBusy;
+
+  static StreamSubscription? _boxSubscription;
+
   /// Initialise workmanager. Call once in main().
   static Future<void> init() async {
     try {
       await Workmanager().initialize(callbackDispatcher);
     } catch (e) {
-      debugPrint('BackupScheduler: WorkManager not initialized yet: $e');
+      debugPrint('BackupScheduler: WorkManager initialization: $e');
+    }
+  }
+
+  /// Attach automatic change detection to Hive box.
+  /// When sales, products, customers, or rentals change, marks backup as dirty.
+  static void startWatchingBox(Box box) {
+    _boxSubscription?.cancel();
+    _boxSubscription = box.watch().listen((event) {
+      markDirty();
+    });
+  }
+
+  /// Stop watching changes (e.g. on logout)
+  static void stopWatchingBox() {
+    _boxSubscription?.cancel();
+    _boxSubscription = null;
+  }
+
+  /// Mark local database as having pending changes that need backup
+  static Future<void> markDirty() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(kPrefDirty, true);
+      await prefs.setString(kPrefDirtyTime, DateTime.now().toIso8601String());
+    } catch (_) {}
+  }
+
+  /// Returns whether records have changed since the last backup
+  static Future<bool> isDirty() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(kPrefDirty) ?? true;
+  }
+
+  /// Clear dirty state after successful backup
+  static Future<void> clearDirty() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(kPrefDirty, false);
+  }
+
+  /// Check whether an automatic backup is due (called on app open & app resume)
+  static Future<bool> checkAndRunDueBackup({String? userEmail}) async {
+    if (_isBackingUpBusy) return false;
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final isEnabled = prefs.getBool(kPrefAutoEnabled) ?? false;
+      if (!isEnabled) return false;
+
+      final freqIdx = prefs.getInt(kPrefFrequency) ?? 2; // default daily
+      final duration = kFrequencyDurations[freqIdx];
+      if (duration == null) return false;
+
+      final email = userEmail ?? prefs.getString(kPrefEmail) ?? '';
+      if (email.isEmpty) return false;
+
+      final lastDriveStr = prefs.getString(kPrefLastDrive);
+      final lastDriveTime = lastDriveStr != null ? DateTime.tryParse(lastDriveStr) : null;
+      final now = DateTime.now();
+
+      bool isDue = false;
+      if (lastDriveTime == null) {
+        isDue = true;
+      } else {
+        final diff = now.difference(lastDriveTime);
+        if (diff >= duration) {
+          isDue = true;
+        }
+      }
+
+      if (!isDue) return false;
+
+      final dirty = await isDirty();
+      if (!dirty && lastDriveTime != null) {
+        debugPrint('BackupScheduler: Backup interval elapsed, but no records changed. Skipping upload.');
+        return false;
+      }
+
+      debugPrint('BackupScheduler: Backup is due (${duration.inHours}h, dirty=$dirty). Running auto-backup...');
+      final success = await runAutoBackupNow(email);
+      return success;
+    } catch (e) {
+      debugPrint('BackupScheduler checkAndRunDueBackup error: $e');
+      return false;
     }
   }
 
@@ -209,7 +344,6 @@ class BackupScheduler {
     String userEmail, {
     bool wifiOnly = false,
   }) async {
-    // Cancel any existing task first
     await cancel();
 
     final prefs = await SharedPreferences.getInstance();
@@ -218,7 +352,6 @@ class BackupScheduler {
 
     final duration = kFrequencyDurations[frequencyIndex];
     if (duration == null) {
-      // 0=never or 1=manual — don't schedule
       await prefs.setBool(kPrefAutoEnabled, false);
       return;
     }
@@ -238,14 +371,69 @@ class BackupScheduler {
         ),
         inputData: {'email': userEmail},
       );
+      debugPrint('BackupScheduler: Registered WorkManager task with frequency: ${duration.inHours}h');
     } catch (e) {
       debugPrint('BackupScheduler: registerPeriodicTask error: $e');
     }
   }
 
   /// Run background auto-backup routine immediately on demand
-  static Future<void> runAutoBackupNow(String userEmail) async {
-    await _performAutoBackup({'email': userEmail});
+  static Future<bool> runAutoBackupNow(String userEmail) async {
+    if (_isBackingUpBusy) return false;
+    _isBackingUpBusy = true;
+    try {
+      await _performAutoBackup({'email': userEmail});
+      return true;
+    } finally {
+      _isBackingUpBusy = false;
+    }
+  }
+
+  /// Create a local pre-restore safety copy of current records before restoring
+  static Future<File?> createSafetySnapshot(String userEmail) async {
+    try {
+      final safeEmail = userEmail.replaceAll('.', '_').replaceAll('@', '_');
+      final userBoxName = 'userdata_$safeEmail';
+      Box box;
+      if (Hive.isBoxOpen(userBoxName)) {
+        box = Hive.box(userBoxName);
+      } else {
+        box = await Hive.openBox(userBoxName);
+      }
+
+      final sales = List<Sale>.from(box.get('sales', defaultValue: <Sale>[]));
+      final products = List<Product>.from(box.get('products', defaultValue: <Product>[]));
+      final customers = List<CustomerModel>.from(box.get('customers', defaultValue: <CustomerModel>[]));
+      final rentalItems = List<RentalItem>.from(box.get('rental_items', defaultValue: <RentalItem>[]));
+      final rentalSales = List<RentalSaleModel>.from(box.get('rental_sales', defaultValue: <RentalSaleModel>[]));
+
+      final now = DateTime.now();
+      final payload = {
+        'appName': 'BizMate',
+        'format': 'PreRestoreSafetyCopy',
+        'version': 3,
+        'createdAt': now.toIso8601String(),
+        'userEmail': userEmail,
+        'sales': sales.map((s) => {'customerName': s.customerName, 'amount': s.amount, 'dateTime': s.dateTime.toIso8601String()}).toList(),
+        'products': products.map((p) => {'name': p.name, 'rate': p.rate}).toList(),
+        'customers': customers.map((c) => {'name': c.name, 'phone': c.phone}).toList(),
+        'rentalItems': rentalItems.map((r) => {'name': r.name, 'price': r.price}).toList(),
+        'rentalSales': rentalSales.map((rs) => {'id': rs.id, 'customerName': rs.customerName}).toList(),
+      };
+
+      final dir = await getApplicationDocumentsDirectory();
+      final backupDir = Directory('${dir.path}/BizMate_Backups/SafetySnapshots');
+      if (!backupDir.existsSync()) backupDir.createSync(recursive: true);
+
+      final dateStr = DateFormat('yyyyMMdd_HHmmss').format(now);
+      final file = File('${backupDir.path}/BizMate_SafetyCopy_$dateStr.json');
+      await file.writeAsString(const JsonEncoder.withIndent('  ').convert(payload));
+      debugPrint('BackupScheduler: Safety snapshot created at: ${file.path}');
+      return file;
+    } catch (e) {
+      debugPrint('BackupScheduler createSafetySnapshot error: $e');
+      return null;
+    }
   }
 
   /// Cancel the scheduled backup task.
@@ -269,6 +457,13 @@ class BackupScheduler {
   static Future<DateTime?> lastAutoBackupTime() async {
     final prefs = await SharedPreferences.getInstance();
     final str = prefs.getString(kPrefLastAuto);
+    return str != null ? DateTime.tryParse(str) : null;
+  }
+
+  /// Returns the last Google Drive backup DateTime, or null.
+  static Future<DateTime?> lastDriveBackupTime() async {
+    final prefs = await SharedPreferences.getInstance();
+    final str = prefs.getString(kPrefLastDrive);
     return str != null ? DateTime.tryParse(str) : null;
   }
 }

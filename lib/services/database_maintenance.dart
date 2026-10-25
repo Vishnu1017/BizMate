@@ -5,6 +5,7 @@ import 'package:bizmate/models/rental_item.dart';
 import 'package:bizmate/models/rental_sale_model.dart';
 import 'package:bizmate/models/sale.dart';
 import 'package:bizmate/models/user_model.dart';
+import 'package:bizmate/services/backup_scheduler.dart';
 import 'package:flutter/widgets.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
@@ -22,7 +23,7 @@ class DatabaseMaintenance with WidgetsBindingObserver {
 
   static bool _observerRegistered = false;
 
-  /// Register lifecycle listener for background auto-compaction
+  /// Register lifecycle listener for background auto-compaction and auto-backup
   static void initLifecycleListener() {
     if (_observerRegistered) return;
     WidgetsBinding.instance.addObserver(_instance);
@@ -36,6 +37,9 @@ class DatabaseMaintenance with WidgetsBindingObserver {
         state == AppLifecycleState.detached ||
         state == AppLifecycleState.hidden) {
       performCompaction();
+    } else if (state == AppLifecycleState.resumed) {
+      // Check if scheduled auto-backup is due when user re-opens/resumes BizMate
+      BackupScheduler.checkAndRunDueBackup();
     }
   }
 

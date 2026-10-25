@@ -171,17 +171,31 @@ class DriveBackupService {
     }
   }
 
+  static bool _isUploading = false;
+  static bool get isUploading => _isUploading;
+  static String? _lastUploadError;
+  static String? get lastUploadError => _lastUploadError;
+
   /// Upload a local backup file to Drive. Returns Drive file ID or null.
+  /// Prevents concurrent duplicate uploads and captures meaningful error states.
   static Future<String?> uploadBackupFile(File file) async {
+    if (_isUploading) {
+      debugPrint('DriveBackupService: Upload already in progress, skipping concurrent duplicate.');
+      return null;
+    }
+    _isUploading = true;
+    _lastUploadError = null;
+
     try {
       var api = await _getDriveApi();
       if (api == null) {
-        final acc = await signIn();
+        final acc = await signInSilently() ?? await signIn();
         if (acc != null) {
           api = await _getDriveApi();
         }
       }
       if (api == null) {
+        _lastUploadError = 'Not signed in to Google Drive';
         debugPrint('DriveBackupService: Not signed in, cannot upload.');
         return null;
       }
@@ -212,9 +226,23 @@ class DriveBackupService {
       );
       debugPrint('DriveBackupService: Uploaded file to Drive successfully: ${result.id}');
       return result.id;
+    } on SocketException catch (e) {
+      _lastUploadError = 'Network connection failed: ${e.message}';
+      debugPrint('DriveBackupService upload network error: $e');
+      return null;
     } catch (e) {
+      final msg = e.toString();
+      if (msg.contains('401') || msg.contains('authError') || msg.contains('invalid_grant')) {
+        _lastUploadError = 'Google Drive session expired. Please re-connect account.';
+      } else if (msg.contains('403') || msg.contains('quotaExceeded') || msg.contains('usageLimits')) {
+        _lastUploadError = 'Google Drive storage quota or rate limit exceeded.';
+      } else {
+        _lastUploadError = 'Upload failed: $msg';
+      }
       debugPrint('DriveBackupService uploadBackupFile error: $e');
       return null;
+    } finally {
+      _isUploading = false;
     }
   }
 

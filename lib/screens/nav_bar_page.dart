@@ -13,6 +13,7 @@ import 'package:hugeicons/hugeicons.dart' show HugeIcon, HugeIcons;
 import 'package:shared_preferences/shared_preferences.dart'
     show SharedPreferences;
 import '../models/product_store.dart';
+import '../services/backup_scheduler.dart';
 import 'backup_screen.dart';
 import 'customers_page.dart';
 import 'dashboard_page.dart';
@@ -168,6 +169,11 @@ class _NavBarPageState extends State<NavBarPage>
     }
 
     final userBox = Hive.box(userBoxName);
+
+    // 🔄 Automatic change detection: mark backup dirty whenever business records change
+    BackupScheduler.startWatchingBox(userBox);
+    // ☁️ Check if a scheduled backup is due when user enters dashboard
+    BackupScheduler.checkAndRunDueBackup(userEmail: email);
 
     // 🔥 FIRST LOGIN FLAG (PERSISTENT)
     final hasLoggedInOnce =

@@ -179,6 +179,8 @@ class _BackupScreenState extends State<BackupScreen>
   bool _isAutoBackupSchedulerActive = false;
   DateTime? _lastAutoSchedulerBackupTime;
   bool _isGoogleDriveConnected = false;
+  String _lastBackupStatus = '';
+  bool _isDataDirty = false;
 
   List<BackupHistoryEntry> _history = [];
   List<File> _localBackupFiles = [];
@@ -277,6 +279,9 @@ class _BackupScreenState extends State<BackupScreen>
       );
     }
 
+    final lastStatus = prefs.getString(kPrefLastStatus) ?? '';
+    final isDirty = await BackupScheduler.isDirty();
+
     setState(() {
       _frequency = parsedFreq;
       _networkType =
@@ -290,6 +295,8 @@ class _BackupScreenState extends State<BackupScreen>
           parsedFreq.isAutomatic || isSchedulerActive;
       _lastAutoSchedulerBackupTime = lastAutoTime;
       _isGoogleDriveConnected = driveConnected;
+      _lastBackupStatus = lastStatus;
+      _isDataDirty = isDirty;
 
       _lastLocalBackupTime =
           lastLocalStr != null ? DateTime.tryParse(lastLocalStr) : null;
@@ -694,9 +701,25 @@ class _BackupScreenState extends State<BackupScreen>
             final nowIso = now.toIso8601String();
             final prefs = await SharedPreferences.getInstance();
             await prefs.setString(_kLastDrive, nowIso);
+            await prefs.setString(kPrefLastAuto, nowIso);
+            await prefs.setDouble(kPrefLastSize, sizeKb);
+            await prefs.setInt(kPrefLastRecords, entry.totalRecords);
+            await prefs.setString(kPrefLastStatus, 'Success');
+            await BackupScheduler.clearDirty();
             setState(() {
               _lastDriveBackupTime = now;
+              _lastBackupSizeKb = sizeKb;
+              _lastRecordCount = entry.totalRecords;
               _isGoogleDriveConnected = true;
+              _lastBackupStatus = 'Success';
+              _isDataDirty = false;
+            });
+          } else {
+            final err = DriveBackupService.lastUploadError ?? 'Google Drive upload failed';
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.setString(kPrefLastStatus, err);
+            setState(() {
+              _lastBackupStatus = err;
             });
           }
         }
@@ -894,6 +917,14 @@ class _BackupScreenState extends State<BackupScreen>
 
       setState(() {
         _isRestoring = true;
+        _backupProgress = 0.05;
+        _backupProgressStage = 'Creating pre-restore safety copy…';
+      });
+
+      // Create a safety snapshot of current local records before modifying database
+      await BackupScheduler.createSafetySnapshot(widget.userEmail);
+
+      setState(() {
         _backupProgress = 0.1;
         _backupProgressStage = 'Opening database…';
       });
@@ -3406,19 +3437,59 @@ class _BackupScreenState extends State<BackupScreen>
                             ),
                           ),
                         ),
+                        if (_isDataDirty) ...[
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 7,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.amber.withValues(alpha: 0.25),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: Colors.amber.withValues(alpha: 0.6),
+                              ),
+                            ),
+                            child: const Text(
+                              'Unsaved Changes',
+                              style: TextStyle(
+                                color: Colors.amberAccent,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                     const SizedBox(height: 3),
                     Text(
                       _lastDriveBackupTime != null
                           ? 'Synced ${_formatDateTime(_lastDriveBackupTime)}'
-                          : 'No cloud backups uploaded yet',
+                          : (_lastLocalBackupTime != null
+                              ? 'Local backup ${_formatDateTime(_lastLocalBackupTime)}'
+                              : 'No cloud backups uploaded yet'),
                       softWrap: true,
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.85),
                         fontSize: isVeryCompact ? 11 : 12,
                       ),
                     ),
+                    if (_lastBackupStatus.isNotEmpty &&
+                        _lastBackupStatus != 'Success')
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Text(
+                          'Last notice: $_lastBackupStatus',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: Color(0xFFFCA5A5),
+                            fontSize: 10,
+                          ),
+                        ),
+                      ),
                   ],
                 ),
               ),
