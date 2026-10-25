@@ -1152,12 +1152,7 @@ class _NavBarPageState extends State<NavBarPage>
         body: Column(
           children: [
             // Clean AppBar
-            Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 1200),
-                child: _buildCleanAppBar(screenWidth),
-              ),
-            ),
+            _buildCleanAppBar(screenWidth),
 
             // Main content
             Expanded(
@@ -1212,11 +1207,10 @@ class _NavBarPageState extends State<NavBarPage>
 
         // Clean Navigation Bar
         bottomNavigationBar: SafeArea(
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 640),
-              child: _buildCleanNavigation(screenWidth),
-            ),
+          child: Align(
+            alignment: Alignment.bottomCenter,
+            heightFactor: 1.0,
+            child: _buildCleanNavigation(screenWidth),
           ),
         ),
       ),
