@@ -307,10 +307,13 @@ class _DashboardPageState extends State<DashboardPage> {
             horizontal: outerPadding,
             vertical: outerPadding,
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Sale Overview Card
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 1000),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Sale Overview Card
               Container(
                 padding: EdgeInsets.symmetric(
                   horizontal: cardPaddingH,
@@ -760,7 +763,9 @@ class _DashboardPageState extends State<DashboardPage> {
           ),
         ),
       ),
-    );
+    ),
+  ),
+);
   }
 
   PopupMenuItem<String> _buildMenuItem(

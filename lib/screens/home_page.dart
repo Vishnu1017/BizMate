@@ -1784,7 +1784,15 @@ class _HomePageState extends State<HomePage>
       body: Stack(
         children: [
           // 🔥 BLOCK TOUCHES WHEN SENDING
-          AbsorbPointer(absorbing: _isSendingReminder, child: buildSalesList()),
+          AbsorbPointer(
+            absorbing: _isSendingReminder,
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 1100),
+                child: buildSalesList(),
+              ),
+            ),
+          ),
 
           // 🔥 OPTIONAL LOADING OVERLAY
           if (_isSendingReminder)

@@ -511,9 +511,12 @@ class _CustomersPageState extends State<CustomersPage> {
       body: MediaQuery.removePadding(
         removeTop: true,
         context: context,
-        child: Column(
-          children: [
-            AdvancedSearchBar(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1100),
+            child: Column(
+              children: [
+                AdvancedSearchBar(
               hintText: 'Search customers...',
               onSearchChanged: _handleSearchChanged,
               onDateRangeChanged: _handleDateRangeChanged,
@@ -871,10 +874,12 @@ class _CustomersPageState extends State<CustomersPage> {
                           );
                         },
                       ),
-            ),
-          ],
+              ),
+            ],
+          ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }

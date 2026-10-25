@@ -704,10 +704,13 @@ class _CameraRentalNavBarState extends State<CameraRentalNavBar> {
       backgroundColor: _backgroundColor,
       body: AbsorbPointer(
         absorbing: _isLoading,
-        child: Column(
-          children: [
-            // Clean AppBar (matching NavBarPage)
-            _buildCleanAppBar(screenWidth),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1200),
+            child: Column(
+              children: [
+                // Clean AppBar (matching NavBarPage)
+                _buildCleanAppBar(screenWidth),
 
             // Main content
             Expanded(
@@ -746,12 +749,12 @@ class _CameraRentalNavBarState extends State<CameraRentalNavBar> {
                               Widget child,
                               Animation<double> animation,
                             ) {
-                              return FadeTransition(
-                                opacity: animation,
-                                child: child,
-                              );
-                            },
-                          ),
+                                return FadeTransition(
+                                  opacity: animation,
+                                  child: child,
+                                );
+                              },
+                            ),
                         ),
                       ),
                     ),
@@ -762,6 +765,8 @@ class _CameraRentalNavBarState extends State<CameraRentalNavBar> {
           ],
         ),
       ),
+    ),
+  ),
       // Clean Navigation Bar (matching NavBarPage)
       bottomNavigationBar: SafeArea(child: _buildCleanNavigation(screenWidth)),
     );

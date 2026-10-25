@@ -255,10 +255,9 @@ class _NavBarPageState extends State<NavBarPage>
   }
 
   double _appBarHeight(double width) {
-    if (width <= _kCompactMax) return 110;
-    if (width <= _kLargePhoneMax) return 140;
-    if (width <= _kTabletMax) return 170;
-    return 200;
+    if (width <= _kCompactMax) return 108;
+    if (width <= _kLargePhoneMax) return 116;
+    return 124;
   }
 
   // ------------------------
@@ -1153,48 +1152,58 @@ class _NavBarPageState extends State<NavBarPage>
         body: Column(
           children: [
             // Clean AppBar
-            _buildCleanAppBar(screenWidth),
+            Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 1200),
+                child: _buildCleanAppBar(screenWidth),
+              ),
+            ),
 
             // Main content
             Expanded(
-              child: Padding(
-                padding: EdgeInsets.only(
-                  top: isSmallScreen ? 8 : 10,
-                  left: _pagePadding(screenWidth).horizontal / 4,
-                  right: _pagePadding(screenWidth).horizontal / 4,
-                  bottom: _pagePadding(screenWidth).horizontal / 11,
-                ),
-                child: Column(
-                  children: [
-                    // Action buttons
-                    if ([0, 1, 2].contains(_currentIndex))
-                      _buildAddSaleButton(screenWidth),
-                    if (_currentIndex == 3) _buildAddItemButton(screenWidth),
-
-                    SizedBox(height: _scaleForWidth(screenWidth, 16)),
-
-                    // Page content
-                    Expanded(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: _surfaceColor,
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: _dividerColor),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.03),
-                              blurRadius: 16,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(20),
-                          child: _pages[_currentIndex],
-                        ),
-                      ),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 1200),
+                  child: Padding(
+                    padding: EdgeInsets.only(
+                      top: isSmallScreen ? 8 : 10,
+                      left: _pagePadding(screenWidth).horizontal / 4,
+                      right: _pagePadding(screenWidth).horizontal / 4,
+                      bottom: _pagePadding(screenWidth).horizontal / 11,
                     ),
-                  ],
+                    child: Column(
+                      children: [
+                        // Action buttons
+                        if ([0, 1, 2].contains(_currentIndex))
+                          _buildAddSaleButton(screenWidth),
+                        if (_currentIndex == 3) _buildAddItemButton(screenWidth),
+
+                        SizedBox(height: _scaleForWidth(screenWidth, 16)),
+
+                        // Page content
+                        Expanded(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: _surfaceColor,
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: _dividerColor),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.03),
+                                  blurRadius: 16,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(20),
+                              child: _pages[_currentIndex],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -1203,7 +1212,12 @@ class _NavBarPageState extends State<NavBarPage>
 
         // Clean Navigation Bar
         bottomNavigationBar: SafeArea(
-          child: _buildCleanNavigation(screenWidth),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 640),
+              child: _buildCleanNavigation(screenWidth),
+            ),
+          ),
         ),
       ),
     );
