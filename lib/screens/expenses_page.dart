@@ -10,6 +10,7 @@ import 'package:share_plus/share_plus.dart';
 import '../models/expense.dart';
 import '../services/backup_scheduler.dart';
 import '../utils/app_theme.dart';
+import '../widgets/ModernCalendar.dart' show ModernCalendar;
 import '../widgets/app_snackbar.dart';
 import '../widgets/app_theme_toggle.dart';
 import '../widgets/confirm_delete_dialog.dart';
@@ -34,25 +35,46 @@ class ExpensesPage extends StatefulWidget {
 
   static const List<ExpenseCategoryInfo> categories = [
     ExpenseCategoryInfo('Rent', Icons.apartment_rounded, Colors.purple),
-    ExpenseCategoryInfo('Maintenance & Repairs', Icons.build_rounded, Colors.orange),
+    ExpenseCategoryInfo(
+      'Maintenance & Repairs',
+      Icons.build_rounded,
+      Colors.orange,
+    ),
     ExpenseCategoryInfo('Salaries & Staff', Icons.badge_rounded, Colors.teal),
     ExpenseCategoryInfo('Utilities & Bills', Icons.bolt_rounded, Colors.amber),
-    ExpenseCategoryInfo('Equipment & Gear', Icons.camera_alt_rounded, Colors.indigo),
+    ExpenseCategoryInfo(
+      'Equipment & Gear',
+      Icons.camera_alt_rounded,
+      Colors.indigo,
+    ),
     ExpenseCategoryInfo('Marketing & Ads', Icons.campaign_rounded, Colors.pink),
-    ExpenseCategoryInfo('Supplies & Packaging', Icons.inventory_2_rounded, Colors.brown),
-    ExpenseCategoryInfo('Travel & Fuel', Icons.local_shipping_rounded, Colors.blue),
-    ExpenseCategoryInfo('Taxes & Licences', Icons.receipt_long_rounded, Colors.cyan),
+    ExpenseCategoryInfo(
+      'Supplies & Packaging',
+      Icons.inventory_2_rounded,
+      Colors.brown,
+    ),
+    ExpenseCategoryInfo(
+      'Travel & Fuel',
+      Icons.local_shipping_rounded,
+      Colors.blue,
+    ),
+    ExpenseCategoryInfo(
+      'Taxes & Licences',
+      Icons.receipt_long_rounded,
+      Colors.cyan,
+    ),
     ExpenseCategoryInfo('Other', Icons.category_rounded, Colors.blueGrey),
   ];
 
   static ExpenseCategoryInfo getCategoryInfo(String category) {
     return categories.firstWhere(
       (c) => c.name.toLowerCase() == category.toLowerCase(),
-      orElse: () => const ExpenseCategoryInfo(
-        'Other',
-        Icons.category_rounded,
-        Colors.blueGrey,
-      ),
+      orElse:
+          () => const ExpenseCategoryInfo(
+            'Other',
+            Icons.category_rounded,
+            Colors.blueGrey,
+          ),
     );
   }
 
@@ -69,7 +91,8 @@ class _ExpensesPageState extends State<ExpensesPage> {
   bool _isLoading = true;
   String _searchQuery = '';
   String _selectedCategory = 'All';
-  String _selectedFilter = 'This Month'; // All, This Month, Last 30 Days, This Year
+  String _selectedFilter =
+      'This Month'; // All, This Month, Last 30 Days, This Year
 
   late Box _userBox;
 
@@ -81,8 +104,9 @@ class _ExpensesPageState extends State<ExpensesPage> {
 
   Future<void> _loadExpenses() async {
     try {
-      final safeEmail =
-          widget.userEmail.replaceAll('.', '_').replaceAll('@', '_');
+      final safeEmail = widget.userEmail
+          .replaceAll('.', '_')
+          .replaceAll('@', '_');
       final boxName = "userdata_$safeEmail";
 
       if (!Hive.isBoxOpen(boxName)) {
@@ -91,10 +115,11 @@ class _ExpensesPageState extends State<ExpensesPage> {
       _userBox = Hive.box(boxName);
 
       final raw = _userBox.get('expenses', defaultValue: []);
-      final List<Expense> loaded = (raw as List).map((e) {
-        if (e is Expense) return e;
-        return Expense.fromJson(Map<String, dynamic>.from(e as Map));
-      }).toList();
+      final List<Expense> loaded =
+          (raw as List).map((e) {
+            if (e is Expense) return e;
+            return Expense.fromJson(Map<String, dynamic>.from(e as Map));
+          }).toList();
 
       loaded.sort((a, b) => b.dateTime.compareTo(a.dateTime));
 
@@ -168,13 +193,15 @@ class _ExpensesPageState extends State<ExpensesPage> {
 
   Future<void> _openExpenseDialog({Expense? expenseToEdit}) async {
     final isEditing = expenseToEdit != null;
-    final titleController =
-        TextEditingController(text: isEditing ? expenseToEdit.title : '');
+    final titleController = TextEditingController(
+      text: isEditing ? expenseToEdit.title : '',
+    );
     final amountController = TextEditingController(
       text: isEditing ? expenseToEdit.amount.toStringAsFixed(2) : '',
     );
-    final notesController =
-        TextEditingController(text: isEditing ? (expenseToEdit.notes ?? '') : '');
+    final notesController = TextEditingController(
+      text: isEditing ? (expenseToEdit.notes ?? '') : '',
+    );
 
     String selectedCategory =
         isEditing ? expenseToEdit.category : categories.first.name;
@@ -204,8 +231,9 @@ class _ExpensesPageState extends State<ExpensesPage> {
               ),
               decoration: BoxDecoration(
                 color: ctx.cardBg,
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(28)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(28),
+                ),
                 boxShadow: const [
                   BoxShadow(
                     color: Colors.black26,
@@ -285,7 +313,8 @@ class _ExpensesPageState extends State<ExpensesPage> {
                       TextFormField(
                         controller: titleController,
                         decoration: InputDecoration(
-                          hintText: 'e.g. Studio Rent, Sensor Cleaning, Extra Battery',
+                          hintText:
+                              'e.g. Studio Rent, Sensor Cleaning, Extra Battery',
                           prefixIcon: const Icon(Icons.edit_note_rounded),
                           contentPadding: const EdgeInsets.symmetric(
                             horizontal: 14,
@@ -368,8 +397,7 @@ class _ExpensesPageState extends State<ExpensesPage> {
                         child: ListView.separated(
                           scrollDirection: Axis.horizontal,
                           itemCount: categories.length,
-                          separatorBuilder: (_, _) =>
-                              const SizedBox(width: 8),
+                          separatorBuilder: (_, _) => const SizedBox(width: 8),
                           itemBuilder: (context, idx) {
                             final cat = categories[idx];
                             final isSel = selectedCategory == cat.name;
@@ -416,24 +444,66 @@ class _ExpensesPageState extends State<ExpensesPage> {
                                 ),
                                 const SizedBox(height: 6),
                                 InkWell(
-                                  onTap: () async {
-                                    final picked = await showDatePicker(
+                                  onTap: () {
+                                    final isDark =
+                                        Theme.of(modalContext).brightness ==
+                                        Brightness.dark;
+                                    showModalBottomSheet(
                                       context: modalContext,
-                                      initialDate: selectedDate,
-                                      firstDate: DateTime(2020),
-                                      lastDate: DateTime(2035),
-                                    );
-                                    if (picked != null) {
-                                      setModalState(() {
-                                        selectedDate = DateTime(
-                                          picked.year,
-                                          picked.month,
-                                          picked.day,
-                                          selectedDate.hour,
-                                          selectedDate.minute,
+                                      isScrollControlled: true,
+                                      useRootNavigator: true,
+                                      backgroundColor: Colors.transparent,
+                                      builder: (calCtx) {
+                                        return Container(
+                                          padding: EdgeInsets.only(
+                                            bottom:
+                                                MediaQuery.of(
+                                                  calCtx,
+                                                ).viewInsets.bottom,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color:
+                                                isDark
+                                                    ? const Color(0xFF1E293B)
+                                                    : Colors.white,
+                                            borderRadius:
+                                                const BorderRadius.vertical(
+                                                  top: Radius.circular(24),
+                                                ),
+                                          ),
+                                          child: SafeArea(
+                                            top: false,
+                                            child: SingleChildScrollView(
+                                              child: Center(
+                                                child: Padding(
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        vertical: 8,
+                                                      ),
+                                                  child: ModernCalendar(
+                                                    selectedDate: selectedDate,
+                                                    onDateSelected: (
+                                                      DateTime date,
+                                                    ) {
+                                                      setModalState(() {
+                                                        selectedDate = DateTime(
+                                                          date.year,
+                                                          date.month,
+                                                          date.day,
+                                                          selectedDate.hour,
+                                                          selectedDate.minute,
+                                                        );
+                                                      });
+                                                      Navigator.pop(calCtx);
+                                                    },
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
                                         );
-                                      });
-                                    }
+                                      },
+                                    );
                                   },
                                   borderRadius: BorderRadius.circular(12),
                                   child: Container(
@@ -456,8 +526,9 @@ class _ExpensesPageState extends State<ExpensesPage> {
                                         ),
                                         const SizedBox(width: 8),
                                         Text(
-                                          DateFormat('dd MMM yyyy')
-                                              .format(selectedDate),
+                                          DateFormat(
+                                            'dd MMM yyyy',
+                                          ).format(selectedDate),
                                           style: TextStyle(
                                             fontSize: 13,
                                             fontWeight: FontWeight.w600,
@@ -492,9 +563,7 @@ class _ExpensesPageState extends State<ExpensesPage> {
                                     horizontal: 12,
                                   ),
                                   decoration: BoxDecoration(
-                                    border: Border.all(
-                                      color: ctx.borderColor,
-                                    ),
+                                    border: Border.all(color: ctx.borderColor),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: DropdownButtonHideUnderline(
@@ -578,8 +647,9 @@ class _ExpensesPageState extends State<ExpensesPage> {
                           onPressed: () async {
                             if (!formKey.currentState!.validate()) return;
 
-                            final amount =
-                                double.parse(amountController.text.trim());
+                            final amount = double.parse(
+                              amountController.text.trim(),
+                            );
 
                             if (isEditing) {
                               expenseToEdit.title = titleController.text.trim();
@@ -590,9 +660,9 @@ class _ExpensesPageState extends State<ExpensesPage> {
                               expenseToEdit.notes = notesController.text.trim();
                             } else {
                               final newExp = Expense(
-                                id: DateTime.now()
-                                    .millisecondsSinceEpoch
-                                    .toString(),
+                                id:
+                                    DateTime.now().millisecondsSinceEpoch
+                                        .toString(),
                                 title: titleController.text.trim(),
                                 amount: amount,
                                 category: selectedCategory,
@@ -614,9 +684,10 @@ class _ExpensesPageState extends State<ExpensesPage> {
                             if (mounted) {
                               AppSnackBar.showSuccess(
                                 context,
-                                message: isEditing
-                                    ? 'Expense updated successfully!'
-                                    : 'Expense added successfully!',
+                                message:
+                                    isEditing
+                                        ? 'Expense updated successfully!'
+                                        : 'Expense added successfully!',
                               );
                             }
                           },
@@ -650,7 +721,8 @@ class _ExpensesPageState extends State<ExpensesPage> {
     await showConfirmDialog(
       context: context,
       title: 'Delete Expense?',
-      message: 'Are you sure you want to delete "${exp.title}" of ₹${exp.amount.toStringAsFixed(2)}?',
+      message:
+          'Are you sure you want to delete "${exp.title}" of ₹${exp.amount.toStringAsFixed(2)}?',
       icon: Icons.delete_outline_rounded,
       iconColor: Colors.redAccent,
       onConfirm: () async {
@@ -709,10 +781,7 @@ class _ExpensesPageState extends State<ExpensesPage> {
       );
     } catch (e) {
       if (mounted) {
-        AppSnackBar.showError(
-          context,
-          message: 'Failed to export CSV: $e',
-        );
+        AppSnackBar.showError(context, message: 'Failed to export CSV: $e');
       }
     }
   }
@@ -727,135 +796,144 @@ class _ExpensesPageState extends State<ExpensesPage> {
 
     return Scaffold(
       backgroundColor: context.scaffoldBg,
-      appBar: showAppBar
-          ? PreferredSize(
-              preferredSize: const Size.fromHeight(60),
-              child: AppBar(
-                elevation: 0,
-                backgroundColor: Colors.transparent,
-                flexibleSpace: Container(
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        Color(0xFF2563EB),
-                        Color(0xFF1E40AF),
-                        Color(0xFF020617),
-                      ],
-                      stops: [0.0, 0.6, 1.0],
-                      begin: Alignment.bottomRight,
-                      end: Alignment.topLeft,
+      appBar:
+          showAppBar
+              ? PreferredSize(
+                preferredSize: const Size.fromHeight(60),
+                child: AppBar(
+                  elevation: 0,
+                  backgroundColor: Colors.transparent,
+                  flexibleSpace: Container(
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Color(0xFF2563EB),
+                          Color(0xFF1E40AF),
+                          Color(0xFF020617),
+                        ],
+                        stops: [0.0, 0.6, 1.0],
+                        begin: Alignment.bottomRight,
+                        end: Alignment.topLeft,
+                      ),
                     ),
                   ),
+                  iconTheme: const IconThemeData(color: Colors.white),
+                  title: const Text(
+                    'Expense Tracker',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  actions: [
+                    IconButton(
+                      icon: const Icon(
+                        Icons.file_download_outlined,
+                        color: Colors.white,
+                      ),
+                      tooltip: 'Export CSV',
+                      onPressed: _exportExpensesCsv,
+                    ),
+                    const Padding(
+                      padding: EdgeInsets.only(right: 12),
+                      child: AppThemeToggle(),
+                    ),
+                  ],
                 ),
-                iconTheme: const IconThemeData(color: Colors.white),
-                title: const Text(
-                  'Expense Tracker',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
+              )
+              : null,
+      body:
+          _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : RefreshIndicator(
+                onRefresh: _loadExpenses,
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 16,
                   ),
-                ),
-                actions: [
-                  IconButton(
-                    icon: const Icon(Icons.file_download_outlined, color: Colors.white),
-                    tooltip: 'Export CSV',
-                    onPressed: _exportExpensesCsv,
-                  ),
-                  const Padding(
-                    padding: EdgeInsets.only(right: 12),
-                    child: AppThemeToggle(),
-                  ),
-                ],
-              ),
-            )
-          : null,
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
-              onRefresh: _loadExpenses,
-              child: SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 900),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Summary Banner
-                        _buildSummaryCard(isDark),
-                        const SizedBox(height: 16),
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 900),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Summary Banner
+                          _buildSummaryCard(isDark),
+                          const SizedBox(height: 16),
 
-                        // Date Filter Tabs
-                        _buildDateFilterRow(),
-                        const SizedBox(height: 12),
+                          // Date Filter Tabs
+                          _buildDateFilterRow(),
+                          const SizedBox(height: 12),
 
-                        // Search & Category Dropdown
-                        _buildSearchAndCategoryRow(isDark, width),
-                        const SizedBox(height: 16),
+                          // Search & Category Dropdown
+                          _buildSearchAndCategoryRow(isDark, width),
+                          const SizedBox(height: 16),
 
-                        // Section Heading with Count
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'Records (${filtered.length})',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: context.textPrimary,
+                          // Section Heading with Count
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Records (${filtered.length})',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: context.textPrimary,
+                                ),
                               ),
-                            ),
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                IconButton(
-                                  icon: const Icon(
-                                    Icons.file_download_outlined,
-                                    size: 20,
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(
+                                      Icons.file_download_outlined,
+                                      size: 20,
+                                    ),
+                                    tooltip: 'Export CSV',
+                                    color: const Color(0xFF1E40AF),
+                                    onPressed: _exportExpensesCsv,
                                   ),
-                                  tooltip: 'Export CSV',
-                                  color: const Color(0xFF1E40AF),
-                                  onPressed: _exportExpensesCsv,
-                                ),
-                                TextButton.icon(
-                                  onPressed: () => _openExpenseDialog(),
-                                  icon: const Icon(Icons.add, size: 16),
-                                  label: const Text('Add Expense'),
-                                  style: TextButton.styleFrom(
-                                    foregroundColor: const Color(0xFF1E40AF),
-                                    textStyle:
-                                        const TextStyle(fontWeight: FontWeight.bold),
+                                  TextButton.icon(
+                                    onPressed: () => _openExpenseDialog(),
+                                    icon: const Icon(Icons.add, size: 16),
+                                    label: const Text('Add Expense'),
+                                    style: TextButton.styleFrom(
+                                      foregroundColor: const Color(0xFF1E40AF),
+                                      textStyle: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
                                   ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-
-                        // Expense List
-                        if (filtered.isEmpty)
-                          _buildEmptyState(isDark)
-                        else
-                          ListView.separated(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: filtered.length,
-                            separatorBuilder: (_, _) =>
-                                const SizedBox(height: 10),
-                            itemBuilder: (ctx, i) {
-                              return _buildExpenseTile(filtered[i], isDark);
-                            },
+                                ],
+                              ),
+                            ],
                           ),
-                        const SizedBox(height: 80),
-                      ],
+                          const SizedBox(height: 8),
+
+                          // Expense List
+                          if (filtered.isEmpty)
+                            _buildEmptyState(isDark)
+                          else
+                            ListView.separated(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              itemCount: filtered.length,
+                              separatorBuilder:
+                                  (_, _) => const SizedBox(height: 10),
+                              itemBuilder: (ctx, i) {
+                                return _buildExpenseTile(filtered[i], isDark);
+                              },
+                            ),
+                          const SizedBox(height: 80),
+                        ],
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
       floatingActionButton: FloatingActionButton.extended(
         backgroundColor: const Color(0xFF1E40AF),
         foregroundColor: Colors.white,
@@ -879,9 +957,10 @@ class _ExpensesPageState extends State<ExpensesPage> {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: isDark
-              ? [const Color(0xFF1E293B), const Color(0xFF0F172A)]
-              : [const Color(0xFF1E40AF), const Color(0xFF1E3A8A)],
+          colors:
+              isDark
+                  ? [const Color(0xFF1E293B), const Color(0xFF0F172A)]
+                  : [const Color(0xFF1E40AF), const Color(0xFF1E3A8A)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -914,8 +993,10 @@ class _ExpensesPageState extends State<ExpensesPage> {
               ),
               const SizedBox(width: 8),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(12),
@@ -1003,27 +1084,29 @@ class _ExpensesPageState extends State<ExpensesPage> {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
-        children: filters.map((f) {
-          final isSel = _selectedFilter == f;
-          return Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: ChoiceChip(
-              label: Text(f),
-              selected: isSel,
-              selectedColor: const Color(0xFF1E40AF),
-              labelStyle: TextStyle(
-                color: isSel ? Colors.white : context.textPrimary,
-                fontWeight: isSel ? FontWeight.bold : FontWeight.w500,
-                fontSize: 12,
-              ),
-              onSelected: (_) {
-                setState(() {
-                  _selectedFilter = f;
-                });
-              },
-            ),
-          );
-        }).toList(),
+        children:
+            filters.map((f) {
+              final isSel = _selectedFilter == f;
+              return Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: ChoiceChip(
+                  label: Text(f),
+                  selected: isSel,
+                  selectedColor: const Color(0xFF1E40AF),
+                  checkmarkColor: Colors.white,
+                  labelStyle: TextStyle(
+                    color: isSel ? Colors.white : context.textPrimary,
+                    fontWeight: isSel ? FontWeight.bold : FontWeight.w500,
+                    fontSize: 12,
+                  ),
+                  onSelected: (_) {
+                    setState(() {
+                      _selectedFilter = f;
+                    });
+                  },
+                ),
+              );
+            }).toList(),
       ),
     );
   }
@@ -1039,14 +1122,13 @@ class _ExpensesPageState extends State<ExpensesPage> {
         hintText: 'Search title, notes, mode…',
         hintStyle: const TextStyle(fontSize: 13),
         prefixIcon: const Icon(Icons.search_rounded, size: 20),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 10,
         ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
         filled: true,
-        fillColor:
-            isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC),
+        fillColor: isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC),
       ),
     );
 
@@ -1086,11 +1168,7 @@ class _ExpensesPageState extends State<ExpensesPage> {
 
     if (width < 360) {
       return Column(
-        children: [
-          searchField,
-          const SizedBox(height: 8),
-          categoryDropdown,
-        ],
+        children: [searchField, const SizedBox(height: 8), categoryDropdown],
       );
     }
 
@@ -1244,28 +1322,33 @@ class _ExpensesPageState extends State<ExpensesPage> {
                     _deleteExpense(exp);
                   }
                 },
-                itemBuilder: (context) => [
-                  const PopupMenuItem(
-                    value: 'edit',
-                    child: Row(
-                      children: [
-                        Icon(Icons.edit_outlined, size: 18),
-                        SizedBox(width: 8),
-                        Text('Edit'),
-                      ],
-                    ),
-                  ),
-                  const PopupMenuItem(
-                    value: 'delete',
-                    child: Row(
-                      children: [
-                        Icon(Icons.delete_outline, color: Colors.red, size: 18),
-                        SizedBox(width: 8),
-                        Text('Delete', style: TextStyle(color: Colors.red)),
-                      ],
-                    ),
-                  ),
-                ],
+                itemBuilder:
+                    (context) => [
+                      const PopupMenuItem(
+                        value: 'edit',
+                        child: Row(
+                          children: [
+                            Icon(Icons.edit_outlined, size: 18),
+                            SizedBox(width: 8),
+                            Text('Edit'),
+                          ],
+                        ),
+                      ),
+                      const PopupMenuItem(
+                        value: 'delete',
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.delete_outline,
+                              color: Colors.red,
+                              size: 18,
+                            ),
+                            SizedBox(width: 8),
+                            Text('Delete', style: TextStyle(color: Colors.red)),
+                          ],
+                        ),
+                      ),
+                    ],
               ),
             ],
           ),

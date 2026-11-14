@@ -113,16 +113,25 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
   Future<void> _loadUserRole() async {
     try {
       final sessionBox = await Hive.openBox('session');
-      String role = sessionBox.get('currentUserRole', defaultValue: '') as String? ?? '';
+      String role =
+          sessionBox.get('currentUserRole', defaultValue: '') as String? ?? '';
       if (role.trim().isEmpty) {
         final email = sessionBox.get('currentUserEmail')?.toString();
         if (email != null && email.isNotEmpty) {
-          final usersBox = Hive.isBoxOpen('users')
-              ? Hive.box<User>('users')
-              : await Hive.openBox<User>('users');
+          final usersBox =
+              Hive.isBoxOpen('users')
+                  ? Hive.box<User>('users')
+                  : await Hive.openBox<User>('users');
           final user = usersBox.values.firstWhere(
             (u) => u.email.trim().toLowerCase() == email.trim().toLowerCase(),
-            orElse: () => User(name: '', email: '', phone: '', password: '', role: 'None'),
+            orElse:
+                () => User(
+                  name: '',
+                  email: '',
+                  phone: '',
+                  password: '',
+                  role: 'None',
+                ),
           );
           if (user.role.isNotEmpty && user.role != 'None') {
             role = user.role;
@@ -149,7 +158,8 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
       final email = sessionBox.get('currentUserEmail');
 
       // Also load role alongside customer list
-      final role = sessionBox.get('currentUserRole', defaultValue: '') as String? ?? '';
+      final role =
+          sessionBox.get('currentUserRole', defaultValue: '') as String? ?? '';
       if (mounted) setState(() => _userRole = role.toLowerCase().trim());
 
       if (email == null || email.toString().isEmpty) {
@@ -861,7 +871,8 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
-                                      if ((customer['address'] ?? '').isNotEmpty) ...[
+                                      if ((customer['address'] ?? '')
+                                          .isNotEmpty) ...[
                                         SizedBox(height: rs(3)),
                                         Text(
                                           customer['address']!,
@@ -1238,9 +1249,10 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                     Text(
                       _userRole.contains('photo')
                           ? "Booking & Event Dates"
-                          : _userRole.contains('3d') || _userRole.contains('print')
-                              ? "Booking & Delivery Date"
-                              : "Booking Date",
+                          : _userRole.contains('3d') ||
+                              _userRole.contains('print')
+                          ? "Booking & Delivery Date"
+                          : "Booking Date",
                       style: TextStyle(
                         fontSize: 16 * scale,
                         fontWeight: FontWeight.bold,
@@ -1387,8 +1399,12 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                             border: Border.all(
                               color:
                                   isDark
-                                      ? const Color(0xFF38BDF8).withValues(alpha: 0.4)
-                                      : const Color(0xFF1E40AF).withValues(alpha: 0.3),
+                                      ? const Color(
+                                        0xFF38BDF8,
+                                      ).withValues(alpha: 0.4)
+                                      : const Color(
+                                        0xFF1E40AF,
+                                      ).withValues(alpha: 0.3),
                               width: 1.5,
                             ),
                           ),
@@ -1401,20 +1417,31 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                                   gradient:
                                       context.isDark
                                           ? const LinearGradient(
-                                            colors: [Color(0xFF38BDF8), Color(0xFF60A5FA), Color(0xFFBAE6FD)],
+                                            colors: [
+                                              Color(0xFF38BDF8),
+                                              Color(0xFF60A5FA),
+                                              Color(0xFFBAE6FD),
+                                            ],
                                             stops: [0.0, 0.6, 1.0],
                                             begin: Alignment.bottomRight,
                                             end: Alignment.topLeft,
                                           )
                                           : const LinearGradient(
-                                            colors: [Color(0xFF2563EB), Color(0xFF1E40AF), Color(0xFF020617)],
+                                            colors: [
+                                              Color(0xFF2563EB),
+                                              Color(0xFF1E40AF),
+                                              Color(0xFF020617),
+                                            ],
                                             stops: [0.0, 0.6, 1.0],
                                             begin: Alignment.bottomRight,
                                             end: Alignment.topLeft,
                                           ),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
-                                child: const Icon(Icons.camera_alt, color: Colors.white),
+                                child: const Icon(
+                                  Icons.camera_alt,
+                                  color: Colors.white,
+                                ),
                               ),
                               const SizedBox(width: 16),
                               Expanded(
@@ -1425,7 +1452,10 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                                       "Photography Event Dates",
                                       style: TextStyle(
                                         fontSize: 12 * scale,
-                                        color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                                        color:
+                                            isDark
+                                                ? Colors.grey.shade400
+                                                : Colors.grey.shade600,
                                       ),
                                     ),
                                     const SizedBox(height: 2),
@@ -1436,7 +1466,10 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                                       style: TextStyle(
                                         fontSize: 14 * scale,
                                         fontWeight: FontWeight.bold,
-                                        color: isDark ? Colors.white : const Color(0xFF333333),
+                                        color:
+                                            isDark
+                                                ? Colors.white
+                                                : const Color(0xFF333333),
                                       ),
                                     ),
                                   ],
@@ -1445,7 +1478,10 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                               Icon(
                                 Icons.arrow_forward_ios,
                                 size: 16,
-                                color: isDark ? const Color(0xFF60A5FA) : const Color(0xFF1E40AF),
+                                color:
+                                    isDark
+                                        ? const Color(0xFF60A5FA)
+                                        : const Color(0xFF1E40AF),
                               ),
                             ],
                           ),
@@ -1457,29 +1493,41 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                         Wrap(
                           spacing: 8,
                           runSpacing: 8,
-                          children: selectedEventDates.map((date) {
-                            return Chip(
-                              backgroundColor:
-                                  isDark ? const Color(0xFF334155) : const Color(0xFFEEF4FF),
-                              label: Text(
-                                "${date.day}/${date.month}/${date.year}",
-                                style: TextStyle(
-                                  color: isDark ? Colors.white : Colors.black87,
-                                ),
-                              ),
-                              deleteIcon: Icon(
-                                Icons.close,
-                                size: 18,
-                                color: isDark ? Colors.grey.shade300 : Colors.black54,
-                              ),
-                              onDeleted: () {
-                                setState(() => selectedEventDates.remove(date));
-                              },
-                            );
-                          }).toList(),
+                          children:
+                              selectedEventDates.map((date) {
+                                return Chip(
+                                  backgroundColor:
+                                      isDark
+                                          ? const Color(0xFF334155)
+                                          : const Color(0xFFEEF4FF),
+                                  label: Text(
+                                    "${date.day}/${date.month}/${date.year}",
+                                    style: TextStyle(
+                                      color:
+                                          isDark
+                                              ? Colors.white
+                                              : Colors.black87,
+                                    ),
+                                  ),
+                                  deleteIcon: Icon(
+                                    Icons.close,
+                                    size: 18,
+                                    color:
+                                        isDark
+                                            ? Colors.grey.shade300
+                                            : Colors.black54,
+                                  ),
+                                  onDeleted: () {
+                                    setState(
+                                      () => selectedEventDates.remove(date),
+                                    );
+                                  },
+                                );
+                              }).toList(),
                         ),
                       ],
-                    ] else if (_userRole.contains('3d') || _userRole.contains('print')) ...[
+                    ] else if (_userRole.contains('3d') ||
+                        _userRole.contains('print')) ...[
                       const SizedBox(height: 15),
 
                       // 3D Printing: single delivery date
@@ -1503,8 +1551,12 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                             border: Border.all(
                               color:
                                   isDark
-                                      ? const Color(0xFFA78BFA).withValues(alpha: 0.5)
-                                      : const Color(0xFF7C3AED).withValues(alpha: 0.4),
+                                      ? const Color(
+                                        0xFFA78BFA,
+                                      ).withValues(alpha: 0.5)
+                                      : const Color(
+                                        0xFF7C3AED,
+                                      ).withValues(alpha: 0.4),
                               width: 1.5,
                             ),
                           ),
@@ -1517,20 +1569,31 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                                   gradient:
                                       context.isDark
                                           ? const LinearGradient(
-                                            colors: [Color(0xFFA78BFA), Color(0xFF8B5CF6), Color(0xFFDDD6FE)],
+                                            colors: [
+                                              Color(0xFFA78BFA),
+                                              Color(0xFF8B5CF6),
+                                              Color(0xFFDDD6FE),
+                                            ],
                                             stops: [0.0, 0.6, 1.0],
                                             begin: Alignment.bottomRight,
                                             end: Alignment.topLeft,
                                           )
                                           : const LinearGradient(
-                                            colors: [Color(0xFF7C3AED), Color(0xFF5B21B6), Color(0xFF2E1065)],
+                                            colors: [
+                                              Color(0xFF7C3AED),
+                                              Color(0xFF5B21B6),
+                                              Color(0xFF2E1065),
+                                            ],
                                             stops: [0.0, 0.6, 1.0],
                                             begin: Alignment.bottomRight,
                                             end: Alignment.topLeft,
                                           ),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
-                                child: const Icon(Icons.local_shipping_rounded, color: Colors.white),
+                                child: const Icon(
+                                  Icons.local_shipping_rounded,
+                                  color: Colors.white,
+                                ),
                               ),
                               const SizedBox(width: 16),
                               Expanded(
@@ -1541,7 +1604,10 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                                       "Delivery Date",
                                       style: TextStyle(
                                         fontSize: 12 * scale,
-                                        color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                                        color:
+                                            isDark
+                                                ? Colors.grey.shade400
+                                                : Colors.grey.shade600,
                                       ),
                                     ),
                                     const SizedBox(height: 2),
@@ -1552,7 +1618,10 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                                       style: TextStyle(
                                         fontSize: 14 * scale,
                                         fontWeight: FontWeight.bold,
-                                        color: isDark ? Colors.white : const Color(0xFF333333),
+                                        color:
+                                            isDark
+                                                ? Colors.white
+                                                : const Color(0xFF333333),
                                       ),
                                     ),
                                   ],
@@ -1561,7 +1630,10 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
                               Icon(
                                 Icons.arrow_forward_ios,
                                 size: 16,
-                                color: isDark ? const Color(0xFFA78BFA) : const Color(0xFF7C3AED),
+                                color:
+                                    isDark
+                                        ? const Color(0xFFA78BFA)
+                                        : const Color(0xFF7C3AED),
                               ),
                             ],
                           ),
