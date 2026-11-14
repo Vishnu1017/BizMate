@@ -1,4 +1,5 @@
 import 'package:bizmate/models/customer_model.dart';
+import 'package:bizmate/models/expense.dart';
 import 'package:bizmate/models/payment.dart';
 import 'package:bizmate/models/product.dart';
 import 'package:bizmate/models/rental_item.dart';
@@ -55,6 +56,7 @@ class DatabaseMaintenance with WidgetsBindingObserver {
         'rental_items',
         'customers',
         'rental_sales',
+        'expenses',
       ];
 
       for (final boxName in globalBoxes) {
@@ -82,6 +84,9 @@ class DatabaseMaintenance with WidgetsBindingObserver {
                 break;
               case 'rental_sales':
                 box = Hive.box<RentalSaleModel>(boxName);
+                break;
+              case 'expenses':
+                box = Hive.box<Expense>(boxName);
                 break;
               default:
                 box = Hive.box(boxName);

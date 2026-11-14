@@ -10,6 +10,8 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:intl/intl.dart';
 import '../models/sale.dart';
 import '../utils/app_theme.dart';
+import '../utils/upi_payment_helper.dart';
+import '../widgets/dynamic_upi_qr_dialog.dart';
 
 class SaleDetailScreen extends StatefulWidget {
   final Sale sale;
@@ -207,6 +209,47 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
     super.dispose();
   }
 
+  Future<void> _showDynamicUpiQr() async {
+    final currentUser = await UpiPaymentHelper.getCurrentUser();
+    final total = widget.sale.totalAmount;
+    final currentReceived =
+        double.tryParse(amountController.text) ?? widget.sale.amount;
+    final balance = (total - currentReceived).clamp(0.0, double.infinity);
+    final amountToPay = balance > 0 ? balance : total;
+    final orderRef = widget.sale.key != null
+        ? widget.sale.key.toString()
+        : widget.sale.formattedDate;
+
+    if (!mounted) return;
+
+    await DynamicUpiQrDialog.show(
+      context,
+      payeeName: currentUser?.name.isNotEmpty == true
+          ? currentUser!.name
+          : 'BizMate Merchant',
+      upiId: currentUser?.upiId ?? '',
+      amount: amountToPay,
+      orderId: orderRef,
+      customerName: customerController.text,
+      transactionNote: 'Invoice #$orderRef - ${customerController.text}',
+      onPaymentConfirmed: (paidAmount) {
+        setState(() {
+          _selectedMode = 'UPI';
+          final newTotalReceived = currentReceived + paidAmount;
+          amountController.text = newTotalReceived.toStringAsFixed(2);
+          if (newTotalReceived >= total) {
+            isFullyPaid = true;
+          }
+        });
+        AppSnackBar.showSuccess(
+          context,
+          message:
+              'Payment of ₹${paidAmount.toStringAsFixed(2)} applied! Tap Save Changes to persist.',
+        );
+      },
+    );
+  }
+
   void saveChanges() async {
     if (_isSaving) return;
 
@@ -341,8 +384,26 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final isWide = constraints.maxWidth >= 800;
-        final horizontalPadding = isWide ? constraints.maxWidth * 0.12 : 16.0;
-        final cardPadding = isWide ? 24.0 : 16.0;
+        final isVerySmall = constraints.maxWidth < 350;
+        final isSmall = constraints.maxWidth < 400;
+        final responsiveScale = isVerySmall
+            ? 0.78
+            : isSmall
+                ? 0.88
+                : isWide
+                    ? 1.12
+                    : 1.0;
+        scale = responsiveScale;
+        final horizontalPadding = isWide
+            ? constraints.maxWidth * 0.12
+            : isVerySmall
+                ? 8.0
+                : 14.0;
+        final cardPadding = isWide
+            ? 24.0
+            : isVerySmall
+                ? 10.0
+                : 16.0;
         final bodyWidth =
             isWide ? constraints.maxWidth * 0.76 : constraints.maxWidth;
 
@@ -1752,6 +1813,43 @@ class _SaleDetailScreenState extends State<SaleDetailScreen> {
                                           }).toList(),
                                     ),
                                   ],
+                                ),
+                                Padding(
+                                  padding: EdgeInsets.only(top: 12 * scale),
+                                  child: SizedBox(
+                                    width: double.infinity,
+                                    child: OutlinedButton.icon(
+                                      style: OutlinedButton.styleFrom(
+                                        foregroundColor:
+                                            const Color(0xFF1E40AF),
+                                        side: const BorderSide(
+                                          color: Color(0xFF1E40AF),
+                                          width: 1.4,
+                                        ),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                        ),
+                                        padding: EdgeInsets.symmetric(
+                                          vertical: 10 * scale,
+                                        ),
+                                      ),
+                                      onPressed: _showDynamicUpiQr,
+                                      icon: const Icon(
+                                        Icons.qr_code_2_rounded,
+                                        size: 20,
+                                      ),
+                                      label: const FittedBox(
+                                        fit: BoxFit.scaleDown,
+                                        child: Text(
+                                          "Show Dynamic UPI QR",
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
                                 ),
                               ],
                             ),

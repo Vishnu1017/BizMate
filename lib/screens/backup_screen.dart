@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:bizmate/models/customer_model.dart';
+import 'package:bizmate/models/expense.dart';
 import 'package:bizmate/models/payment.dart';
 import 'package:bizmate/models/product.dart';
 import 'package:bizmate/models/rental_item.dart';
@@ -303,9 +304,13 @@ class _BackupScreenState extends State<BackupScreen>
       _isDataDirty = isDirty;
 
       _lastLocalBackupTime =
-          lastLocalStr != null ? DateTime.tryParse(lastLocalStr)?.toLocal() : null;
+          lastLocalStr != null
+              ? DateTime.tryParse(lastLocalStr)?.toLocal()
+              : null;
       _lastDriveBackupTime =
-          lastDriveStr != null ? DateTime.tryParse(lastDriveStr)?.toLocal() : null;
+          lastDriveStr != null
+              ? DateTime.tryParse(lastDriveStr)?.toLocal()
+              : null;
       _lastBackupSizeKb = lastSize;
       _lastRecordCount = lastRecords;
 
@@ -518,6 +523,9 @@ class _BackupScreenState extends State<BackupScreen>
       final rentalSales = List<RentalSaleModel>.from(
         box.get('rental_sales', defaultValue: <RentalSaleModel>[]),
       );
+      final expenses = List<Expense>.from(
+        box.get('expenses', defaultValue: <Expense>[]),
+      );
 
       // Stage 2: Create payload
       setState(() {
@@ -552,13 +560,24 @@ class _BackupScreenState extends State<BackupScreen>
                     'deliveryStatus': s.deliveryStatus,
                     'deliveryLink': s.deliveryLink,
                     'deliveryStatusHistory': s.deliveryStatusHistory ?? [],
-                    'eventDates': (s.eventDates ?? []).map((d) => d.toIso8601String()).toList(),
-                    'completedEventDates': (s.completedEventDates ?? []).map((d) => d.toIso8601String()).toList(),
-                    'paymentHistory': s.paymentHistory.map((p) => {
-                      'amount': p.amount,
-                      'date': p.date.toIso8601String(),
-                      'mode': p.mode,
-                    }).toList(),
+                    'eventDates':
+                        (s.eventDates ?? [])
+                            .map((d) => d.toIso8601String())
+                            .toList(),
+                    'completedEventDates':
+                        (s.completedEventDates ?? [])
+                            .map((d) => d.toIso8601String())
+                            .toList(),
+                    'paymentHistory':
+                        s.paymentHistory
+                            .map(
+                              (p) => {
+                                'amount': p.amount,
+                                'date': p.date.toIso8601String(),
+                                'mode': p.mode,
+                              },
+                            )
+                            .toList(),
                   },
                 )
                 .toList(),
@@ -616,6 +635,8 @@ class _BackupScreenState extends State<BackupScreen>
                   },
                 )
                 .toList(),
+        'expenses':
+            expenses.map((e) => e.toJson()).toList(),
       };
 
       String finalJsonContent;
@@ -717,7 +738,9 @@ class _BackupScreenState extends State<BackupScreen>
               _isDataDirty = false;
             });
           } else {
-            final err = DriveBackupService.lastUploadError ?? 'Google Drive upload failed';
+            final err =
+                DriveBackupService.lastUploadError ??
+                'Google Drive upload failed';
             final prefs = await SharedPreferences.getInstance();
             await prefs.setString(kPrefLastStatus, err);
             setState(() {
@@ -737,10 +760,7 @@ class _BackupScreenState extends State<BackupScreen>
           final shareText =
               'BizMate Business Backup ($dateStr). Keep this file safe to restore sales & rental records.';
           await SharePlus.instance.share(
-            ShareParams(
-              files: [XFile(backupFile.path)],
-              text: shareText,
-            ),
+            ShareParams(files: [XFile(backupFile.path)], text: shareText),
           );
         } else if (driveUploaded) {
           AppSnackBar.showSuccess(
@@ -756,10 +776,7 @@ class _BackupScreenState extends State<BackupScreen>
           final shareText =
               'BizMate Data Backup ($dateStr) - ${_googleAccount.isNotEmpty ? _googleAccount : widget.userEmail}';
           await SharePlus.instance.share(
-            ShareParams(
-              files: [XFile(backupFile.path)],
-              text: shareText,
-            ),
+            ShareParams(files: [XFile(backupFile.path)], text: shareText),
           );
         }
       }
@@ -872,16 +889,20 @@ class _BackupScreenState extends State<BackupScreen>
           data['rentalItems'] ?? data['rental_items'] ?? data['RentalItems'];
       final rentalSalesRaw =
           data['rentalSales'] ?? data['rental_sales'] ?? data['RentalSales'];
+      final expensesRaw =
+          data['expenses'] ?? data['Expenses'];
 
       if (salesRaw == null &&
           productsRaw == null &&
           customersRaw == null &&
           rentalItemsRaw == null &&
-          rentalSalesRaw == null) {
+          rentalSalesRaw == null &&
+          expensesRaw == null) {
         if (mounted) {
           AppSnackBar.showError(
             context,
-            message: 'Invalid BizMate backup archive: No recognizable records found.',
+            message:
+                'Invalid BizMate backup archive: No recognizable records found.',
           );
         }
         return;
@@ -892,6 +913,7 @@ class _BackupScreenState extends State<BackupScreen>
       final customersCount = (customersRaw as List?)?.length ?? 0;
       final rentalItemsCount = (rentalItemsRaw as List?)?.length ?? 0;
       final rentalSalesCount = (rentalSalesRaw as List?)?.length ?? 0;
+      final expensesCount = (expensesRaw as List?)?.length ?? 0;
       final exportedAt =
           data['exportedAt'] != null
               ? DateTime.tryParse(data['exportedAt'].toString())
@@ -907,6 +929,7 @@ class _BackupScreenState extends State<BackupScreen>
         customersCount: customersCount,
         rentalItemsCount: rentalItemsCount,
         rentalSalesCount: rentalSalesCount,
+        expensesCount: expensesCount,
         fileName: file.path.split(Platform.pathSeparator).last,
       );
 
@@ -965,12 +988,15 @@ class _BackupScreenState extends State<BackupScreen>
               for (final p in item['paymentHistory'] as List) {
                 try {
                   if (p is Map) {
-                    payments.add(Payment(
-                      amount: safeToDouble(p['amount']),
-                      date: DateTime.tryParse(p['date']?.toString() ?? '') ??
-                          DateTime.now(),
-                      mode: p['mode']?.toString() ?? 'Cash',
-                    ));
+                    payments.add(
+                      Payment(
+                        amount: safeToDouble(p['amount']),
+                        date:
+                            DateTime.tryParse(p['date']?.toString() ?? '') ??
+                            DateTime.now(),
+                        mode: p['mode']?.toString() ?? 'Cash',
+                      ),
+                    );
                   }
                 } catch (_) {}
               }
@@ -994,9 +1020,10 @@ class _BackupScreenState extends State<BackupScreen>
 
             List<String>? delHist;
             if (item['deliveryStatusHistory'] is List) {
-              delHist = (item['deliveryStatusHistory'] as List)
-                  .map((e) => e.toString())
-                  .toList();
+              delHist =
+                  (item['deliveryStatusHistory'] as List)
+                      .map((e) => e.toString())
+                      .toList();
             }
 
             existing.add(
@@ -1140,8 +1167,7 @@ class _BackupScreenState extends State<BackupScreen>
                 brand: item['brand']?.toString() ?? '',
                 category: item['category']?.toString() ?? '',
                 price: safeToDouble(item['price']),
-                availability:
-                    item['availability']?.toString() ?? 'Available',
+                availability: item['availability']?.toString() ?? 'Available',
                 imagePath: item['imagePath']?.toString() ?? '',
                 condition: item['condition']?.toString() ?? 'Good',
               ),
@@ -1175,13 +1201,15 @@ class _BackupScreenState extends State<BackupScreen>
               for (final p in item['paymentHistory'] as List) {
                 try {
                   if (p is Map) {
-                    payments.add(Payment(
-                      amount: safeToDouble(p['amount']),
-                      date:
-                          DateTime.tryParse(p['date']?.toString() ?? '') ??
-                          DateTime.now(),
-                      mode: p['mode']?.toString() ?? 'Cash',
-                    ));
+                    payments.add(
+                      Payment(
+                        amount: safeToDouble(p['amount']),
+                        date:
+                            DateTime.tryParse(p['date']?.toString() ?? '') ??
+                            DateTime.now(),
+                        mode: p['mode']?.toString() ?? 'Cash',
+                      ),
+                    );
                   }
                 } catch (_) {}
               }
@@ -1215,6 +1243,31 @@ class _BackupScreenState extends State<BackupScreen>
           }
         }
         await box.put('rental_sales', existing);
+      }
+
+      // ── 6. Expenses ──
+      setState(() {
+        _backupProgress = 0.98;
+        _backupProgressStage = 'Restoring business expenses…';
+      });
+      if (expensesRaw is List) {
+        final existing =
+            restoreMode == 'merge'
+                ? List<Expense>.from(
+                  box.get('expenses', defaultValue: <Expense>[]),
+                )
+                : <Expense>[];
+        for (final raw in expensesRaw) {
+          try {
+            if (raw is! Map) continue;
+            final item = Map<String, dynamic>.from(raw);
+            existing.add(Expense.fromJson(item));
+            restoredTotal++;
+          } catch (e) {
+            debugPrint('Error restoring expense record: $e');
+          }
+        }
+        await box.put('expenses', existing);
       }
 
       setState(() {
@@ -1292,7 +1345,8 @@ class _BackupScreenState extends State<BackupScreen>
       if (mounted) {
         AppSnackBar.showError(
           context,
-          message: 'Sign-in error: ${resp.errorMessage ?? "Could not connect to Google"}',
+          message:
+              'Sign-in error: ${resp.errorMessage ?? "Could not connect to Google"}',
         );
       }
     } catch (e) {
@@ -1306,73 +1360,86 @@ class _BackupScreenState extends State<BackupScreen>
     final isDark = context.isDark;
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.amber.withValues(alpha: 0.15),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.restart_alt_rounded, color: Colors.amber, size: 22),
+      builder:
+          (ctx) => AlertDialog(
+            backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                'Full Restart Required',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white : Colors.black87,
+            title: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.amber.withValues(alpha: 0.15),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.restart_alt_rounded,
+                    color: Colors.amber,
+                    size: 22,
+                  ),
                 ),
-              ),
-            ),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Native plugins for Google Drive & WorkManager were recently added.',
-              style: TextStyle(
-                fontSize: 13,
-                color: isDark ? Colors.white70 : Colors.black87,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Text(
-                'Flutter hot-restart cannot load newly added native Android libraries.\n\n'
-                '👉 Please stop the app completely (press "q" in terminal or click Stop ⏹) and run "flutter run".',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontFamily: 'monospace',
-                  color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0369A1),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Full Restart Required',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
+                  ),
                 ),
+              ],
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Native plugins for Google Drive & WorkManager were recently added.',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: isDark ? Colors.white70 : Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color:
+                        isDark
+                            ? const Color(0xFF0F172A)
+                            : const Color(0xFFF1F5F9),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    'Flutter hot-restart cannot load newly added native Android libraries.\n\n'
+                    '👉 Please stop the app completely (press "q" in terminal or click Stop ⏹) and run "flutter run".',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontFamily: 'monospace',
+                      color:
+                          isDark
+                              ? const Color(0xFF38BDF8)
+                              : const Color(0xFF0369A1),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              ElevatedButton(
+                onPressed: () => Navigator.pop(ctx),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: brandPrimary,
+                  foregroundColor: Colors.white,
+                ),
+                child: const Text('Understood'),
               ),
-            ),
-          ],
-        ),
-        actions: [
-          ElevatedButton(
-            onPressed: () => Navigator.pop(ctx),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: brandPrimary,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Understood'),
+            ],
           ),
-        ],
-      ),
     );
   }
 
@@ -1384,89 +1451,111 @@ class _BackupScreenState extends State<BackupScreen>
 
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: const Color(0xFF4285F4).withValues(alpha: 0.15),
-                shape: BoxShape.circle,
-              ),
-              child: const FaIcon(FontAwesomeIcons.googleDrive, color: Color(0xFF4285F4), size: 20),
+      builder:
+          (ctx) => AlertDialog(
+            backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                'Google Account',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white : Colors.black87,
+            title: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF4285F4).withValues(alpha: 0.15),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const FaIcon(
+                    FontAwesomeIcons.googleDrive,
+                    color: Color(0xFF4285F4),
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Google Account',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Enter your Google account email to link with BizMate for cloud backup storage and notifications:',
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    color: isDark ? Colors.white70 : Colors.black87,
+                    height: 1.4,
+                  ),
+                ),
+                const SizedBox(height: 14),
+                TextField(
+                  controller: fallbackController,
+                  keyboardType: TextInputType.emailAddress,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: isDark ? Colors.white : Colors.black87,
+                  ),
+                  decoration: InputDecoration(
+                    labelText: 'Google Account Email',
+                    hintText: 'name@gmail.com',
+                    prefixIcon: const Icon(
+                      Icons.alternate_email_rounded,
+                      size: 18,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: Text(
+                  'Cancel',
+                  style: TextStyle(
+                    color: isDark ? const Color(0xFF94A3B8) : Colors.grey[700],
+                  ),
                 ),
               ),
-            ),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Enter your Google account email to link with BizMate for cloud backup storage and notifications:',
-              style: TextStyle(
-                fontSize: 12.5,
-                color: isDark ? Colors.white70 : Colors.black87,
-                height: 1.4,
+              ElevatedButton(
+                onPressed: () {
+                  final email = fallbackController.text.trim();
+                  if (email.isNotEmpty) {
+                    _saveGoogleAccount(email);
+                    setState(() => _isGoogleDriveConnected = true);
+                  }
+                  Navigator.pop(ctx);
+                  AppSnackBar.showSuccess(
+                    context,
+                    message: 'Account configured: $email',
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF10B981),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                child: const Text('Save Account'),
               ),
-            ),
-            const SizedBox(height: 14),
-            TextField(
-              controller: fallbackController,
-              keyboardType: TextInputType.emailAddress,
-              style: TextStyle(fontSize: 13, color: isDark ? Colors.white : Colors.black87),
-              decoration: InputDecoration(
-                labelText: 'Google Account Email',
-                hintText: 'name@gmail.com',
-                prefixIcon: const Icon(Icons.alternate_email_rounded, size: 18),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(
-              'Cancel',
-              style: TextStyle(color: isDark ? const Color(0xFF94A3B8) : Colors.grey[700]),
-            ),
+            ],
           ),
-          ElevatedButton(
-            onPressed: () {
-              final email = fallbackController.text.trim();
-              if (email.isNotEmpty) {
-                _saveGoogleAccount(email);
-                setState(() => _isGoogleDriveConnected = true);
-              }
-              Navigator.pop(ctx);
-              AppSnackBar.showSuccess(
-                context,
-                message: 'Account configured: $email',
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF10B981),
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            ),
-            child: const Text('Save Account'),
-          ),
-        ],
-      ),
     );
   }
 
@@ -1505,7 +1594,10 @@ class _BackupScreenState extends State<BackupScreen>
                     fontSize: 11,
                     fontFamily: 'monospace',
                     fontWeight: FontWeight.w600,
-                    color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
+                    color:
+                        isDark
+                            ? const Color(0xFF38BDF8)
+                            : const Color(0xFF0284C7),
                   ),
                 ),
               ],
@@ -1517,7 +1609,10 @@ class _BackupScreenState extends State<BackupScreen>
             tooltip: 'Copy $title',
             onPressed: () {
               Clipboard.setData(ClipboardData(text: value));
-              AppSnackBar.showSuccess(context, message: 'Copied $title to clipboard!');
+              AppSnackBar.showSuccess(
+                context,
+                message: 'Copied $title to clipboard!',
+              );
             },
           ),
         ],
@@ -1569,7 +1664,10 @@ class _BackupScreenState extends State<BackupScreen>
       }
     } catch (e) {
       if (mounted) {
-        AppSnackBar.showError(context, message: 'Could not open Google Drive: $e');
+        AppSnackBar.showError(
+          context,
+          message: 'Could not open Google Drive: $e',
+        );
       }
     }
   }
@@ -1642,24 +1740,25 @@ class _BackupScreenState extends State<BackupScreen>
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (_) => const Center(
-        child: Card(
-          child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                CircularProgressIndicator(),
-                SizedBox(height: 16),
-                Text(
-                  'Reading Google Drive ("BizMate Backups")…',
-                  style: TextStyle(fontWeight: FontWeight.w600),
+      builder:
+          (_) => const Center(
+            child: Card(
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    CircularProgressIndicator(),
+                    SizedBox(height: 16),
+                    Text(
+                      'Reading Google Drive ("BizMate Backups")…',
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
-        ),
-      ),
     );
 
     List<DriveBackupFile> driveFiles = [];
@@ -1725,8 +1824,7 @@ class _BackupScreenState extends State<BackupScreen>
                   'Found ${driveFiles.length} cloud backup(s) in "BizMate Backups":',
                   style: TextStyle(
                     fontSize: 12,
-                    color:
-                        isDark ? const Color(0xFF94A3B8) : Colors.grey[600],
+                    color: isDark ? const Color(0xFF94A3B8) : Colors.grey[600],
                   ),
                 ),
                 const SizedBox(height: 14),
@@ -1772,49 +1870,53 @@ class _BackupScreenState extends State<BackupScreen>
                                 showDialog(
                                   context: context,
                                   barrierDismissible: false,
-                                  builder: (_) => Center(
-                                    child: Card(
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(16),
-                                      ),
-                                      child: Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 24,
-                                          vertical: 20,
-                                        ),
-                                        child: Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            const CircularProgressIndicator(),
-                                            const SizedBox(height: 16),
-                                            Text(
-                                              'Downloading ${f.name} from Google Drive…',
-                                              textAlign: TextAlign.center,
-                                              style: const TextStyle(
-                                                fontWeight: FontWeight.w600,
-                                                fontSize: 13,
-                                              ),
+                                  builder:
+                                      (_) => Center(
+                                        child: Card(
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              16,
                                             ),
-                                            const SizedBox(height: 6),
-                                            const Text(
-                                              'Please wait, do not close the app…',
-                                              style: TextStyle(
-                                                fontSize: 11,
-                                                color: Colors.grey,
-                                              ),
+                                          ),
+                                          child: Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 24,
+                                              vertical: 20,
                                             ),
-                                          ],
+                                            child: Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                const CircularProgressIndicator(),
+                                                const SizedBox(height: 16),
+                                                Text(
+                                                  'Downloading ${f.name} from Google Drive…',
+                                                  textAlign: TextAlign.center,
+                                                  style: const TextStyle(
+                                                    fontWeight: FontWeight.w600,
+                                                    fontSize: 13,
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 6),
+                                                const Text(
+                                                  'Please wait, do not close the app…',
+                                                  style: TextStyle(
+                                                    fontSize: 11,
+                                                    color: Colors.grey,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                  ),
                                 );
 
                                 File? downloaded;
                                 try {
                                   final tempDir = await getTemporaryDirectory();
-                                  final targetFile =
-                                      File('${tempDir.path}/${f.name}');
+                                  final targetFile = File(
+                                    '${tempDir.path}/${f.name}',
+                                  );
                                   downloaded =
                                       await DriveBackupService.downloadBackupFile(
                                         f.id,
@@ -1825,8 +1927,10 @@ class _BackupScreenState extends State<BackupScreen>
                                 }
 
                                 if (mounted) {
-                                  Navigator.of(context, rootNavigator: true)
-                                      .pop();
+                                  Navigator.of(
+                                    context,
+                                    rootNavigator: true,
+                                  ).pop();
                                 }
 
                                 if (downloaded != null &&
@@ -1868,15 +1972,21 @@ class _BackupScreenState extends State<BackupScreen>
                               tooltip: 'Delete from Drive',
                               onPressed: () async {
                                 final confirm =
-                                    await _showDeleteDriveBackupConfirmation(f.name);
+                                    await _showDeleteDriveBackupConfirmation(
+                                      f.name,
+                                    );
                                 if (confirm == true) {
-                                  final ok = await DriveBackupService.deleteDriveBackup(f.id);
+                                  final ok =
+                                      await DriveBackupService.deleteDriveBackup(
+                                        f.id,
+                                      );
                                   if (ok && mounted) {
                                     Navigator.pop(ctx);
                                     _restoreFromGoogleDrive();
                                     AppSnackBar.showSuccess(
                                       context,
-                                      message: 'Deleted ${f.name} from Google Drive.',
+                                      message:
+                                          'Deleted ${f.name} from Google Drive.',
                                     );
                                   }
                                 }
@@ -1922,79 +2032,81 @@ class _BackupScreenState extends State<BackupScreen>
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (ctx) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF4285F4).withValues(alpha: 0.15),
-                  shape: BoxShape.circle,
-                ),
-                child: const FaIcon(
-                  FontAwesomeIcons.googleDrive,
-                  color: Color(0xFF4285F4),
-                  size: 26,
-                ),
-              ),
-              const SizedBox(height: 14),
-              Text(
-                'No Drive Backups Found',
-                style: TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white : Colors.black87,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'No backup files were found under account ($_googleAccount) in "BizMate Backups". You can create a new backup now or pick an existing JSON file from your device/cloud storage.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 13,
-                  color: isDark ? Colors.white70 : Colors.black87,
-                ),
-              ),
-              const SizedBox(height: 20),
-              ElevatedButton.icon(
-                onPressed: () {
-                  Navigator.pop(ctx);
-                  _runBackup();
-                },
-                icon: const Icon(Icons.cloud_upload_rounded, size: 18),
-                label: const Text('Back Up to Drive Now'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF2563EB),
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size.fromHeight(44),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+      builder:
+          (ctx) => SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF4285F4).withValues(alpha: 0.15),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const FaIcon(
+                      FontAwesomeIcons.googleDrive,
+                      color: Color(0xFF4285F4),
+                      size: 26,
+                    ),
                   ),
-                ),
-              ),
-              const SizedBox(height: 10),
-              OutlinedButton.icon(
-                onPressed: () {
-                  Navigator.pop(ctx);
-                  _restoreFromFile();
-                },
-                icon: const Icon(Icons.file_open_rounded, size: 18),
-                label: const Text('Select File from Device / Files App'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: isDark ? Colors.white : Colors.black87,
-                  minimumSize: const Size.fromHeight(44),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+
+                  const SizedBox(height: 14),
+                  Text(
+                    'No Drive Backups Found',
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
                   ),
-                ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'No backup files were found under account ($_googleAccount) in "BizMate Backups". You can create a new backup now or pick an existing JSON file from your device/cloud storage.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: isDark ? Colors.white70 : Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      _runBackup();
+                    },
+                    icon: const Icon(Icons.cloud_upload_rounded, size: 18),
+                    label: const Text('Back Up to Drive Now'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF2563EB),
+                      foregroundColor: Colors.white,
+                      minimumSize: const Size.fromHeight(44),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  OutlinedButton.icon(
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      _restoreFromFile();
+                    },
+                    icon: const Icon(Icons.file_open_rounded, size: 18),
+                    label: const Text('Select File from Device / Files App'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: isDark ? Colors.white : Colors.black87,
+                      minimumSize: const Size.fromHeight(44),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
-      ),
     );
   }
 
@@ -2007,91 +2119,112 @@ class _BackupScreenState extends State<BackupScreen>
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (ctx) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+      builder:
+          (ctx) => SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF4285F4).withValues(alpha: 0.15),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const FaIcon(
-                      FontAwesomeIcons.googleDrive,
-                      color: Color(0xFF4285F4),
-                      size: 20,
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: const Color(
+                            0xFF4285F4,
+                          ).withValues(alpha: 0.15),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const FaIcon(
+                          FontAwesomeIcons.googleDrive,
+                          color: Color(0xFF4285F4),
+                          size: 20,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        'Restore from Cloud / Drive',
+                        style: TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.white : Colors.black87,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    errorReason != null && errorReason.isNotEmpty
+                        ? errorReason
+                        : 'Select a BizMate backup file directly from your Google Drive app or local storage:',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: isDark ? Colors.white70 : Colors.black87,
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Text(
-                    'Restore from Cloud / Drive',
-                    style: TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.bold,
-                      color: isDark ? Colors.white : Colors.black87,
+                  const SizedBox(height: 16),
+                  ListTile(
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF2563EB).withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(
+                        Icons.file_open_rounded,
+                        color: Color(0xFF2563EB),
+                      ),
                     ),
+                    title: const Text(
+                      'Select File from Google Drive / Files',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
+                    ),
+                    subtitle: const Text(
+                      'Pick any .json backup saved in Google Drive or Downloads',
+                      style: TextStyle(fontSize: 12),
+                    ),
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      _restoreFromFile();
+                    },
+                  ),
+                  ListTile(
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.green.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(
+                        Icons.refresh_rounded,
+                        color: Colors.green,
+                      ),
+                    ),
+                    title: const Text(
+                      'Retry Google Sign-In',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
+                    ),
+                    subtitle: const Text(
+                      'Attempt connecting Google account again',
+                      style: TextStyle(fontSize: 12),
+                    ),
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      _restoreFromGoogleDrive();
+                    },
                   ),
                 ],
               ),
-              const SizedBox(height: 10),
-              Text(
-                errorReason != null && errorReason.isNotEmpty
-                    ? errorReason
-                    : 'Select a BizMate backup file directly from your Google Drive app or local storage:',
-                style: TextStyle(
-                  fontSize: 13,
-                  color: isDark ? Colors.white70 : Colors.black87,
-                ),
-              ),
-              const SizedBox(height: 16),
-              ListTile(
-                leading: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF2563EB).withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(Icons.file_open_rounded, color: Color(0xFF2563EB)),
-                ),
-                title: const Text('Select File from Google Drive / Files',
-                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-                subtitle: const Text(
-                  'Pick any .json backup saved in Google Drive or Downloads',
-                  style: TextStyle(fontSize: 12),
-                ),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  _restoreFromFile();
-                },
-              ),
-              ListTile(
-                leading: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.green.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(Icons.refresh_rounded, color: Colors.green),
-                ),
-                title: const Text('Retry Google Sign-In',
-                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-                subtitle: const Text('Attempt connecting Google account again',
-                    style: TextStyle(fontSize: 12)),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  _restoreFromGoogleDrive();
-                },
-              ),
-            ],
+            ),
           ),
-        ),
-      ),
     );
   }
 
@@ -2099,29 +2232,32 @@ class _BackupScreenState extends State<BackupScreen>
     final isDark = context.isDark;
     return showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Delete Cloud Backup?'),
-        content: Text(
-          'Are you sure you want to permanently delete "$fileName" from your Google Drive?',
-          style: TextStyle(color: isDark ? Colors.white70 : Colors.black87),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.redAccent,
-              foregroundColor: Colors.white,
+      builder:
+          (ctx) => AlertDialog(
+            backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
             ),
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Delete'),
+            title: const Text('Delete Cloud Backup?'),
+            content: Text(
+              'Are you sure you want to permanently delete "$fileName" from your Google Drive?',
+              style: TextStyle(color: isDark ? Colors.white70 : Colors.black87),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.redAccent,
+                  foregroundColor: Colors.white,
+                ),
+                onPressed: () => Navigator.pop(ctx, true),
+                child: const Text('Delete'),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 
@@ -2480,18 +2616,23 @@ class _BackupScreenState extends State<BackupScreen>
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  currentUser.displayName ?? 'Google Drive Active',
+                                  currentUser.displayName ??
+                                      'Google Drive Active',
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 13,
-                                    color: isDark ? Colors.white : Colors.black87,
+                                    color:
+                                        isDark ? Colors.white : Colors.black87,
                                   ),
                                 ),
                                 Text(
                                   currentUser.email,
                                   style: TextStyle(
                                     fontSize: 11,
-                                    color: isDark ? const Color(0xFF94A3B8) : Colors.grey[600],
+                                    color:
+                                        isDark
+                                            ? const Color(0xFF94A3B8)
+                                            : Colors.grey[600],
                                   ),
                                 ),
                               ],
@@ -2531,12 +2672,18 @@ class _BackupScreenState extends State<BackupScreen>
                       onDeveloperError: () => _showGoogleCloudConfigDialog(),
                       onError: (msg) {
                         if (mounted) {
-                          AppSnackBar.showError(context, message: 'Sign-in error: $msg');
+                          AppSnackBar.showError(
+                            context,
+                            message: 'Sign-in error: $msg',
+                          );
                         }
                       },
                       onCanceled: () {
                         if (mounted) {
-                          AppSnackBar.showInfo(context, message: 'Sign-in canceled');
+                          AppSnackBar.showInfo(
+                            context,
+                            message: 'Sign-in canceled',
+                          );
                         }
                       },
                     ),
@@ -2546,13 +2693,19 @@ class _BackupScreenState extends State<BackupScreen>
                         Navigator.pop(ctx);
                         _exportToGoogleDriveApp();
                       },
-                      icon: const FaIcon(FontAwesomeIcons.googleDrive, size: 14, color: Color(0xFF4285F4)),
+                      icon: const FaIcon(
+                        FontAwesomeIcons.googleDrive,
+                        size: 14,
+                        color: Color(0xFF4285F4),
+                      ),
                       label: const Text('Save to Google Drive App (No Setup)'),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: const Color(0xFF4285F4),
                         side: const BorderSide(color: Color(0xFF4285F4)),
                         minimumSize: const Size.fromHeight(40),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -2560,7 +2713,8 @@ class _BackupScreenState extends State<BackupScreen>
                       'Or configure account email for scheduled backups:',
                       style: TextStyle(
                         fontSize: 12,
-                        color: isDark ? const Color(0xFF94A3B8) : Colors.grey[600],
+                        color:
+                            isDark ? const Color(0xFF94A3B8) : Colors.grey[600],
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -2568,7 +2722,9 @@ class _BackupScreenState extends State<BackupScreen>
                   TextField(
                     controller: controller,
                     keyboardType: TextInputType.emailAddress,
-                    style: TextStyle(color: isDark ? Colors.white : Colors.black87),
+                    style: TextStyle(
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
                     decoration: InputDecoration(
                       labelText: 'Account Email',
                       prefixIcon: const Icon(
@@ -2588,7 +2744,8 @@ class _BackupScreenState extends State<BackupScreen>
                   child: Text(
                     'Cancel',
                     style: TextStyle(
-                      color: isDark ? const Color(0xFF94A3B8) : Colors.grey[700],
+                      color:
+                          isDark ? const Color(0xFF94A3B8) : Colors.grey[700],
                     ),
                   ),
                 ),
@@ -2876,6 +3033,7 @@ class _BackupScreenState extends State<BackupScreen>
     required int customersCount,
     required int rentalItemsCount,
     required int rentalSalesCount,
+    int expensesCount = 0,
     required String fileName,
   }) {
     final isDark = context.isDark;
@@ -2976,6 +3134,14 @@ class _BackupScreenState extends State<BackupScreen>
                     const Color(0xFFDC2626),
                     isDark,
                   ),
+                  if (expensesCount > 0)
+                    _metricRow(
+                      'Business Expenses',
+                      expensesCount,
+                      Icons.account_balance_wallet_rounded,
+                      const Color(0xFFEF4444),
+                      isDark,
+                    ),
                   const SizedBox(height: 16),
                   Container(
                     padding: const EdgeInsets.symmetric(
@@ -3056,7 +3222,8 @@ class _BackupScreenState extends State<BackupScreen>
                     child: Text(
                       'Cancel',
                       style: TextStyle(
-                        color: isDark ? const Color(0xFF94A3B8) : Colors.grey[600],
+                        color:
+                            isDark ? const Color(0xFF94A3B8) : Colors.grey[600],
                         fontSize: 13,
                       ),
                     ),
@@ -3125,7 +3292,8 @@ class _BackupScreenState extends State<BackupScreen>
       final latestCloudTime = await DriveBackupService.getLatestBackupTime();
       if (latestCloudTime != null && mounted) {
         final prefs = await SharedPreferences.getInstance();
-        if (_lastDriveBackupTime == null || latestCloudTime.isAfter(_lastDriveBackupTime!)) {
+        if (_lastDriveBackupTime == null ||
+            latestCloudTime.isAfter(_lastDriveBackupTime!)) {
           await prefs.setString(_kLastDrive, latestCloudTime.toIso8601String());
           setState(() {
             _lastDriveBackupTime = latestCloudTime;
@@ -3307,9 +3475,7 @@ class _BackupScreenState extends State<BackupScreen>
           // ── PHONE & iPAD PORTRAIT RESPONSIVE DASHBOARD ───────────────────
           final maxContentWidth = isTabletPortrait ? 720.0 : 620.0;
           final horizontalPadding =
-              isTabletPortrait
-                  ? 24.0
-                  : (isVeryCompact ? 12.0 : 16.0);
+              isTabletPortrait ? 24.0 : (isVeryCompact ? 12.0 : 16.0);
 
           return Center(
             child: ConstrainedBox(
@@ -3335,10 +3501,7 @@ class _BackupScreenState extends State<BackupScreen>
                     isTablet: isTabletPortrait,
                   ),
                   const SizedBox(height: 20),
-                  _buildCloudSettingsCard(
-                    isDark,
-                    isVeryCompact: isVeryCompact,
-                  ),
+                  _buildCloudSettingsCard(isDark, isVeryCompact: isVeryCompact),
                   const SizedBox(height: 20),
                   _buildLocalStorageCard(
                     isDark,
@@ -3752,9 +3915,7 @@ class _BackupScreenState extends State<BackupScreen>
                       style: TextStyle(
                         fontSize: isVeryCompact ? 9.5 : 10.5,
                         color:
-                            isDark
-                                ? const Color(0xFF94A3B8)
-                                : Colors.grey[600],
+                            isDark ? const Color(0xFF94A3B8) : Colors.grey[600],
                         height: 1.2,
                       ),
                     ),
@@ -4272,7 +4433,9 @@ class _BackupScreenState extends State<BackupScreen>
                     ),
                   ),
                   title: Text(
-                    DateFormat('dd MMM yyyy, hh:mm a').format(lastMod.toLocal()),
+                    DateFormat(
+                      'dd MMM yyyy, hh:mm a',
+                    ).format(lastMod.toLocal()),
                     softWrap: true,
                     style: TextStyle(
                       fontSize: 13,
@@ -4393,7 +4556,9 @@ class _BackupScreenState extends State<BackupScreen>
                   ),
                 ),
                 title: Text(
-                  DateFormat('dd MMM yyyy, hh:mm a').format(h.createdAt.toLocal()),
+                  DateFormat(
+                    'dd MMM yyyy, hh:mm a',
+                  ).format(h.createdAt.toLocal()),
                   softWrap: true,
                   style: TextStyle(
                     fontSize: 13,
@@ -4488,16 +4653,17 @@ class _GoogleSignInButtonState extends State<_GoogleSignInButton> {
   Widget build(BuildContext context) {
     return ElevatedButton.icon(
       onPressed: _isLoading ? null : _handleSignIn,
-      icon: _isLoading
-          ? const SizedBox(
-              width: 16,
-              height: 16,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: Colors.white,
-              ),
-            )
-          : const FaIcon(FontAwesomeIcons.google, size: 16),
+      icon:
+          _isLoading
+              ? const SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.white,
+                ),
+              )
+              : const FaIcon(FontAwesomeIcons.google, size: 16),
       label: Text(
         _isLoading ? 'Signing in to Google…' : 'Sign in with Google Drive',
       ),
@@ -4505,9 +4671,7 @@ class _GoogleSignInButtonState extends State<_GoogleSignInButton> {
         backgroundColor: const Color(0xFF4285F4),
         foregroundColor: Colors.white,
         minimumSize: const Size.fromHeight(44),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }

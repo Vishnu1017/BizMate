@@ -474,7 +474,7 @@ class _HomePageState extends State<HomePage>
         return LayoutBuilder(
           builder: (context, constraints) {
             final bool isSmallScreen = constraints.maxWidth < 600;
-            final bool isVerySmallScreen = constraints.maxWidth < 400;
+            final bool isVerySmallScreen = constraints.maxWidth < 360;
             final bool isLargeScreen = constraints.maxWidth > 900;
 
             return Column(
@@ -840,6 +840,8 @@ class _HomePageState extends State<HomePage>
                                         ] else ...[
                                           Text(
                                             sale.customerName,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
                                             style: TextStyle(
                                               fontSize: isSmallScreen ? 15 : 16,
                                               fontWeight: FontWeight.bold,

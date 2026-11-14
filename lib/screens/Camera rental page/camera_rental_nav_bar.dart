@@ -100,25 +100,34 @@ class _CameraRentalNavBarState extends State<CameraRentalNavBar> {
   // Responsive helpers
   // ------------------------
 
-  // Breakpoint map (same as NavBarPage)
-  static const double _kCompactMax = 480; // small phones
-  static const double _kLargePhoneMax = 768; // large phones / small tablets
-  static const double _kTabletMax = 1024; // tablets
+  // Breakpoint map (tuned for very small to large mobile form factors)
+  static const double _kVerySmallMax = 350; // very small mobile (iPhone SE 1st gen, ~320px)
+  static const double _kSmallMax = 390;     // small mobile (iPhone SE 2/3, 12/13 mini ~360-390px)
+  static const double _kMediumMax = 430;    // medium mobile (iPhone 14/15/16, Pixel, Galaxy ~390-430px)
+  static const double _kBigPhoneMax = 600;  // phablets / large phones
+  static const double _kTabletMax = 1024;   // tablets
 
   double _scaleForWidth(double width, double base) {
-    // returns scaled value for font/padding based on width
-    if (width <= _kCompactMax) return base * 0.85; // compact
-    if (width <= _kLargePhoneMax) return base * 0.95; // large phone
-    if (width <= _kTabletMax) return base * 1.05; // tablet
-    return base * 1.15; // desktop
+    if (width <= _kVerySmallMax) return base * 0.76;
+    if (width <= _kSmallMax) return base * 0.85;
+    if (width <= _kMediumMax) return base * 0.95;
+    if (width <= _kBigPhoneMax) return base * 1.02;
+    if (width <= _kTabletMax) return base * 1.08;
+    return base * 1.15;
   }
 
   EdgeInsets _pagePadding(double width) {
-    if (width <= _kCompactMax) {
-      return const EdgeInsets.symmetric(horizontal: 14, vertical: 12);
+    if (width <= _kVerySmallMax) {
+      return const EdgeInsets.symmetric(horizontal: 8, vertical: 8);
     }
-    if (width <= _kLargePhoneMax) {
-      return const EdgeInsets.symmetric(horizontal: 20, vertical: 16);
+    if (width <= _kSmallMax) {
+      return const EdgeInsets.symmetric(horizontal: 12, vertical: 10);
+    }
+    if (width <= _kMediumMax) {
+      return const EdgeInsets.symmetric(horizontal: 16, vertical: 12);
+    }
+    if (width <= _kBigPhoneMax) {
+      return const EdgeInsets.symmetric(horizontal: 20, vertical: 14);
     }
     if (width <= _kTabletMax) {
       return const EdgeInsets.symmetric(horizontal: 28, vertical: 20);
@@ -127,10 +136,12 @@ class _CameraRentalNavBarState extends State<CameraRentalNavBar> {
   }
 
   double _appBarHeight(double width) {
-    if (width <= _kCompactMax) return 110;
-    if (width <= _kLargePhoneMax) return 140;
-    if (width <= _kTabletMax) return 170;
-    return 200;
+    if (width <= _kVerySmallMax) return 100;
+    if (width <= _kSmallMax) return 106;
+    if (width <= _kMediumMax) return 114;
+    if (width <= _kBigPhoneMax) return 126;
+    if (width <= _kTabletMax) return 150;
+    return 180;
   }
 
   // ------------------------
@@ -258,15 +269,20 @@ class _CameraRentalNavBarState extends State<CameraRentalNavBar> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     // ===== TITLE =====
-                    Text(
-                      _titles[_currentIndex],
-                      style: TextStyle(
-                        fontSize: _scaleForWidth(screenWidth, 24 * scale),
-                        color: textPrimary,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: -0.4,
+                    Expanded(
+                      child: Text(
+                        _titles[_currentIndex],
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: _scaleForWidth(screenWidth, 22),
+                          color: textPrimary,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.4,
+                        ),
                       ),
                     ),
+                    const SizedBox(width: 8),
 
                     // ===== CART BUTTON =====
                     InkWell(
@@ -545,8 +561,13 @@ class _CameraRentalNavBarState extends State<CameraRentalNavBar> {
   // ------------------------
 
   Widget _buildCleanNavigation(double screenWidth) {
-    final isSmallScreen = screenWidth < _kLargePhoneMax;
-    final horizontalMargin = isSmallScreen ? 16.0 : 28.0;
+    final horizontalMargin = screenWidth <= _kVerySmallMax
+        ? 6.0
+        : screenWidth <= _kMediumMax
+            ? 12.0
+            : screenWidth <= _kTabletMax
+                ? 18.0
+                : 30.0;
 
     return Container(
       margin: EdgeInsets.symmetric(
@@ -698,7 +719,7 @@ class _CameraRentalNavBarState extends State<CameraRentalNavBar> {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final isSmallScreen = screenWidth < _kLargePhoneMax;
+    final isSmallScreen = screenWidth < _kBigPhoneMax;
 
     return Scaffold(
       backgroundColor: _backgroundColor,
@@ -742,19 +763,10 @@ class _CameraRentalNavBarState extends State<CameraRentalNavBar> {
                         ),
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(20),
-                          child: AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 300),
-                            child: _pages[_currentIndex],
-                            transitionBuilder: (
-                              Widget child,
-                              Animation<double> animation,
-                            ) {
-                                return FadeTransition(
-                                  opacity: animation,
-                                  child: child,
-                                );
-                              },
-                            ),
+                          child: IndexedStack(
+                            index: _currentIndex,
+                            children: _pages,
+                          ),
                         ),
                       ),
                     ),

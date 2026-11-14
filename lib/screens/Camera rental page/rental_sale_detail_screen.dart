@@ -9,6 +9,8 @@ import 'package:flutter/services.dart';
 import 'package:hive/hive.dart';
 
 import '../../../models/rental_sale_model.dart';
+import '../../utils/upi_payment_helper.dart';
+import '../../widgets/dynamic_upi_qr_dialog.dart';
 
 class RentalSaleDetailScreen extends StatefulWidget {
   final RentalSaleModel sale;
@@ -92,6 +94,48 @@ class _RentalSaleDetailScreenState extends State<RentalSaleDetailScreen> {
         widget.sale.paymentMode.isNotEmpty ? widget.sale.paymentMode : "Cash";
 
     isFullyPaid = widget.sale.amountPaid >= widget.sale.totalCost;
+  }
+
+  Future<void> _showDynamicUpiQr() async {
+    final currentUser = await UpiPaymentHelper.getCurrentUser();
+    final total =
+        double.tryParse(totalController.text) ?? widget.sale.totalCost;
+    final currentReceived =
+        double.tryParse(amountController.text) ?? widget.sale.amountPaid;
+    final balance = (total - currentReceived).clamp(0.0, double.infinity);
+    final amountToPay = balance > 0 ? balance : total;
+    final orderRef = widget.sale.id.length > 6
+        ? widget.sale.id.substring(widget.sale.id.length - 6)
+        : widget.sale.id;
+
+    if (!mounted) return;
+
+    await DynamicUpiQrDialog.show(
+      context,
+      payeeName: currentUser?.name.isNotEmpty == true
+          ? currentUser!.name
+          : 'BizMate Merchant',
+      upiId: currentUser?.upiId ?? '',
+      amount: amountToPay,
+      orderId: orderRef,
+      customerName: customerController.text,
+      transactionNote: 'Rental #$orderRef - ${customerController.text}',
+      onPaymentConfirmed: (paidAmount) {
+        setState(() {
+          _selectedMode = 'UPI';
+          final newTotalReceived = currentReceived + paidAmount;
+          amountController.text = newTotalReceived.toStringAsFixed(2);
+          if (newTotalReceived >= total) {
+            isFullyPaid = true;
+          }
+        });
+        AppSnackBar.showSuccess(
+          context,
+          message:
+              'Payment of ₹${paidAmount.toStringAsFixed(2)} applied! Tap Save Changes to persist.',
+        );
+      },
+    );
   }
 
   // SAME saveChanges()
@@ -468,6 +512,36 @@ class _RentalSaleDetailScreenState extends State<RentalSaleDetailScreen> {
                                     ),
                                   );
                                 }).toList(),
+                          ),
+                          Padding(
+                            padding: EdgeInsets.only(top: 12 * scale),
+                            child: SizedBox(
+                              width: double.infinity,
+                              child: OutlinedButton.icon(
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: const Color(0xFF1E40AF),
+                                  side: const BorderSide(
+                                    color: Color(0xFF1E40AF),
+                                    width: 1.4,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  padding: EdgeInsets.symmetric(
+                                    vertical: 10 * scale,
+                                  ),
+                                ),
+                                onPressed: _showDynamicUpiQr,
+                                icon: const Icon(
+                                  Icons.qr_code_2_rounded,
+                                  size: 20,
+                                ),
+                                label: const Text(
+                                  "Show Dynamic UPI QR",
+                                  style: TextStyle(fontWeight: FontWeight.w700),
+                                ),
+                              ),
+                            ),
                           ),
                         ],
                       ),

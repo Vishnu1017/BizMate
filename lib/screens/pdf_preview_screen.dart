@@ -6,6 +6,8 @@ import 'package:flutter_pdfview/flutter_pdfview.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../models/sale.dart';
+import '../utils/upi_payment_helper.dart';
+import '../widgets/dynamic_upi_qr_dialog.dart';
 
 class PdfPreviewScreen extends StatelessWidget {
   final String filePath;
@@ -65,8 +67,35 @@ class PdfPreviewScreen extends StatelessWidget {
             ),
           ),
           centerTitle: true,
-          actions: const [
-            Padding(
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.qr_code_2_rounded, color: Colors.white),
+              tooltip: "Show Dynamic UPI QR",
+              onPressed: () async {
+                final currentUser = await UpiPaymentHelper.getCurrentUser();
+                final balance = (sale.totalAmount - sale.amount)
+                    .clamp(0.0, double.infinity);
+                final orderRef = sale.key != null
+                    ? sale.key.toString()
+                    : sale.formattedDate;
+
+                if (!context.mounted) return;
+
+                await DynamicUpiQrDialog.show(
+                  context,
+                  payeeName: currentUser?.name.isNotEmpty == true
+                      ? currentUser!.name
+                      : 'BizMate Merchant',
+                  upiId: currentUser?.upiId ?? '',
+                  amount: balance > 0 ? balance : sale.totalAmount,
+                  orderId: orderRef,
+                  customerName: sale.customerName,
+                  transactionNote:
+                      'Invoice #$orderRef - ${sale.customerName}',
+                );
+              },
+            ),
+            const Padding(
               padding: EdgeInsets.only(right: 16),
               child: AppThemeToggle(),
             ),
@@ -180,6 +209,17 @@ class PdfPreviewScreen extends StatelessWidget {
 
           // Same share logic untouched
           onPressed: () async {
+            final currentUser = await UpiPaymentHelper.getCurrentUser();
+            final balance =
+                (sale.totalAmount - sale.amount).clamp(0.0, double.infinity);
+            final amountToPay = balance > 0 ? balance : sale.totalAmount;
+            final orderRef = sale.key != null
+                ? sale.key.toString()
+                : sale.formattedDate;
+            final upiPayLink = currentUser?.upiId.isNotEmpty == true
+                ? '\n              📲 *Pay via UPI:* ${UpiPaymentHelper.buildUniversalPaymentLink(upiId: currentUser!.upiId, payeeName: currentUser.name.isNotEmpty ? currentUser.name : "BizMate", amount: amountToPay, transactionNote: "Invoice #$orderRef - ${sale.customerName}", transactionRef: orderRef)}\n'
+                : '';
+
             final taxLine = '• Tax: ₹${sale.safeTax.toStringAsFixed(2)}';
             final discountLine = sale.discount > 0
                 ? '\n              • Discount: ₹${sale.discount.toStringAsFixed(2)}'
@@ -194,7 +234,7 @@ class PdfPreviewScreen extends StatelessWidget {
               • Received: ₹${sale.receivedAmount}
               • Balance Due: ₹${sale.balanceAmount}
               • Date: ${sale.formattedDate}
-
+$upiPayLink
               📲 Scan the QR code to pay via UPI.
 
               Thanks for choosing *${sale.customerName}*!

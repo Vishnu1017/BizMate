@@ -22,6 +22,7 @@ import 'package:shared_preferences/shared_preferences.dart'
     show SharedPreferences;
 import '../utils/payment_icons.dart';
 import '../utils/upi_payment_helper.dart';
+import 'dynamic_upi_qr_dialog.dart';
 
 class RentalSaleMenu extends StatelessWidget {
   /// The rental sale entry
@@ -104,6 +105,23 @@ class RentalSaleMenu extends StatelessWidget {
   List<PopupMenuItem<String>> _buildMenuItems() {
     return [
       PopupMenuItem(
+        value: 'show_upi_qr',
+        child: Row(
+          children: [
+            Icon(
+              Icons.qr_code_2_rounded,
+              color: Colors.indigo,
+              size: isSmallScreen ? 18 : 24,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              'Collect via UPI QR',
+              style: TextStyle(fontSize: isSmallScreen ? 12 : null),
+            ),
+          ],
+        ),
+      ),
+      PopupMenuItem(
         value: 'share_pdf',
         child: Row(
           children: [
@@ -159,6 +177,9 @@ class RentalSaleMenu extends StatelessWidget {
 
   Future<void> _handleMenuSelection(String value, BuildContext context) async {
     switch (value) {
+      case 'show_upi_qr':
+        await _handleShowUpiQr(context);
+        break;
       case 'delete':
         await _handleDelete(context);
         break;
@@ -169,6 +190,57 @@ class RentalSaleMenu extends StatelessWidget {
         _handlePaymentHistory(context);
         break;
     }
+  }
+
+  // ---------------------------------------------------------------------------
+  // SHOW DYNAMIC UPI QR
+  // ---------------------------------------------------------------------------
+
+  Future<void> _handleShowUpiQr(BuildContext context) async {
+    final currentUser = await _getCurrentUser();
+    final balance =
+        (sale.totalCost - sale.amountPaid).clamp(0, double.infinity).toDouble();
+    final orderRef =
+        sale.id.length > 6 ? sale.id.substring(sale.id.length - 6) : sale.id;
+
+    if (!context.mounted) return;
+
+    await DynamicUpiQrDialog.show(
+      context,
+      payeeName: currentUser?.name.isNotEmpty == true
+          ? currentUser!.name
+          : (currentUserName.isNotEmpty ? currentUserName : 'BizMate Merchant'),
+      upiId: currentUser?.upiId ?? '',
+      amount: balance > 0 ? balance : sale.totalCost,
+      orderId: orderRef,
+      customerName: sale.customerName,
+      transactionNote: 'Rental #$orderRef - ${sale.customerName}',
+      onPaymentConfirmed: (paidAmount) async {
+        try {
+          sale.amountPaid += paidAmount;
+          await sale.save();
+
+          final raw = userBox.get('rental_sales', defaultValue: []);
+          final List<RentalSaleModel> list =
+              (raw as List).map((e) => e as RentalSaleModel).toList();
+          for (int i = 0; i < list.length; i++) {
+            if (list[i].id == sale.id) {
+              list[i] = sale;
+              break;
+            }
+          }
+          await userBox.put('rental_sales', list);
+
+          if (parentContext.mounted) {
+            AppSnackBar.showSuccess(
+              parentContext,
+              message:
+                  'Payment of ₹${paidAmount.toStringAsFixed(2)} recorded successfully!',
+            );
+          }
+        } catch (_) {}
+      },
+    );
   }
 
   // ---------------------------------------------------------------------------
@@ -588,10 +660,16 @@ class RentalSaleMenu extends StatelessWidget {
   }
 
   String _generateQrData(double? enteredAmount, User currentUser) {
+    final orderRef =
+        sale.id.length > 6 ? sale.id.substring(sale.id.length - 6) : sale.id;
     return UpiPaymentHelper.buildQrData(
       upiId: currentUser.upiId,
-      payeeName: currentUser.name,
+      payeeName: currentUser.name.isNotEmpty
+          ? currentUser.name
+          : (currentUserName.isNotEmpty ? currentUserName : 'BizMate Merchant'),
       amount: enteredAmount,
+      transactionNote: 'Rental #$orderRef - ${sale.customerName}',
+      transactionRef: sale.id,
     );
   }
 
@@ -708,27 +786,30 @@ class RentalSaleMenu extends StatelessWidget {
         );
       }
 
-      final currentUser = await _getCurrentUser();
+      final currentUser = await _getCurrentUser() ??
+          User(
+            name: currentUserName,
+            email: currentUserEmail,
+            phone: currentUserPhone,
+            password: '',
+            role: '',
+            upiId: '',
+          );
 
       if (!context.mounted) return;
-      if (currentUser == null || currentUser.upiId.isEmpty) {
-        AppSnackBar.showWarning(
-          context,
-          message: "Please set your UPI ID in Profile first",
-          duration: Duration(seconds: 2),
-        );
-        return;
-      }
 
       final balanceAmount =
           (sale.totalCost - sale.amountPaid)
               .clamp(0, double.infinity)
               .toDouble();
 
-      final enteredAmount = await _showAmountDialog(context, balanceAmount);
+      final hasUpi = currentUser.upiId.isNotEmpty;
+      final enteredAmount = hasUpi && balanceAmount > 0
+          ? await _showAmountDialog(context, balanceAmount)
+          : balanceAmount;
       if (!context.mounted) return;
 
-      final qrData = _generateQrData(enteredAmount, currentUser);
+      final qrData = hasUpi ? _generateQrData(enteredAmount, currentUser) : '';
 
       pdf.addPage(
         pw.Page(
@@ -803,9 +884,9 @@ class RentalSaleMenu extends StatelessWidget {
                           pw.SizedBox(height: 12),
 
                           // ***************************************
-                          //     🔥 SHOW QR ONLY IF BALANCE > 0
+                          //     🔥 SHOW QR ONLY IF BALANCE > 0 & UPI CONFIGURED
                           // ***************************************
-                          if (balanceAmount > 0) ...[
+                          if (balanceAmount > 0 && qrData.isNotEmpty) ...[
                             pw.Container(
                               decoration: pw.BoxDecoration(
                                 color: PdfColor.fromInt(0xFFF8FAFC),

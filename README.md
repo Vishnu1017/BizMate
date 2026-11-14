@@ -18,7 +18,7 @@
   <a href="https://github.com/Vishnu1017/BizMate/blob/main/LICENSE">
     <img src="https://img.shields.io/github/license/Vishnu1017/BizMate" alt="License"/>
   </a>
-  <img src="https://img.shields.io/badge/version-1.0.67-blue" alt="Version"/>
+  <img src="https://img.shields.io/badge/version-1.0.72-blue" alt="Version"/>
   <img src="https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter" alt="Flutter"/>
   <img src="https://img.shields.io/badge/Dart-3.x-0175C2?logo=dart" alt="Dart"/>
   <img src="https://img.shields.io/badge/Platform-Android%20%7C%20iOS-green" alt="Platform"/>
@@ -30,9 +30,9 @@
 
 ## 🧾 About BizMate
 
-**BizMate** is a powerful, **offline-first** Flutter application built for **photographers, freelancers, and small business owners**. It provides a complete suite of tools to manage sales, customers, products, camera rental gear, bookings, payments, and business reports — all from a single beautifully designed app.
+**BizMate** is a powerful, **offline-first** Flutter application built for **photographers, freelancers, and small business owners**. It provides a complete suite of tools to manage sales, customers, products, expenses, net profit analytics, camera rental gear, bookings, dynamic UPI QR payments, and business reports — all from a single beautifully designed app.
 
-Built with **Hive** for lightning-fast local storage, BizMate works entirely offline with no internet required for day-to-day operations. It features a premium **Business Analytics splash screen with modern Lottie animations**, **direct Google Drive cloud backup & restore** (100% direct Google Cloud OAuth 2.0 with **zero Firebase dependency**), non-restricted `driveFileScope` security compliance, automated **Workmanager background scheduling**, network constraints (Wi-Fi only vs. Any Network), customizable backup frequencies (Manual, Daily, Weekly, Monthly), local backup completion alerts, **optional End-to-End Encryption (E2EE with secret PIN)**, **dark and light themes with enhanced financial readability**, **biometric authentication**, **GST-compliant PDF invoices with embedded NPCI UPI QR codes and accepted UPI app badges (Google Pay, PhonePe, Paytm, BHIM)**, **WhatsApp messaging**, and a dedicated **Camera Rental module** tailored for photographers.
+Built with **Hive** for lightning-fast local storage, BizMate works entirely offline with no internet required for day-to-day operations. It features a premium **Business Analytics splash screen with modern Lottie animations**, **direct Google Drive cloud backup & restore** (100% direct Google Cloud OAuth 2.0 with **zero Firebase dependency**), non-restricted `driveFileScope` security compliance, automated **Workmanager background scheduling**, network constraints (Wi-Fi only vs. Any Network), customizable backup frequencies (Manual, Daily, Weekly, Monthly), local backup completion alerts, **optional End-to-End Encryption (E2EE with secret PIN)**, **dark and light themes with enhanced financial readability**, **biometric authentication**, **interactive Dynamic UPI QR codes for instant counter checkout and remote payment link sharing**, **GST-compliant PDF invoices with embedded NPCI UPI QR codes and accepted UPI app badges (Google Pay, PhonePe, Paytm, BHIM)**, an embedded **Expense Tracker with real-time Net Profit & PnL Financial Dashboard**, **universal 5-tier mobile responsiveness (<350px up to tablets)**, **zero-lag IndexedStack tab persistence**, **WhatsApp messaging**, and a dedicated **Camera Rental module** tailored for photographers.
 
 ---
 
@@ -42,9 +42,11 @@ Built with **Hive** for lightning-fast local storage, BizMate works entirely off
 |---|---|
 | 🔐 **Auth & Security** | Passcode, Biometrics (Face ID / Fingerprint), Auto-login, Role-based signup |
 | 💫 **Splash Experience** | Centered Analytics Showcase Deck, Lottie animated 'B', glowing cyber orbitals, floating KPI cards |
-| 🏠 **Dashboard** | Animated stats, payment status filter chips (All / PAID / PARTIAL / DUE), quick actions |
+| 🏠 **Dashboard & PnL** | Real-time Net Profit, Revenue vs Expenses, dual-view PnL/Revenue spline curves, edge-safe tooltips |
+| 💸 **Expense Tracker** | Bottom navbar tab (Index 2), categorized expense logging, payment modes, receipt tracking, instant profit impact |
+| 📲 **Dynamic UPI QR** | Interactive counter checkout dialog, customizable pre-filled amount/order note, direct UPI app launch, link sharing |
 | 🛒 **Sales** | GST invoices, advance payments, payment timeline, tax calculations, contextual options menu |
-| 📦 **Products** | Drag-reorder, categories, quick search, price bundles |
+| 📦 **Products** | Drag-reorder, categories, quick search, price bundles, safe initial-mount caching |
 | 👥 **Customers** | WhatsApp integration with templates, direct calling, Client Release Agreement PDF |
 | 📅 **Calendar** | Visual booking calendar, date-range picker, event markers |
 | 🚚 **Delivery** | Status tracker with animated progress timeline |
@@ -52,10 +54,11 @@ Built with **Hive** for lightning-fast local storage, BizMate works entirely off
 | 📊 **Reports** | fl_chart analytics (bar & spline curves), CSV and PDF export, revenue breakdown |
 | 📁 **PDF Invoices** | GST-compliant invoices, embedded NPCI UPI QR code, crisp accepted UPI app logos (GPay, PhonePe, Paytm, BHIM), shareable via WhatsApp/Email |
 | 📸 **Camera Rental** | Full rental management for photographers: gear inventory with photos, booking date pickers, customer records & rental invoices |
+| 📱 **Universal Layout** | 5-Tier responsive layout engine (<350px very small, 360–390px small, 390–430px medium, 430–600px phablet, >600px tablet) |
+| ⚡ **Performance** | Zero-lag `IndexedStack` tab persistence, preserved scroll offsets, Adaptive High-Hz Engine (60Hz–165Hz & LTPO), Multi-GPU hardware acceleration |
 | ☁️ **Cloud Backup** | Direct Google Drive sync (OAuth 2.0, zero Firebase), `driveFileScope` security, `BizMate Backups` folder, Cloud Restore Browser, automated Workmanager scheduler (Daily, Weekly, Monthly), Wi-Fi constraint, notifications |
 | 💾 **Data Protection** | On-device backups manager, recent audit logs, optional End-to-End Encryption (AES PIN), WhatsApp export, JSON file import, database health |
 | 👤 **Profile** | Avatar photo picking & cropping, role badges, UPI ID configuration, passcode management |
-| ⚡ **GPU & Display** | Adaptive High-Hz Engine (60Hz–165Hz & LTPO), Multi-GPU hardware acceleration (Adreno, Mali, Immortalis, Apple Silicon), zero-latency Surface pipeline |
 | 🌗 **Theme** | Instant dark/light toggle on every screen with smooth transitions & high-contrast financial records |
 
 ---
@@ -103,13 +106,43 @@ Built with **Hive** for lightning-fast local storage, BizMate works entirely off
 - Secure passcode setup, change, and removal from profile
 - **Theme toggle on login & signup screen** — switch dark/light before logging in
 
-### 🏠 Dashboard & Home
-- Animated stats summary (Total Sales, Revenue, Outstanding Dues)
-- Recent sales list with customer info, status badges, and payment progress
-- **Payment status filter chips** — instantly filter by **All / PAID / PARTIAL / DUE**
-- Filter chips stack with search and date range filters simultaneously
-- Quick action buttons for adding sales and viewing reports
-- Dark / Light theme toggle with persistent preference
+### 🏠 Financial Dashboard & Net Profit Analytics
+- **Real-Time Financial Health Metrics** — live cards calculating **Total Revenue**, **Total Expenses**, and **Net Profit** with automated profit margin indicators
+- **Dual-View Segmented Analytics Toggle** — effortlessly switch between **Revenue Trend** and **Profit & Loss (PnL)** spline curve visualizations
+- **fl_chart Edge-Safe Tooltip Inspection** — enhanced with `fitInsideHorizontally` and `fitInsideVertically` plus spot indicator styling, guaranteeing tooltips never clip off the screen edges
+- **Adaptive Multi-Tier Metric Layout** — stacks into full-width cards on small screens, 2-column cards on standard phones, and 3-column horizontal grid on tablets
+- **Integrated Operational Actions** — one-tap buttons to jump directly into **Manage Expenses** or explore **Sales Insights**
+- **Home Sales Feed** — recent sales with customer info, payment status badges (All / PAID / PARTIAL / DUE), search, date filters, and quick invoice actions
+
+### 💸 Expense Tracker (Embedded Navbar Tab)
+- **Direct Bottom Navigation Access** — embedded as Tab index 2 directly between Dashboard and Customers for rapid bookkeeping
+- **Granular Expense Categorization** — log expenses under Rent, Equipment, Travel, Marketing, Maintenance, Salaries, Utilities, and Miscellaneous
+- **Payment Method & Receipt Tracking** — tag payment modes (UPI, Cash, Card, Bank) and store vendor remarks with timestamps
+- **Instant PnL Synchronization** — any added or edited expense immediately updates the Net Profit cards and graphs across the entire app
+- **Search & Category Filtering** — auto-stacking filter row adapting cleanly to mobile widths with wrapped badge tags for zero horizontal overflow
+
+### 📲 Dynamic UPI QR Codes & Instant Checkout Dialog
+- **Interactive Counter Checkout Modal (`DynamicUpiQrDialog`)** — generate on-the-fly NPCI-compliant UPI QR codes encoding merchant VPA, payee name, transaction note, order ID, and exact balance
+- **Real-Time Custom Amount Editing** — adjust the payable amount directly inside the dialog without leaving the screen
+- **Direct UPI App Launching** — one-tap deep-linking into installed apps (Google Pay, PhonePe, Paytm, BHIM) with automatic fallback
+- **Shareable Payment Link Payload** — share pre-composed payment links containing merchant details and UPI URI via native share sheet (WhatsApp, SMS, Email)
+- **One-Tap 'Mark as Paid' Confirmation** — records the payment immediately, appends to the sale timeline, and updates business revenue
+- **Omnipresent Access Points**:
+  - Contextual **Sale Options Menu** (`Collect via UPI QR`)
+  - **PDF Invoice Preview Screen** (Top AppBar action button)
+  - **Sale Detail / Edit Screen** (Prominent "Show Dynamic UPI QR" button)
+
+### 📱 Universal 5-Tier Mobile & Multi-Device Responsiveness
+- **Very Small Mobile (<350px, e.g. iPhone SE 1st gen, 320px Android)**: Tailored 0.76x scaling, 6–8px padding, single-column stacked metric cards, auto-collapsing search/date rows, and ellipsis text truncation
+- **Small Mobile (350px–390px, e.g. iPhone 12/13 mini, iPhone SE 2/3)**: 0.85x proportional scaling, compact filter chips, and flexible badge wrapping
+- **Medium Mobile (390px–430px, e.g. iPhone 14/15/16, Galaxy S23/S24, Pixel 7/8/9)**: 0.95x standard layout with complete avatar columns and spacious typography
+- **Big Mobile / Phablet (430px–600px, e.g. iPhone Pro Max, Galaxy Ultra)**: 1.02x scale factor, generous touch targets, and expanded list tiles
+- **Tablets & Desktop (>600px)**: Centered layout constraints (900px–1200px max width), multi-column grids, and full horizontal data layouts
+
+### ⚡ Zero-Lag Tab Switching & State Persistence Engine
+- **`IndexedStack` Architecture** — tabs in `NavBarPage` and `CameraRentalNavBar` remain mounted in memory, completely eliminating rebuild delays and simulator lag
+- **Preserved Scroll Offsets & Input State** — scrolling through sales or typing search queries is retained when switching between tabs
+- **Initial-Mount Null-Safety Guards** — safe asynchronous Hive box initialization across all views (`ProductsPage`, `CustomersPage`, `DashboardPage`) preventing null-operator race conditions
 
 ### 🛒 Sales Management
 - Create and manage **GST-compliant sales/invoices**
@@ -229,13 +262,23 @@ bizmate/
 │   ├── main.dart                     # App entry, splash screen, routing
 │   ├── models/                       # Hive data models (Sale, Customer, Product…)
 │   ├── screens/                      # All feature screens
-│   │   ├── home_page.dart
-│   │   ├── dashboard_page.dart
-│   │   ├── profile_page.dart
-│   │   ├── backup_screen.dart
-│   │   ├── Camera rental page/
+│   │   ├── nav_bar_page.dart         # Main 6-tab shell with IndexedStack persistence
+│   │   ├── home_page.dart            # Sales feed, status filter chips, quick search
+│   │   ├── dashboard_page.dart       # Net profit, revenue vs expenses, fl_chart PnL curves
+│   │   ├── expenses_page.dart        # Expense management, categories, receipt tracking
+│   │   ├── customers_page.dart       # Customer directory, WhatsApp automation, agreements
+│   │   ├── products_page.dart        # Package catalog, pricing bundles, drag reorder
+│   │   ├── sale_detail_screen.dart   # Edit sale, payment progress, dynamic UPI QR trigger
+│   │   ├── pdf_preview_screen.dart   # Invoice viewer, UPI QR action, sharing
+│   │   ├── profile_page.dart         # Business identity, UPI config, biometric & theme
+│   │   ├── backup_screen.dart        # Google Drive cloud sync & local backup manager
+│   │   ├── Camera rental page/       # Dedicated camera rental gear & bookings module
 │   │   └── ...
 │   ├── widgets/                      # Reusable UI components
+│   │   ├── dynamic_upi_qr_dialog.dart# Counter checkout UPI QR modal & link sharing
+│   │   ├── advanced_search_bar.dart  # Multi-parameter search & calendar filter
+│   │   ├── sale_options_menu.dart    # Contextual actions, UPI collect, PDF share
+│   │   └── ...
 │   ├── services/                     # Business logic & data services
 │   └── utils/                        # Helpers, constants, extensions
 ├── assets/
@@ -575,10 +618,14 @@ flutter build ipa --release
 - [x] GST-compliant PDF invoices with NPCI UPI QR code
 - [x] High-resolution Accepted UPI App badges on invoices (Google Pay, PhonePe, Paytm, BHIM)
 - [x] Dark & Light theme financial contrast and accessibility polish
+- [x] Expense tracking module embedded directly in bottom navbar (Tab index 2)
+- [x] Real-time Net Profit & PnL Financial Dashboard with dual-view spline analytics
+- [x] Dynamic UPI QR code generator, interactive counter checkout dialog & payment link sharing
+- [x] Universal 5-Tier mobile and tablet responsiveness (<350px very small up to >600px tablets)
+- [x] Zero-lag IndexedStack tab state persistence and scroll retention
 - [ ] Multi-device real-time sync
 - [ ] Push notifications for upcoming bookings and overdue payments
 - [ ] Custom invoice branding (logo, colors, header)
-- [ ] Expense tracking module
 - [ ] Multi-language / localization support
 
 ---

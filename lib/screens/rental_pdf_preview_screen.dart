@@ -6,6 +6,8 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../models/rental_sale_model.dart';
 import '../../widgets/app_snackbar.dart';
 import '../../widgets/app_theme_toggle.dart';
+import '../../widgets/dynamic_upi_qr_dialog.dart';
+import '../../utils/upi_payment_helper.dart';
 
 class RentalPdfPreviewScreen extends StatelessWidget {
   final String filePath;
@@ -55,8 +57,34 @@ class RentalPdfPreviewScreen extends StatelessWidget {
             style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
           ),
           centerTitle: true,
-          actions: const [
-            Padding(
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.qr_code_2_rounded, color: Colors.white),
+              tooltip: "Show Dynamic UPI QR",
+              onPressed: () async {
+                final currentUser = await UpiPaymentHelper.getCurrentUser();
+                final balance = (sale.totalCost - sale.amountPaid)
+                    .clamp(0.0, double.infinity);
+                final orderRef = sale.id.length > 6
+                    ? sale.id.substring(sale.id.length - 6)
+                    : sale.id;
+
+                if (!context.mounted) return;
+
+                await DynamicUpiQrDialog.show(
+                  context,
+                  payeeName: currentUser?.name.isNotEmpty == true
+                      ? currentUser!.name
+                      : userName,
+                  upiId: currentUser?.upiId ?? '',
+                  amount: balance > 0 ? balance : sale.totalCost,
+                  orderId: orderRef,
+                  customerName: sale.customerName,
+                  transactionNote: 'Rental #$orderRef - ${sale.customerName}',
+                );
+              },
+            ),
+            const Padding(
               padding: EdgeInsets.only(right: 16),
               child: AppThemeToggle(),
             ),
@@ -141,6 +169,20 @@ class RentalPdfPreviewScreen extends StatelessWidget {
           icon: const Icon(Icons.share, color: Colors.white),
           label: const Text("Share", style: TextStyle(color: Colors.white)),
           onPressed: () async {
+            final currentUser = await UpiPaymentHelper.getCurrentUser();
+            final balance =
+                (sale.totalCost - sale.amountPaid).clamp(0.0, double.infinity);
+            final amountToPay = balance > 0
+                ? balance
+                : (sale.ratePerDay * sale.numberOfDays);
+            final orderRef = sale.id.length > 6
+                ? sale.id.substring(sale.id.length - 6)
+                : sale.id;
+
+            final upiPayLink = currentUser?.upiId.isNotEmpty == true
+                ? '\n📲 *Pay via UPI:* ${UpiPaymentHelper.buildUniversalPaymentLink(upiId: currentUser!.upiId, payeeName: currentUser.name.isNotEmpty ? currentUser.name : userName, amount: amountToPay, transactionNote: "Rental #$orderRef - ${sale.customerName}", transactionRef: orderRef)}\n'
+                : '';
+
             final message = '''
 Hi ${sale.customerName},
 
@@ -149,9 +191,10 @@ Hi ${sale.customerName},
 • Rate/day: ₹${sale.ratePerDay.toStringAsFixed(2)}
 • Days: ${sale.numberOfDays}
 • Total: ₹${(sale.ratePerDay * sale.numberOfDays).toStringAsFixed(2)}
+• Balance: ₹${balance.toStringAsFixed(2)}
 • From: ${sale.fromDateTime.day}/${sale.fromDateTime.month}/${sale.fromDateTime.year}
 • To: ${sale.toDateTime.day}/${sale.toDateTime.month}/${sale.toDateTime.year}
-
+$upiPayLink
 Thanks for renting with us!
 ''';
 

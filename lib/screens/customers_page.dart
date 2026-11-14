@@ -496,10 +496,12 @@ class _CustomersPageState extends State<CustomersPage> {
     final w = MediaQuery.of(context).size.width;
 
     double scale =
-        w < 360
-            ? 0.80
+        w < 350
+            ? 0.76
+            : w < 390
+            ? 0.85
             : w < 480
-            ? 0.90
+            ? 0.95
             : w < 700
             ? 1.00
             : w < 1100

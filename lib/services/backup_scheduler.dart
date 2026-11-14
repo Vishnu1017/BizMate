@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:bizmate/models/customer_model.dart';
+import 'package:bizmate/models/expense.dart';
 import 'package:bizmate/models/payment.dart';
 import 'package:bizmate/models/product.dart';
 import 'package:bizmate/models/rental_item.dart';
@@ -100,8 +101,9 @@ Future<void> _performAutoBackup(Map<String, dynamic>? inputData) async {
     final customers = List<CustomerModel>.from(box.get('customers', defaultValue: <CustomerModel>[]));
     final rentalItems = List<RentalItem>.from(box.get('rental_items', defaultValue: <RentalItem>[]));
     final rentalSales = List<RentalSaleModel>.from(box.get('rental_sales', defaultValue: <RentalSaleModel>[]));
+    final expenses = List<Expense>.from(box.get('expenses', defaultValue: <Expense>[]));
 
-    final totalRecords = sales.length + products.length + customers.length + rentalItems.length + rentalSales.length;
+    final totalRecords = sales.length + products.length + customers.length + rentalItems.length + rentalSales.length + expenses.length;
     final now = DateTime.now();
 
     final payload = {
@@ -166,6 +168,7 @@ Future<void> _performAutoBackup(Map<String, dynamic>? inputData) async {
         'toDateTime': rs.toDateTime.toIso8601String(),
         'tax': rs.safeTax,
       }).toList(),
+      'expenses': expenses.map((e) => e.toJson()).toList(),
     };
 
     // Save local backup file
@@ -406,6 +409,7 @@ class BackupScheduler {
       final customers = List<CustomerModel>.from(box.get('customers', defaultValue: <CustomerModel>[]));
       final rentalItems = List<RentalItem>.from(box.get('rental_items', defaultValue: <RentalItem>[]));
       final rentalSales = List<RentalSaleModel>.from(box.get('rental_sales', defaultValue: <RentalSaleModel>[]));
+      final expenses = List<Expense>.from(box.get('expenses', defaultValue: <Expense>[]));
 
       final now = DateTime.now();
       final payload = {
@@ -419,6 +423,7 @@ class BackupScheduler {
         'customers': customers.map((c) => {'name': c.name, 'phone': c.phone}).toList(),
         'rentalItems': rentalItems.map((r) => {'name': r.name, 'price': r.price}).toList(),
         'rentalSales': rentalSales.map((rs) => {'id': rs.id, 'customerName': rs.customerName}).toList(),
+        'expenses': expenses.map((e) => {'id': e.id, 'title': e.title, 'amount': e.amount, 'category': e.category, 'dateTime': e.dateTime.toIso8601String()}).toList(),
       };
 
       final dir = await getApplicationDocumentsDirectory();

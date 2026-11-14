@@ -12,7 +12,8 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:hugeicons/hugeicons.dart' show HugeIcon, HugeIcons;
 
 class ProductsPage extends StatefulWidget {
-  const ProductsPage({super.key, required String userEmail});
+  final String userEmail;
+  const ProductsPage({super.key, required this.userEmail});
 
   @override
   State<ProductsPage> createState() => _ProductsPageState();
@@ -33,10 +34,15 @@ class _ProductsPageState extends State<ProductsPage> {
 
   // ---------------- LOAD USER-SPECIFIC PRODUCTS ----------------
   Future<void> _loadUserProducts() async {
-    if (!Hive.isBoxOpen('session')) await Hive.openBox('session');
-    final email = Hive.box('session').get("currentUserEmail");
+    String email = widget.userEmail.trim();
+    if (email.isEmpty) {
+      if (!Hive.isBoxOpen('session')) await Hive.openBox('session');
+      email =
+          (Hive.box('session').get("currentUserEmail")?.toString() ?? '').trim();
+    }
 
-    if (email == null) {
+    if (email.isEmpty) {
+      if (!mounted) return;
       setState(() {
         _allProducts = [];
       });
@@ -46,20 +52,22 @@ class _ProductsPageState extends State<ProductsPage> {
     final safeEmail = email.replaceAll('.', '_').replaceAll('@', '_');
     final boxName = 'userdata_$safeEmail';
 
-    userBox =
+    final box =
         Hive.isBoxOpen(boxName)
             ? Hive.box(boxName)
             : await Hive.openBox(boxName);
 
-    if (!userBox!.containsKey('products')) {
-      await userBox!.put('products', <Product>[]);
+    if (!box.containsKey('products')) {
+      await box.put('products', <Product>[]);
     }
 
     final List<Product> loaded = List<Product>.from(
-      userBox!.get("products", defaultValue: <Product>[]),
+      box.get("products", defaultValue: <Product>[]),
     );
 
+    if (!mounted) return;
     setState(() {
+      userBox = box;
       _allProducts = loaded;
     });
   }
@@ -95,7 +103,9 @@ class _ProductsPageState extends State<ProductsPage> {
 
     if (confirmed) {
       _allProducts.removeAt(realIndex);
-      await userBox!.put("products", _allProducts);
+      if (userBox != null && userBox!.isOpen) {
+        await userBox!.put("products", _allProducts);
+      }
 
       _filterProducts();
     }
@@ -108,10 +118,12 @@ class _ProductsPageState extends State<ProductsPage> {
     final w = MediaQuery.of(context).size.width;
 
     double scale =
-        w < 360
-            ? 0.78
+        w < 350
+            ? 0.76
+            : w < 390
+            ? 0.85
             : w < 480
-            ? 0.90
+            ? 0.95
             : w < 700
             ? 1.00
             : w < 1100
@@ -137,13 +149,17 @@ class _ProductsPageState extends State<ProductsPage> {
 
             // -------- PRODUCTS LIST --------
             Expanded(
-              child: ValueListenableBuilder(
-                valueListenable: userBox!.listenable(),
-                builder: (context, box, _) {
-                  // 🔥 REPLACE setState WITH LOCAL COMPUTATION
-                  final List<Product> newList = List<Product>.from(
-                    userBox!.get("products", defaultValue: <Product>[]),
-                  );
+              child: userBox == null
+                  ? const Center(
+                      child: CircularProgressIndicator(),
+                    )
+                  : ValueListenableBuilder(
+                      valueListenable: userBox!.listenable(),
+                      builder: (context, box, _) {
+                        // 🔥 REPLACE setState WITH LOCAL COMPUTATION
+                        final List<Product> newList = List<Product>.from(
+                          box.get("products", defaultValue: <Product>[]),
+                        );
                   // 🔥 AUTO SCROLL TO TOP WHEN NEW PRODUCT ADDED
                   if (newList.length > _previousProductCount) {
                     WidgetsBinding.instance.addPostFrameCallback((_) {

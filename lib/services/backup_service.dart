@@ -6,6 +6,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import '../models/expense.dart';
 import '../models/payment.dart';
 import '../models/product.dart';
 import '../models/rental_item.dart';
@@ -45,6 +46,9 @@ class BackupService {
       );
       final List<RentalSaleModel> rentalSales = List<RentalSaleModel>.from(
         userBox.get("rental_sales", defaultValue: <RentalSaleModel>[]),
+      );
+      final List<Expense> expenses = List<Expense>.from(
+        userBox.get("expenses", defaultValue: <Expense>[]),
       );
 
       final Map<String, dynamic> backupData = {
@@ -120,6 +124,8 @@ class BackupService {
                   },
                 )
                 .toList(),
+        'expenses':
+            expenses.map((e) => e.toJson()).toList(),
       };
 
       final String jsonString = const JsonEncoder.withIndent(
@@ -278,6 +284,22 @@ class BackupService {
           } catch (_) {}
         }
         await userBox.put('products', currentProducts);
+      }
+
+      if (data.containsKey('expenses') && data['expenses'] is List) {
+        final List expensesData = data['expenses'];
+        final List<Expense> currentExpenses = List<Expense>.from(
+          userBox.get('expenses', defaultValue: <Expense>[]),
+        );
+        for (var item in expensesData) {
+          try {
+            if (item is Map) {
+              currentExpenses.add(Expense.fromJson(Map<String, dynamic>.from(item)));
+              restoredCount++;
+            }
+          } catch (_) {}
+        }
+        await userBox.put('expenses', currentExpenses);
       }
 
       if (context.mounted) {

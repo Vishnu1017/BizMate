@@ -5,6 +5,7 @@ import 'dart:math';
 import 'dart:math' as math;
 import 'dart:ui';
 import 'package:bizmate/models/customer_model.dart';
+import 'package:bizmate/models/expense.dart';
 import 'package:bizmate/models/payment.dart';
 import 'package:bizmate/models/product.dart';
 import 'package:bizmate/models/rental_item.dart';
@@ -85,6 +86,7 @@ Future<void> _initializeHive() async {
       _openBoxSafely<RentalItem>('rental_items'),
       _openBoxSafely<CustomerModel>('customers'),
       _openBoxSafely<RentalSaleModel>('rental_sales'),
+      _openBoxSafely<Expense>('expenses'),
     ]);
   } catch (e) {
     debugPrint('Hive initialization error: $e');
@@ -100,6 +102,7 @@ void _registerAdapters() {
   _registerAdapter<RentalItem>(4, RentalItemAdapter());
   _registerAdapter<CustomerModel>(5, CustomerModelAdapter());
   _registerAdapter<RentalSaleModel>(6, RentalSaleModelAdapter());
+  _registerAdapter<Expense>(7, ExpenseAdapter());
 }
 
 void _registerAdapter<T>(int typeId, TypeAdapter<T> adapter) {

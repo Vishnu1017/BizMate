@@ -17,6 +17,7 @@ import '../services/backup_scheduler.dart';
 import 'backup_screen.dart';
 import 'customers_page.dart';
 import 'dashboard_page.dart';
+import 'expenses_page.dart';
 import 'home_page.dart';
 import 'new_sale_screen.dart';
 import 'products_page.dart';
@@ -84,6 +85,7 @@ class _NavBarPageState extends State<NavBarPage>
   final List<String> _titles = [
     "Home",
     "Dashboard",
+    "Expenses",
     "Customers",
     "Packages",
     "Profile",
@@ -92,6 +94,7 @@ class _NavBarPageState extends State<NavBarPage>
   @override
   void initState() {
     super.initState();
+    _initPages();
     _nameNotifier = ValueNotifier(widget.user.name);
     _loadProfileImage();
     _loadRentalStatus();
@@ -192,71 +195,85 @@ class _NavBarPageState extends State<NavBarPage>
     setState(() {});
   }
 
-  List<Widget> get _pages => [
-    HomePage(
-      userEmail: widget.userEmail,
-      userName: widget.user.name,
-      userPhone: widget.userPhone,
-    ),
-    DashboardPage(userEmail: widget.userEmail),
-    CustomersPage(userEmail: widget.userEmail),
-    ProductsPage(userEmail: widget.userEmail),
-    ProfilePage(
-      user: widget.user,
-      userEmail: widget.userEmail,
-      onRentalStatusChanged: () async {
-        await _reloadRentalStatus();
-        if (!mounted) return;
-        setState(() {});
-      },
-      onProfileUpdated: (updatedName) {
-        // 🔥 INSTANT UPDATE
-        _nameNotifier.value = updatedName;
+  late final List<Widget> _pages;
 
-        // keep widget.user in sync too
-        widget.user.name = updatedName;
+  void _initPages() {
+    _pages = [
+      HomePage(
+        userEmail: widget.userEmail,
+        userName: widget.user.name,
+        userPhone: widget.userPhone,
+      ),
+      DashboardPage(userEmail: widget.userEmail),
+      ExpensesPage(userEmail: widget.userEmail, isEmbedded: true),
+      CustomersPage(userEmail: widget.userEmail),
+      ProductsPage(userEmail: widget.userEmail),
+      ProfilePage(
+        user: widget.user,
+        userEmail: widget.userEmail,
+        onRentalStatusChanged: () async {
+          await _reloadRentalStatus();
+          if (!mounted) return;
+          setState(() {});
+        },
+        onProfileUpdated: (updatedName) {
+          // 🔥 INSTANT UPDATE
+          _nameNotifier.value = updatedName;
 
-        // optional: refresh welcome message
-        fetchWelcomeMessage();
-      },
-      onImageUpdated: () {
-        _loadProfileImage();
-      },
-    ),
-  ];
+          // keep widget.user in sync too
+          widget.user.name = updatedName;
+
+          // optional: refresh welcome message
+          fetchWelcomeMessage();
+        },
+        onImageUpdated: () {
+          _loadProfileImage();
+        },
+      ),
+    ];
+  }
 
   // ------------------------
   // Responsive helpers
   // ------------------------
-  // Breakpoint map (simple and easy to tune)
-  static const double _kCompactMax = 480; // small phones
-  static const double _kLargePhoneMax = 768; // large phones / small tablets
-  static const double _kTabletMax = 1024; // tablets
+  // Breakpoint map (tuned for very small to large mobile form factors)
+  static const double _kVerySmallMax = 350; // very small phones (e.g. 320px)
+  static const double _kSmallMax = 390;     // small phones (e.g. 360-380px)
+  static const double _kMediumMax = 430;    // medium phones (e.g. 390-420px)
+  static const double _kBigPhoneMax = 600;  // big screen phones (e.g. 430-480px+)
+  static const double _kLargePhoneMax = 768;// large phones / small tablets
+  static const double _kTabletMax = 1024;   // tablets
 
   double _scaleForWidth(double width, double base) {
-    // returns scaled value for font/padding based on width
-    if (width <= _kCompactMax) return base * 0.85; // compact
-    if (width <= _kLargePhoneMax) return base * 0.95; // large phone
-    if (width <= _kTabletMax) return base * 1.05; // tablet
-    return base * 1.15; // desktop
+    if (width < _kVerySmallMax) return base * 0.76;
+    if (width < _kSmallMax) return base * 0.85;
+    if (width < _kMediumMax) return base * 0.95;
+    if (width < _kBigPhoneMax) return base * 1.02;
+    if (width < _kTabletMax) return base * 1.08;
+    return base * 1.15;
   }
 
   EdgeInsets _pagePadding(double width) {
-    if (width <= _kCompactMax) {
+    if (width < _kVerySmallMax) {
+      return const EdgeInsets.symmetric(horizontal: 8, vertical: 8);
+    }
+    if (width < _kMediumMax) {
       return const EdgeInsets.symmetric(horizontal: 14, vertical: 12);
     }
-    if (width <= _kLargePhoneMax) {
-      return const EdgeInsets.symmetric(horizontal: 20, vertical: 16);
+    if (width < _kBigPhoneMax) {
+      return const EdgeInsets.symmetric(horizontal: 18, vertical: 14);
     }
-    if (width <= _kTabletMax) {
-      return const EdgeInsets.symmetric(horizontal: 28, vertical: 20);
+    if (width < _kTabletMax) {
+      return const EdgeInsets.symmetric(horizontal: 26, vertical: 18);
     }
     return const EdgeInsets.symmetric(horizontal: 48, vertical: 24);
   }
 
   double _appBarHeight(double width) {
-    if (width <= _kCompactMax) return 108;
-    if (width <= _kLargePhoneMax) return 116;
+    if (width <= _kVerySmallMax) return 100;
+    if (width <= _kSmallMax) return 106;
+    if (width <= _kMediumMax) return 114;
+    if (width <= _kBigPhoneMax) return 120;
     return 124;
   }
 
@@ -266,7 +283,7 @@ class _NavBarPageState extends State<NavBarPage>
   Widget _buildCleanAppBar(double screenWidth) {
     final bool isPhotographer = widget.user.role == 'Photographer';
     // ignore: unused_local_variable
-    final isSmallScreen = screenWidth < _kLargePhoneMax;
+    final isSmallScreen = screenWidth < _kBigPhoneMax;
     final padding = _pagePadding(screenWidth);
 
     // ── Theme-aware surface colors ──────────────────────────────────
@@ -306,7 +323,7 @@ class _NavBarPageState extends State<NavBarPage>
                     GestureDetector(
                       onTap: () {
                         setState(() {
-                          _currentIndex = 4; // ✅ Profile tab index
+                          _currentIndex = 5; // ✅ Profile tab index
                         });
                       },
                       child: Container(
@@ -409,6 +426,8 @@ class _NavBarPageState extends State<NavBarPage>
                           // Welcome / Welcome back (STATIC)
                           Text(
                             welcomeMessage.split('\n').first,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                               fontSize: _scaleForWidth(screenWidth, 12),
                               color: barText2,
@@ -422,6 +441,8 @@ class _NavBarPageState extends State<NavBarPage>
                             builder: (context, name, _) {
                               return Text(
                                 name,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
                                   fontSize: _scaleForWidth(
                                     screenWidth,
@@ -520,13 +541,17 @@ class _NavBarPageState extends State<NavBarPage>
                 // Page title and status
                 Row(
                   children: [
-                    Text(
-                      _titles[_currentIndex],
-                      style: TextStyle(
-                        fontSize: _scaleForWidth(screenWidth, 24 * scale),
-                        color: barText1,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: -0.4 * scale,
+                    Expanded(
+                      child: Text(
+                        _titles[_currentIndex],
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: _scaleForWidth(screenWidth, 24 * scale),
+                          color: barText1,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.4 * scale,
+                        ),
                       ),
                     ),
                   ],
@@ -758,7 +783,7 @@ class _NavBarPageState extends State<NavBarPage>
   // Add Sale / Add Item buttons
   // ------------------------
   Widget _buildAddSaleButton(double screenWidth) {
-    if (![0, 1, 2].contains(_currentIndex)) {
+    if (![0, 1, 3].contains(_currentIndex)) {
       return const SizedBox.shrink();
     }
 
@@ -864,7 +889,7 @@ class _NavBarPageState extends State<NavBarPage>
   }
 
   Widget _buildAddItemButton(double screenWidth) {
-    if (_currentIndex != 3) return const SizedBox.shrink();
+    if (_currentIndex != 4) return const SizedBox.shrink();
 
     final c2 = context.appColors;
     return Material(
@@ -977,8 +1002,13 @@ class _NavBarPageState extends State<NavBarPage>
   // Bottom navigation (clean)
   // ------------------------
   Widget _buildCleanNavigation(double screenWidth) {
-    final isSmallScreen = screenWidth < _kLargePhoneMax;
-    final horizontalMargin = isSmallScreen ? 14.0 : 30.0;
+    final horizontalMargin = screenWidth < _kVerySmallMax
+        ? 6.0
+        : screenWidth < _kMediumMax
+            ? 12.0
+            : screenWidth < _kTabletMax
+                ? 18.0
+                : 30.0;
     final c = context.appColors;
 
     return Container(
@@ -1009,14 +1039,20 @@ class _NavBarPageState extends State<NavBarPage>
             Icons.dashboard_outlined,
             Icons.dashboard,
           ),
-          _buildNavItem(screenWidth, 2, Icons.people_outline, Icons.people),
           _buildNavItem(
             screenWidth,
-            3,
+            2,
+            Icons.receipt_long_outlined,
+            Icons.receipt_long,
+          ),
+          _buildNavItem(screenWidth, 3, Icons.people_outline, Icons.people),
+          _buildNavItem(
+            screenWidth,
+            4,
             Icons.inventory_2_outlined,
             Icons.inventory_2,
           ),
-          _buildNavItem(screenWidth, 4, Icons.person_outline, Icons.person),
+          _buildNavItem(screenWidth, 5, Icons.person_outline, Icons.person),
         ],
       ),
     );
@@ -1042,7 +1078,7 @@ class _NavBarPageState extends State<NavBarPage>
             _currentIndex = index;
           });
 
-          if (index == 3) {
+          if (index == 4) {
             await Future.delayed(const Duration(milliseconds: 100));
             if (!mounted) return;
             setState(() {});
@@ -1143,7 +1179,7 @@ class _NavBarPageState extends State<NavBarPage>
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final isSmallScreen = screenWidth < _kLargePhoneMax;
+    final isSmallScreen = screenWidth < _kBigPhoneMax;
 
     return AbsorbPointer(
       absorbing: _isNavigating,
@@ -1169,11 +1205,14 @@ class _NavBarPageState extends State<NavBarPage>
                     child: Column(
                       children: [
                         // Action buttons
-                        if ([0, 1, 2].contains(_currentIndex))
+                        if ([0, 1, 3].contains(_currentIndex)) ...[
                           _buildAddSaleButton(screenWidth),
-                        if (_currentIndex == 3) _buildAddItemButton(screenWidth),
-
-                        SizedBox(height: _scaleForWidth(screenWidth, 16)),
+                          SizedBox(height: _scaleForWidth(screenWidth, 16)),
+                        ],
+                        if (_currentIndex == 4) ...[
+                          _buildAddItemButton(screenWidth),
+                          SizedBox(height: _scaleForWidth(screenWidth, 16)),
+                        ],
 
                         // Page content
                         Expanded(
@@ -1192,7 +1231,10 @@ class _NavBarPageState extends State<NavBarPage>
                             ),
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(20),
-                              child: _pages[_currentIndex],
+                              child: IndexedStack(
+                                index: _currentIndex,
+                                children: _pages,
+                              ),
                             ),
                           ),
                         ),

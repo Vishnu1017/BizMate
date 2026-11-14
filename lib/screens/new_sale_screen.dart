@@ -1044,7 +1044,10 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
     if (width >= 1000) return 1.05;
     if (width >= 800) return 1.0;
     if (width >= 600) return 0.96;
-    return 0.92;
+    if (width >= 430) return 0.92;
+    if (width >= 390) return 0.88;
+    if (width >= 350) return 0.82;
+    return 0.76;
   }
 
   EdgeInsets _responsivePadding(BoxConstraints constraints) {
@@ -1057,6 +1060,9 @@ class _NewSaleScreenState extends State<NewSaleScreen> {
     }
     if (w >= 600) {
       return const EdgeInsets.symmetric(horizontal: 20, vertical: 16);
+    }
+    if (w < 350) {
+      return const EdgeInsets.symmetric(horizontal: 8, vertical: 8);
     }
     return const EdgeInsets.symmetric(horizontal: 12, vertical: 12);
   }

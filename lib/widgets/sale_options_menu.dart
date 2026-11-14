@@ -23,6 +23,7 @@ import '../widgets/app_snackbar.dart';
 import '../widgets/confirm_delete_dialog.dart';
 import '../utils/payment_icons.dart';
 import '../utils/upi_payment_helper.dart';
+import 'dynamic_upi_qr_dialog.dart';
 
 class SaleOptionsMenu extends StatelessWidget {
   final Sale sale;
@@ -121,9 +122,13 @@ class SaleOptionsMenu extends StatelessWidget {
               size: isSmallScreen ? 18 : 24,
             ),
             const SizedBox(width: 8),
-            Text(
-              'Share PDF',
-              style: TextStyle(fontSize: isSmallScreen ? 12 : null),
+            Expanded(
+              child: Text(
+                'Share PDF',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontSize: isSmallScreen ? 12 : null),
+              ),
             ),
           ],
         ),
@@ -138,9 +143,13 @@ class SaleOptionsMenu extends StatelessWidget {
               size: isSmallScreen ? 18 : 24,
             ),
             const SizedBox(width: 8),
-            Text(
-              'View Payment History',
-              style: TextStyle(fontSize: isSmallScreen ? 12 : null),
+            Expanded(
+              child: Text(
+                'View Payment History',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontSize: isSmallScreen ? 12 : null),
+              ),
             ),
           ],
         ),
@@ -157,50 +166,84 @@ class SaleOptionsMenu extends StatelessWidget {
               size: isSmallScreen ? 18 : 24,
             ),
             const SizedBox(width: 8),
-            Text(
-              is3DPrinting
-                  ? '3D Print Delivery Tracker'
-                  : 'Photo Delivery Tracker',
-              style: TextStyle(fontSize: isSmallScreen ? 12 : null),
+            Expanded(
+              child: Text(
+                is3DPrinting
+                    ? '3D Print Delivery Tracker'
+                    : 'Photo Delivery Tracker',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontSize: isSmallScreen ? 12 : null),
+              ),
             ),
           ],
         ),
       ),
-      if (sale.amount < sale.totalAmount)
+      if (sale.amount < sale.totalAmount) ...[
         PopupMenuItem(
-          value: 'payment_reminder',
+          value: 'show_upi_qr',
           child: Row(
-            children: [
-              Icon(
-                Icons.notifications_active,
-                color: Colors.orange,
-                size: isSmallScreen ? 18 : 24,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                'Send Payment Reminder',
-                style: TextStyle(fontSize: isSmallScreen ? 12 : null),
-              ),
-            ],
-          ),
-        ),
-      PopupMenuItem(
-        value: 'delete',
-        child: Row(
           children: [
             Icon(
-              Icons.delete,
-              color: Colors.red,
+              Icons.qr_code_2_rounded,
+              color: Colors.indigo,
               size: isSmallScreen ? 18 : 24,
             ),
             const SizedBox(width: 8),
-            Text(
-              'Delete',
-              style: TextStyle(fontSize: isSmallScreen ? 12 : null),
+            Expanded(
+              child: Text(
+                'Collect via UPI QR',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontSize: isSmallScreen ? 12 : null),
+              ),
             ),
           ],
         ),
       ),
+      PopupMenuItem(
+        value: 'payment_reminder',
+        child: Row(
+          children: [
+            Icon(
+              Icons.notifications_active,
+              color: Colors.orange,
+              size: isSmallScreen ? 18 : 24,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Send Payment Reminder',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontSize: isSmallScreen ? 12 : null),
+              ),
+            ),
+          ],
+        ),
+      ),
+    ],
+    PopupMenuItem(
+      value: 'delete',
+      child: Row(
+        children: [
+          Icon(
+            Icons.delete,
+            color: Colors.red,
+            size: isSmallScreen ? 18 : 24,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'Delete',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: isSmallScreen ? 12 : null),
+            ),
+          ),
+        ],
+      ),
+    ),
     ];
   }
 
@@ -259,6 +302,9 @@ class SaleOptionsMenu extends StatelessWidget {
     String role = '',
   }) async {
     switch (value) {
+      case 'show_upi_qr':
+        await _handleShowUpiQr(context);
+        break;
       case 'delete':
         await _handleDelete(context);
         break;
@@ -275,6 +321,47 @@ class SaleOptionsMenu extends StatelessWidget {
         await _handlePaymentReminder(context);
         break;
     }
+  }
+
+  // ---------------------------------------------------------------------------
+  // SHOW DYNAMIC UPI QR
+  // ---------------------------------------------------------------------------
+
+  Future<void> _handleShowUpiQr(BuildContext context) async {
+    final usersBox = Hive.box<User>('users');
+    final currentUser = await _getCurrentUser(usersBox);
+    final balance =
+        (sale.totalAmount - sale.amount).clamp(0, double.infinity).toDouble();
+    final orderRef = invoiceNumber.isNotEmpty
+        ? invoiceNumber
+        : (sale.key != null ? sale.key.toString() : sale.formattedDate);
+
+    if (!context.mounted) return;
+
+    await DynamicUpiQrDialog.show(
+      context,
+      payeeName: currentUser?.name.isNotEmpty == true
+          ? currentUser!.name
+          : (currentUserName.isNotEmpty ? currentUserName : 'BizMate Merchant'),
+      upiId: currentUser?.upiId ?? '',
+      amount: balance > 0 ? balance : sale.totalAmount,
+      orderId: orderRef,
+      customerName: sale.customerName,
+      transactionNote: 'Invoice #$orderRef - ${sale.customerName}',
+      onPaymentConfirmed: (paidAmount) async {
+        try {
+          sale.amount += paidAmount;
+          await sale.save();
+          if (context.mounted) {
+            AppSnackBar.showSuccess(
+              context,
+              message:
+                  'Payment of ₹${paidAmount.toStringAsFixed(2)} recorded successfully!',
+            );
+          }
+        } catch (_) {}
+      },
+    );
   }
 
   Future<void> _handleDelete(BuildContext context) async {
@@ -458,62 +545,95 @@ class SaleOptionsMenu extends StatelessWidget {
       await rootBundle.load('assets/fonts/Roboto-Regular.ttf'),
     );
 
-    if (!context.mounted) return;
-    final enteredAmount = await _showAmountDialog(
-      context,
-      balanceAmount.toDouble(),
-    );
-
     final usersBox = Hive.box<User>('users');
-    final currentUser = await _getCurrentUser(usersBox);
-
-    if (currentUser == null || currentUser.upiId.isEmpty) {
-      if (context.mounted) {
-        AppSnackBar.showWarning(
-          context,
-          message: "Please set your UPI ID in your profile first",
-          duration: const Duration(seconds: 2),
+    final currentUser = await _getCurrentUser(usersBox) ??
+        User(
+          name: currentUserName,
+          email: currentUserEmail,
+          phone: currentUserPhone,
+          password: '',
+          role: '',
+          upiId: '',
         );
-      }
-      return;
-    }
+
+    final hasUpi = currentUser.upiId.isNotEmpty;
+    final enteredAmount = hasUpi && balanceAmount > 0
+        ? await _showAmountDialog(
+            context,
+            balanceAmount.toDouble(),
+          )
+        : balanceAmount.toDouble();
+
+    if (!context.mounted) return;
+
+    final payee = currentUser.name.isNotEmpty
+        ? currentUser.name
+        : (currentUserName.isNotEmpty ? currentUserName : 'BizMate Merchant');
+    final orderRef = invoiceNumber.isNotEmpty
+        ? invoiceNumber
+        : (sale.key != null ? sale.key.toString() : sale.formattedDate);
+    final note = 'Invoice #$orderRef - ${sale.customerName}';
 
     // Now generate QR code and cross-platform UPI links
-    final qrData = UpiPaymentHelper.buildQrData(
-      upiId: currentUser.upiId,
-      payeeName: currentUser.name,
-      amount: enteredAmount,
-    );
+    final qrData = hasUpi
+        ? UpiPaymentHelper.buildQrData(
+            upiId: currentUser.upiId,
+            payeeName: payee,
+            amount: enteredAmount,
+            transactionNote: note,
+            transactionRef: orderRef,
+          )
+        : '';
 
-    final googlePayLink = UpiPaymentHelper.buildGooglePayLink(
-      upiId: currentUser.upiId,
-      payeeName: currentUser.name,
-      amount: enteredAmount,
-    );
+    final googlePayLink = hasUpi
+        ? UpiPaymentHelper.buildGooglePayLink(
+            upiId: currentUser.upiId,
+            payeeName: payee,
+            amount: enteredAmount,
+            transactionNote: note,
+            transactionRef: orderRef,
+          )
+        : '';
 
-    final phonePeLink = UpiPaymentHelper.buildPhonePeLink(
-      upiId: currentUser.upiId,
-      payeeName: currentUser.name,
-      amount: enteredAmount,
-    );
+    final phonePeLink = hasUpi
+        ? UpiPaymentHelper.buildPhonePeLink(
+            upiId: currentUser.upiId,
+            payeeName: payee,
+            amount: enteredAmount,
+            transactionNote: note,
+            transactionRef: orderRef,
+          )
+        : '';
 
-    final paytmLink = UpiPaymentHelper.buildPaytmLink(
-      upiId: currentUser.upiId,
-      payeeName: currentUser.name,
-      amount: enteredAmount,
-    );
+    final paytmLink = hasUpi
+        ? UpiPaymentHelper.buildPaytmLink(
+            upiId: currentUser.upiId,
+            payeeName: payee,
+            amount: enteredAmount,
+            transactionNote: note,
+            transactionRef: orderRef,
+          )
+        : '';
 
-    final bhimLink = UpiPaymentHelper.buildBhimLink(
-      upiId: currentUser.upiId,
-      payeeName: currentUser.name,
-      amount: enteredAmount,
-    );
+    final bhimLink = hasUpi
+        ? UpiPaymentHelper.buildBhimLink(
+            upiId: currentUser.upiId,
+            payeeName: payee,
+            amount: enteredAmount,
+            transactionNote: note,
+            transactionRef: orderRef,
+          )
+        : '';
 
-    final upiUniversalLink = UpiPaymentHelper.buildUniversalPaymentLink(
-      upiId: currentUser.upiId,
-      payeeName: currentUser.name,
-      amount: enteredAmount,
-    );
+    final upiUniversalLink = hasUpi
+        ? UpiPaymentHelper.buildUniversalPaymentLink(
+            upiId: currentUser.upiId,
+            payeeName: payee,
+            amount: enteredAmount,
+            transactionNote: note,
+            transactionRef: orderRef,
+          )
+        : '';
 
     final profileImageBytes = await _getProfileImageBytes();
 
@@ -825,10 +945,18 @@ class SaleOptionsMenu extends StatelessWidget {
   }
 
   String _generateQrData(double? enteredAmount, User currentUser) {
+    final orderRef = invoiceNumber.isNotEmpty
+        ? invoiceNumber
+        : (sale.key != null ? sale.key.toString() : sale.formattedDate);
+    final note = 'Invoice #$orderRef - ${sale.customerName}';
     return UpiPaymentHelper.buildQrData(
       upiId: currentUser.upiId,
-      payeeName: currentUser.name,
+      payeeName: currentUser.name.isNotEmpty
+          ? currentUser.name
+          : (currentUserName.isNotEmpty ? currentUserName : 'BizMate Merchant'),
       amount: enteredAmount,
+      transactionNote: note,
+      transactionRef: orderRef,
     );
   }
 
@@ -1091,7 +1219,7 @@ class SaleOptionsMenu extends StatelessWidget {
                     ],
                     pw.SizedBox(height: 12),
                     // Payment Section (Modern Integrated Card)
-                    if (balanceAmount > 0) ...[
+                    if (balanceAmount > 0 && qrData.isNotEmpty) ...[
                       pw.Container(
                         decoration: pw.BoxDecoration(
                           color: PdfColor.fromInt(0xFFF8FAFC),
