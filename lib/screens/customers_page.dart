@@ -8,7 +8,7 @@ import 'package:bizmate/widgets/advanced_search_bar.dart'
 import 'package:bizmate/widgets/app_snackbar.dart';
 import 'package:bizmate/widgets/confirm_delete_dialog.dart';
 import 'package:flutter/material.dart';
-import 'package:hive/hive.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -18,7 +18,9 @@ import '../models/sale.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class CustomersPage extends StatefulWidget {
-  const CustomersPage({super.key, required String userEmail});
+  final String userEmail;
+
+  const CustomersPage({super.key, required this.userEmail});
 
   @override
   State<CustomersPage> createState() => _CustomersPageState();
@@ -33,13 +35,57 @@ class _CustomersPageState extends State<CustomersPage> {
   int _previousCustomerCount = 0;
   bool _isGeneratingPdf = false;
 
+  Box? _userBox;
+  VoidCallback? _salesListener;
+
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await _initUserBoxAndListener();
       fetchUniqueCustomers();
       _loadProfileName();
     });
+  }
+
+  Future<void> _initUserBoxAndListener() async {
+    try {
+      String email = widget.userEmail.trim();
+      if (email.isEmpty) {
+        if (!Hive.isBoxOpen('session')) await Hive.openBox('session');
+        email =
+            Hive.box('session').get('currentUserEmail')?.toString().trim() ?? '';
+      }
+      if (email.isEmpty) return;
+
+      final safeEmail = email.replaceAll('.', '_').replaceAll('@', '_');
+      final boxName = 'userdata_$safeEmail';
+      if (!Hive.isBoxOpen(boxName)) {
+        await Hive.openBox(boxName);
+      }
+      _userBox = Hive.box(boxName);
+
+      if (_salesListener == null && _userBox != null) {
+        _salesListener = () {
+          if (!mounted) return;
+          fetchUniqueCustomers();
+        };
+        _userBox!.listenable(keys: ['sales']).addListener(_salesListener!);
+      }
+    } catch (e) {
+      debugPrint('Error attaching sales listener in CustomersPage: $e');
+    }
+  }
+
+  @override
+  void dispose() {
+    if (_userBox != null && _salesListener != null) {
+      try {
+        _userBox!.listenable(keys: ['sales']).removeListener(_salesListener!);
+      } catch (_) {}
+    }
+    _scrollController.dispose();
+    super.dispose();
   }
 
   // ------------------- SEARCH -------------------
@@ -84,10 +130,10 @@ class _CustomersPageState extends State<CustomersPage> {
     }
 
     final safeEmail = email.replaceAll('.', '_').replaceAll('@', '_');
-    if (!Hive.isBoxOpen('userdata_$safeEmail')) {
-      await Hive.openBox('userdata_$safeEmail');
-    }
-    final userBox = Hive.box('userdata_$safeEmail');
+    final userBox = _userBox ??
+        (Hive.isBoxOpen('userdata_$safeEmail')
+            ? Hive.box('userdata_$safeEmail')
+            : await Hive.openBox('userdata_$safeEmail'));
 
     List<Sale> sales = List<Sale>.from(userBox.get("sales", defaultValue: []));
 

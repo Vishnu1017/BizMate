@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:hive/hive.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -95,11 +95,45 @@ class _ExpensesPageState extends State<ExpensesPage> {
       'This Month'; // All, This Month, Last 30 Days, This Year
 
   late Box _userBox;
+  VoidCallback? _expensesListener;
 
   @override
   void initState() {
     super.initState();
     _loadExpenses();
+  }
+
+  @override
+  void dispose() {
+    if (_expensesListener != null) {
+      try {
+        _userBox
+            .listenable(keys: ['expenses'])
+            .removeListener(_expensesListener!);
+      } catch (_) {}
+    }
+    super.dispose();
+  }
+
+  void _reloadExpensesFromBox() {
+    try {
+      final raw = _userBox.get('expenses', defaultValue: []);
+      final List<Expense> loaded =
+          (raw as List).map((e) {
+            if (e is Expense) return e;
+            return Expense.fromJson(Map<String, dynamic>.from(e as Map));
+          }).toList();
+
+      loaded.sort((a, b) => b.dateTime.compareTo(a.dateTime));
+
+      if (mounted) {
+        setState(() {
+          _expenses = loaded;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error reloading expenses from box: $e');
+    }
   }
 
   Future<void> _loadExpenses() async {
@@ -113,6 +147,16 @@ class _ExpensesPageState extends State<ExpensesPage> {
         await Hive.openBox(boxName);
       }
       _userBox = Hive.box(boxName);
+
+      if (_expensesListener == null) {
+        _expensesListener = () {
+          if (!mounted) return;
+          _reloadExpensesFromBox();
+        };
+        _userBox
+            .listenable(keys: ['expenses'])
+            .addListener(_expensesListener!);
+      }
 
       final raw = _userBox.get('expenses', defaultValue: []);
       final List<Expense> loaded =

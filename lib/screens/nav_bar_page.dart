@@ -48,6 +48,8 @@ class NavBarPage extends StatefulWidget {
 
 class _NavBarPageState extends State<NavBarPage>
     with SingleTickerProviderStateMixin {
+  final GlobalKey<DashboardPageState> _dashboardKey =
+      GlobalKey<DashboardPageState>();
   int _currentIndex = 0;
   bool _isRentalEnabled = false;
   String welcomeMessage = "";
@@ -204,7 +206,7 @@ class _NavBarPageState extends State<NavBarPage>
         userName: widget.user.name,
         userPhone: widget.userPhone,
       ),
-      DashboardPage(userEmail: widget.userEmail),
+      DashboardPage(key: _dashboardKey, userEmail: widget.userEmail),
       ExpensesPage(userEmail: widget.userEmail, isEmbedded: true),
       CustomersPage(userEmail: widget.userEmail),
       ProductsPage(userEmail: widget.userEmail),
@@ -807,6 +809,8 @@ class _NavBarPageState extends State<NavBarPage>
               MaterialPageRoute(builder: (context) => const NewSaleScreen()),
             );
 
+            _dashboardKey.currentState?.refreshData();
+
             if (mounted) {
               setState(() => _isNavigating = false);
             }
@@ -1077,6 +1081,10 @@ class _NavBarPageState extends State<NavBarPage>
           setState(() {
             _currentIndex = index;
           });
+
+          if (index == 1) {
+            _dashboardKey.currentState?.refreshData();
+          }
 
           if (index == 4) {
             await Future.delayed(const Duration(milliseconds: 100));

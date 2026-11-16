@@ -1,5 +1,6 @@
 // lib/screens/dashboard_page.dart
 // Fully production-responsive DashboardPage with Net Profit & Expense Tracking
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:bizmate/models/expense.dart';
@@ -10,7 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
-import 'package:hive/hive.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:bizmate/services/notification_service.dart';
 import '../models/payment.dart';
 import '../models/rental_sale_model.dart';
@@ -22,10 +23,10 @@ class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key, required this.userEmail});
 
   @override
-  State<DashboardPage> createState() => _DashboardPageState();
+  State<DashboardPage> createState() => DashboardPageState();
 }
 
-class _DashboardPageState extends State<DashboardPage> {
+class DashboardPageState extends State<DashboardPage> {
   double totalSale = 0.0;
   double totalExpense = 0.0;
   double netProfit = 0.0;
@@ -56,14 +57,60 @@ class _DashboardPageState extends State<DashboardPage> {
   List<Expense> expenses = [];
   bool _isLoading = true;
 
+  Box? _userBox;
+  StreamSubscription<BoxEvent>? _boxSubscription;
+
+  /// Public refresh method callable from parent navigation shell
+  Future<void> refreshData() async {
+    await _initializeData();
+  }
+
+  Future<String> _resolveBoxName() async {
+    String email = widget.userEmail.trim();
+    if (email.isEmpty) {
+      if (!Hive.isBoxOpen('session')) await Hive.openBox('session');
+      email =
+          Hive.box('session').get('currentUserEmail')?.toString().trim() ?? '';
+    }
+    final safeEmail =
+        email.toLowerCase().replaceAll('.', '_').replaceAll('@', '_');
+    return "userdata_$safeEmail";
+  }
+
   @override
   void initState() {
     super.initState();
 
     Future.delayed(Duration.zero, () async {
+      await _initUserBoxAndListener();
       await _initializeData();
       if (mounted) setState(() {});
     });
+  }
+
+  Future<void> _initUserBoxAndListener() async {
+    try {
+      final boxName = await _resolveBoxName();
+
+      if (!Hive.isBoxOpen(boxName)) {
+        await Hive.openBox(boxName);
+      }
+      _userBox = Hive.box(boxName);
+
+      await _boxSubscription?.cancel();
+      _boxSubscription = _userBox!.watch().listen((BoxEvent event) {
+        if (!mounted) return;
+        _initializeData();
+      });
+    } catch (e) {
+      debugPrint('Error attaching userBox watch stream in DashboardPage: $e');
+    }
+  }
+
+  @override
+  void dispose() {
+    _boxSubscription?.cancel();
+    super.dispose();
   }
 
   Future<void> _initializeData() async {
@@ -85,18 +132,14 @@ class _DashboardPageState extends State<DashboardPage> {
 
   Future<void> _loadSalesData() async {
     try {
-      final safeEmail = widget.userEmail
-          .replaceAll('.', '_')
-          .replaceAll('@', '_');
-      final boxName = "userdata_$safeEmail";
-
-      if (!Hive.isBoxOpen(boxName)) {
-        await Hive.openBox(boxName);
-      }
-      final userBox = Hive.box(boxName);
+      final boxName = await _resolveBoxName();
+      final userBox = _userBox ??
+          (Hive.isBoxOpen(boxName)
+              ? Hive.box(boxName)
+              : await Hive.openBox(boxName));
 
       final rawSales = userBox.get('sales', defaultValue: []);
-      sales = (rawSales as List).map((e) => e as Sale).toList();
+      sales = List<Sale>.from((rawSales as List).whereType<Sale>());
     } catch (e) {
       debugPrint('Error loading sales data: $e');
       sales = [];
@@ -105,19 +148,16 @@ class _DashboardPageState extends State<DashboardPage> {
 
   Future<void> _loadRentalSalesData() async {
     try {
-      final safeEmail = widget.userEmail
-          .replaceAll('.', '_')
-          .replaceAll('@', '_');
-      final boxName = "userdata_$safeEmail";
-
-      if (!Hive.isBoxOpen(boxName)) {
-        await Hive.openBox(boxName);
-      }
-      final userBox = Hive.box(boxName);
+      final boxName = await _resolveBoxName();
+      final userBox = _userBox ??
+          (Hive.isBoxOpen(boxName)
+              ? Hive.box(boxName)
+              : await Hive.openBox(boxName));
 
       final rawRentalSales = userBox.get('rental_sales', defaultValue: []);
-      rentalSales =
-          (rawRentalSales as List).map((e) => e as RentalSaleModel).toList();
+      rentalSales = List<RentalSaleModel>.from(
+        (rawRentalSales as List).whereType<RentalSaleModel>(),
+      );
     } catch (e) {
       debugPrint('Error loading rental sales data: $e');
       rentalSales = [];
@@ -126,15 +166,11 @@ class _DashboardPageState extends State<DashboardPage> {
 
   Future<void> _loadExpensesData() async {
     try {
-      final safeEmail = widget.userEmail
-          .replaceAll('.', '_')
-          .replaceAll('@', '_');
-      final boxName = "userdata_$safeEmail";
-
-      if (!Hive.isBoxOpen(boxName)) {
-        await Hive.openBox(boxName);
-      }
-      final userBox = Hive.box(boxName);
+      final boxName = await _resolveBoxName();
+      final userBox = _userBox ??
+          (Hive.isBoxOpen(boxName)
+              ? Hive.box(boxName)
+              : await Hive.openBox(boxName));
 
       final rawExpenses = userBox.get('expenses', defaultValue: []);
       expenses = (rawExpenses as List).map((e) {

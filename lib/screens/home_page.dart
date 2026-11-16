@@ -642,8 +642,8 @@ class _HomePageState extends State<HomePage>
                           elevation: 4,
                           child: InkWell(
                             borderRadius: BorderRadius.circular(16),
-                            onTap: () {
-                              Navigator.push(
+                            onTap: () async {
+                              await Navigator.push(
                                 context,
                                 MaterialPageRoute(
                                   builder:
@@ -653,6 +653,7 @@ class _HomePageState extends State<HomePage>
                                       ),
                                 ),
                               );
+                              if (mounted) setState(() {});
                             },
                             child: Padding(
                               padding: EdgeInsets.all(

@@ -8,7 +8,7 @@ import 'package:bizmate/widgets/confirm_delete_dialog.dart'
     show showConfirmDialog;
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:hive/hive.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../models/customer_model.dart';
 
@@ -33,11 +33,25 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
 
   List<CustomerModel> customers = [];
   List<CustomerModel> allCustomers = []; // FULL backup list (important)
+  VoidCallback? _rentalCustomersListener;
 
   @override
   void initState() {
     super.initState();
     _loadCustomers();
+  }
+
+  @override
+  void dispose() {
+    if (userBox != null && _rentalCustomersListener != null) {
+      try {
+        userBox!
+            .listenable(keys: ['customers'])
+            .removeListener(_rentalCustomersListener!);
+      } catch (_) {}
+    }
+    _scrollController.dispose();
+    super.dispose();
   }
 
   // ---------------------------------------------------------------------------
@@ -59,6 +73,16 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
         userBox = await Hive.openBox(boxName);
       } else {
         userBox = Hive.box(boxName);
+      }
+
+      if (_rentalCustomersListener == null && userBox != null) {
+        _rentalCustomersListener = () {
+          if (!mounted) return;
+          _loadCustomers();
+        };
+        userBox!
+            .listenable(keys: ['customers'])
+            .addListener(_rentalCustomersListener!);
       }
 
       List<CustomerModel> loaded = [];
@@ -92,8 +116,8 @@ class _RentalCustomersPageState extends State<RentalCustomersPage> {
           uniqueCustomers.values.toList()
             ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
-      // ✅ Persist cleaned list back (self-healing)
-      if (userBox != null) {
+      // ✅ Persist cleaned list back only if duplicates were found
+      if (userBox != null && dedupedList.length != loaded.length) {
         await userBox!.put("customers", dedupedList);
       }
 

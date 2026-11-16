@@ -5,7 +5,7 @@ import 'package:bizmate/models/sale.dart';
 import 'package:bizmate/models/rental_sale_model.dart';
 import 'package:bizmate/models/user_model.dart';
 import 'package:bizmate/widgets/app_theme_toggle.dart';
-import 'package:hive/hive.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:unicons/unicons.dart';
 
@@ -34,11 +34,26 @@ class _CalendarPageState extends State<CalendarPage> {
 
   double scale = 1.0;
 
+  Box? _userBox;
+  VoidCallback? _eventsListener;
+
   @override
   void initState() {
     super.initState();
     _selectedDay = _focusedDay;
     _initCalendar();
+  }
+
+  @override
+  void dispose() {
+    if (_userBox != null && _eventsListener != null) {
+      try {
+        _userBox!
+            .listenable(keys: ['sales', 'rental_sales'])
+            .removeListener(_eventsListener!);
+      } catch (_) {}
+    }
+    super.dispose();
   }
 
   Future<void> _initCalendar() async {
@@ -55,6 +70,37 @@ class _CalendarPageState extends State<CalendarPage> {
     await _loadUserRole();
     if (mounted) {
       _rebuildFilteredEvents();
+    }
+    // 4. Attach real-time listener
+    await _attachEventsListener();
+  }
+
+  Future<void> _attachEventsListener() async {
+    try {
+      if (!Hive.isBoxOpen('session')) await Hive.openBox('session');
+      final email = Hive.box('session').get('currentUserEmail')?.toString();
+      if (email != null && email.isNotEmpty) {
+        final safeEmail = email.replaceAll('.', '_').replaceAll('@', '_');
+        final boxName = 'userdata_$safeEmail';
+        if (!Hive.isBoxOpen(boxName)) await Hive.openBox(boxName);
+        _userBox = Hive.box(boxName);
+
+        if (_eventsListener == null && _userBox != null) {
+          _eventsListener = () async {
+            if (!mounted) return;
+            _allSales = await _loadUserSales();
+            _allRentals = await _loadUserRentalSales();
+            if (mounted) {
+              _rebuildFilteredEvents();
+            }
+          };
+          _userBox!
+              .listenable(keys: ['sales', 'rental_sales'])
+              .addListener(_eventsListener!);
+        }
+      }
+    } catch (e) {
+      debugPrint('Error attaching events listener to CalendarPage: $e');
     }
   }
 
