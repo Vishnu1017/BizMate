@@ -18,7 +18,7 @@
   <a href="https://github.com/Vishnu1017/BizMate/blob/main/LICENSE">
     <img src="https://img.shields.io/github/license/Vishnu1017/BizMate" alt="License"/>
   </a>
-  <img src="https://img.shields.io/badge/version-1.0.72-blue" alt="Version"/>
+  <img src="https://img.shields.io/badge/version-1.0.73-blue" alt="Version"/>
   <img src="https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter" alt="Flutter"/>
   <img src="https://img.shields.io/badge/Dart-3.x-0175C2?logo=dart" alt="Dart"/>
   <img src="https://img.shields.io/badge/Platform-Android%20%7C%20iOS-green" alt="Platform"/>
@@ -42,8 +42,10 @@ Built with **Hive** for lightning-fast local storage, BizMate works entirely off
 |---|---|
 | 🔐 **Auth & Security** | Passcode, Biometrics (Face ID / Fingerprint), Auto-login, Role-based signup |
 | 💫 **Splash Experience** | Centered Analytics Showcase Deck, Lottie animated 'B', glowing cyber orbitals, floating KPI cards |
+| 🧭 **Dynamic Navigation** | 5-item dynamic bottom bar (Home ↔ Expense toggle), signature floating pill, pop-up lift animation, gradient focus & micro dot |
+| 🔄 **Real-Time Data Sync** | Reactive Hive box listeners (`ValueListenableBuilder`) across Dashboard, Sales, Customers, Expenses & Calendar |
 | 🏠 **Dashboard & PnL** | Real-time Net Profit, Revenue vs Expenses, dual-view PnL/Revenue spline curves, edge-safe tooltips |
-| 💸 **Expense Tracker** | Bottom navbar tab (Index 2), categorized expense logging, payment modes, receipt tracking, instant profit impact |
+| 💸 **Expense Tracker** | Categorized expense logging, payment modes, receipt tracking, ModernCalendar date picker, instant profit impact |
 | 📲 **Dynamic UPI QR** | Interactive counter checkout dialog, customizable pre-filled amount/order note, direct UPI app launch, link sharing |
 | 🛒 **Sales** | GST invoices, advance payments, payment timeline, tax calculations, contextual options menu |
 | 📦 **Products** | Drag-reorder, categories, quick search, price bundles, safe initial-mount caching |
@@ -73,6 +75,33 @@ Built with **Hive** for lightning-fast local storage, BizMate works entirely off
 - **Financial Distribution Donut Ring** — animated 3-segment progress breakdown (Revenue 60%, Profit 25%, Expenses 15%)
 - **Monthly Performance Bar Chart** — 7-month comparative analytics with dynamic spline trend curve and glowing data nodes
 - **Floating Glassmorphic KPI Cards** — live preview cards for Revenue (₹2.4L), Sales (1,284), Customers (348), and Stock (96 items)
+
+### 🧭 Dynamic 5-Item Bottom Navigation & Signature Animations
+- **Intelligent 5-Position Navigation Architecture** — clean, permanent 5-slot bottom bar layout (Dynamic Home/Expense, Dashboard, Customers, Packages, Profile)
+- **Contextual Home ↔ Expense Toggle**:
+  - **On Home screen**: Displays the **Expense** icon with active gradient focus; tapping navigates directly to Expenses (index 2)
+  - **On Expense screen**: Displays the **Home** icon with active gradient focus; tapping navigates smoothly back to Home (index 0)
+  - **On other screens (Dashboard, Customers, Packages, Profile)**: Displays the **Home** icon in inactive state; tapping returns to Home
+  - Home and Expense never appear simultaneously, guaranteeing exactly 5 items at all times
+- **Signature Floating Pill Aesthetics** — floating container with responsive margins, `18px` rounded corners, and ambient drop elevation
+- **280ms Pop-Up Lift Animation** — active selection smoothly elevates (`translateY(-6px)`) with `Curves.easeOutCubic`
+- **Gradient Focus Container** — active tab sits within a `42x42px` rounded focus container with BizMate's signature blue gradient and glowing ambient shadow
+- **Animated Micro Indicator Dot** — responsive circular dot expanding beneath the active tab
+- **Native Android Back-Button Handling (`PopScope`)** — pressing the back button anywhere in the app returns to Home first before exiting
+
+### 🔄 Reactive Real-Time Data Synchronization Engine
+- **Instant Reactive Sync Across All Modules** — powered by Hive box `ValueListenableBuilder` reactive listeners
+- **Zero Manual Refreshing Needed** — creating, editing, or deleting any sale, rental booking, customer record, or expense immediately updates:
+  - Financial Dashboard cards (Total Revenue, Total Expenses, Net Profit)
+  - fl_chart Revenue & PnL spline analytics
+  - Home page sales feed & status filters
+  - Customers and Rental Customers directories
+  - Visual Booking & Calendar event markers
+- **Automated Dashboard Refresh Hook** — tab switches automatically re-verify and refresh financial datasets for guaranteed accuracy
+
+### 📅 Interactive Modern Calendar & Date Filtering
+- **Interactive `ModernCalendar` Dialog** — seamlessly integrated into the Add New Expense date picker for an intuitive, elegant date selection experience
+- **Theme-Adaptive Filter Contrast** — polished date filter rows with high-contrast white checkmark indicators in both dark and light modes
 
 ### 📁 GST PDF Invoices & Seamless UPI Payments
 - **GST-Compliant Invoices** — itemized product tables, tax breakdowns, discount calculation, and customer details
@@ -623,6 +652,11 @@ flutter build ipa --release
 - [x] Dynamic UPI QR code generator, interactive counter checkout dialog & payment link sharing
 - [x] Universal 5-Tier mobile and tablet responsiveness (<350px very small up to >600px tablets)
 - [x] Zero-lag IndexedStack tab state persistence and scroll retention
+- [x] Dynamic 5-item bottom navigation with Home ↔ Expense contextual toggle
+- [x] Signature floating pill design, 280ms pop-up lift animation, gradient focus container & micro indicator dot
+- [x] App-wide reactive real-time data sync across Dashboard, Expenses, Sales, Customers & Calendar
+- [x] Modern interactive calendar dialog (`ModernCalendar`) in Add Expense date picker
+- [x] Native `PopScope` Android back-button navigation returning to Home before exit
 - [ ] Multi-device real-time sync
 - [ ] Push notifications for upcoming bookings and overdue payments
 - [ ] Custom invoice branding (logo, colors, header)

@@ -1005,6 +1005,32 @@ class _NavBarPageState extends State<NavBarPage>
   // ------------------------
   // Bottom navigation (clean)
   // ------------------------
+  Future<void> _onNavTap(int index) async {
+    if (_isNavigating) return;
+
+    setState(() => _isNavigating = true);
+
+    setState(() {
+      _currentIndex = index;
+    });
+
+    if (index == 1) {
+      _dashboardKey.currentState?.refreshData();
+    }
+
+    if (index == 4) {
+      await Future.delayed(const Duration(milliseconds: 100));
+      if (!mounted) return;
+      setState(() {});
+    }
+
+    await _loadRentalStatus();
+
+    if (mounted) {
+      setState(() => _isNavigating = false);
+    }
+  }
+
   Widget _buildCleanNavigation(double screenWidth) {
     final horizontalMargin = screenWidth < _kVerySmallMax
         ? 6.0
@@ -1014,6 +1040,27 @@ class _NavBarPageState extends State<NavBarPage>
                 ? 18.0
                 : 30.0;
     final c = context.appColors;
+
+    final bool isHome = _currentIndex == 0;
+    final bool isExpense = _currentIndex == 2;
+
+    // Dynamic first item:
+    // When current screen is Home:
+    //   - Display Expense icon, highlighted with gradient focus
+    //   - Tapping it navigates to Expense screen (index 2)
+    // When current screen is Expense:
+    //   - Display Home icon, highlighted with gradient focus
+    //   - Tapping it navigates to Home screen (index 0)
+    // When current screen is any other screen:
+    //   - Display Home icon, inactive
+    //   - Tapping it navigates to Home screen (index 0)
+    final IconData firstOutline =
+        isHome ? Icons.receipt_long_outlined : Icons.home_outlined;
+    final IconData firstFilled =
+        isHome ? Icons.receipt_long : Icons.home;
+    final bool firstSelected = isHome || isExpense;
+    final VoidCallback firstTap =
+        isHome ? () => _onNavTap(2) : () => _onNavTap(0);
 
     return Container(
       margin: EdgeInsets.symmetric(
@@ -1036,148 +1083,155 @@ class _NavBarPageState extends State<NavBarPage>
       ),
       child: Row(
         children: [
-          _buildNavItem(screenWidth, 0, Icons.home_outlined, Icons.home),
+          // 1. Dynamic Home / Expense
           _buildNavItem(
-            screenWidth,
-            1,
-            Icons.dashboard_outlined,
-            Icons.dashboard,
+            screenWidth: screenWidth,
+            outlineIcon: firstOutline,
+            filledIcon: firstFilled,
+            isSelected: firstSelected,
+            onTap: firstTap,
+            semanticLabel: isHome ? 'Expense' : 'Home',
           ),
+
+          // 2. Dashboard
           _buildNavItem(
-            screenWidth,
-            2,
-            Icons.receipt_long_outlined,
-            Icons.receipt_long,
+            screenWidth: screenWidth,
+            outlineIcon: Icons.dashboard_outlined,
+            filledIcon: Icons.dashboard,
+            isSelected: _currentIndex == 1,
+            onTap: () => _onNavTap(1),
+            semanticLabel: 'Dashboard',
           ),
-          _buildNavItem(screenWidth, 3, Icons.people_outline, Icons.people),
+
+          // 3. Customers
           _buildNavItem(
-            screenWidth,
-            4,
-            Icons.inventory_2_outlined,
-            Icons.inventory_2,
+            screenWidth: screenWidth,
+            outlineIcon: Icons.people_outline,
+            filledIcon: Icons.people,
+            isSelected: _currentIndex == 3,
+            onTap: () => _onNavTap(3),
+            semanticLabel: 'Customers',
           ),
-          _buildNavItem(screenWidth, 5, Icons.person_outline, Icons.person),
+
+          // 4. Packages
+          _buildNavItem(
+            screenWidth: screenWidth,
+            outlineIcon: Icons.inventory_2_outlined,
+            filledIcon: Icons.inventory_2,
+            isSelected: _currentIndex == 4,
+            onTap: () => _onNavTap(4),
+            semanticLabel: 'Packages',
+          ),
+
+          // 5. Profile
+          _buildNavItem(
+            screenWidth: screenWidth,
+            outlineIcon: Icons.person_outline,
+            filledIcon: Icons.person,
+            isSelected: _currentIndex == 5,
+            onTap: () => _onNavTap(5),
+            semanticLabel: 'Profile',
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildNavItem(
-    double screenWidth,
-    int index,
-    IconData outlineIcon,
-    IconData filledIcon,
-  ) {
-    final isSelected = index == _currentIndex;
-
+  Widget _buildNavItem({
+    required double screenWidth,
+    required IconData outlineIcon,
+    required IconData filledIcon,
+    required bool isSelected,
+    required VoidCallback onTap,
+    String? semanticLabel,
+  }) {
     return Expanded(
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: () async {
-          if (_isNavigating) return;
+      child: Tooltip(
+        message: semanticLabel ?? '',
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: onTap,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 280),
+            curve: Curves.easeOutCubic,
+            transform: Matrix4.translationValues(
+              0,
+              isSelected ? -6 : 0, // 🔥 POP-UP EFFECT
+              0,
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // ================= ICON WITH GRADIENT FOCUS =================
+                Container(
+                  width: _scaleForWidth(screenWidth, 42),
+                  height: _scaleForWidth(screenWidth, 42),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
 
-          setState(() => _isNavigating = true);
-
-          setState(() {
-            _currentIndex = index;
-          });
-
-          if (index == 1) {
-            _dashboardKey.currentState?.refreshData();
-          }
-
-          if (index == 4) {
-            await Future.delayed(const Duration(milliseconds: 100));
-            if (!mounted) return;
-            setState(() {});
-          }
-
-          await _loadRentalStatus();
-
-          if (mounted) {
-            setState(() => _isNavigating = false);
-          }
-        },
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 280),
-          curve: Curves.easeOutCubic,
-          transform: Matrix4.translationValues(
-            0,
-            isSelected ? -6 : 0, // 🔥 POP-UP EFFECT
-            0,
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // ================= ICON WITH GRADIENT FOCUS =================
-              Container(
-                width: _scaleForWidth(screenWidth, 42),
-                height: _scaleForWidth(screenWidth, 42),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-
-                  // 🔥 GRADIENT WHEN SELECTED
-                  gradient:
-                      context.isDark
-                          ? const LinearGradient(
-                            colors: [
-                              Color(0xFF38BDF8),
-                              Color(0xFF60A5FA),
-                              Color(0xFFBAE6FD),
-                            ],
-                            stops: [0.0, 0.6, 1.0],
-                            begin: Alignment.bottomRight,
-                            end: Alignment.topLeft,
-                          )
-                          : const LinearGradient(
-                            colors: [
-                              Color(0xFF2563EB),
-                              Color(0xFF1E40AF),
-                              Color(0xFF020617),
-                            ],
-                            stops: [0.0, 0.6, 1.0],
-                            begin: Alignment.bottomRight,
-                            end: Alignment.topLeft,
-                          ),
-
-                  color: isSelected ? null : Colors.transparent,
-
-                  boxShadow:
-                      isSelected
-                          ? [
-                            BoxShadow(
-                              color: const Color(
-                                0xFF2563EB,
-                              ).withValues(alpha: 0.35),
-                              blurRadius: 22,
-                              offset: const Offset(0, 8),
+                    // 🔥 GRADIENT WHEN SELECTED
+                    gradient:
+                        context.isDark
+                            ? const LinearGradient(
+                              colors: [
+                                Color(0xFF38BDF8),
+                                Color(0xFF60A5FA),
+                                Color(0xFFBAE6FD),
+                              ],
+                              stops: [0.0, 0.6, 1.0],
+                              begin: Alignment.bottomRight,
+                              end: Alignment.topLeft,
+                            )
+                            : const LinearGradient(
+                              colors: [
+                                Color(0xFF2563EB),
+                                Color(0xFF1E40AF),
+                                Color(0xFF020617),
+                              ],
+                              stops: [0.0, 0.6, 1.0],
+                              begin: Alignment.bottomRight,
+                              end: Alignment.topLeft,
                             ),
-                          ]
-                          : [],
-                ),
-                child: Icon(
-                  isSelected ? filledIcon : outlineIcon,
-                  color: isSelected ? Colors.white : context.appColors.icon,
-                  size:
-                      isSelected
-                          ? _scaleForWidth(screenWidth, 26)
-                          : _scaleForWidth(screenWidth, 24),
-                ),
-              ),
 
-              const SizedBox(height: 4),
+                    color: isSelected ? null : Colors.transparent,
 
-              // ================= MICRO INDICATOR DOT =================
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 250),
-                width: isSelected ? 6 : 0,
-                height: 6,
-                decoration: const BoxDecoration(
-                  color: Color(0xFF2563EB),
-                  shape: BoxShape.circle,
+                    boxShadow:
+                        isSelected
+                            ? [
+                              BoxShadow(
+                                color: const Color(
+                                  0xFF2563EB,
+                                ).withValues(alpha: 0.35),
+                                blurRadius: 22,
+                                offset: const Offset(0, 8),
+                              ),
+                            ]
+                            : [],
+                  ),
+                  child: Icon(
+                    isSelected ? filledIcon : outlineIcon,
+                    color: isSelected ? Colors.white : context.appColors.icon,
+                    size:
+                        isSelected
+                            ? _scaleForWidth(screenWidth, 26)
+                            : _scaleForWidth(screenWidth, 24),
+                  ),
                 ),
-              ),
-            ],
+
+                const SizedBox(height: 4),
+
+                // ================= MICRO INDICATOR DOT =================
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 250),
+                  width: isSelected ? 6 : 0,
+                  height: 6,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF2563EB),
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
